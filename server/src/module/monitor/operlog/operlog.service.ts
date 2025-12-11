@@ -98,10 +98,7 @@ export class OperlogService {
       findManyArgs.take = pageSize;
     }
 
-    const [list, total] = await this.prisma.$transaction([
-      this.prisma.sysOperLog.findMany(findManyArgs),
-      this.prisma.sysOperLog.count({ where }),
-    ]);
+    const [list, total] = await this.prisma.$transaction([this.prisma.sysOperLog.findMany(findManyArgs), this.prisma.sysOperLog.count({ where })]);
 
     return ResultData.ok({
       rows: list,

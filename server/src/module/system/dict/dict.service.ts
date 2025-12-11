@@ -299,18 +299,17 @@ export class DictService {
       orderBy: [{ dictType: 'asc' }, { dictSort: 'asc' }],
     });
 
-    const grouped = dictData.reduce<Record<string, typeof dictData>>((acc, item) => {
-      if (!acc[item.dictType]) {
-        acc[item.dictType] = [];
-      }
-      acc[item.dictType].push(item);
-      return acc;
-    }, {} as Record<string, typeof dictData>);
-
-    await Promise.all(
-      Object.entries(grouped).map(([dictType, items]) =>
-        this.redisService.set(`${CacheEnum.SYS_DICT_KEY}${dictType}`, items),
-      ),
+    const grouped = dictData.reduce<Record<string, typeof dictData>>(
+      (acc, item) => {
+        if (!acc[item.dictType]) {
+          acc[item.dictType] = [];
+        }
+        acc[item.dictType].push(item);
+        return acc;
+      },
+      {} as Record<string, typeof dictData>,
     );
+
+    await Promise.all(Object.entries(grouped).map(([dictType, items]) => this.redisService.set(`${CacheEnum.SYS_DICT_KEY}${dictType}`, items)));
   }
 }

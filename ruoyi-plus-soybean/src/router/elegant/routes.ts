@@ -123,15 +123,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
-        name: 'monitor_cache_list',
-        path: '/monitor/cache_list',
-        component: 'view.monitor_cache_list',
-        meta: {
-          title: 'monitor_cache_list',
-          i18nKey: 'route.monitor_cache_list'
-        }
-      },
-      {
         name: 'monitor_job',
         path: '/monitor/job',
         component: 'view.monitor_job',

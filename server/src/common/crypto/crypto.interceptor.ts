@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
@@ -31,35 +25,32 @@ export class DecryptInterceptor implements NestInterceptor {
     }
 
     // 检查是否跳过解密
-    const skipDecrypt = this.reflector.getAllAndOverride<boolean>(SKIP_DECRYPT_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const skipDecrypt = this.reflector.getAllAndOverride<boolean>(SKIP_DECRYPT_KEY, [context.getHandler(), context.getClass()]);
 
     if (skipDecrypt) {
       return next.handle();
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    
+
     // 检查请求头是否标识为加密请求
     const isEncrypted = request.headers['x-encrypted'] === 'true';
-    
+
     if (!isEncrypted || !request.body) {
       return next.handle();
     }
 
     try {
       const { encryptedKey, encryptedData } = request.body;
-      
+
       if (encryptedKey && encryptedData) {
         // 解密请求体
         const decryptedBody = this.cryptoService.decryptRequest(encryptedKey, encryptedData);
         request.body = decryptedBody;
-        
+
         // 保存 AES 密钥用于响应加密
         (request as any).__aesKey = this.cryptoService['rsaDecrypt'](encryptedKey);
-        
+
         this.logger.debug('Request body decrypted successfully');
       }
     } catch (error) {
@@ -90,10 +81,7 @@ export class EncryptInterceptor implements NestInterceptor {
     }
 
     // 检查是否跳过加密
-    const skipEncrypt = this.reflector.getAllAndOverride<boolean>(SKIP_ENCRYPT_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const skipEncrypt = this.reflector.getAllAndOverride<boolean>(SKIP_ENCRYPT_KEY, [context.getHandler(), context.getClass()]);
 
     if (skipEncrypt) {
       return next.handle();
@@ -101,10 +89,10 @@ export class EncryptInterceptor implements NestInterceptor {
 
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
-    
+
     // 检查请求头是否要求加密响应
     const requireEncrypt = request.headers['x-encrypted'] === 'true';
-    
+
     if (!requireEncrypt) {
       return next.handle();
     }
@@ -115,12 +103,12 @@ export class EncryptInterceptor implements NestInterceptor {
           // 使用请求中的 AES 密钥（如果有）
           const aesKey = (request as any).__aesKey;
           const encrypted = this.cryptoService.encryptResponse(data, aesKey);
-          
+
           // 设置响应头标识
           response.setHeader('X-Encrypted', 'true');
-          
+
           this.logger.debug('Response body encrypted successfully');
-          
+
           return encrypted;
         } catch (error) {
           this.logger.error('Failed to encrypt response:', error.message);

@@ -15,12 +15,7 @@ const swaggerUrl = computed(() => {
 
 <template>
   <div class="h-full">
-    <iframe
-      id="swagger-frame"
-      class="size-full border-none"
-      :src="swaggerUrl"
-      title="Swagger API Documentation"
-    />
+    <iframe id="swagger-frame" class="size-full border-none" :src="swaggerUrl" title="Swagger API Documentation" />
   </div>
 </template>
 

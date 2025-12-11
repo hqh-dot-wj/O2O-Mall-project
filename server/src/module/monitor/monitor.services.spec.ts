@@ -30,9 +30,7 @@ jest.mock('cron', () => ({
 }));
 
 jest.mock('node-disk-info', () => ({
-  getDiskInfoSync: jest.fn().mockReturnValue([
-    { _mounted: '/', _filesystem: 'apfs', _blocks: 1024, _used: 256, _available: 768 },
-  ]),
+  getDiskInfoSync: jest.fn().mockReturnValue([{ _mounted: '/', _filesystem: 'apfs', _blocks: 1024, _used: 256, _available: 768 }]),
 }));
 
 describe('Monitor module services', () => {
@@ -268,9 +266,7 @@ describe('Monitor module services', () => {
     const service = new ServerService();
 
     beforeEach(() => {
-      (nodeDiskInfo.getDiskInfoSync as jest.Mock).mockReturnValue([
-        { _mounted: '/', _filesystem: 'apfs', _blocks: 1024 * 4, _used: 1024, _available: 1024 * 3 },
-      ]);
+      (nodeDiskInfo.getDiskInfoSync as jest.Mock).mockReturnValue([{ _mounted: '/', _filesystem: 'apfs', _blocks: 1024 * 4, _used: 1024, _available: 1024 * 3 }]);
     });
 
     it('should convert bytes to gigabytes', () => {

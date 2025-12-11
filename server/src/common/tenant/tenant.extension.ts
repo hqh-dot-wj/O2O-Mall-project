@@ -3,7 +3,7 @@ import { TenantContext } from './tenant.context';
 
 /**
  * Prisma 租户扩展 - 自动添加租户过滤和设置租户ID
- * 
+ *
  * 使用方式:
  * const prisma = new PrismaClient().$extends(tenantExtension);
  */
@@ -75,21 +75,7 @@ export const tenantExtension = Prisma.defineExtension((client) => {
 /**
  * 需要租户隔离的模型列表
  */
-const TENANT_MODELS = [
-  'SysConfig',
-  'SysDept',
-  'SysDictData',
-  'SysDictType',
-  'SysJob',
-  'SysLogininfor',
-  'SysMenu',
-  'SysNotice',
-  'SysOperLog',
-  'SysPost',
-  'SysRole',
-  'SysUpload',
-  'SysUser',
-];
+const TENANT_MODELS = ['SysConfig', 'SysDept', 'SysDictData', 'SysDictType', 'SysJob', 'SysLogininfor', 'SysMenu', 'SysNotice', 'SysOperLog', 'SysPost', 'SysRole', 'SysUpload', 'SysUser'];
 
 /**
  * 检查模型是否需要租户过滤
@@ -148,7 +134,7 @@ function addTenantFilterForUpdate(model: string, args: any): any {
   // 对于 update，需要在 where 条件中添加租户ID
   args = args || {};
   args.where = args.where || {};
-  
+
   // 如果使用复合唯一键，需要确保租户ID在条件中
   if (args.where.AND) {
     args.where.AND.push({ tenantId });
@@ -179,7 +165,7 @@ function setTenantId(model: string, args: any): any {
 
   args = args || {};
   args.data = args.data || {};
-  
+
   // 如果没有指定租户ID，使用当前上下文的租户ID
   if (!args.data.tenantId) {
     args.data.tenantId = tenantId;
@@ -226,7 +212,7 @@ function setTenantIdForUpsert(model: string, args: any): any {
   }
 
   args = args || {};
-  
+
   // 设置 create 数据的租户ID
   if (args.create && !args.create.tenantId) {
     args.create.tenantId = tenantId;

@@ -134,7 +134,9 @@ describe('System module services', () => {
 
     it('should return full menu tree for super admin', async () => {
       userService.getRoleIds.mockResolvedValue([1]);
-      (prisma.sysMenu.findMany as jest.Mock).mockResolvedValue([{ menuId: 1, parentId: 0, menuType: 'M', orderNum: 1, menuName: '仪表盘', path: '/dashboard', visible: '0', status: '0', perms: '*:*:*', component: 'Dashboard', delFlag: '0' } as any]);
+      (prisma.sysMenu.findMany as jest.Mock).mockResolvedValue([
+        { menuId: 1, parentId: 0, menuType: 'M', orderNum: 1, menuName: '仪表盘', path: '/dashboard', visible: '0', status: '0', perms: '*:*:*', component: 'Dashboard', delFlag: '0' } as any,
+      ]);
       const data = await service.getMenuListByUserId(1);
       expect(data).toHaveLength(1);
     });
@@ -210,7 +212,14 @@ describe('System module services', () => {
       prisma.$transaction.mockImplementation(async (cb) => cb(prisma));
       (prisma.sysRole.create as jest.Mock).mockResolvedValue({ roleId: 1 });
       await service.create({ roleName: '管理员', menuIds: [1, 2] } as any);
-      expect(prisma.sysRoleMenu.createMany).toHaveBeenCalledWith(expect.objectContaining({ data: [{ roleId: 1, menuId: 1 }, { roleId: 1, menuId: 2 }] }));
+      expect(prisma.sysRoleMenu.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: [
+            { roleId: 1, menuId: 1 },
+            { roleId: 1, menuId: 2 },
+          ],
+        }),
+      );
     });
 
     it('should merge permissions from menu service', async () => {
@@ -245,9 +254,7 @@ describe('System module services', () => {
     });
 
     it('should import table metadata and columns', async () => {
-      const selectSpy = jest.spyOn(service as any, 'selectDbTableListByNames').mockResolvedValue([
-        { tableName: 'sys_user', tableComment: '用户表' },
-      ]);
+      const selectSpy = jest.spyOn(service as any, 'selectDbTableListByNames').mockResolvedValue([{ tableName: 'sys_user', tableComment: '用户表' }]);
       const columnSpy = jest.spyOn(service as any, 'getTableColumnInfo').mockResolvedValue([
         {
           tableId: 1,

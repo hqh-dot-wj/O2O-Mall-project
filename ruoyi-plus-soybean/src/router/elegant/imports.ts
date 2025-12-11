@@ -26,7 +26,6 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   demo_tree: () => import("@/views/demo/tree/index.vue"),
   home: () => import("@/views/home/index.vue"),
   monitor_cache: () => import("@/views/monitor/cache/index.vue"),
-  monitor_cache_list: () => import("@/views/monitor/cache/list.vue"),
   "monitor_job-log": () => import("@/views/monitor/job-log/index.vue"),
   monitor_job: () => import("@/views/monitor/job/index.vue"),
   monitor_logininfor: () => import("@/views/monitor/logininfor/index.vue"),

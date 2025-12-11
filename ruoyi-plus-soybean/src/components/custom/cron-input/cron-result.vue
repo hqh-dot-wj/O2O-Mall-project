@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import CronExpressionParser from 'cron-parser';
 import dayjs from 'dayjs';
+import CronExpressionParser from 'cron-parser';
 
 defineOptions({
   name: 'CronResult'
@@ -66,9 +66,7 @@ watch(
     </template>
     <template v-else-if="nextTimes.length > 0">
       <div class="grid grid-cols-2 gap-8px">
-        <div v-for="(time, index) in nextTimes" :key="index" class="text-14px">
-          {{ index + 1 }}. {{ time }}
-        </div>
+        <div v-for="(time, index) in nextTimes" :key="index" class="text-14px">{{ index + 1 }}. {{ time }}</div>
       </div>
     </template>
     <template v-else>

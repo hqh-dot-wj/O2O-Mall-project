@@ -4,21 +4,21 @@ import * as crypto from 'crypto';
 
 /**
  * 加解密服务
- * 
+ *
  * 实现 RSA + AES 混合加密方案:
  * - RSA 用于加密/解密 AES 密钥
  * - AES 用于加密/解密实际数据
- * 
+ *
  * 与 Soybean 前端的 crypto.ts 保持一致
  */
 @Injectable()
 export class CryptoService implements OnModuleInit {
   private readonly logger = new Logger(CryptoService.name);
-  
+
   // RSA 密钥对
   private publicKey: string;
   private privateKey: string;
-  
+
   // 是否启用加密
   private enabled: boolean = false;
 
@@ -26,17 +26,17 @@ export class CryptoService implements OnModuleInit {
 
   onModuleInit() {
     this.enabled = this.configService.get<boolean>('crypto.enabled', false);
-    
+
     if (this.enabled) {
       // 从配置加载或生成 RSA 密钥对
       this.publicKey = this.configService.get<string>('crypto.rsaPublicKey', '');
       this.privateKey = this.configService.get<string>('crypto.rsaPrivateKey', '');
-      
+
       if (!this.publicKey || !this.privateKey) {
         this.logger.warn('RSA keys not configured, generating new key pair...');
         this.generateRsaKeyPair();
       }
-      
+
       this.logger.log('Crypto service initialized with RSA+AES encryption');
     } else {
       this.logger.log('Crypto service disabled');
@@ -72,10 +72,10 @@ export class CryptoService implements OnModuleInit {
         format: 'pem',
       },
     });
-    
+
     this.publicKey = publicKey;
     this.privateKey = privateKey;
-    
+
     // 输出公钥供配置使用
     this.logger.debug('Generated RSA Public Key:');
     this.logger.debug(this.publicKey);
@@ -129,13 +129,13 @@ export class CryptoService implements OnModuleInit {
     try {
       // 确保 AES key 是 16 字节 (128位)
       const key = this.normalizeAesKey(aesKey);
-      
+
       const decipher = crypto.createDecipheriv('aes-128-ecb', key, null);
       decipher.setAutoPadding(true); // PKCS7 padding
-      
+
       let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
       decrypted += decipher.final('utf8');
-      
+
       return decrypted;
     } catch (error) {
       this.logger.error('AES decrypt error:', error.message);
@@ -150,13 +150,13 @@ export class CryptoService implements OnModuleInit {
   aesEncrypt(data: string, aesKey: string): string {
     try {
       const key = this.normalizeAesKey(aesKey);
-      
+
       const cipher = crypto.createCipheriv('aes-128-ecb', key, null);
       cipher.setAutoPadding(true); // PKCS7 padding
-      
+
       let encrypted = cipher.update(data, 'utf8', 'base64');
       encrypted += cipher.final('base64');
-      
+
       return encrypted;
     } catch (error) {
       this.logger.error('AES encrypt error:', error.message);
@@ -192,10 +192,10 @@ export class CryptoService implements OnModuleInit {
   decryptRequest(encryptedKey: string, encryptedData: string): any {
     // 1. 使用 RSA 私钥解密 AES 密钥
     const aesKey = this.rsaDecrypt(encryptedKey);
-    
+
     // 2. 使用 AES 密钥解密数据
     const decryptedJson = this.aesDecrypt(encryptedData, aesKey);
-    
+
     // 3. 解析 JSON
     return JSON.parse(decryptedJson);
   }
@@ -207,14 +207,14 @@ export class CryptoService implements OnModuleInit {
   encryptResponse(data: any, clientAesKey?: string): { encryptedKey: string; encryptedData: string } {
     // 如果客户端提供了 AES 密钥，使用它；否则生成新的
     const aesKey = clientAesKey || this.generateAesKey();
-    
+
     // 1. 使用 AES 加密数据
     const jsonData = JSON.stringify(data);
     const encryptedData = this.aesEncrypt(jsonData, aesKey);
-    
+
     // 2. 使用 RSA 公钥加密 AES 密钥 (如果需要发送新密钥)
     const encryptedKey = clientAesKey ? '' : this.rsaEncrypt(aesKey);
-    
+
     return { encryptedKey, encryptedData };
   }
 }

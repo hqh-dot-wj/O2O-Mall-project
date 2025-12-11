@@ -110,13 +110,41 @@ defineExpose({
   <div class="cron-input">
     <NTabs v-model:value="tabValue" type="card" size="small">
       <NTabPane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.tab">
-        <CronSecond v-if="tab.name === 'second'" :value="cronValue.second" @change="(val: string) => updateCronValue('second', val)" />
-        <CronMinute v-else-if="tab.name === 'minute'" :value="cronValue.minute" @change="(val: string) => updateCronValue('minute', val)" />
-        <CronHour v-else-if="tab.name === 'hour'" :value="cronValue.hour" @change="(val: string) => updateCronValue('hour', val)" />
-        <CronDay v-else-if="tab.name === 'day'" :value="cronValue.day" @change="(val: string) => updateCronValue('day', val)" />
-        <CronMonth v-else-if="tab.name === 'month'" :value="cronValue.month" @change="(val: string) => updateCronValue('month', val)" />
-        <CronWeek v-else-if="tab.name === 'week'" :value="cronValue.week" @change="(val: string) => updateCronValue('week', val)" />
-        <CronYear v-else-if="tab.name === 'year'" :value="cronValue.year" @change="(val: string) => updateCronValue('year', val)" />
+        <CronSecond
+          v-if="tab.name === 'second'"
+          :value="cronValue.second"
+          @change="(val: string) => updateCronValue('second', val)"
+        />
+        <CronMinute
+          v-else-if="tab.name === 'minute'"
+          :value="cronValue.minute"
+          @change="(val: string) => updateCronValue('minute', val)"
+        />
+        <CronHour
+          v-else-if="tab.name === 'hour'"
+          :value="cronValue.hour"
+          @change="(val: string) => updateCronValue('hour', val)"
+        />
+        <CronDay
+          v-else-if="tab.name === 'day'"
+          :value="cronValue.day"
+          @change="(val: string) => updateCronValue('day', val)"
+        />
+        <CronMonth
+          v-else-if="tab.name === 'month'"
+          :value="cronValue.month"
+          @change="(val: string) => updateCronValue('month', val)"
+        />
+        <CronWeek
+          v-else-if="tab.name === 'week'"
+          :value="cronValue.week"
+          @change="(val: string) => updateCronValue('week', val)"
+        />
+        <CronYear
+          v-else-if="tab.name === 'year'"
+          :value="cronValue.year"
+          @change="(val: string) => updateCronValue('year', val)"
+        />
       </NTabPane>
     </NTabs>
 

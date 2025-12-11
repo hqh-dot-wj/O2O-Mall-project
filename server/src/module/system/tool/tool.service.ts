@@ -130,9 +130,7 @@ export class ToolService {
       const tableData: Prisma.GenTableCreateInput = {
         tableName,
         tableComment: meta.tableComment?.trim() || tableName,
-        className: toolConfig.autoRemovePre
-          ? StringUtils.toPascalCase(tableName.replace(new RegExp(toolConfig.tablePrefix.join('|')), ''))
-          : StringUtils.toPascalCase(tableName),
+        className: toolConfig.autoRemovePre ? StringUtils.toPascalCase(tableName.replace(new RegExp(toolConfig.tablePrefix.join('|')), '')) : StringUtils.toPascalCase(tableName),
         packageName: toolConfig.packageName,
         moduleName: toolConfig.moduleName,
         businessName: tableName.slice(tableName.lastIndexOf('_') + 1),
@@ -317,10 +315,7 @@ export class ToolService {
    * @returns
    */
   async remove(id: number) {
-    await this.prisma.$transaction([
-      this.prisma.genTableColumn.deleteMany({ where: { tableId: id } }),
-      this.prisma.genTable.delete({ where: { tableId: id } }),
-    ]);
+    await this.prisma.$transaction([this.prisma.genTableColumn.deleteMany({ where: { tableId: id } }), this.prisma.genTable.delete({ where: { tableId: id } })]);
     return ResultData.ok();
   }
 
@@ -443,10 +438,7 @@ export class ToolService {
       SELECT COUNT(*)::bigint AS total
       ${baseSql}
     `;
-    const [list, totalRes] = await Promise.all([
-      this.prisma.$queryRaw<DbTableRow[]>(listSql),
-      this.prisma.$queryRaw<Array<{ total: bigint }>>(countSql),
-    ]);
+    const [list, totalRes] = await Promise.all([this.prisma.$queryRaw<DbTableRow[]>(listSql), this.prisma.$queryRaw<Array<{ total: bigint }>>(countSql)]);
     return ResultData.ok({
       list: list.map((item) => ({
         ...item,

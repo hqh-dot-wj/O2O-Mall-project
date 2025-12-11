@@ -46,7 +46,7 @@ export class PostController {
   })
   @Get('/optionselect')
   optionselect(@Query('deptId') deptId?: string, @Query('postIds') postIds?: string) {
-    const ids = postIds ? postIds.split(',').map(id => +id) : undefined;
+    const ids = postIds ? postIds.split(',').map((id) => +id) : undefined;
     return this.postService.optionselect(deptId ? +deptId : undefined, ids);
   }
 

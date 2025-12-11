@@ -71,10 +71,7 @@ export class MenuService {
       where: {
         delFlag: '0',
       },
-      orderBy: [
-        { orderNum: 'asc' },
-        { parentId: 'asc' },
-      ],
+      orderBy: [{ orderNum: 'asc' }, { parentId: 'asc' }],
     });
     const tree = ListToTree(
       res,
@@ -102,10 +99,7 @@ export class MenuService {
       where: {
         delFlag: '0',
       },
-      orderBy: [
-        { orderNum: 'asc' },
-        { parentId: 'asc' },
-      ],
+      orderBy: [{ orderNum: 'asc' }, { parentId: 'asc' }],
     });
     const tree = ListToTree(
       res,

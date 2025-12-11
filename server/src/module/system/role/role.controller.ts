@@ -53,7 +53,7 @@ export class RoleController {
   })
   @Get('optionselect')
   optionselect(@Query('roleIds') roleIds?: string) {
-    const ids = roleIds ? roleIds.split(',').map(id => +id) : undefined;
+    const ids = roleIds ? roleIds.split(',').map((id) => +id) : undefined;
     return this.roleService.optionselect(ids);
   }
 

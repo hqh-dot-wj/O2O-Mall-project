@@ -5,7 +5,7 @@ import { TenantContext } from './tenant.context';
 
 /**
  * 租户帮助类 - 提供租户相关的查询帮助方法
- * 
+ *
  * 用法示例:
  * ```typescript
  * const users = await this.prisma.sysUser.findMany({
@@ -65,14 +65,14 @@ export class TenantHelper {
 
   /**
    * 添加租户过滤条件到 where 子句
-   * 
+   *
    * @example
    * ```typescript
    * // 简单查询
    * const users = await this.prisma.sysUser.findMany({
    *   where: this.tenantHelper.addTenantFilter({ status: '0' }),
    * });
-   * 
+   *
    * // 复杂查询
    * const where = { OR: [{ name: 'a' }, { name: 'b' }] };
    * const users = await this.prisma.sysUser.findMany({
@@ -87,13 +87,13 @@ export class TenantHelper {
 
     const tenantId = this.getTenantId();
     const result = { ...(where || {}), tenantId } as T & { tenantId: string };
-    
+
     return result;
   }
 
   /**
    * 添加租户ID到创建数据
-   * 
+   *
    * @example
    * ```typescript
    * const user = await this.prisma.sysUser.create({
@@ -111,15 +111,14 @@ export class TenantHelper {
    */
   setTenantIdForMany<T extends object>(dataList: T[]): (T & { tenantId: string })[] {
     const tenantId = this.getTenantId();
-    return dataList.map(data => ({ ...data, tenantId }));
+    return dataList.map((data) => ({ ...data, tenantId }));
   }
 
   /**
    * 检查模型是否需要租户过滤
    */
   static hasTenantField(model: string): boolean {
-    return TenantHelper.TENANT_MODELS.has(model.toLowerCase()) || 
-           TenantHelper.TENANT_MODELS.has(model);
+    return TenantHelper.TENANT_MODELS.has(model.toLowerCase()) || TenantHelper.TENANT_MODELS.has(model);
   }
 
   /**

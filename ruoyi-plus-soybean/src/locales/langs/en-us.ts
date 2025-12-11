@@ -144,11 +144,15 @@ const local: App.I18n.Schema = {
         'top-hybrid-sidebar-first': 'Top Hybrid Sidebar First',
         'top-hybrid-header-first': 'Top Hybrid Header First',
         vertical_detail: 'Vertical layout, menu on the left, content on the right.',
-        'vertical-mix_detail': 'Left dual menu layout, first level menu in the dark area on the left, second level menu in the light area on the left.',
-        'vertical-hybrid-header-first_detail': 'Left hybrid layout, first level menu at the top, second level menu in the dark area on the left, third level menu in the light area on the left.',
+        'vertical-mix_detail':
+          'Left dual menu layout, first level menu in the dark area on the left, second level menu in the light area on the left.',
+        'vertical-hybrid-header-first_detail':
+          'Left hybrid layout, first level menu at the top, second level menu in the dark area on the left, third level menu in the light area on the left.',
         horizontal_detail: 'Top menu layout, menu at the top, content below.',
-        'top-hybrid-sidebar-first_detail': 'Top hybrid layout, first level menu on the left, second level menu at the top.',
-        'top-hybrid-header-first_detail': 'Top hybrid layout, first level menu at the top, second level menu on the left.'
+        'top-hybrid-sidebar-first_detail':
+          'Top hybrid layout, first level menu on the left, second level menu at the top.',
+        'top-hybrid-header-first_detail':
+          'Top hybrid layout, first level menu at the top, second level menu on the left.'
       },
       tab: {
         title: 'Tab Settings',

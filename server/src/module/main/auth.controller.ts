@@ -19,7 +19,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
  * 认证控制器 - 匹配 Soybean 前端 API
- * 
+ *
  * 路由前缀: /auth
  * 对应前端: src/service/api/auth.ts
  */
@@ -53,7 +53,7 @@ export class AuthController {
   @SkipEncrypt()
   async getTenantList(): Promise<ResultData> {
     const tenantEnabled = this.configService.get<boolean>('tenant.enabled', true);
-    
+
     const result: LoginTenantVo = {
       tenantEnabled,
       voList: [],
@@ -80,11 +80,13 @@ export class AuthController {
       } catch (error) {
         // 如果表不存在，返回默认租户
         this.logger.warn('SysTenant table may not exist yet:', error.message);
-        result.voList = [{
-          tenantId: TenantContext.SUPER_TENANT_ID,
-          companyName: '默认租户',
-          domain: '',
-        }];
+        result.voList = [
+          {
+            tenantId: TenantContext.SUPER_TENANT_ID,
+            companyName: '默认租户',
+            domain: '',
+          },
+        ];
       }
     }
 
@@ -120,11 +122,7 @@ export class AuthController {
         const captchaInfo = createMath();
         result.img = captchaInfo.data;
         result.uuid = GenerateUUID();
-        await this.redisService.set(
-          CacheEnum.CAPTCHA_CODE_KEY + result.uuid,
-          captchaInfo.text.toLowerCase(),
-          1000 * 60 * 5
-        );
+        await this.redisService.set(CacheEnum.CAPTCHA_CODE_KEY + result.uuid, captchaInfo.text.toLowerCase(), 1000 * 60 * 5);
       } catch (err) {
         this.logger.error('生成验证码错误:', err);
         return ResultData.fail(500, '生成验证码错误，请重试');
@@ -149,19 +147,15 @@ export class AuthController {
   @HttpCode(200)
   @NotRequireAuth()
   @ApiHeader({ name: 'tenant-id', description: '租户ID', required: false })
-  async login(
-    @Body() loginDto: AuthLoginDto,
-    @ClientInfo() clientInfo: ClientInfoDto,
-    @Headers('tenant-id') headerTenantId?: string,
-  ): Promise<ResultData> {
+  async login(@Body() loginDto: AuthLoginDto, @ClientInfo() clientInfo: ClientInfoDto, @Headers('tenant-id') headerTenantId?: string): Promise<ResultData> {
     // 优先使用 header 中的租户ID，其次使用 body 中的
     const tenantId = headerTenantId || loginDto.tenantId || TenantContext.SUPER_TENANT_ID;
-    
+
     this.logger.log(`用户登录: ${loginDto.username}, 租户: ${tenantId}`);
 
     // 转换为原有的登录 DTO 格式调用服务（注意：原服务使用 userName 而非 username）
     const loginData = {
-      userName: loginDto.username,  // Soybean 前端用 username，后端用 userName
+      userName: loginDto.username, // Soybean 前端用 username，后端用 userName
       password: loginDto.password,
       code: loginDto.code,
       uuid: loginDto.uuid,
@@ -170,12 +164,12 @@ export class AuthController {
     // 设置租户上下文后执行登录
     return TenantContext.run({ tenantId }, async () => {
       const result = await this.mainService.login(loginData as any, clientInfo);
-      
+
       // 转换响应格式为 Soybean 前端期望的格式
       if (result.code === 200 && result.data?.token) {
         const jwtExpires = this.configService.get<string>('jwt.expiresin', '1h');
         const refreshExpires = this.configService.get<string>('jwt.refreshExpiresIn', '2h');
-        
+
         const loginToken: LoginTokenVo = {
           access_token: result.data.token,
           refresh_token: result.data.token, // 暂时使用同一个 token
@@ -185,10 +179,10 @@ export class AuthController {
           scope: '',
           openid: '',
         };
-        
+
         return ResultData.ok(loginToken);
       }
-      
+
       return result;
     });
   }
@@ -207,10 +201,7 @@ export class AuthController {
   @HttpCode(200)
   @NotRequireAuth()
   @ApiHeader({ name: 'tenant-id', description: '租户ID', required: false })
-  async register(
-    @Body() registerDto: AuthRegisterDto,
-    @Headers('tenant-id') headerTenantId?: string,
-  ): Promise<ResultData> {
+  async register(@Body() registerDto: AuthRegisterDto, @Headers('tenant-id') headerTenantId?: string): Promise<ResultData> {
     // 验证密码一致性
     if (registerDto.password !== registerDto.confirmPassword) {
       return ResultData.fail(400, '两次输入的密码不一致');
@@ -242,10 +233,7 @@ export class AuthController {
   @NotRequireAuth()
   @Post('logout')
   @HttpCode(200)
-  async logout(
-    @User() user: UserDto,
-    @ClientInfo() clientInfo: ClientInfoDto,
-  ): Promise<ResultData> {
+  async logout(@User() user: UserDto, @ClientInfo() clientInfo: ClientInfoDto): Promise<ResultData> {
     if (user?.token) {
       await this.redisService.del(`${CacheEnum.LOGIN_TOKEN_KEY}${user.token}`);
     }
@@ -298,11 +286,16 @@ export class AuthController {
     const unit = match[2] || 's';
 
     switch (unit) {
-      case 'd': return value * 86400;
-      case 'h': return value * 3600;
-      case 'm': return value * 60;
-      case 's': return value;
-      default: return value;
+      case 'd':
+        return value * 86400;
+      case 'h':
+        return value * 3600;
+      case 'm':
+        return value * 60;
+      case 's':
+        return value;
+      default:
+        return value;
     }
   }
 }

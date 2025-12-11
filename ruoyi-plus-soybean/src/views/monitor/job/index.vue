@@ -3,12 +3,7 @@ import { ref } from 'vue';
 import { NButton, NDivider } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { jsonClone } from '@sa/utils';
-import {
-  fetchChangeJobStatus,
-  fetchDeleteJob,
-  fetchGetJobList,
-  fetchRunJob
-} from '@/service/api/monitor/job';
+import { fetchChangeJobStatus, fetchDeleteJob, fetchGetJobList, fetchRunJob } from '@/service/api/monitor/job';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate } from '@/hooks/common/table';
 import { useDict } from '@/hooks/business/dict';
@@ -18,10 +13,10 @@ import ButtonIcon from '@/components/custom/button-icon.vue';
 import { $t } from '@/locales';
 import StatusSwitch from '@/components/custom/status-switch.vue';
 import DictTag from '@/components/custom/dict-tag.vue';
+import CronModal from '@/components/custom/cron-input/cron-modal.vue';
 import JobSearch from './modules/job-search.vue';
 import JobOperateDrawer from './modules/job-operate-drawer.vue';
 import JobDetailDrawer from './modules/job-detail-drawer.vue';
-import CronModal from '@/components/custom/cron-input/cron-modal.vue';
 
 defineOptions({
   name: 'JobList'

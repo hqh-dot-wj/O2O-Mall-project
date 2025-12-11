@@ -18,14 +18,10 @@ export class SseController {
   @ApiOperation({ summary: 'SSE连接' })
   @NotRequireAuth()
   @Sse('sse')
-  sse(
-    @Query('Authorization') authorization: string,
-    @Query('clientid') clientid: string,
-    @Req() req: Request,
-  ): Observable<MessageEvent> {
+  sse(@Query('Authorization') authorization: string, @Query('clientid') clientid: string, @Req() req: Request): Observable<MessageEvent> {
     // 从 Authorization 参数中提取 token
     const token = authorization?.replace('Bearer ', '');
-    
+
     if (!token) {
       // 如果没有token，返回一个空的Observable
       return new Observable<MessageEvent>((subscriber) => {
@@ -36,7 +32,7 @@ export class SseController {
 
     // 生成唯一的客户端ID
     const uniqueClientId = `${clientid || 'unknown'}_${uuidv4()}`;
-    
+
     // 这里简化处理，实际应该解析JWT获取userId
     // 暂时使用默认值1，你可以根据需要完善JWT解析逻辑
     const userId = 1;
@@ -67,10 +63,7 @@ export class SseController {
 
   @ApiOperation({ summary: '发送消息给指定用户' })
   @Post('sse/send')
-  sendMessage(
-    @Body('userId') userId: number,
-    @Body('message') message: string,
-  ): ResultData {
+  sendMessage(@Body('userId') userId: number, @Body('message') message: string): ResultData {
     this.sseService.sendToUser(userId, message);
     return ResultData.ok(null, '消息发送成功');
   }

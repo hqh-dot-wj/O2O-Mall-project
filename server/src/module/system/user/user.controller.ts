@@ -37,7 +37,7 @@ export class UserController {
     // 移除敏感字段
     const safeUser = { ...user.user };
     delete safeUser.password;
-    
+
     // 返回 Soybean 前端期望的格式
     return ResultData.ok({
       user: safeUser,

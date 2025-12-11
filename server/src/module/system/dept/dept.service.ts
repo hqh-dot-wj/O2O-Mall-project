@@ -200,12 +200,7 @@ export class DeptService {
     const depts = await this.prisma.sysDept.findMany({
       where: {
         delFlag: '0',
-        OR: [
-          { deptId },
-          { ancestors: { contains: `,${deptId}` } },
-          { ancestors: { startsWith: `${deptId},` } },
-          { ancestors: { contains: `,${deptId},` } },
-        ],
+        OR: [{ deptId }, { ancestors: { contains: `,${deptId}` } }, { ancestors: { startsWith: `${deptId},` } }, { ancestors: { contains: `,${deptId},` } }],
       },
       select: { deptId: true },
     });

@@ -240,7 +240,9 @@ getCacheNames();
               :data="cacheNames"
               :max-height="500"
               :row-key="(row: Api.Monitor.CacheName) => row.cacheName"
-              :row-props="(row: Api.Monitor.CacheName) => ({ style: 'cursor: pointer', onClick: () => handleNameRowClick(row) })"
+              :row-props="
+                (row: Api.Monitor.CacheName) => ({ style: 'cursor: pointer', onClick: () => handleNameRowClick(row) })
+              "
               striped
             />
           </NSpin>
@@ -263,7 +265,9 @@ getCacheNames();
               :data="cacheKeys"
               :max-height="500"
               :row-key="(row: { key: string }) => row.key"
-              :row-props="(row: { key: string }) => ({ style: 'cursor: pointer', onClick: () => handleKeyRowClick(row) })"
+              :row-props="
+                (row: { key: string }) => ({ style: 'cursor: pointer', onClick: () => handleKeyRowClick(row) })
+              "
               striped
             />
           </NSpin>
@@ -289,13 +293,7 @@ getCacheNames();
               <NInput v-model:value="cacheForm.cacheKey" readonly placeholder="" />
             </NFormItem>
             <NFormItem label="缓存内容">
-              <NInput
-                v-model:value="cacheForm.cacheValue"
-                type="textarea"
-                :rows="12"
-                readonly
-                placeholder=""
-              />
+              <NInput v-model:value="cacheForm.cacheValue" type="textarea" :rows="12" readonly placeholder="" />
             </NFormItem>
           </NForm>
         </NCard>

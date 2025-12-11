@@ -44,7 +44,7 @@ function transformElegantRouteToVueRoute(
   function getLayoutName(component: string) {
     const layout = component.replace(LAYOUT_PREFIX, '');
 
-    if (!layouts[layout]) {
+    if(!layouts[layout]) {
       throw new Error(`Layout component "${layout}" not found`);
     }
 
@@ -58,7 +58,7 @@ function transformElegantRouteToVueRoute(
   function getViewName(component: string) {
     const view = component.replace(VIEW_PREFIX, '');
 
-    if (!views[view]) {
+    if(!views[view]) {
       throw new Error(`View component "${view}" not found`);
     }
 
@@ -145,7 +145,7 @@ function transformElegantRouteToVueRoute(
   if (children?.length) {
     const childRoutes = children.flatMap(child => transformElegantRouteToVueRoute(child, layouts, views));
 
-    if (isFirstLevelRoute(route)) {
+    if(isFirstLevelRoute(route)) {
       vueRoute.children = childRoutes;
     } else {
       vueRoutes.push(...childRoutes);
@@ -178,7 +178,6 @@ const routeMap: RouteMap = {
   "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?",
   "monitor": "/monitor",
   "monitor_cache": "/monitor/cache",
-  "monitor_cache_list": "/monitor/cache_list",
   "monitor_job": "/monitor/job",
   "monitor_job-log": "/monitor/job-log",
   "monitor_logininfor": "/monitor/logininfor",

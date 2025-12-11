@@ -4,15 +4,7 @@ import { DecryptInterceptor, EncryptInterceptor } from './crypto.interceptor';
 
 @Global()
 @Module({
-  providers: [
-    CryptoService,
-    DecryptInterceptor,
-    EncryptInterceptor,
-  ],
-  exports: [
-    CryptoService,
-    DecryptInterceptor,
-    EncryptInterceptor,
-  ],
+  providers: [CryptoService, DecryptInterceptor, EncryptInterceptor],
+  exports: [CryptoService, DecryptInterceptor, EncryptInterceptor],
 })
 export class CryptoModule {}

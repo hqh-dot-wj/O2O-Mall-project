@@ -12,7 +12,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AppLoading: typeof import('./../components/common/app-loading.vue')['default']
     AppProvider: typeof import('./../components/common/app-provider.vue')['default']
     BetterScroll: typeof import('./../components/custom/better-scroll.vue')['default']
     BooleanTag: typeof import('./../components/custom/boolean-tag.vue')['default']
@@ -51,7 +50,9 @@ declare module 'vue' {
     IconLocalBanner: typeof import('~icons/local/banner')['default']
     IconLocalLogo: typeof import('~icons/local/logo')['default']
     'IconMaterialSymbols:add': typeof import('~icons/material-symbols/add')['default']
+    'IconMaterialSymbols:close': typeof import('~icons/material-symbols/close')['default']
     'IconMaterialSymbols:deleteOutline': typeof import('~icons/material-symbols/delete-outline')['default']
+    'IconMaterialSymbols:deleteSweepOutline': typeof import('~icons/material-symbols/delete-sweep-outline')['default']
     'IconMaterialSymbols:downloadRounded': typeof import('~icons/material-symbols/download-rounded')['default']
     'IconMaterialSymbols:imageOutline': typeof import('~icons/material-symbols/image-outline')['default']
     'IconMaterialSymbols:listAltOutline': typeof import('~icons/material-symbols/list-alt-outline')['default']
@@ -69,7 +70,6 @@ declare module 'vue' {
     IconMdiDrag: typeof import('~icons/mdi/drag')['default']
     IconMdiHarddisk: typeof import('~icons/mdi/harddisk')['default']
     IconMdiHelpCircle: typeof import('~icons/mdi/help-circle')['default']
-    IconMdiInformationOutline: typeof import('~icons/mdi/information-outline')['default']
     IconMdiKeyboardEsc: typeof import('~icons/mdi/keyboard-esc')['default']
     IconMdiKeyboardReturn: typeof import('~icons/mdi/keyboard-return')['default']
     IconMdiMemory: typeof import('~icons/mdi/memory')['default']
@@ -178,14 +178,12 @@ declare module 'vue' {
     TinymceEditor: typeof import('./../components/custom/tinymce-editor.vue')['default']
     UmoDocEditor: typeof import('./../components/custom/umo-doc-editor.vue')['default']
     UserSelect: typeof import('./../components/custom/user-select.vue')['default']
-    Watermark: typeof import('./../components/common/watermark.vue')['default']
     WaveBg: typeof import('./../components/custom/wave-bg.vue')['default']
   }
 }
 
 // For TSX support
 declare global {
-  const AppLoading: typeof import('./../components/common/app-loading.vue')['default']
   const AppProvider: typeof import('./../components/common/app-provider.vue')['default']
   const BetterScroll: typeof import('./../components/custom/better-scroll.vue')['default']
   const BooleanTag: typeof import('./../components/custom/boolean-tag.vue')['default']
@@ -224,7 +222,9 @@ declare global {
   const IconLocalBanner: typeof import('~icons/local/banner')['default']
   const IconLocalLogo: typeof import('~icons/local/logo')['default']
   const 'IconMaterialSymbols:add': typeof import('~icons/material-symbols/add')['default']
+  const 'IconMaterialSymbols:close': typeof import('~icons/material-symbols/close')['default']
   const 'IconMaterialSymbols:deleteOutline': typeof import('~icons/material-symbols/delete-outline')['default']
+  const 'IconMaterialSymbols:deleteSweepOutline': typeof import('~icons/material-symbols/delete-sweep-outline')['default']
   const 'IconMaterialSymbols:downloadRounded': typeof import('~icons/material-symbols/download-rounded')['default']
   const 'IconMaterialSymbols:imageOutline': typeof import('~icons/material-symbols/image-outline')['default']
   const 'IconMaterialSymbols:listAltOutline': typeof import('~icons/material-symbols/list-alt-outline')['default']
@@ -242,7 +242,6 @@ declare global {
   const IconMdiDrag: typeof import('~icons/mdi/drag')['default']
   const IconMdiHarddisk: typeof import('~icons/mdi/harddisk')['default']
   const IconMdiHelpCircle: typeof import('~icons/mdi/help-circle')['default']
-  const IconMdiInformationOutline: typeof import('~icons/mdi/information-outline')['default']
   const IconMdiKeyboardEsc: typeof import('~icons/mdi/keyboard-esc')['default']
   const IconMdiKeyboardReturn: typeof import('~icons/mdi/keyboard-return')['default']
   const IconMdiMemory: typeof import('~icons/mdi/memory')['default']
@@ -351,6 +350,5 @@ declare global {
   const TinymceEditor: typeof import('./../components/custom/tinymce-editor.vue')['default']
   const UmoDocEditor: typeof import('./../components/custom/umo-doc-editor.vue')['default']
   const UserSelect: typeof import('./../components/custom/user-select.vue')['default']
-  const Watermark: typeof import('./../components/common/watermark.vue')['default']
   const WaveBg: typeof import('./../components/custom/wave-bg.vue')['default']
 }

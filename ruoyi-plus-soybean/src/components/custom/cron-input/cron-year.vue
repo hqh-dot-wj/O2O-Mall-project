@@ -100,9 +100,21 @@ watch(
         <NRadio value="range">
           <span class="flex items-center gap-8px">
             周期 从
-            <NInputNumber v-model:value="rangeStart" :min="currentYear" :max="currentYear + 100" size="small" class="w-100px" />
+            <NInputNumber
+              v-model:value="rangeStart"
+              :min="currentYear"
+              :max="currentYear + 100"
+              size="small"
+              class="w-100px"
+            />
             到
-            <NInputNumber v-model:value="rangeEnd" :min="currentYear" :max="currentYear + 100" size="small" class="w-100px" />
+            <NInputNumber
+              v-model:value="rangeEnd"
+              :min="currentYear"
+              :max="currentYear + 100"
+              size="small"
+              class="w-100px"
+            />
             年
           </span>
         </NRadio>

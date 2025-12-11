@@ -12,13 +12,13 @@ export const SKIP_DECRYPT_KEY = 'skipDecrypt';
 
 /**
  * 跳过响应加密装饰器
- * 
+ *
  * 使用此装饰器的方法将返回未加密的响应
  * 适用于：
  * - 获取公钥接口
  * - 健康检查接口
  * - 不需要加密的公开接口
- * 
+ *
  * @example
  * ```typescript
  * @SkipEncrypt()
@@ -32,12 +32,12 @@ export const SkipEncrypt = () => SetMetadata(SKIP_ENCRYPT_KEY, true);
 
 /**
  * 跳过请求解密装饰器
- * 
+ *
  * 使用此装饰器的方法将不解密请求体
  * 适用于：
  * - 文件上传接口
  * - 接收第三方回调的接口
- * 
+ *
  * @example
  * ```typescript
  * @SkipDecrypt()

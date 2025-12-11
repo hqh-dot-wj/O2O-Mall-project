@@ -1,19 +1,5 @@
 import { Type, applyDecorators } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiBody,
-  ApiExtraModels,
-  ApiOkResponse,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiHeader,
-  ApiConsumes,
-  ApiProduces,
-  ApiSecurity,
-  ApiTags,
-  getSchemaPath,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiBody, ApiExtraModels, ApiOkResponse, ApiResponse, ApiParam, ApiQuery, ApiHeader, ApiConsumes, ApiProduces, ApiSecurity, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ResultData } from '../utils/result';
 
 /**
@@ -330,8 +316,7 @@ export const Api = (options: ApiOptions) => {
 
   // 3. 文件上传处理
   if (fileUpload) {
-    const uploadConfig: FileUploadOption =
-      typeof fileUpload === 'boolean' ? { fieldName: 'file' } : fileUpload;
+    const uploadConfig: FileUploadOption = typeof fileUpload === 'boolean' ? { fieldName: 'file' } : fileUpload;
 
     const { fieldName = 'file', multiple, description: fileDesc, allowedTypes, maxSize } = uploadConfig;
 
@@ -508,13 +493,9 @@ export const Api = (options: ApiOptions) => {
 
       if (respOption.type) {
         const respIsBaseType = baseTypeNames.includes(respOption.type.name);
-        const respItems = respIsBaseType
-          ? { type: respOption.type.name.toLowerCase() }
-          : { $ref: getSchemaPath(respOption.type) };
+        const respItems = respIsBaseType ? { type: respOption.type.name.toLowerCase() } : { $ref: getSchemaPath(respOption.type) };
 
-        respSchema.properties.data = respOption.isArray
-          ? { type: 'array', items: respItems }
-          : respItems;
+        respSchema.properties.data = respOption.isArray ? { type: 'array', items: respItems } : respItems;
       }
 
       decorators.push(

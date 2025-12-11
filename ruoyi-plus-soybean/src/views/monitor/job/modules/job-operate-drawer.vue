@@ -142,7 +142,7 @@ defineExpose({
                 调用方法
                 <NTooltip trigger="hover">
                   <template #trigger>
-                    <icon-mdi-help-circle class="text-14px cursor-help" />
+                    <icon-mdi-help-circle class="cursor-help text-14px" />
                   </template>
                   <div>
                     Bean调用示例：ryTask.ryParams('ry')

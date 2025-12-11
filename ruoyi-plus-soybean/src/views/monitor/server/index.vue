@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h, onMounted, ref } from 'vue';
-import { NCard, NDescriptions, NDescriptionsItem, NGrid, NGridItem, NProgress, NSpin, NDataTable } from 'naive-ui';
+import { NCard, NDataTable, NDescriptions, NDescriptionsItem, NGrid, NGridItem, NProgress, NSpin } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
 import { fetchGetServerInfo } from '@/service/api/monitor/server';
 
@@ -112,15 +112,9 @@ onMounted(() => {
               <icon-mdi-memory class="text-20px text-primary" />
             </template>
             <NDescriptions label-placement="left" :column="1" bordered>
-              <NDescriptionsItem label="总内存">
-                {{ serverInfo?.mem?.total ?? '-' }} GB
-              </NDescriptionsItem>
-              <NDescriptionsItem label="已用内存">
-                {{ serverInfo?.mem?.used ?? '-' }} GB
-              </NDescriptionsItem>
-              <NDescriptionsItem label="剩余内存">
-                {{ serverInfo?.mem?.free ?? '-' }} GB
-              </NDescriptionsItem>
+              <NDescriptionsItem label="总内存">{{ serverInfo?.mem?.total ?? '-' }} GB</NDescriptionsItem>
+              <NDescriptionsItem label="已用内存">{{ serverInfo?.mem?.used ?? '-' }} GB</NDescriptionsItem>
+              <NDescriptionsItem label="剩余内存">{{ serverInfo?.mem?.free ?? '-' }} GB</NDescriptionsItem>
               <NDescriptionsItem label="使用率">
                 <NProgress
                   type="line"

@@ -4,11 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { NButton, NDivider } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { jsonClone } from '@sa/utils';
-import {
-  fetchCleanJobLog,
-  fetchDeleteJobLog,
-  fetchGetJobLogList
-} from '@/service/api/monitor/job-log';
+import { fetchCleanJobLog, fetchDeleteJobLog, fetchGetJobLogList } from '@/service/api/monitor/job-log';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate } from '@/hooks/common/table';
 import { useDict } from '@/hooks/business/dict';
