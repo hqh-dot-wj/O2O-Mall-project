@@ -3,6 +3,14 @@
 /server/src/config/prod.yml
 /docs/.vitepress/cache
 /docs/node_modules
+
+# 部署配置敏感文件
+.env
+.env.local
+.env.*.local
+.github-secrets.txt
+.docker-secrets.txt
+nginx-config/
 /docs/dist
 **/node_modules
 /docs
