@@ -26,7 +26,7 @@ const naiveDateLocale = computed(() => {
 });
 
 const watermarkProps = computed<WatermarkProps>(() => {
-  const appTitle = import.meta.env.VITE_APP_TITLE || 'Nest-Admin';
+  const appTitle = import.meta.env.VITE_APP_TITLE || 'Nest-Admin-Soybean';
   const content =
     themeStore.watermark.enableUserName && userInfo.user?.userName
       ? `${userInfo.user?.nickName}@${appTitle} ${userInfo.user?.userName}`

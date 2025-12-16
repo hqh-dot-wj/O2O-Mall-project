@@ -60,7 +60,7 @@ export const themeSettings: App.Theme.ThemeSetting = {
   },
   watermark: {
     visible: import.meta.env.VITE_WATERMARK === 'Y',
-    text: 'Nest-Admin',
+    text: 'Nest-Admin-Soybean',
     enableUserName: false,
     enableTime: false,
     timeFormat: 'YYYY-MM-DD HH:mm'

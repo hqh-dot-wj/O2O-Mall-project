@@ -35,7 +35,7 @@ const isWatermarkTextVisible = computed(
     </SettingItem>
     <SettingItem v-if="isWatermarkTextVisible" key="5" :label="$t('theme.general.watermark.text')">
       <NInput v-model:value="themeStore.watermark.text" autosize type="text" size="small" class="w-120px"
-        placeholder="Nest-Admin" />
+        placeholder="Nest-Admin-Soybean" />
     </SettingItem>
   </TransitionGroup>
 </template>

@@ -1,12 +1,12 @@
 {
-  "name": "nest-admin-ui",
+  "name": "Nest-Admin-Soybean",
   "type": "module",
   "version": "1.2.1",
   "description": "基于 Vue3 + NestJS 的现代化企业级后台管理系统，集成了强大的权限管理和丰富的组件库。",
   "license": "MIT",
-  "homepage": "https://github.com/linlingqin77/Nest-Admin",
+  "homepage": "https://github.com/linlingqin77/Nest-Admin-Soybean",
   "keywords": [
-    "Nest-Admin",
+    "Nest-Admin-Soybean",
     "Vue3",
     "NestJS",
     "admin-template",
@@ -16,7 +16,9 @@
     "naive-ui-admin",
     "UnoCSS"
   ],
-  "contributors": ["linlingqin77"],
+  "contributors": [
+    "linlingqin77"
+  ],
   "engines": {
     "node": ">=20.19.0",
     "pnpm": ">=10.5.0"
@@ -59,6 +61,7 @@
     "dayjs": "1.11.19",
     "defu": "6.1.4",
     "echarts": "6.0.0",
+    "element-plus": "^2.12.0",
     "highlight.js": "^11.11.1",
     "jsencrypt": "^3.3.2",
     "json5": "2.2.3",
@@ -68,6 +71,7 @@
     "pinia": "3.0.4",
     "streamsaver": "^2.0.6",
     "tailwind-merge": "3.4.0",
+    "vform3-builds": "^3.0.10",
     "vue": "3.5.24",
     "vue-advanced-cropper": "^2.8.9",
     "vue-draggable-plus": "0.6.0",
@@ -92,12 +96,16 @@
     "@unocss/vite": "66.5.6",
     "@vitejs/plugin-vue": "6.0.1",
     "@vitejs/plugin-vue-jsx": "5.1.1",
+    "chalk": "^4.1.2",
+    "compressing": "^1.10.0",
     "consola": "3.4.2",
     "eslint": "9.39.1",
     "eslint-plugin-vue": "10.5.1",
     "kolorist": "1.8.0",
+    "ora": "^5.4.1",
     "sass": "1.94.0",
     "simple-git-hooks": "2.13.1",
+    "ssh2": "^1.15.0",
     "tsx": "4.20.6",
     "typescript": "5.9.3",
     "unplugin-icons": "22.5.0",
@@ -109,11 +117,7 @@
     "vite-plugin-svg-icons": "2.0.1",
     "vite-plugin-vue-devtools": "8.0.3",
     "vue-eslint-parser": "10.2.0",
-    "vue-tsc": "3.1.4",
-    "ssh2": "^1.15.0",
-    "ora": "^5.4.1",
-    "chalk": "^4.1.2",
-    "compressing": "^1.10.0"
+    "vue-tsc": "3.1.4"
   },
   "simple-git-hooks": {
     "commit-msg": "pnpm sa git-commit-verify",

@@ -15,22 +15,18 @@ const gap = computed(() => (appStore.isMobile ? 0 : 16));
 
 <template>
   <NSpace vertical :size="16">
-    <NAlert title="如遇问题请先看这里" type="warning">
+    <!-- <NAlert title="如遇问题请先看这里" type="warning">
       <div class="text-18px">
         <div>
           开发前请先查看 ReadMe.md 文件和
-          <NA
-            href="https://github.com/linlingqin77/Nest-Admin"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <NA href="https://github.com/linlingqin77/Nest-Admin-Soybean" target="_blank" rel="noopener noreferrer">
             项目文档
           </NA>
         </div>
         <div>如遇菜单无法点击，请检查是否已替换菜单 SQL</div>
         <div>如遇代码无法生成，请检查是否已替换代码生成模板</div>
       </div>
-    </NAlert>
+    </NAlert> -->
     <HeaderBanner />
     <CardData />
     <NGrid :x-gap="gap" :y-gap="16" responsive="screen" item-responsive>

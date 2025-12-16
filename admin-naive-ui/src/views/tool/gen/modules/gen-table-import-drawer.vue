@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { fetchGetGenDataNames, fetchGetGenDbList, fetchImportGenTable } from '@/service/api/tool';
 import { useAppStore } from '@/store/modules/app';
-import { useTable, useTableOperate } from '@/hooks/common/table';
+import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import GenTableDbSearch from './gen-table-db-search.vue';
 

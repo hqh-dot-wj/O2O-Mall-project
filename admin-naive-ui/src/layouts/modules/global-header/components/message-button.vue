@@ -16,7 +16,7 @@ const noticeNum = computed(() => {
 });
 
 const toGitee = () => {
-  window.open('https://github.com/linlingqin77/Nest-Admin', '_blank');
+  window.open('https://github.com/linlingqin77/Nest-Admin-Soybean', '_blank');
 };
 </script>
 
@@ -36,13 +36,8 @@ const toGitee = () => {
         {{ $t('page.home.message') }}
       </NTooltip>
     </template>
-    <NCard
-      size="small"
-      :bordered="false"
-      class="w-345px"
-      header-class="p-0"
-      :segmented="{ content: true, footer: 'soft' }"
-    >
+    <NCard size="small" :bordered="false" class="w-345px" header-class="p-0"
+      :segmented="{ content: true, footer: 'soft' }">
       <template #header>
         <span>通知公告</span>
       </template>
@@ -124,6 +119,7 @@ const toGitee = () => {
 }
 
 @keyframes bell-ring {
+
   0%,
   100% {
     transform-origin: top;

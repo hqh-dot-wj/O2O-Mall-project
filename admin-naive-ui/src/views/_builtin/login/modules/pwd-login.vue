@@ -133,32 +133,17 @@ async function handleSocialLogin(type: Api.System.SocialSource) {
   <div>
     <div class="mb-5px text-32px text-black font-600 dark:text-white">登录到您的账户</div>
     <div class="pb-18px text-16px text-#858585">欢迎回来！请输入您的账户信息</div>
-    <NForm
-      ref="formRef"
-      :model="model"
-      :rules="rules"
-      size="large"
-      :show-label="false"
-      @keyup.enter="() => !authStore.loginLoading && handleSubmit()"
-    >
+    <NForm ref="formRef" :model="model" :rules="rules" size="large" :show-label="false"
+      @keyup.enter="() => !authStore.loginLoading && handleSubmit()">
       <NFormItem v-if="tenantEnabled" path="tenantId">
-        <NSelect
-          v-model:value="model.tenantId"
-          placeholder="请选择租户"
-          :options="tenantOption"
-          :loading="tenantLoading"
-        />
+        <NSelect v-model:value="model.tenantId" placeholder="请选择租户" :options="tenantOption" :loading="tenantLoading" />
       </NFormItem>
       <NFormItem path="username">
         <NInput v-model:value="model.username" :placeholder="$t('page.login.common.userNamePlaceholder')" />
       </NFormItem>
       <NFormItem path="password">
-        <NInput
-          v-model:value="model.password"
-          type="password"
-          show-password-on="click"
-          :placeholder="$t('page.login.common.passwordPlaceholder')"
-        />
+        <NInput v-model:value="model.password" type="password" show-password-on="click"
+          :placeholder="$t('page.login.common.passwordPlaceholder')" />
       </NFormItem>
       <NFormItem v-if="captchaEnabled" path="code">
         <div class="w-full flex-y-center gap-16px">
@@ -186,25 +171,25 @@ async function handleSocialLogin(type: Api.System.SocialSource) {
         </NButton>
       </NSpace>
     </NForm>
-
+    <!-- 
     <NDivider>
       <div class="color-#858585">{{ $t('page.login.pwdLogin.otherAccountLogin') }}</div>
-    </NDivider>
+    </NDivider> -->
 
-    <div class="w-full flex-y-center gap-16px">
+    <!-- <div class="w-full flex-y-center gap-16px">
       <NButton class="flex-1" @click="handleSocialLogin('gitee')">
         <template #icon>
           <icon-simple-icons:gitee class="color-#c71d23" />
         </template>
-        <span class="ml-6px">Gitee</span>
-      </NButton>
-      <NButton class="flex-1" @click="handleSocialLogin('github')">
-        <template #icon>
+<span class="ml-6px">Gitee</span>
+</NButton>
+<NButton class="flex-1" @click="handleSocialLogin('github')">
+  <template #icon>
           <icon-mdi:github class="color-#010409" />
         </template>
-        <span class="ml-6px">GitHub</span>
-      </NButton>
-    </div>
+  <span class="ml-6px">GitHub</span>
+</NButton>
+</div> -->
 
     <div class="mt-24px w-full text-center text-18px text-#858585">
       您还没有账户？

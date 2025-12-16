@@ -9,6 +9,8 @@ import { PostModule } from './post/post.module';
 import { RoleModule } from './role/role.module';
 import { ToolModule } from './tool/tool.module';
 import { UserModule } from './user/user.module';
+import { TenantModule } from './tenant/tenant.module';
+import { TenantPackageModule } from './tenant-package/tenant-package.module';
 
 @Global()
 @Module({
@@ -21,8 +23,10 @@ import { UserModule } from './user/user.module';
     NoticeModule,
     PostModule,
     RoleModule,
+    TenantModule, // 租户管理
+    TenantPackageModule, // 租户套餐管理
     ToolModule,
     UserModule,
   ],
 })
-export class SystemModule {}
+export class SystemModule { }
