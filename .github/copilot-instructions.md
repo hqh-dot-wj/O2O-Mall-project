@@ -1,8 +1,8 @@
-# Nest-Admin AI Coding Agent Instructions
+# Nest-Admin-Soybean AI Coding Agent Instructions
 
 ## Project Overview
 
-Nest-Admin is a full-stack enterprise admin system with:
+Nest-Admin-Soybean is a full-stack enterprise admin system with:
 - **Backend**: NestJS + Prisma + PostgreSQL (in `server/`)
 - **Frontend**: Vue 3 + Naive UI + Vite + UnoCSS (in `admin-naive-ui/`)
 - **Architecture**: Multi-tenant SaaS with RBAC, request encryption, comprehensive logging
@@ -107,7 +107,7 @@ pnpm gen-route  # Regenerate route definitions from views
 - Auto-logs all HTTP requests with `requestId`, `tenantId`, `username`
 - Sensitive fields (`password`, `token`, etc.) are auto-redacted
 - Development: colorized console output
-- Production: JSON logs to `/var/log/nest-admin/`
+- Production: JSON logs to `/var/log/nest-admin-soybean/`
 
 **Health checks:**
 - `/api/health` - Full health (DB, Redis, memory, disk)

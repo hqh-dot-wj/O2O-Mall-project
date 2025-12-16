@@ -1,7 +1,7 @@
 {
-  "name": "nest-admin-server",
+  "name": "nest-admin-soybean-server",
   "version": "2.0.0",
-  "description": "Nest-Admin 后端服务，基于 NestJS + Prisma 构建的企业级后台管理系统",
+  "description": "Nest-Admin-Soybean 后端服务，基于 NestJS + Prisma 构建的企业级后台管理系统",
   "author": "linlingqin77",
   "private": true,
   "license": "MIT",

@@ -40,7 +40,7 @@ export default () => ({
     logger: {
       dir:
         process.env.LOG_DIR ||
-        (env === 'production' ? '/var/log/nest-admin' : '../logs'),
+        (env === 'production' ? '/var/log/nest-admin-soybean' : '../logs'),
       level: process.env.LOG_LEVEL || (env === 'production' ? 'info' : 'debug'),
       prettyPrint: bool(process.env.LOG_PRETTY_PRINT, env === 'development'),
       excludePaths: json(process.env.LOG_EXCLUDE_PATHS, [
@@ -93,7 +93,7 @@ export default () => ({
       host: process.env.DB_HOST || '127.0.0.1',
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_DATABASE || 'nest-admin',
+      database: process.env.DB_DATABASE || 'nest-admin-soybean',
       port: num(process.env.DB_PORT, 5432),
       ssl: bool(process.env.DB_SSL, env === 'production'),
       schema: process.env.DB_SCHEMA || 'public',
@@ -105,7 +105,7 @@ export default () => ({
     password: process.env.REDIS_PASSWORD || '',
     port: num(process.env.REDIS_PORT, 6379),
     db: num(process.env.REDIS_DB, env === 'production' ? 0 : 2),
-    keyPrefix: process.env.REDIS_KEY_PREFIX || (env === 'production' ? 'nest-admin:' : ''),
+    keyPrefix: process.env.REDIS_KEY_PREFIX || (env === 'production' ? 'nest-admin-soybean:' : ''),
   },
 
   jwt: {

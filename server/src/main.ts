@@ -14,9 +14,9 @@ import { writeFileSync } from 'fs';
 
 // API 版本信息
 const API_INFO = {
-  title: 'Nest-Admin',
+  title: 'Nest-Admin-Soybean',
   description: `
-## Nest-Admin 后台管理系统 API 文档
+## Nest-Admin-Soybean 后台管理系统 API 文档
 
 ### 接口说明
 - 所有接口返回统一格式: \`{ code: number, msg: string, data: any }\`
@@ -29,8 +29,8 @@ const API_INFO = {
   `,
   version: '2.0.0',
   contact: {
-    name: 'Nest-Admin',
-    url: 'https://github.com/linlingqin77/Nest-Admin',
+    name: 'Nest-Admin-Soybean',
+    url: 'https://github.com/linlingqin77/Nest-Admin-Soybean',
   },
   license: {
     name: 'MIT',
@@ -119,7 +119,7 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true,
     },
-    customSiteTitle: 'Nest-Admin API Docs',
+    customSiteTitle: 'Nest-Admin-Soybean API Docs',
   });
 
   // 获取真实 ip
@@ -130,7 +130,7 @@ async function bootstrap() {
 
   // 使用 Logger 而不是 console.log
   const logger = new Logger('Bootstrap');
-  logger.log(`Nest-Admin 服务启动成功`);
+  logger.log(`Nest-Admin-Soybean 服务启动成功`);
   logger.log(`服务地址: http://localhost:${port}${prefix}/`);
   logger.log(`Swagger 文档: http://localhost:${port}${prefix}/swagger-ui/`);
   logger.log(`健康检查: http://localhost:${port}${prefix}/health`);

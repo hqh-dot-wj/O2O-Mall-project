@@ -2,8 +2,8 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "nest-admin使用指南",
-  description: "帮助你更好的使用nest-admin",
+  title: "nest-admin-soybean使用指南",
+  description: "帮助你更好的使用nest-admin-soybean",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -24,7 +24,7 @@ export default defineConfig({
       }
     ],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/taozhi1010/nest-admin' }
+      { icon: 'github', link: 'https://github.com/linlingqin77/Nest-Admin-Soybean' }
     ]
   }
 })

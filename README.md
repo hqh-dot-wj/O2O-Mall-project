@@ -1,8 +1,8 @@
-# Nest-Admin
+# Nest-Admin-Soybean
 
 <div align="center">
 
-![Nest-Admin Logo](https://img.shields.io/badge/Nest--Admin-2.0.0-blue)
+![Nest-Admin-Soybean Logo](https://img.shields.io/badge/Nest--Admin--Soybean-2.0.0-blue)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D20.19.0-brightgreen)](https://nodejs.org)
 [![NestJS](https://img.shields.io/badge/NestJS-10.x-red)](https://nestjs.com/)
@@ -253,8 +253,8 @@ sequenceDiagram
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/linlingqin77/Nest-Admin.git
-cd Nest-Admin
+git clone https://github.com/linlingqin77/Nest-Admin-Soybean.git
+cd Nest-Admin-Soybean
 ```
 
 ### 2. 后端启动
@@ -309,10 +309,10 @@ pnpm dev
 
 ---
 
-## 📦 项目结构
+## 📂 项目结构
 
 ```
-Nest-Admin/
+Nest-Admin-Soybean/
 ├── server/                      # 后端项目
 │   ├── src/
 │   │   ├── common/             # 公共模块
@@ -666,7 +666,7 @@ pnpm cleanup               # 清理依赖
 - **作者**: linlingqin77
 - **邮箱**: linlingqin77@qq.com
 - **GitHub**: [@linlingqin77](https://github.com/linlingqin77)
-- **项目地址**: [https://github.com/linlingqin77/Nest-Admin](https://github.com/linlingqin77/Nest-Admin)
+- **项目地址**: [https://github.com/linlingqin77/Nest-Admin-Soybean](https://github.com/linlingqin77/Nest-Admin-Soybean)
 
 ---
 
@@ -674,7 +674,7 @@ pnpm cleanup               # 清理依赖
 
 如果这个项目对您有帮助，请给个 Star ⭐️
 
-[![Star History Chart](https://api.star-history.com/svg?repos=linlingqin77/Nest-Admin&type=Date)](https://star-history.com/#linlingqin77/Nest-Admin&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=linlingqin77/Nest-Admin-Soybean&type=Date)](https://star-history.com/#linlingqin77/Nest-Admin-Soybean&Date)
 
 ---
 

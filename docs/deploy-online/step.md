@@ -44,7 +44,7 @@ outline: deep
 
 #### 初始化数据库
 
-`nest-admin`项目中自带数据库初始化脚本，打开`nest-admin/server/db/init.sql`，复制到`Navicat`的新建查询中，执行一下。
+`nest-admin-soybean`项目中自带数据库初始化脚本，打开`nest-admin-soybean/server/db/init.sql`，复制到`Navicat`的新建查询中，执行一下。
 
 如果没有什么意外，数据库初始化脚本应该是没什么问题。
 
@@ -84,7 +84,7 @@ outline: deep
 
 本文目前是笔者根据自己的学习经验整合的，可能流程中有些遗漏，但是可以保证整个流程绝对可以跑通。
 
-如果您有更好的流程，欢迎提交PR或者加入我们的交流群，提出更好的部署方式，优化`nest-admin`的部署流程。
+如果您有更好的流程，欢迎提交PR或者加入我们的交流群，提出更好的部署方式，优化`nest-admin-soybean`的部署流程。
 
 ## 
 

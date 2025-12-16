@@ -22074,12 +22074,12 @@
     }
   },
   "info": {
-    "title": "Nest-Admin",
-    "description": "\n## Nest-Admin 后台管理系统 API 文档\n\n### 接口说明\n- 所有接口返回统一格式: `{ code: number, msg: string, data: any }`\n- code=200 表示成功，其他表示失败\n- 需要认证的接口请在请求头携带 `Authorization: Bearer <token>`\n\n### 版本历史\n- v2.0.0 (2024-01) - 重构优化，Enum 统一管理，DTO/VO 文件拆分\n- v1.0.0 (2023-01) - 初始版本\n  ",
+    "title": "Nest-Admin-Soybean",
+    "description": "\n## Nest-Admin-Soybean 后台管理系统 API 文档\n\n### 接口说明\n- 所有接口返回统一格式: `{ code: number, msg: string, data: any }`\n- code=200 表示成功，其他表示失败\n- 需要认证的接口请在请求头携带 `Authorization: Bearer <token>`\n\n### 版本历史\n- v2.0.0 (2024-01) - 重构优化，Enum 统一管理，DTO/VO 文件拆分\n- v1.0.0 (2023-01) - 初始版本\n  ",
     "version": "2.0.0",
     "contact": {
-      "name": "Nest-Admin",
-      "url": "https://github.com/linlingqin77/Nest-Admin",
+      "name": "Nest-Admin-Soybean",
+      "url": "https://github.com/linlingqin77/Nest-Admin-Soybean",
       "email": ""
     },
     "license": {

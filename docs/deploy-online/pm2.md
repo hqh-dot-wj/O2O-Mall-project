@@ -118,7 +118,7 @@ sudo ln -s /server/soft/node/node-v20.5.0-linux-x64/bin/pm2  /usr/bin/pm2
 当前目录是用来放nest项目后端的
 
 ```bash
-mkdir -p /server/soft/nest-admin
+mkdir -p /server/soft/nest-admin-soybean
 ```
 
 #### 解压到指定目录
@@ -126,7 +126,7 @@ mkdir -p /server/soft/nest-admin
 这里我们将对应的压缩包解压到我们刚才创建的目录中
 
 ```bash
-sudo tar -xvf nest-server.tar -C /server/soft/nest-admin
+sudo tar -xvf nest-server.tar -C /server/soft/nest-admin-soybean
 ```
 
 #### 切换目录
@@ -134,7 +134,7 @@ sudo tar -xvf nest-server.tar -C /server/soft/nest-admin
 这里我们切换到对应的项目目录，然后为npm安装做准备。
 
 ```bash
-cd /server/soft/nest-admin/server/
+cd /server/soft/nest-admin-soybean/server/
 ```
 
 #### 安装依赖
@@ -157,7 +157,7 @@ sudo ln -s /server/soft/node/node-v20.5.0-linux-x64/bin/pnpm /usr/bin/pnpm
 #### 启动项目
 
 ```bash
-cd /server/soft/nest-admin/server/dist
+cd /server/soft/nest-admin-soybean/server/dist
 pm2 start main.js
 ```
 

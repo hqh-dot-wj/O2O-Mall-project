@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "nest-admin"
+  name: "nest-admin-soybean"
   tagline: 让开发、部署、运维一步到位
   actions:
     - theme: brand
