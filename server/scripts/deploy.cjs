@@ -189,19 +189,19 @@ async function deploy() {
   try {
     // 复制 dist 目录的内容到临时目录根部
     execSync(`cp -r dist/* ${tempDir}/`, { cwd: projectRoot });
-    
+
     // 复制其他必要文件到临时目录
     execSync(`cp -r prisma ${tempDir}/`, { cwd: projectRoot });
     execSync(`cp -r public ${tempDir}/`, { cwd: projectRoot });
     execSync(`cp package.json ${tempDir}/`, { cwd: projectRoot });
     execSync(`cp pnpm-lock.yaml ${tempDir}/`, { cwd: projectRoot, stdio: 'ignore' });
     execSync(`cp scripts/ecosystem.config.cjs ${tempDir}/`, { cwd: projectRoot });
-    
+
     // 如果配置了复制 .env 文件，根据环境选择对应的 .env 文件
     if (config.includeEnvFile) {
       const envFile = env === 'prod' ? '.env.production' : `.env.${env}`;
       const defaultEnv = '.env';
-      
+
       // 优先使用环境特定的文件，否则使用默认的 .env
       // 始终重命名为 .env 上传到服务器（避免服务器上同时存在两个文件）
       if (checkExists(path.join(projectRoot, envFile))) {
@@ -227,14 +227,14 @@ async function deploy() {
   console.log(chalk.cyan('📦 步骤 5: 压缩部署文件'));
   const zipFileName = `server_deploy_${formatTime()}.tar.gz`;
   const zipFilePath = path.join(projectRoot, zipFileName);
-  
+
   spinner = ora('正在压缩文件...').start();
   try {
     await compressing.tgz.compressDir(tempDir, zipFilePath);
-    
+
     // 清理临时目录
     execSync(`rm -rf ${tempDir}`, { cwd: projectRoot });
-    
+
     const stats = fs.statSync(zipFilePath);
     const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
     spinner.succeed(chalk.green(`✓ 文件压缩完成 (${fileSizeMB} MB)`));
@@ -298,13 +298,13 @@ async function deploy() {
               await execRemoteCommand(
                 `cd ${config.remotePath} && tar -czf ${backupFullPath} . 2>/dev/null || true`
               );
-              
+
               // 只保留最近的 N 个备份
               const keepBackups = config.keepBackups || 5;
               await execRemoteCommand(
                 `cd ${config.backupPath} && ls -t backup_*.tar.gz 2>/dev/null | tail -n +${keepBackups + 1} | xargs -r rm -f`
               );
-              
+
               spinner.succeed(chalk.green('✓ 备份完成'));
             } else {
               spinner.info(chalk.yellow('⚠ 远程目录为空，跳过备份'));
@@ -418,6 +418,25 @@ async function deploy() {
           }
         }
 
+        // 13.5. 运行种子数据（可选，首次部署或需要重置数据时）
+        if (config.runSeed) {
+          console.log('');
+          console.log(chalk.cyan('🌱 步骤 13.5: 导入种子数据'));
+          console.log(chalk.yellow('⚠️  警告: 此操作将导入初始数据（菜单、角色等）'));
+          spinner = ora('正在导入种子数据...').start();
+
+          try {
+            const pnpmPath = config.pnpmPath || 'pnpm';
+            // 使用 prisma:seed:only 仅导入数据，不重置数据库
+            const seedCmd = `cd ${config.remotePath} && ${pnpmPath} run prisma:seed:only`;
+            await execRemoteCommand(seedCmd);
+            spinner.succeed(chalk.green('✓ 种子数据导入完成'));
+          } catch (error) {
+            spinner.warn(chalk.yellow('⚠ 种子数据导入失败'));
+            console.error(chalk.gray(`  ${error.message}`));
+          }
+        }
+
         // 14. 启动/重启服务
         console.log('');
         console.log(chalk.cyan('🚀 步骤 14: 启动服务'));
@@ -427,10 +446,10 @@ async function deploy() {
           // 尝试重启，如果失败则启动新的
           const pm2Cmd = `cd ${config.remotePath} && pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production`;
           await execRemoteCommand(pm2Cmd);
-          
+
           // 保存 PM2 配置
           await execRemoteCommand('pm2 save');
-          
+
           spinner.succeed(chalk.green('✓ 服务启动成功'));
         } catch (error) {
           spinner.fail(chalk.red('✗ 服务启动失败'));
@@ -450,7 +469,7 @@ async function deploy() {
           try {
             const healthCmd = `curl -f ${config.healthCheckUrl} || echo "Health check failed"`;
             const result = await execRemoteCommand(healthCmd);
-            
+
             if (result.includes('Health check failed')) {
               spinner.warn(chalk.yellow('⚠ 健康检查失败，请手动验证'));
             } else {
