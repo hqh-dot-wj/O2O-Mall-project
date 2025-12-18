@@ -6,6 +6,5 @@ import { NoticeRepository } from './notice.repository';
 @Module({
   controllers: [NoticeController],
   providers: [NoticeService, NoticeRepository],
-  exports: [NoticeService],
 })
 export class NoticeModule { }
