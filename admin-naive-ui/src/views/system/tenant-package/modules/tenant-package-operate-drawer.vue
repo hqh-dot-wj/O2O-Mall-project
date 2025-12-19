@@ -130,11 +130,11 @@ async function handleSubmit() {
 }
 
 watch(visible, () => {
-    if (visible.value) {
-      handleUpdateModelWhenEdit();
-      restoreValidation();
-    }
-  });
+  if (visible.value) {
+    handleUpdateModelWhenEdit();
+    restoreValidation();
+  }
+});
 </script>
 
 <template>
