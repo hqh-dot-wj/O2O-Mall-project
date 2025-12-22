@@ -156,7 +156,10 @@ model SysConfig {
 
   @@unique([tenantId, configKey], name: "unique_tenant_config_key")
   @@index([tenantId, status])
+  @@index([tenantId, configType])
+  @@index([tenantId, delFlag, status])
   @@index([configKey])
+  @@index([createTime])
   @@map("sys_config")
 }
 
@@ -334,6 +337,8 @@ model SysNotice {
   @@index([tenantId, status])
   @@index([tenantId, noticeType])
   @@index([tenantId, createTime])
+  @@index([tenantId, delFlag, status])
+  @@index([createTime])
   @@map("sys_notice")
 }
 
@@ -532,9 +537,14 @@ model SysUser {
   @@index([tenantId, status])
   @@index([tenantId, userName])
   @@index([tenantId, createTime])
+  @@index([tenantId, phonenumber])
+  @@index([tenantId, email])
+  @@index([tenantId, delFlag, status])
   @@index([userName])
   @@index([deptId])
   @@index([status])
+  @@index([phonenumber])
+  @@index([email])
   @@map("sys_user")
 }
 

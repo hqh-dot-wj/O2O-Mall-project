@@ -20,6 +20,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         },
       },
       log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+      // 优化连接池配置
+      // @ts-ignore - Prisma内部配置，提升并发性能
+      __internal: {
+        engine: {
+          connection_limit: 10,       // 最大连接数
+          pool_timeout: 30,           // 连接池超时(秒)
+          connect_timeout: 10,        // 连接超时(秒)
+        },
+      },
     });
   }
 

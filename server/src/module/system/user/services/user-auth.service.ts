@@ -10,7 +10,7 @@ import { GenerateUUID, FormatDate } from 'src/common/utils/index';
 import { LoginDto, RegisterDto } from 'src/module/main/dto/index';
 import { UserType } from '../dto/user';
 import { ClientInfoDto } from 'src/common/decorators/common.decorator';
-import { CacheEvict } from 'src/common/decorators/redis.decorator';
+import { CacheEvict, Cacheable } from 'src/common/decorators/redis.decorator';
 import { Captcha } from 'src/common/decorators/captcha.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRepository } from '../user.repository';
@@ -218,7 +218,9 @@ export class UserAuthService {
 
     /**
      * 获取用户权限列表
+     * 添加缓存以提升性能，减少数据库查询
      */
+    @Cacheable(CacheEnum.SYS_USER_KEY, 'permissions:{userId}')
     async getUserPermissions(userId: number) {
         const roleIds = await this.getRoleIds([userId]);
         const list = await this.roleService.getPermissionsByRoleIds(roleIds);

@@ -20,8 +20,9 @@ export const tenantExtension = Prisma.defineExtension((client) => {
           return query(args);
         },
         async findUnique({ model, operation, args, query }) {
-          // findUnique 不添加租户过滤，因为主键已经唯一
-          return query(args);
+          // findUnique 需要验证结果是否属于当前租户
+          const result = await query(args);
+          return validateTenantOwnership(model, result);
         },
         async findFirstOrThrow({ model, operation, args, query }) {
           args = addTenantFilter(model, args);
@@ -56,7 +57,8 @@ export const tenantExtension = Prisma.defineExtension((client) => {
           return query(args);
         },
         async delete({ model, operation, args, query }) {
-          // delete 操作通常通过主键，不添加租户过滤
+          // delete 操作需要添加租户过滤，防止误删其他租户数据
+          args = addTenantFilterForDelete(model, args);
           return query(args);
         },
         async deleteMany({ model, operation, args, query }) {
@@ -83,6 +85,68 @@ const TENANT_MODELS = ['SysConfig', 'SysDept', 'SysDictData', 'SysDictType', 'Sy
 function hasTenantField(model: string): boolean {
   return TENANT_MODELS.includes(model);
 }
+
+/**
+ * 验证查询结果是否属于当前租户
+ */
+function validateTenantOwnership(model: string, result: any): any {
+  if (!result || !hasTenantField(model)) {
+    return result;
+  }
+
+  // 忽略租户过滤或超级租户不需要验证
+  if (TenantContext.isIgnoreTenant() || TenantContext.isSuperTenant()) {
+    return result;
+  }
+
+  const currentTenantId = TenantContext.getTenantId();
+  if (!currentTenantId) {
+    return result;
+  }
+
+  // 验证结果的租户ID是否匹配
+  if (result.tenantId && result.tenantId !== currentTenantId) {
+    // 返回 null 而不是抛出异常，保持与 Prisma findUnique 的行为一致
+    return null;
+  }
+
+  return result;
+}
+
+/**
+ * 为删除操作添加租户过滤
+ */
+function addTenantFilterForDelete(model: string, args: any): any {
+  if (!hasTenantField(model)) {
+    return args;
+  }
+
+  if (TenantContext.isIgnoreTenant() || TenantContext.isSuperTenant()) {
+    return args;
+  }
+
+  const tenantId = TenantContext.getTenantId();
+  if (!tenantId) {
+    return args;
+  }
+
+  args = args || {};
+  args.where = args.where || {};
+
+  // 添加租户过滤条件
+  if (args.where.AND) {
+    args.where.AND.push({ tenantId });
+  } else if (args.where.OR) {
+    args.where = {
+      AND: [{ tenantId }, { OR: args.where.OR }],
+    };
+  } else {
+    args.where.tenantId = tenantId;
+  }
+
+  return args;
+}
+
 
 /**
  * 添加租户过滤条件

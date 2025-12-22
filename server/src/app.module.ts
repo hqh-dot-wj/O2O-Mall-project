@@ -89,24 +89,27 @@ import { PrismaModule } from './prisma/prisma.module';
       provide: APP_INTERCEPTOR,
       useClass: TransactionalInterceptor,
     },
-    // 租户守卫
-    {
-      provide: APP_GUARD,
-      useClass: TenantGuard,
-    },
-    // API 限流守卫
+    // API 限流守卫 - 最先执行，防止DDoS攻击
     {
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
     },
+    // JWT 认证守卫 - 第二执行，验证用户身份
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    // 租户守卫 - 基于已认证用户设置租户上下文
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
+    },
+    // 角色守卫 - 检查用户角色
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    // 权限守卫 - 检查API权限
     {
       provide: APP_GUARD,
       useClass: PermissionGuard,
