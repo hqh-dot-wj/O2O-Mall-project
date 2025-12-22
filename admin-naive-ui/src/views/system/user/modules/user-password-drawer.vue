@@ -63,12 +63,14 @@ async function handleSubmit() {
   const { userId, password } = model;
 
   // request
-  const { error } = await fetchResetUserPassword(userId!, password!);
-  if (error) return;
-
-  window.$message?.success($t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+  try {
+    await fetchResetUserPassword(userId!, password!);
+    window.$message?.success($t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 watch(visible, () => {
@@ -93,13 +95,8 @@ watch(visible, () => {
           <NInput v-model:value="model.userName" disabled />
         </NFormItem>
         <NFormItem :label="$t('page.system.user.password')" path="password">
-          <NInput
-            v-model:value="model.password"
-            type="password"
-            show-password-on="click"
-            :input-props="{ autocomplete: 'off' }"
-            :placeholder="$t('page.system.user.form.password.required')"
-          />
+          <NInput v-model:value="model.password" type="password" show-password-on="click"
+            :input-props="{ autocomplete: 'off' }" :placeholder="$t('page.system.user.form.password.required')" />
         </NFormItem>
       </NForm>
       <template #footer>

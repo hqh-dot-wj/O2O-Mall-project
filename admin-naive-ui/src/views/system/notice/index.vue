@@ -143,16 +143,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteNotice(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteNotice(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleDelete(noticeId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteNotice([noticeId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteNotice([noticeId]);
+    onDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function edit(noticeId: CommonType.IdType) {

@@ -30,10 +30,16 @@ const dragCounter = ref(0);
 function handleWindowDragEnter(event: DragEvent) {
     event.preventDefault();
 
+    // 打印 dataTransfer 的详细信息
+    console.log('handleWindowDragEnter - dataTransfer.types:', event.dataTransfer?.types);
+    console.log('handleWindowDragEnter - dataTransfer.items:', event.dataTransfer?.items);
+
     // 检查是否包含文件（从外部拖入）
     const hasFiles = event.dataTransfer?.types.includes('Files');
     // 排除内部拖拽（fileId表示是内部文件拖拽）
     const isInternalDrag = event.dataTransfer?.types.includes('fileid');
+
+    console.log('handleWindowDragEnter - hasFiles:', hasFiles, 'isInternalDrag:', isInternalDrag);
 
     if (hasFiles && !isInternalDrag) {
         dragCounter.value++;
@@ -59,6 +65,10 @@ function handleDrop(event: DragEvent) {
 
     const files = Array.from(event.dataTransfer?.files || []);
     console.log('DragUploadOverlay handleDrop - files:', files);
+    // 添加文件详细信息日志
+    files.forEach((file, index) => {
+        console.log(`File ${index}: name=${file.name}, type=${file.type}, size=${file.size}`);
+    });
 
     show.value = false;
     dragCounter.value = 0;
@@ -77,25 +87,16 @@ function handleWindowDragEnd() {
     dragCounter.value = 0;
 }
 
-// 处理窗口级别的drop事件（确保蒙层消失）
-function handleWindowDrop(event: DragEvent) {
-    console.log('Window drop event');
-    show.value = false;
-    dragCounter.value = 0;
-}
-
 onMounted(() => {
     window.addEventListener('dragenter', handleWindowDragEnter);
     window.addEventListener('dragleave', handleWindowDragLeave);
     window.addEventListener('dragend', handleWindowDragEnd);
-    window.addEventListener('drop', handleWindowDrop);
 });
 
 onUnmounted(() => {
     window.removeEventListener('dragenter', handleWindowDragEnter);
     window.removeEventListener('dragleave', handleWindowDragLeave);
     window.removeEventListener('dragend', handleWindowDragEnd);
-    window.removeEventListener('drop', handleWindowDrop);
 });
 </script>
 
@@ -112,7 +113,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: none;
+    pointer-events: auto;
 
     .overlay-content {
         padding: 48px;

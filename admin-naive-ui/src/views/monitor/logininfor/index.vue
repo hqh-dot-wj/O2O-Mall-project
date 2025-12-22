@@ -191,9 +191,12 @@ const { drawerVisible, editingData, handleEdit, checkedRowKeys, onBatchDeleted }
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteLoginInfor(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteLoginInfor(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function view(infoId: CommonType.IdType) {
@@ -211,19 +214,25 @@ async function handleCleanLoginInfor() {
     positiveText: '确认清空',
     negativeText: '取消',
     onPositiveClick: async () => {
-      const { error } = await fetchCleanLoginInfor();
-      if (error) return;
-      window.$message?.success('清空成功');
-      await getData();
+      try {
+        await fetchCleanLoginInfor();
+        window.$message?.success('清空成功');
+        await getData();
+      } catch {
+        // error handled by request interceptor
+      }
     }
   });
 }
 
 async function handleUnlockLoginInfor(username: string) {
-  const { error } = await fetchUnlockLoginInfor(username);
-  if (error) return;
-  window.$message?.success('解锁成功');
-  await getDataByPage();
+  try {
+    await fetchUnlockLoginInfor(username);
+    window.$message?.success('解锁成功');
+    await getDataByPage();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 </script>
 

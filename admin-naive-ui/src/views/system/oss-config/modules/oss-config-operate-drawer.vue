@@ -107,20 +107,23 @@ async function handleSubmit() {
       accessPolicy,
       remark
     } = model;
-    const { error } = await fetchCreateOssConfig({
-      configKey,
-      accessKey,
-      secretKey,
-      bucketName,
-      prefix,
-      endpoint,
-      domain,
-      isHttps,
-      region,
-      accessPolicy,
-      remark
-    });
-    if (error) return;
+    try {
+      await fetchCreateOssConfig({
+        configKey,
+        accessKey,
+        secretKey,
+        bucketName,
+        prefix,
+        endpoint,
+        domain,
+        isHttps,
+        region,
+        accessPolicy,
+        remark
+      });
+    } catch {
+      return;
+    }
   }
 
   if (props.operateType === 'edit') {
@@ -138,21 +141,24 @@ async function handleSubmit() {
       accessPolicy,
       remark
     } = model;
-    const { error } = await fetchUpdateOssConfig({
-      ossConfigId,
-      configKey,
-      accessKey,
-      secretKey,
-      bucketName,
-      prefix,
-      endpoint,
-      domain,
-      isHttps,
-      region,
-      accessPolicy,
-      remark
-    });
-    if (error) return;
+    try {
+      await fetchUpdateOssConfig({
+        ossConfigId,
+        configKey,
+        accessKey,
+        secretKey,
+        bucketName,
+        prefix,
+        endpoint,
+        domain,
+        isHttps,
+        region,
+        accessPolicy,
+        remark
+      });
+    } catch {
+      return;
+    }
   }
 
   window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));

@@ -81,21 +81,21 @@ async function handleSubmit() {
   await validate();
 
   // request
-  if (props.operateType === 'add') {
-    const { configName, configKey, configValue, configType, remark } = model;
-    const { error } = await fetchCreateConfig({ configName, configKey, configValue, configType, remark });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      const { configName, configKey, configValue, configType, remark } = model;
+      await fetchCreateConfig({ configName, configKey, configValue, configType, remark });
+    } else if (props.operateType === 'edit') {
+      const { configId, configName, configKey, configValue, configType, remark } = model;
+      await fetchUpdateConfig({ configId, configName, configKey, configValue, configType, remark });
+    }
 
-  if (props.operateType === 'edit') {
-    const { configId, configName, configKey, configValue, configType, remark } = model;
-    const { error } = await fetchUpdateConfig({ configId, configName, configKey, configValue, configType, remark });
-    if (error) return;
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {

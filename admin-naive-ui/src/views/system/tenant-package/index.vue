@@ -151,16 +151,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteTenantPackage(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteTenantPackage(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleDelete(packageId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteTenantPackage([packageId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteTenantPackage([packageId]);
+    onDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 function edit(packageId: CommonType.IdType) {
@@ -181,16 +187,16 @@ async function handleStatusChange(
   value: Api.Common.EnableStatus,
   callback: (flag: boolean) => void
 ) {
-  const { error } = await fetchUpdateTenantPackageStatus({
-    packageId: row.packageId,
-    status: value
-  });
-
-  callback(!error);
-
-  if (!error) {
+  try {
+    await fetchUpdateTenantPackageStatus({
+      packageId: row.packageId,
+      status: value
+    });
+    callback(true);
     window.$message?.success($t('page.system.tenantPackage.statusChangeSuccess'));
     getData();
+  } catch {
+    callback(false);
   }
 }
 </script>

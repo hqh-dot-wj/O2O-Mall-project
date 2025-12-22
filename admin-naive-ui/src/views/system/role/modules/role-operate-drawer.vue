@@ -88,11 +88,15 @@ async function handleUpdateModelWhenEdit() {
   if (props.operateType === 'edit' && props.rowData) {
     startMenuLoading();
     Object.assign(model, props.rowData);
-    const { data, error } = await fetchGetRoleMenuTreeSelect(model.roleId!);
-    if (error) return;
-    model.menuIds = data.checkedKeys;
-    menuOptions.value = data.menus;
-    stopMenuLoading();
+    try {
+      const { data } = await fetchGetRoleMenuTreeSelect(model.roleId!);
+      model.menuIds = data.checkedKeys;
+      menuOptions.value = data.menus;
+    } catch {
+      // error handled by request interceptor
+    } finally {
+      stopMenuLoading();
+    }
   }
 }
 
@@ -105,36 +109,36 @@ async function handleSubmit() {
   const { roleId, roleName, roleKey, roleSort, menuCheckStrictly, status, remark } = model;
   const menuIds = menuTreeRef.value?.getCheckedMenuIds();
   // request
-  if (props.operateType === 'add') {
-    const { error } = await fetchCreateRole({
-      roleName,
-      roleKey,
-      roleSort,
-      menuCheckStrictly,
-      status,
-      remark,
-      menuIds
-    });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      await fetchCreateRole({
+        roleName,
+        roleKey,
+        roleSort,
+        menuCheckStrictly,
+        status,
+        remark,
+        menuIds
+      });
+    } else if (props.operateType === 'edit') {
+      await fetchUpdateRole({
+        roleId,
+        roleName,
+        roleKey,
+        roleSort,
+        menuCheckStrictly,
+        status,
+        remark,
+        menuIds
+      });
+    }
 
-  if (props.operateType === 'edit') {
-    const { error } = await fetchUpdateRole({
-      roleId,
-      roleName,
-      roleKey,
-      roleSort,
-      menuCheckStrictly,
-      status,
-      remark,
-      menuIds
-    });
-    if (error) return;
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {

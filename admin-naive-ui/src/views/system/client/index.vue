@@ -193,16 +193,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteClient(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteClient(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleDelete(id: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteClient([id]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteClient([id]);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function edit(id: CommonType.IdType) {
@@ -219,16 +225,16 @@ async function handleStatusChange(
   value: Api.Common.EnableStatus,
   callback: (flag: boolean) => void
 ) {
-  const { error } = await fetchUpdateClientStatus({
-    clientId: row.clientId,
-    status: value
-  });
-
-  callback(!error);
-
-  if (!error) {
+  try {
+    await fetchUpdateClientStatus({
+      clientId: row.clientId,
+      status: value
+    });
+    callback(true);
     window.$message?.success($t('page.system.user.statusChangeSuccess'));
     getData();
+  } catch {
+    callback(false);
   }
 }
 </script>

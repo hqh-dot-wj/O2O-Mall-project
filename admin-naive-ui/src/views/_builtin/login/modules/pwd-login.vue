@@ -33,6 +33,17 @@ const model: Api.Auth.PwdLoginForm = reactive({
   username: 'admin',
   password: 'admin123',
 });
+
+// 演示账户快速填充
+function handleDemoLogin() {
+  model.tenantId = '000000';
+  model.username = 'demo';
+  model.password = 'demo123';
+  if (captchaEnabled.value) {
+    model.code = '';
+  }
+}
+
 type RuleKey = Extract<keyof Api.Auth.PwdLoginForm, 'username' | 'password' | 'code' | 'tenantId'>;
 
 const rules = computed<Record<RuleKey, App.Global.FormRule[]>>(() => {
@@ -50,18 +61,22 @@ const rules = computed<Record<RuleKey, App.Global.FormRule[]>>(() => {
 });
 async function handleFetchTenantList() {
   startTenantLoading();
-  const { data, error } = await fetchTenantList();
-  if (error) return;
-  tenantEnabled.value = data.tenantEnabled;
-  if (data.tenantEnabled) {
-    tenantOption.value = data.voList.map(tenant => {
-      return {
-        label: tenant.companyName,
-        value: tenant.tenantId
-      };
-    });
+  try {
+    const { data } = await fetchTenantList();
+    tenantEnabled.value = data.tenantEnabled;
+    if (data.tenantEnabled) {
+      tenantOption.value = data.voList.map(tenant => {
+        return {
+          label: tenant.companyName,
+          value: tenant.tenantId
+        };
+      });
+    }
+  } catch {
+    // error handled by request interceptor
+  } finally {
+    endTenantLoading();
   }
-  endTenantLoading();
 }
 
 handleFetchTenantList();
@@ -85,8 +100,8 @@ async function handleSubmit() {
 
 async function handleFetchCaptchaCode() {
   startCodeLoading();
-  const { data, error } = await fetchCaptchaCode();
-  if (!error) {
+  try {
+    const { data } = await fetchCaptchaCode();
     captchaEnabled.value = data.captchaEnabled;
     if (data.captchaEnabled && data.img) {
       model.uuid = data.uuid;
@@ -99,8 +114,11 @@ async function handleFetchCaptchaCode() {
         codeUrl.value = `data:image/gif;base64,${data.img}`;
       }
     }
+  } catch {
+    // error handled by request interceptor
+  } finally {
+    endCodeLoading();
   }
-  endCodeLoading();
 }
 
 handleFetchCaptchaCode();
@@ -123,9 +141,12 @@ handleLoginRember();
 // handleRegister();
 
 async function handleSocialLogin(type: Api.System.SocialSource) {
-  const { data, error } = await fetchSocialAuthBinding(type, model.tenantId);
-  if (error) return;
-  window.location.href = data;
+  try {
+    const { data } = await fetchSocialAuthBinding(type, model.tenantId);
+    window.location.href = data;
+  } catch {
+    // error handled by request interceptor
+  }
 }
 </script>
 
@@ -133,6 +154,27 @@ async function handleSocialLogin(type: Api.System.SocialSource) {
   <div>
     <div class="mb-5px text-32px text-black font-600 dark:text-white">登录到您的账户</div>
     <div class="pb-18px text-16px text-#858585">欢迎回来！请输入您的账户信息</div>
+    
+    <!-- 演示账户提示卡片 -->
+    <div 
+      v-if="model.username !== 'demo'"
+      class="demo-account-card mb-16px" 
+      @click="handleDemoLogin"
+    >
+      <div class="flex items-center">
+        <div class="demo-icon">
+          <icon-carbon:user-avatar class="text-24px" />
+        </div>
+        <div class="flex-1 ml-12px">
+          <div class="text-16px font-600 mb-2px">演示账户快速体验</div>
+          <div class="text-12px opacity-70">
+            账号: demo / 密码: demo123 (仅查看权限)
+          </div>
+        </div>
+        <icon-carbon:arrow-right class="text-20px opacity-60" />
+      </div>
+    </div>
+    
     <NForm ref="formRef" :model="model" :rules="rules" size="large" :show-label="false"
       @keyup.enter="() => !authStore.loginLoading && handleSubmit()">
       <NFormItem v-if="tenantEnabled" path="tenantId">
@@ -237,5 +279,44 @@ async function handleSocialLogin(type: Api.System.SocialSource) {
 :deep(.n-divider) {
   --n-font-size: 16px !important;
   --n-font-weight: 400 !important;
+}
+
+/* 演示账户卡片样式 */
+.demo-account-card {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.demo-account-card:hover {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.demo-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* 深色模式适配 */
+.dark .demo-account-card {
+  border-color: #4a4a4a;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+}
+
+.dark .demo-account-card:hover {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea25 0%, #764ba225 100%);
 }
 </style>

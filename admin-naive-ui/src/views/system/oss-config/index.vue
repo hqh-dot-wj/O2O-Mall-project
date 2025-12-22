@@ -181,16 +181,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteOssConfig(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteOssConfig(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleDelete(ossConfigId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteOssConfig([ossConfigId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteOssConfig([ossConfigId]);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function edit(ossConfigId: CommonType.IdType) {
@@ -203,17 +209,18 @@ async function handleStatusChange(
   value: Api.Common.EnableStatus,
   callback: (flag: boolean) => void
 ) {
-  const { error } = await fetchUpdateOssConfigStatus({
-    configKey: row.configKey,
-    ossConfigId: row.ossConfigId,
-    status: value
-  });
-
-  callback(!error);
-
-  if (!error) {
+  try {
+    await fetchUpdateOssConfigStatus({
+      configKey: row.configKey,
+      ossConfigId: row.ossConfigId,
+      status: value
+    });
+    callback(true);
     window.$message?.success('状态修改成功');
     getData();
+  } catch {
+    callback(false);
+    // 错误消息已在请求工具中显示
   }
 }
 </script>

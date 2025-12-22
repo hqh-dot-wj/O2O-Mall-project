@@ -2,6 +2,7 @@
 import { ref, reactive, computed } from 'vue';
 import { NModal, NCard, NForm, NFormItem, NInput, NInputNumber, NSwitch, NButton, NSpace, useMessage } from 'naive-ui';
 import { fetchCreateShare } from '@/service/api';
+import { $t } from '@/locales';
 
 const message = useMessage();
 
@@ -26,9 +27,9 @@ const shareUrl = computed(() => {
 
 function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text).then(() => {
-        message.success('复制成功');
+        message.success($t('common.copySuccess'));
     }).catch(() => {
-        message.error('复制失败');
+        message.error($t('common.copyFailed'));
     });
 }
 
@@ -69,7 +70,7 @@ async function handleCreate() {
         const { data } = await fetchCreateShare(params);
 
         shareResult.value = data;
-        message.success('创建分享成功');
+        message.success($t('page.fileManager.createShareSuccess'));
     } catch (error: any) {
         const errorMsg = error?.response?.data?.msg || error?.message || '创建分享失败';
         message.error(errorMsg);

@@ -57,17 +57,21 @@ const btnData = ref<Api.System.MenuList>([]);
 
 const getMeunTree = async () => {
   startLoading();
-  const { data, error } = await fetchGetMenuList();
-  if (error) return;
-  treeData.value = [
-    {
-      menuId: 0,
-      menuName: $t('page.system.menu.rootName'),
-      icon: 'material-symbols:home-outline-rounded',
-      children: handleTree(data, { idField: 'menuId', filterFn: item => item.menuType !== 'F' })
-    }
-  ] as Api.System.Menu[];
-  endLoading();
+  try {
+    const { data } = await fetchGetMenuList();
+    treeData.value = [
+      {
+        menuId: 0,
+        menuName: $t('page.system.menu.rootName'),
+        icon: 'material-symbols:home-outline-rounded',
+        children: handleTree(data, { idField: 'menuId', filterFn: item => item.menuType !== 'F' })
+      }
+    ] as Api.System.Menu[];
+  } catch {
+    // 错误消息已在请求工具中显示
+  } finally {
+    endLoading();
+  }
 };
 
 getMeunTree();
@@ -97,17 +101,20 @@ function handleUpdateMenu() {
 }
 
 async function handleDeleteMenu(id?: CommonType.IdType) {
-  const { error } = await fetchDeleteMenu(id || checkedKeys.value[0]);
-  if (error) return;
-  window.$message?.success($t('common.deleteSuccess'));
-  if (id) {
-    getBtnMenuList();
-    return;
+  try {
+    await fetchDeleteMenu(id || checkedKeys.value[0]);
+    window.$message?.success($t('common.deleteSuccess'));
+    if (id) {
+      getBtnMenuList();
+      return;
+    }
+    expandedKeys.value.filter(item => !checkedKeys.value.includes(item));
+    currentMenu.value = undefined;
+    checkedKeys.value = [];
+    getMeunTree();
+  } catch {
+    // 错误消息已在请求工具中显示
   }
-  expandedKeys.value.filter(item => !checkedKeys.value.includes(item));
-  currentMenu.value = undefined;
-  checkedKeys.value = [];
-  getMeunTree();
 }
 
 function renderLabel({ option }: { option: TreeOption }) {
@@ -196,13 +203,17 @@ async function getBtnMenuList() {
   controller = new AbortController();
   startBtnLoading();
   btnData.value = [];
-  const { data, error } = await fetchGetMenuList(
-    { parentId: currentMenu.value?.menuId, menuType: 'F' },
-    controller.signal
-  );
-  if (error) return;
-  btnData.value = data || [];
-  endBtnLoading();
+  try {
+    const { data } = await fetchGetMenuList(
+      { parentId: currentMenu.value?.menuId, menuType: 'F' },
+      controller.signal
+    );
+    btnData.value = data || [];
+  } catch {
+    // error handled by request interceptor
+  } finally {
+    endBtnLoading();
+  }
 }
 
 function addBtnMenu() {

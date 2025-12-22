@@ -180,11 +180,13 @@ defineExpose({
 .primary-menu {
     display: flex;
     flex-direction: column;
+    width: v-bind('SIDEBAR_PRIMARY_WIDTH + "px"');
     padding-top: 40px;
-    padding-bottom: 30px;
+    padding-bottom: 16px;
     background-color: v-bind('themeVars.cardColor');
     border-right: 1px solid v-bind('themeVars.dividerColor');
     box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.06);
+    height: 100%;
 
     .primary-menu-item {
         display: flex;

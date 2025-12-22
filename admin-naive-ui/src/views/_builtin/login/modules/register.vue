@@ -48,7 +48,7 @@ async function handleSubmit() {
   try {
     await validate();
     startRegisterLoading();
-    const { error } = await fetchRegister({
+    await fetchRegister({
       tenantId: model.tenantId,
       username: model.username,
       password: model.password,
@@ -58,10 +58,6 @@ async function handleSubmit() {
       userType: model.userType,
       clientId: import.meta.env.VITE_APP_CLIENT_ID
     });
-    if (error) {
-      handleFetchCaptchaCode();
-      return;
-    }
     window.$message?.success('注册成功');
     // 注册成功后跳转到登录页
     toggleLoginModule('pwd-login');
@@ -73,30 +69,36 @@ async function handleSubmit() {
 }
 
 async function handleFetchTenantList() {
-  const { data, error } = await fetchTenantList();
-  if (error) return;
-  tenantEnabled.value = data.tenantEnabled;
-  tenantOption.value = data.voList.map(tenant => {
-    return {
-      label: tenant.companyName,
-      value: tenant.tenantId
-    };
-  });
+  try {
+    const { data } = await fetchTenantList();
+    tenantEnabled.value = data.tenantEnabled;
+    tenantOption.value = data.voList.map(tenant => {
+      return {
+        label: tenant.companyName,
+        value: tenant.tenantId
+      };
+    });
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 handleFetchTenantList();
 
 async function handleFetchCaptchaCode() {
   startCodeLoading();
-  const { data, error } = await fetchCaptchaCode();
-  if (!error) {
+  try {
+    const { data } = await fetchCaptchaCode();
     captchaEnabled.value = data.captchaEnabled;
     if (data.captchaEnabled) {
       model.uuid = data.uuid;
       codeUrl.value = `data:image/gif;base64,${data.img}`;
     }
+  } catch {
+    // error handled by request interceptor
+  } finally {
+    endCodeLoading();
   }
-  endCodeLoading();
 }
 
 handleFetchCaptchaCode();
@@ -106,14 +108,8 @@ handleFetchCaptchaCode();
   <div>
     <div class="mb-5px text-32px text-black font-600 sm:text-30px dark:text-white">注册新账户</div>
     <div class="pb-18px text-16px text-#858585">欢迎注册！请输入您的账户信息</div>
-    <NForm
-      ref="formRef"
-      :model="model"
-      :rules="rules"
-      size="large"
-      :show-label="false"
-      @keyup.enter="() => !registerLoading && handleSubmit()"
-    >
+    <NForm ref="formRef" :model="model" :rules="rules" size="large" :show-label="false"
+      @keyup.enter="() => !registerLoading && handleSubmit()">
       <NFormItem v-if="tenantEnabled" path="tenantId">
         <NSelect v-model:value="model.tenantId" :options="tenantOption" :enabled="tenantEnabled" />
       </NFormItem>
@@ -121,20 +117,12 @@ handleFetchCaptchaCode();
         <NInput v-model:value="model.username" :placeholder="$t('page.login.common.userNamePlaceholder')" />
       </NFormItem>
       <NFormItem path="password">
-        <NInput
-          v-model:value="model.password"
-          type="password"
-          show-password-on="click"
-          :placeholder="$t('page.login.common.passwordPlaceholder')"
-        />
+        <NInput v-model:value="model.password" type="password" show-password-on="click"
+          :placeholder="$t('page.login.common.passwordPlaceholder')" />
       </NFormItem>
       <NFormItem path="confirmPassword">
-        <NInput
-          v-model:value="model.confirmPassword"
-          type="password"
-          show-password-on="click"
-          :placeholder="$t('page.login.common.confirmPasswordPlaceholder')"
-        />
+        <NInput v-model:value="model.confirmPassword" type="password" show-password-on="click"
+          :placeholder="$t('page.login.common.confirmPasswordPlaceholder')" />
       </NFormItem>
       <NFormItem v-if="captchaEnabled" path="code">
         <div class="w-full flex-y-center gap-16px">

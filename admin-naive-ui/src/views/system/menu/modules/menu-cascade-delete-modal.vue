@@ -65,11 +65,14 @@ async function handleSubmit() {
     },
     negativeText: $t('common.cancel'),
     onPositiveClick: async () => {
-      const { error } = await fetchCascadeDeleteMenu(model.menuIds);
-      if (error) return;
-      window.$message?.success($t('common.deleteSuccess'));
-      closeDrawer();
-      emit('submitted');
+      try {
+        await fetchCascadeDeleteMenu(model.menuIds);
+        window.$message?.success($t('common.deleteSuccess'));
+        closeDrawer();
+        emit('submitted');
+      } catch {
+        // error handled by request interceptor
+      }
     }
   });
 }
@@ -83,27 +86,12 @@ watch(visible, () => {
 </script>
 
 <template>
-  <NModal
-    v-model:show="visible"
-    :title="$t('page.system.menu.cascadeDelete')"
-    preset="card"
-    :bordered="false"
-    display-directive="show"
-    class="max-w-90% w-500px"
-    @close="closeDrawer"
-  >
+  <NModal v-model:show="visible" :title="$t('page.system.menu.cascadeDelete')" preset="card" :bordered="false"
+    display-directive="show" class="max-w-90% w-500px" @close="closeDrawer">
     <NForm ref="formRef" :model="model" :rules="rules">
       <NFormItem :show-label="false" path="menuIds">
-        <MenuTree
-          v-if="visible"
-          ref="menuTreeRef"
-          v-model:options="menuOptions"
-          v-model:loading="menuLoading"
-          v-model:checked-keys="model.menuIds"
-          :cascade="true"
-          :show-header="false"
-          :immediate="true"
-        />
+        <MenuTree v-if="visible" ref="menuTreeRef" v-model:options="menuOptions" v-model:loading="menuLoading"
+          v-model:checked-keys="model.menuIds" :cascade="true" :show-header="false" :immediate="true" />
       </NFormItem>
     </NForm>
     <template #footer>

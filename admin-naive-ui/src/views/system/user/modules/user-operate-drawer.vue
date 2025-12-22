@@ -120,44 +120,43 @@ async function handleSubmit() {
     model;
 
   // request
-  if (props.operateType === 'add') {
-    const { error } = await fetchCreateUser({
-      deptId,
-      userName,
-      password,
-      nickName,
-      email,
-      phonenumber,
-      sex,
-      status,
-      roleIds,
-      postIds,
-      remark
-    });
-    window.$message?.success($t('common.addSuccess'));
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      await fetchCreateUser({
+        deptId,
+        userName,
+        password,
+        nickName,
+        email,
+        phonenumber,
+        sex,
+        status,
+        roleIds,
+        postIds,
+        remark
+      });
+    } else if (props.operateType === 'edit') {
+      await fetchUpdateUser({
+        userId,
+        deptId,
+        userName,
+        nickName,
+        email,
+        phonenumber,
+        sex,
+        status,
+        roleIds,
+        postIds,
+        remark
+      });
+    }
 
-  if (props.operateType === 'edit') {
-    const { error } = await fetchUpdateUser({
-      userId,
-      deptId,
-      userName,
-      nickName,
-      email,
-      phonenumber,
-      sex,
-      status,
-      roleIds,
-      postIds,
-      remark
-    });
-    if (error) return;
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {

@@ -16,7 +16,7 @@ export const FILE_TYPE_CATEGORIES = {
     video: {
         label: '视频',
         icon: 'i-carbon-video',
-        exts: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp']
+        exts: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp', 'qt']
     },
     document: {
         label: '文档',

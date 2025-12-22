@@ -90,26 +90,30 @@ async function handleCacheValue(cacheKey: string) {
 
 /** 清理指定名称缓存 */
 async function handleClearCacheName(cacheName: string) {
-  const { error } = await fetchClearCacheName(cacheName);
-  if (!error) {
+  try {
+    await fetchClearCacheName(cacheName);
     window.$message?.success(`清理缓存名称[${cacheName}]成功`);
     await getCacheKeys(currentCacheName.value);
+  } catch {
+    // error handled by request interceptor
   }
 }
 
 /** 清理指定键名缓存 */
 async function handleClearCacheKey(cacheKey: string) {
-  const { error } = await fetchClearCacheKey(cacheKey);
-  if (!error) {
+  try {
+    await fetchClearCacheKey(cacheKey);
     window.$message?.success(`清理缓存键名[${cacheKey}]成功`);
     await getCacheKeys(currentCacheName.value);
+  } catch {
+    // error handled by request interceptor
   }
 }
 
 /** 清理全部缓存 */
 async function handleClearCacheAll() {
-  const { error } = await fetchClearCacheAll();
-  if (!error) {
+  try {
+    await fetchClearCacheAll();
     window.$message?.success('清理全部缓存成功');
     cacheForm.value = {
       cacheName: '',
@@ -117,6 +121,8 @@ async function handleClearCacheAll() {
       cacheValue: ''
     };
     cacheKeys.value = [];
+  } catch {
+    // error handled by request interceptor
   }
 }
 

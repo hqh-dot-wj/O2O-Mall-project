@@ -95,18 +95,16 @@ async function handleSubmit() {
   startLoading();
   try {
     if (props.operateType === 'add') {
-      const { error } = await fetchCreateJob(model);
-      if (error) return;
-    }
-
-    if (props.operateType === 'edit') {
-      const { error } = await fetchUpdateJob(model);
-      if (error) return;
+      await fetchCreateJob(model);
+    } else if (props.operateType === 'edit') {
+      await fetchUpdateJob(model);
     }
 
     window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
     closeDrawer();
     emit('submitted');
+  } catch {
+    // error handled by request interceptor
   } finally {
     endLoading();
   }

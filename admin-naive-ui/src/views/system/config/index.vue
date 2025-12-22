@@ -164,16 +164,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteConfig(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteConfig(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleDelete(configId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteConfig([configId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteConfig([configId]);
+    onDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function edit(configId: CommonType.IdType) {
@@ -185,10 +191,13 @@ async function handleExport() {
 }
 
 async function handleRefreshCache() {
-  const { error } = await fetchRefreshCache();
-  if (error) return;
-  window.$message?.success($t('page.system.config.refreshCacheSuccess'));
-  await getData();
+  try {
+    await fetchRefreshCache();
+    window.$message?.success($t('page.system.config.refreshCacheSuccess'));
+    await getData();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 </script>
 

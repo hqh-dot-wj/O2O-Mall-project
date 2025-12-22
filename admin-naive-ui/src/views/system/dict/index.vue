@@ -172,16 +172,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteDictData(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteDictData(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleDelete(dictCode: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteDictData([dictCode]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteDictData([dictCode]);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function edit(dictCode: CommonType.IdType) {
@@ -198,10 +204,13 @@ async function handleReset() {
 }
 
 async function handleRefreshCache() {
-  const { error } = await fetchRefreshCache();
-  if (error) return;
-  window.$message?.success($t('page.system.dict.refreshCacheSuccess'));
-  await getData();
+  try {
+    await fetchRefreshCache();
+    window.$message?.success($t('page.system.dict.refreshCacheSuccess'));
+    await getData();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 const { loading: treeLoading, startLoading: startTreeLoading, endLoading: endTreeLoading } = useLoading();
@@ -216,12 +225,15 @@ function dictFilter(pattern: string, node: TreeOption) {
 
 async function getTreeData() {
   startTreeLoading();
-  const { data: tree, error } = await fetchGetDictTypeOption();
-  if (!error) {
+  try {
+    const { data: tree } = await fetchGetDictTypeOption();
     dictData.value = tree;
     handleClickTree(route.query.dictType ? [route.query.dictType as string] : []);
+  } catch {
+    // 错误消息已在请求工具中显示
+  } finally {
+    endTreeLoading();
   }
-  endTreeLoading();
 }
 
 getTreeData();
@@ -303,10 +315,13 @@ function handleEditType(dictType: Api.System.DictType) {
 }
 
 async function handleDeleteType(dictType: Api.System.DictType) {
-  const { error } = await fetchBatchDeleteDictType([dictType.dictId]);
-  if (error) return;
-  window.$message?.success($t('common.deleteSuccess'));
-  getTreeData();
+  try {
+    await fetchBatchDeleteDictType([dictType.dictId]);
+    window.$message?.success($t('common.deleteSuccess'));
+    getTreeData();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleExportType() {

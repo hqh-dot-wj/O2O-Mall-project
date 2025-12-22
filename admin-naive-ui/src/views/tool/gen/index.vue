@@ -201,16 +201,22 @@ const {
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteGenTable(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteGenTable(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleDelete(id: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteGenTable([id]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteGenTable([id]);
+    onDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 function edit(id: CommonType.IdType) {
@@ -219,9 +225,12 @@ function edit(id: CommonType.IdType) {
 
 async function refresh(id: CommonType.IdType) {
   // request
-  const { error } = await fetchSynchGenDbList(id);
-  if (error) return;
-  window.$message?.success('同步成功');
+  try {
+    await fetchSynchGenDbList(id);
+    window.$message?.success('同步成功');
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 function handleImport() {
@@ -242,9 +251,12 @@ async function handleGenCode(row?: Api.Tool.GenTable) {
   }
   // request
   if (row?.genType === '1') {
-    const { error } = await fetchGenCode(row.tableId!);
-    if (error) return;
-    window.$message?.success('生成成功');
+    try {
+      await fetchGenCode(row.tableId!);
+      window.$message?.success('生成成功');
+    } catch {
+      // error handled by request interceptor
+    }
   } else {
     zip(`/tool/gen/batchGenCode?tableIdStr=${tableIds}`, `RuoYi-${row?.tableId ? `${row.className}` : Date.now()}.zip`);
   }

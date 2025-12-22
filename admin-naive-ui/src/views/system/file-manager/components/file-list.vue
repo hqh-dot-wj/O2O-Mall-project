@@ -2,12 +2,12 @@
     <div class="file-list-view">
         <n-data-table :columns="columns" :data="fileList" :loading="loading" :row-key="(row: FileItem) => row.id"
             :virtual-scroll="fileList.length > VIRTUAL_SCROLL_THRESHOLD" :max-height="600"
-            :checked-row-keys="checkedRowKeys" striped @update:checked-row-keys="handleCheck" @scroll="handleScroll" />
+            v-model:checked-row-keys="checkedKeys" remote striped @scroll="handleScroll" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from 'vue';
+import { computed, h } from 'vue';
 import { NDataTable, NEllipsis, NCheckbox, NIcon, useThemeVars } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import {
@@ -34,11 +34,9 @@ export interface FileItem {
 interface Props {
     fileList: FileItem[];
     loading?: boolean;
-    checkedKeys?: (string | number)[];
 }
 
 interface Emits {
-    (e: 'update:checkedKeys', keys: (string | number)[]): void;
     (e: 'itemClick', item: FileItem): void;
     (e: 'itemDblClick', item: FileItem): void;
     (e: 'contextMenu', event: MouseEvent, item: FileItem): void;
@@ -46,14 +44,15 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    loading: false,
-    checkedKeys: () => []
+    loading: false
 });
 
 const emit = defineEmits<Emits>();
 
+// 使用 defineModel 定义双向绑定，这是 Vue 3.4+ 的标准做法
+const checkedKeys = defineModel<(string | number)[]>('checkedKeys', { default: () => [] });
+
 const themeVars = useThemeVars();
-const checkedRowKeys = ref<(string | number)[]>(props.checkedKeys);
 
 // 列定义
 const columns = computed<DataTableColumns<FileItem>>(() => [
@@ -115,12 +114,6 @@ const columns = computed<DataTableColumns<FileItem>>(() => [
     }
 ]);
 
-// 处理选中
-function handleCheck(keys: (string | number)[]) {
-    checkedRowKeys.value = keys;
-    emit('update:checkedKeys', keys);
-}
-
 // 处理滚动
 function handleScroll(event: Event) {
     emit('scroll', event);
@@ -135,11 +128,6 @@ function handleScroll(event: Event) {
         }
     }
 }
-
-// 监听 props 变化
-watch(() => props.checkedKeys, (newKeys) => {
-    checkedRowKeys.value = newKeys;
-});
 </script>
 
 <style scoped lang="scss">
@@ -147,63 +135,5 @@ watch(() => props.checkedKeys, (newKeys) => {
     width: 100%;
     height: 100%;
 
-    /* 表头样式 */
-    :deep(.n-data-table-th) {
-        height: v-bind('TABLE_ROW_HEIGHT + "px"');
-        font-size: 12px;
-        color: v-bind('themeVars.textColor2');
-        line-height: 1;
-    }
-
-    /* 表格行样式 */
-    :deep(.n-data-table-td) {
-        height: v-bind('TABLE_ROW_HEIGHT + "px"');
-        font-size: 12px;
-        line-height: 1;
-    }
-
-    /* 选中行样式 */
-    :deep(.n-data-table-tr--selected) {
-        background-color: v-bind('themeVars.primaryColorSuppl + "1A"') !important;
-    }
-
-    /* 悬停行样式 */
-    :deep(.n-data-table-tr:hover) {
-        background-color: #f7f9fc;
-    }
-
-    /* 暗色模式悬停 */
-    :deep(.n-data-table-tr:hover) {
-        background-color: v-bind('themeVars.hoverColor');
-    }
-
-    /* Checkbox 默认隐藏，悬停和选中时显示 */
-    :deep(.checkbox-cell .n-checkbox) {
-        opacity: 0;
-        transition: opacity 0.2s;
-    }
-
-    :deep(.n-data-table-tr:hover .checkbox-cell .n-checkbox),
-    :deep(.n-checkbox--checked) {
-        opacity: 1;
-    }
-
-    /* 文件名单元格 */
-    .file-name-cell {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        cursor: pointer;
-        transition: color 0.2s;
-
-        &:hover {
-            color: v-bind('themeVars.primaryColor');
-        }
-
-        .file-icon {
-            font-size: v-bind('FILE_ICON_SIZE + "px"');
-            flex-shrink: 0;
-        }
-    }
 }
 </style>

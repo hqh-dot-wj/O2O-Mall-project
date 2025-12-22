@@ -25,37 +25,40 @@ describe('UploadService', () => {
   let prisma: PrismaMock;
   let service: UploadService;
   const configService = {
-    get: jest.fn((key: string) => {
-      switch (key) {
-        case 'app.file.isLocal':
-          return true;
-        case 'app.file.maxSize':
-          return 10;
-        case 'app.file.location':
-          return 'uploads';
-        case 'app.file.domain':
-          return 'http://localhost';
-        case 'app.file.serveRoot':
-          return '/static';
-        case 'cos.secretId':
-          return 'id';
-        case 'cos.secretKey':
-          return 'key';
-        case 'cos.bucket':
-          return 'bucket';
-        case 'cos.region':
-          return 'ap-guangzhou';
-        case 'cos.location':
-          return 'cos';
-        default:
-          return '';
-      }
-    }),
+    app: {
+      file: {
+        isLocal: true,
+        maxSize: 10,
+        location: 'uploads',
+        domain: 'http://localhost',
+        serveRoot: '/static',
+        thumbnailEnabled: true,
+      },
+    },
+    cos: {
+      secretId: 'id',
+      secretKey: 'key',
+      bucket: 'bucket',
+      region: 'ap-guangzhou',
+      location: 'cos',
+      domain: 'https://cos.example.com',
+    },
+  };
+  const versionService = {
+    checkAndCleanOldVersions: jest.fn(),
+  };
+  const thumbnailQueue = {
+    add: jest.fn(),
   };
 
   beforeEach(() => {
     prisma = createPrismaMock();
-    service = new UploadService(prisma, configService as any);
+    service = new UploadService(
+      prisma,
+      configService as any,
+      versionService as any,
+      thumbnailQueue as any
+    );
   });
 
   it('should create chunk upload id', async () => {
@@ -67,7 +70,7 @@ describe('UploadService', () => {
   it('should append timestamp when generating new filename', () => {
     const nowSpy = jest.spyOn(Date.prototype, 'getTime').mockReturnValue(1700000000000);
     const value = service.getNewFileName('demo.txt');
-    expect(value).toBe('demo.txt_1700000000000');
+    expect(value).toBe('demo_1700000000000.txt');
     nowSpy.mockRestore();
   });
 

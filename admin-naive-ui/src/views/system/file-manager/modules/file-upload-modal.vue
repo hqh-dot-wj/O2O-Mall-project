@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { NModal, NCard, NUpload, NButton, NSpace, useMessage } from 'naive-ui';
 import type { UploadFileInfo } from 'naive-ui';
 import { fetchUploadFile } from '@/service/api';
+import { $t } from '@/locales';
 
 const message = useMessage();
 const emit = defineEmits<{
@@ -22,7 +23,7 @@ function openModal(folderId: number = 0) {
 
 async function handleUpload() {
     if (fileList.value.length === 0) {
-        message.warning('请选择要上传的文件');
+        message.warning($t('page.fileManager.selectFilesFirst'));
         return;
     }
 
@@ -35,11 +36,11 @@ async function handleUpload() {
             }
         }
 
-        message.success('上传成功');
+        message.success($t('page.fileManager.uploadSuccess'));
         visible.value = false;
         emit('success');
     } catch (error) {
-        message.error('上传失败');
+        message.error($t('page.fileManager.uploadFailed'));
     } finally {
         uploading.value = false;
     }

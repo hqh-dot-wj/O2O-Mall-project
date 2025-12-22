@@ -73,10 +73,13 @@ function closeDrawer() {
 async function handleSubmit() {
   if (checkedRowKeys.value.length > 0) {
     // request
-    const { error } = await fetchImportGenTable(checkedRowKeys.value as string[], searchParams.dataName!);
-    if (error) return;
-    window.$message?.success('导入成功');
-    emit('submitted');
+    try {
+      await fetchImportGenTable(checkedRowKeys.value as string[], searchParams.dataName!);
+      window.$message?.success('导入成功');
+      emit('submitted');
+    } catch {
+      // error handled by request interceptor
+    }
   }
   closeDrawer();
 }

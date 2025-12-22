@@ -1,5 +1,6 @@
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { BACKEND_ERROR_CODE, REQUEST_CANCELED_CODE, createFlatRequest } from '@sa/axios';
+import type { FlatRequestInstance, ResponseType } from '@sa/axios';
 import { useAuthStore } from '@/store/modules/auth';
 import { localStg, sessionStg } from '@/utils/storage';
 import { getServiceBaseURL } from '@/utils/service';
@@ -11,7 +12,8 @@ import type { RequestInstanceState } from './type';
 const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
 const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
-export const request = createFlatRequest<App.Service.Response, RequestInstanceState>(
+// 创建基础的 flat request 实例
+const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState>(
   {
     baseURL,
     'axios-retry': {
@@ -61,7 +63,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         handleLogout();
         window.removeEventListener('beforeunload', handleLogout);
 
-        request.state.errMsgStack = request.state.errMsgStack.filter(msg => msg !== response.data.msg);
+        flatRequest.state.errMsgStack = flatRequest.state.errMsgStack.filter(msg => msg !== response.data.msg);
       }
 
       const isLogin = Boolean(localStg.get('token'));
@@ -76,7 +78,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
       // when the backend response code is in `modalLogoutCodes`, it means the user will be logged out by displaying a modal
       const modalLogoutCodes = import.meta.env.VITE_SERVICE_MODAL_LOGOUT_CODES?.split(',') || [];
       if (modalLogoutCodes.includes(responseCode) && isLogin) {
-        const isExist = request.state.errMsgStack?.includes(response.data.msg);
+        const isExist = flatRequest.state.errMsgStack?.includes(response.data.msg);
         if (isExist) {
           return null;
         }
@@ -85,7 +87,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
           return null;
         }
 
-        request.state.errMsgStack = [...(request.state.errMsgStack || []), response.data.msg];
+        flatRequest.state.errMsgStack = [...(flatRequest.state.errMsgStack || []), response.data.msg];
 
         window.$dialog?.warning({
           title: '系统提示',
@@ -104,7 +106,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
             logoutAndCleanup();
           }
         });
-        request.cancelAllRequest();
+        flatRequest.cancelAllRequest();
         return null;
       }
 
@@ -112,7 +114,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
       // the api `refreshToken` can not return error code in `expiredTokenCodes`, otherwise it will be a dead loop, should return `logoutCodes` or `modalLogoutCodes`
       const expiredTokenCodes = import.meta.env.VITE_SERVICE_EXPIRED_TOKEN_CODES?.split(',') || [];
       if (expiredTokenCodes.includes(responseCode)) {
-        const success = await handleExpiredRequest(request.state);
+        const success = await handleExpiredRequest(flatRequest.state);
         if (success) {
           const Authorization = getAuthorization();
           Object.assign(response.config.headers, { Authorization });
@@ -152,7 +154,8 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
       } else if (error.response) {
         // 处理HTTP错误（400, 404, 500等）
         // 优先使用后端返回的错误消息
-        message = error.response?.data?.msg || error.response?.data?.message || message;
+        const respData = error.response?.data as Record<string, unknown>;
+        message = (respData?.msg as string) || (respData?.message as string) || message;
         backendErrorCode = String(error.response?.status || '');
       }
 
@@ -168,7 +171,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         return;
       }
 
-      showErrorMsg(request.state, message);
+      showErrorMsg(flatRequest.state, message);
     }
   }
 );
@@ -229,3 +232,44 @@ function handleEncrypt(config: InternalAxiosRequestConfig) {
     }
   }
 }
+
+/**
+ * 包装后的 request 函数
+ * - code === 200 时：正常返回 { data, error: null }
+ * - code !== 200 时：错误消息已在 onError 中显示，然后抛出异常
+ *
+ * 使用方式:
+ * ```ts
+ * // 失败时自动显示错误并抛出异常，后续代码不执行
+ * const { data } = await fetchXxx();
+ * message.success('操作成功');
+ *
+ * // 如果需要处理失败后的逻辑，可以用 try-catch
+ * try {
+ *   const { data } = await fetchXxx();
+ *   message.success('操作成功');
+ * } catch {
+ *   // 错误消息已显示，这里可以做其他处理（如刷新列表等）
+ * }
+ * ```
+ */
+async function wrappedRequest<T, R extends ResponseType = 'json'>(
+  config: Parameters<typeof flatRequest<T, R>>[0]
+) {
+  const result = await flatRequest<T, R>(config);
+  if (result.error) {
+    // 错误消息已在 onError 中显示，直接抛出异常
+    throw result.error;
+  }
+  return result;
+}
+
+// 导出包装后的 request，保持与 flatRequest 相同的接口
+export const request: FlatRequestInstance<App.Service.Response, RequestInstanceState> = Object.assign(
+  wrappedRequest as unknown as FlatRequestInstance<App.Service.Response, RequestInstanceState>,
+  {
+    cancelRequest: flatRequest.cancelRequest,
+    cancelAllRequest: flatRequest.cancelAllRequest,
+    state: flatRequest.state
+  }
+);

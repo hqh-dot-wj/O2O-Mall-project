@@ -33,14 +33,14 @@ const { loading, startLoading, endLoading } = useLoading();
 async function getGenPreview() {
   if (!props.rowData?.tableId) return;
   startLoading();
-  const { data, error } = await fetchGetGenPreview(props.rowData?.tableId);
-  if (error) {
-    endLoading();
+  try {
+    const { data } = await fetchGetGenPreview(props.rowData?.tableId);
+    previewData.value = data;
+  } catch {
     closeDrawer();
-    return;
+  } finally {
+    endLoading();
   }
-  previewData.value = data;
-  endLoading();
 }
 
 function closeDrawer() {
@@ -131,13 +131,8 @@ function getGenLanguage(name: string) {
               {{ genMap[gen] }}
             </NTab>
           </NTabs>
-          <MonacoEditor
-            v-model:value="previewData[tab]"
-            class="tab-pane"
-            read-only
-            :language="getGenLanguage(genMap[tab])"
-            height="calc(100vh - 162px)"
-          />
+          <MonacoEditor v-model:value="previewData[tab]" class="tab-pane" read-only
+            :language="getGenLanguage(genMap[tab])" height="calc(100vh - 162px)" />
           <div class="position-absolute right-42px top-2px">
             <NButton text :focusable="false" class="flex-center" @click="handleCopyCode">
               <template #icon>

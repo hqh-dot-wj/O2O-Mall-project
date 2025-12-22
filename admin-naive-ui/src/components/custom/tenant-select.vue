@@ -68,18 +68,22 @@ async function handleClearTenant() {
 
 async function handleFetchTenantList() {
   startLoading();
-  const { data, error } = await fetchTenantList();
-  if (error) return;
-  enabled.value = data.tenantEnabled;
-  if (data.tenantEnabled) {
-    tenantOption.value = data.voList.map(tenant => {
-      return {
-        label: tenant.companyName,
-        value: tenant.tenantId
-      };
-    });
+  try {
+    const { data } = await fetchTenantList();
+    enabled.value = data.tenantEnabled;
+    if (data.tenantEnabled) {
+      tenantOption.value = data.voList.map(tenant => {
+        return {
+          label: tenant.companyName,
+          value: tenant.tenantId
+        };
+      });
+    }
+  } catch {
+    // error handled by request interceptor
+  } finally {
+    endLoading();
   }
-  endLoading();
 }
 onMounted(async () => {
   if (userInfo.user?.userId !== 1) {
@@ -90,14 +94,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSelect
-    v-if="showTenantSelect"
-    v-model:value="tenantId"
-    :clearable="clearable"
-    placeholder="请选择租户"
-    :options="tenantOption"
-    :loading="loading"
-    @update:value="handleChangeTenant"
-    @clear="handleClearTenant"
-  />
+  <NSelect v-if="showTenantSelect" v-model:value="tenantId" :clearable="clearable" placeholder="请选择租户"
+    :options="tenantOption" :loading="loading" @update:value="handleChangeTenant" @clear="handleClearTenant" />
 </template>

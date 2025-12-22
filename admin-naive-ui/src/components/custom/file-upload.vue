@@ -119,33 +119,22 @@ async function handleRemove(file: UploadFileInfo) {
   if (file.status !== 'finished') {
     return false;
   }
-  const { error } = await fetchBatchDeleteOss([file.id]);
-  if (error) return false;
-  window.$message?.success('删除成功');
-  return true;
+  try {
+    await fetchBatchDeleteOss([file.id]);
+    window.$message?.success('删除成功');
+    return true;
+  } catch {
+    return false;
+  }
 }
 </script>
 
 <template>
   <div class="w-full flex-col">
-    <NUpload
-      v-bind="attrs"
-      v-model:file-list="fileList"
-      :action="`${baseURL}${action}`"
-      :data="data"
-      :headers="headers"
-      :max="max"
-      :accept="accept"
-      :multiple="max > 1"
-      directory-dnd
-      :default-upload="defaultUpload"
-      :list-type="uploadType === 'image' ? 'image-card' : 'text'"
-      :is-error-state="isErrorState"
-      @finish="handleFinish"
-      @error="handleError"
-      @before-upload="beforeUpload"
-      @remove="({ file }) => handleRemove(file)"
-    >
+    <NUpload v-bind="attrs" v-model:file-list="fileList" :action="`${baseURL}${action}`" :data="data" :headers="headers"
+      :max="max" :accept="accept" :multiple="max > 1" directory-dnd :default-upload="defaultUpload"
+      :list-type="uploadType === 'image' ? 'image-card' : 'text'" :is-error-state="isErrorState" @finish="handleFinish"
+      @error="handleError" @before-upload="beforeUpload" @remove="({ file }) => handleRemove(file)">
       <NUploadDragger v-if="uploadType === 'file'">
         <div class="mb-12px flex-center">
           <SvgIcon icon="material-symbols:unarchive-outline" class="text-58px color-#d8d8db dark:color-#a1a1a2" />

@@ -73,21 +73,28 @@ async function handleUpdateModelWhenEdit() {
 
   if (props.operateType === 'add') {
     Object.assign(model, createDefaultModel());
-    const { data, error } = await fetchGetTenantPackageMenuTreeSelect(0);
-    if (error) return;
-    model.menuIds = data.checkedKeys;
-    menuOptions.value = data.menus;
+    try {
+      const { data } = await fetchGetTenantPackageMenuTreeSelect(0);
+      model.menuIds = data.checkedKeys;
+      menuOptions.value = data.menus;
+    } catch {
+      // error handled by request interceptor
+    }
     return;
   }
 
   if (props.operateType === 'edit' && props.rowData) {
     startMenuLoading();
     Object.assign(model, { ...props.rowData, menuIds: [] });
-    const { data, error } = await fetchGetTenantPackageMenuTreeSelect(model.packageId!);
-    if (error) return;
-    model.menuIds = data.checkedKeys;
-    menuOptions.value = data.menus;
-    stopMenuLoading();
+    try {
+      const { data } = await fetchGetTenantPackageMenuTreeSelect(model.packageId!);
+      model.menuIds = data.checkedKeys;
+      menuOptions.value = data.menus;
+    } catch {
+      // error handled by request interceptor
+    } finally {
+      stopMenuLoading();
+    }
   }
 }
 
@@ -101,25 +108,25 @@ async function handleSubmit() {
   const { packageId, packageName, remark, menuCheckStrictly } = model;
   const menuIds = menuTreeRef.value?.getCheckedMenuIds();
   // request
-  if (props.operateType === 'add') {
-    const { error } = await fetchCreateTenantPackage({ packageName, menuIds, remark, menuCheckStrictly });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      await fetchCreateTenantPackage({ packageName, menuIds, remark, menuCheckStrictly });
+    } else if (props.operateType === 'edit') {
+      await fetchUpdateTenantPackage({
+        packageId,
+        packageName,
+        menuIds,
+        remark,
+        menuCheckStrictly
+      });
+    }
 
-  if (props.operateType === 'edit') {
-    const { error } = await fetchUpdateTenantPackage({
-      packageId,
-      packageName,
-      menuIds,
-      remark,
-      menuCheckStrictly
-    });
-    if (error) return;
+    window.$message?.success($t('common.saveSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success($t('common.saveSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {
@@ -135,28 +142,16 @@ watch(visible, () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem :label="$t('page.system.tenantPackage.packageName')" path="packageName">
-          <NInput
-            v-model:value="model.packageName"
-            :placeholder="$t('page.system.tenantPackage.form.packageName.required')"
-          />
+          <NInput v-model:value="model.packageName"
+            :placeholder="$t('page.system.tenantPackage.form.packageName.required')" />
         </NFormItem>
         <NFormItem :label="$t('page.system.tenantPackage.menuIds')" path="menuIds">
-          <MenuTree
-            v-if="visible"
-            ref="menuTreeRef"
-            v-model:checked-keys="model.menuIds"
-            v-model:options="menuOptions"
-            v-model:cascade="model.menuCheckStrictly"
-            v-model:loading="menuLoading"
-            :immediate="false"
-          />
+          <MenuTree v-if="visible" ref="menuTreeRef" v-model:checked-keys="model.menuIds" v-model:options="menuOptions"
+            v-model:cascade="model.menuCheckStrictly" v-model:loading="menuLoading" :immediate="false" />
         </NFormItem>
         <NFormItem :label="$t('page.system.tenantPackage.remark')" path="remark">
-          <NInput
-            v-model:value="model.remark"
-            :placeholder="$t('page.system.tenantPackage.form.remark.required')"
-            type="textarea"
-          />
+          <NInput v-model:value="model.remark" :placeholder="$t('page.system.tenantPackage.form.remark.required')"
+            type="textarea" />
         </NFormItem>
       </NForm>
       <template #footer>

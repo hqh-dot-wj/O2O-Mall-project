@@ -48,16 +48,16 @@ const handleError = () => {
 };
 
 const callbackByCode = async (data: Api.Auth.SocialLoginForm) => {
-  const { error } = await fetchSocialLoginCallback({
-    ...data,
-    clientId: import.meta.env.VITE_APP_CLIENT_ID,
-    grantType: 'social'
-  });
-  if (error) {
+  try {
+    await fetchSocialLoginCallback({
+      ...data,
+      clientId: import.meta.env.VITE_APP_CLIENT_ID,
+      grantType: 'social'
+    });
+    await processResponse();
+  } catch {
     handleError();
-    return;
   }
-  await processResponse();
 };
 
 const loginByCode = async (data: Api.Auth.SocialLoginForm) => {

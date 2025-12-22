@@ -98,33 +98,39 @@ async function handleSubmit() {
   // request
   if (props.operateType === 'add') {
     const { parentId, deptName, deptCategory, orderNum, leader, phone, email, status } = model;
-    const { error } = await fetchCreateDept({
-      parentId,
-      deptName,
-      deptCategory,
-      orderNum,
-      leader,
-      phone,
-      email,
-      status
-    });
-    if (error) return;
+    try {
+      await fetchCreateDept({
+        parentId,
+        deptName,
+        deptCategory,
+        orderNum,
+        leader,
+        phone,
+        email,
+        status
+      });
+    } catch {
+      return;
+    }
   }
 
   if (props.operateType === 'edit') {
     const { deptId, parentId, deptName, deptCategory, orderNum, leader, phone, email, status } = model;
-    const { error } = await fetchUpdateDept({
-      deptId,
-      parentId,
-      deptName,
-      deptCategory,
-      orderNum,
-      leader,
-      phone,
-      email,
-      status
-    });
-    if (error) return;
+    try {
+      await fetchUpdateDept({
+        deptId,
+        parentId,
+        deptName,
+        deptCategory,
+        orderNum,
+        leader,
+        phone,
+        email,
+        status
+      });
+    } catch {
+      return;
+    }
   }
 
   window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
@@ -134,19 +140,19 @@ async function handleSubmit() {
 
 async function getDeptData() {
   startDeptLoading();
-  const { data, error } =
-    props.operateType === 'add' ? await fetchGetDeptList() : await fetchGetExcludeDeptList(props.rowData?.deptId);
+  try {
+    const { data } =
+      props.operateType === 'add' ? await fetchGetDeptList() : await fetchGetExcludeDeptList(props.rowData?.deptId);
 
-  if (error) {
+    if (data) {
+      deptData.value = handleTree(data, { idField: 'deptId' });
+      expandedKeys.value = [deptData.value[0].deptId];
+    }
+  } catch (error: any) {
     window.$message?.error(error.message || $t('page.system.dept.error.getDeptDataFail'));
-    return;
+  } finally {
+    endDeptLoading();
   }
-
-  if (data) {
-    deptData.value = handleTree(data, { idField: 'deptId' });
-    expandedKeys.value = [deptData.value[0].deptId];
-  }
-  endDeptLoading();
 }
 
 async function getUserData() {
@@ -156,20 +162,21 @@ async function getUserData() {
     return;
   }
   startUserLoading();
-  const { data, error } = await fetchGetDeptUserList(props.rowData.deptId);
-  if (error) {
+  try {
+    const { data } = await fetchGetDeptUserList(props.rowData.deptId);
+    if (data.length === 0) {
+      placeholder.value = $t('page.system.dept.placeholder.deptUserIsEmptyLeaderPlaceHolder');
+      disabled.value = true;
+    }
+    userOptions.value = data.map(item => ({
+      label: `${item.userName} | ${item.nickName}`,
+      value: item.userId
+    }));
+  } catch (error: any) {
     window.$message?.error(error.message || $t('page.system.dept.error.getDeptUserDataFail'));
-    return;
+  } finally {
+    endUserLoading();
   }
-  if (data.length === 0) {
-    placeholder.value = $t('page.system.dept.placeholder.deptUserIsEmptyLeaderPlaceHolder');
-    disabled.value = true;
-  }
-  userOptions.value = data.map(item => ({
-    label: `${item.userName} | ${item.nickName}`,
-    value: item.userId
-  }));
-  endUserLoading();
 }
 
 watch(visible, () => {

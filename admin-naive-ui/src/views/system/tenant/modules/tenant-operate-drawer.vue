@@ -127,81 +127,81 @@ async function handleSubmit() {
   await validate();
 
   // request
-  if (props.operateType === 'add') {
-    const {
-      contactUserName,
-      contactPhone,
-      companyName,
-      licenseNumber,
-      address,
-      intro,
-      domain,
-      remark,
-      packageId,
-      expireTime,
-      accountCount,
-      status,
-      username,
-      password
-    } = model;
-    const { error } = await fetchCreateTenant({
-      contactUserName,
-      contactPhone,
-      companyName,
-      username,
-      password,
-      licenseNumber,
-      address,
-      intro,
-      domain,
-      remark,
-      packageId,
-      expireTime,
-      accountCount,
-      status
-    });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      const {
+        contactUserName,
+        contactPhone,
+        companyName,
+        licenseNumber,
+        address,
+        intro,
+        domain,
+        remark,
+        packageId,
+        expireTime,
+        accountCount,
+        status,
+        username,
+        password
+      } = model;
+      await fetchCreateTenant({
+        contactUserName,
+        contactPhone,
+        companyName,
+        username,
+        password,
+        licenseNumber,
+        address,
+        intro,
+        domain,
+        remark,
+        packageId,
+        expireTime,
+        accountCount,
+        status
+      });
+    } else if (props.operateType === 'edit') {
+      const {
+        id,
+        tenantId,
+        contactUserName,
+        contactPhone,
+        companyName,
+        licenseNumber,
+        address,
+        intro,
+        domain,
+        remark,
+        packageId,
+        expireTime,
+        accountCount,
+        status
+      } = model;
+      await fetchUpdateTenant({
+        id,
+        tenantId,
+        contactUserName,
+        contactPhone,
+        companyName,
+        licenseNumber,
+        address,
+        intro,
+        domain,
+        remark,
+        packageId,
+        expireTime,
+        accountCount,
+        status
+      });
+    }
 
-  if (props.operateType === 'edit') {
-    const {
-      id,
-      tenantId,
-      contactUserName,
-      contactPhone,
-      companyName,
-      licenseNumber,
-      address,
-      intro,
-      domain,
-      remark,
-      packageId,
-      expireTime,
-      accountCount,
-      status
-    } = model;
-    const { error } = await fetchUpdateTenant({
-      id,
-      tenantId,
-      contactUserName,
-      contactPhone,
-      companyName,
-      licenseNumber,
-      address,
-      intro,
-      domain,
-      remark,
-      packageId,
-      expireTime,
-      accountCount,
-      status
-    });
-    if (error) return;
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {

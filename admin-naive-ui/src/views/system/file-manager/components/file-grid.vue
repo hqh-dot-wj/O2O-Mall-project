@@ -19,8 +19,8 @@
                                     @dragleave="file.type === 'folder' ? handleDragLeave() : undefined"
                                     @drop="file.type === 'folder' ? handleDrop(file, $event) : undefined">
                                     <!-- 选中复选框 -->
-                                    <n-checkbox v-if="checkedKeys.includes(file.id)"
-                                        :checked="checkedKeys.includes(file.id)" class="card-checkbox" @click.stop
+                                    <n-checkbox :checked="checkedKeys.includes(file.id)" class="card-checkbox"
+                                        @click.stop
                                         @update:checked="(checked) => handleCheckChange(file.id, checked)" />
 
                                     <!-- 缩略图区域 -->
@@ -259,6 +259,11 @@ const cardStyle = computed(() => (isSelected: boolean) => ({
 
 // 处理卡片点击
 function handleCardClick(file: FileItem, event: MouseEvent) {
+    // 如果点击的是checkbox，不处理（让checkbox自己的事件处理）
+    if ((event.target as HTMLElement).closest('.n-checkbox')) {
+        return;
+    }
+
     // 检测双击
     if (lastClickId === file.id && clickTimer) {
         // 这是双击的第二次点击，取消单击定时器
@@ -287,7 +292,18 @@ function handleCardClick(file: FileItem, event: MouseEvent) {
 
     // 普通单击延迟处理，给双击机会取消
     clickTimer = setTimeout(() => {
-        emit('itemClick', file);
+        // 如果已经选中，切换选中状态
+        const isSelected = props.checkedKeys.includes(file.id);
+        const newKeys = [...props.checkedKeys];
+
+        if (isSelected) {
+            const index = newKeys.indexOf(file.id);
+            newKeys.splice(index, 1);
+            emit('update:checkedKeys', newKeys);
+        } else {
+            // 未选中时，执行原有的itemClick逻辑（进入文件夹或预览文件）
+            emit('itemClick', file);
+        }
         clickTimer = null;
         lastClickId = null;
     }, 200);
@@ -381,6 +397,10 @@ function handleDrop(file: FileItem, event: DragEvent) {
         cursor: pointer;
         overflow: hidden;
         transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
 
         &.selected {
             box-shadow: 0 0 0 2px v-bind('themeVars.primaryColor');
@@ -401,12 +421,26 @@ function handleDrop(file: FileItem, event: DragEvent) {
             top: 8px;
             left: 8px;
             z-index: 10;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        .file-card:hover .card-checkbox,
+        .file-card.selected .card-checkbox {
+            opacity: 1;
         }
 
         .thumbnail-area {
             width: v-bind('THUMBNAIL_WIDTH + "px"');
             height: v-bind('THUMBNAIL_HEIGHT + "px"');
-            margin: 0 auto 8px;
+            margin: 12px auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 4px;
             overflow: hidden;
             background-color: v-bind('themeVars.cardColor');
@@ -428,6 +462,8 @@ function handleDrop(file: FileItem, event: DragEvent) {
 
         .file-info {
             width: 100%;
+            padding: 0 12px;
+            text-align: center;
 
             .file-name {
                 display: block;

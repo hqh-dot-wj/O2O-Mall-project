@@ -77,21 +77,23 @@ async function handleSubmit() {
   await validate();
 
   // request
-  if (props.operateType === 'add') {
-    const { dictName, dictType, remark } = model;
-    const { error } = await fetchCreateDictType({ dictName, dictType, remark });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      const { dictName, dictType, remark } = model;
+      await fetchCreateDictType({ dictName, dictType, remark });
+    }
 
-  if (props.operateType === 'edit') {
-    const { dictId, dictName, dictType, remark } = model;
-    const { error } = await fetchUpdateDictType({ dictId, dictName, dictType, remark });
-    if (error) return;
-  }
+    if (props.operateType === 'edit') {
+      const { dictId, dictName, dictType, remark } = model;
+      await fetchUpdateDictType({ dictId, dictName, dictType, remark });
+    }
 
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 watch(visible, () => {

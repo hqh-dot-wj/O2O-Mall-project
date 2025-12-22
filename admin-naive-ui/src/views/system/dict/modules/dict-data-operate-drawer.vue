@@ -96,40 +96,42 @@ async function handleSubmit() {
   await validate();
 
   // request
-  if (props.operateType === 'add') {
-    const { dictSort, dictLabel, dictValue, dictType, cssClass, listClass, isDefault, remark } = model;
-    const { error } = await fetchCreateDictData({
-      dictSort,
-      dictLabel,
-      dictValue,
-      dictType,
-      cssClass,
-      listClass,
-      isDefault,
-      remark
-    });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      const { dictSort, dictLabel, dictValue, dictType, cssClass, listClass, isDefault, remark } = model;
+      await fetchCreateDictData({
+        dictSort,
+        dictLabel,
+        dictValue,
+        dictType,
+        cssClass,
+        listClass,
+        isDefault,
+        remark
+      });
+    }
 
-  if (props.operateType === 'edit') {
-    const { dictCode, dictSort, dictLabel, dictValue, dictType, cssClass, listClass, isDefault, remark } = model;
-    const { error } = await fetchUpdateDictData({
-      dictCode,
-      dictSort,
-      dictLabel,
-      dictValue,
-      dictType,
-      cssClass,
-      listClass,
-      isDefault,
-      remark
-    });
-    if (error) return;
-  }
+    if (props.operateType === 'edit') {
+      const { dictCode, dictSort, dictLabel, dictValue, dictType, cssClass, listClass, isDefault, remark } = model;
+      await fetchUpdateDictData({
+        dictCode,
+        dictSort,
+        dictLabel,
+        dictValue,
+        dictType,
+        cssClass,
+        listClass,
+        isDefault,
+        remark
+      });
+    }
 
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 watch(visible, () => {

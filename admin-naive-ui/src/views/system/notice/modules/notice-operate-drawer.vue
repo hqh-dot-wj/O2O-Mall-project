@@ -83,21 +83,21 @@ async function handleSubmit() {
   await validate();
 
   // request
-  if (props.operateType === 'add') {
-    const { noticeTitle, noticeType, noticeContent, status } = model;
-    const { error } = await fetchCreateNotice({ noticeTitle, noticeType, noticeContent, status });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      const { noticeTitle, noticeType, noticeContent, status } = model;
+      await fetchCreateNotice({ noticeTitle, noticeType, noticeContent, status });
+    } else if (props.operateType === 'edit') {
+      const { noticeId, noticeTitle, noticeType, noticeContent, status } = model;
+      await fetchUpdateNotice({ noticeId, noticeTitle, noticeType, noticeContent, status });
+    }
 
-  if (props.operateType === 'edit') {
-    const { noticeId, noticeTitle, noticeType, noticeContent, status } = model;
-    const { error } = await fetchUpdateNotice({ noticeId, noticeTitle, noticeType, noticeContent, status });
-    if (error) return;
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {

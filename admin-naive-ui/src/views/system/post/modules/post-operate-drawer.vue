@@ -88,30 +88,30 @@ async function handleSubmit() {
   await validate();
 
   // request
-  if (props.operateType === 'add') {
-    const { deptId, postCode, postCategory, postName, postSort, status, remark } = model;
-    const { error } = await fetchCreatePost({ deptId, postCode, postCategory, postName, postSort, status, remark });
-    if (error) return;
-  }
+  try {
+    if (props.operateType === 'add') {
+      const { deptId, postCode, postCategory, postName, postSort, status, remark } = model;
+      await fetchCreatePost({ deptId, postCode, postCategory, postName, postSort, status, remark });
+    } else if (props.operateType === 'edit') {
+      const { postId, deptId, postCode, postCategory, postName, postSort, status, remark } = model;
+      await fetchUpdatePost({
+        postId,
+        deptId,
+        postCode,
+        postCategory,
+        postName,
+        postSort,
+        status,
+        remark
+      });
+    }
 
-  if (props.operateType === 'edit') {
-    const { postId, deptId, postCode, postCategory, postName, postSort, status, remark } = model;
-    const { error } = await fetchUpdatePost({
-      postId,
-      deptId,
-      postCode,
-      postCategory,
-      postName,
-      postSort,
-      status,
-      remark
-    });
-    if (error) return;
+    window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
   }
-
-  window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
 }
 
 watch(visible, () => {
@@ -127,16 +127,9 @@ watch(visible, () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem label="归属部门" path="deptId">
-          <NTreeSelect
-            v-model:value="model.deptId"
-            :loading="deptLoading"
-            clearable
-            :options="deptData as []"
-            label-field="label"
-            key-field="id"
-            :default-expanded-keys="deptData?.length ? [deptData[0].id] : []"
-            placeholder="请选择归属部门"
-          />
+          <NTreeSelect v-model:value="model.deptId" :loading="deptLoading" clearable :options="deptData as []"
+            label-field="label" key-field="id" :default-expanded-keys="deptData?.length ? [deptData[0].id] : []"
+            placeholder="请选择归属部门" />
         </NFormItem>
         <NFormItem label="岗位编码" path="postCode">
           <NInput v-model:value="model.postCode" placeholder="请输入岗位编码" />

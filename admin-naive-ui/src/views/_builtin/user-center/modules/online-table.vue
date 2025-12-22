@@ -100,12 +100,15 @@ const { columns, data, loading, getData } = useTable({
 /** 强制下线 */
 async function forceLogout(tokenId: string) {
   startBtnLoading();
-  const { error } = await fetchKickOutCurrentDevice(tokenId);
-  if (!error) {
+  try {
+    await fetchKickOutCurrentDevice(tokenId);
     window.$message?.success('强制下线成功');
     await getData();
+  } catch {
+    // error handled by request interceptor
+  } finally {
+    endBtnLoading();
   }
-  endBtnLoading();
 }
 </script>
 

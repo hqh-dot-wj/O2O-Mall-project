@@ -205,16 +205,22 @@ const { handleAdd, checkedRowKeys, onBatchDeleted, onDeleted } = useTableOperate
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteOss(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteOss(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleDelete(ossId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteOss([ossId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteOss([ossId]);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 function download(ossId: CommonType.IdType) {
@@ -245,18 +251,18 @@ async function handleUpdatePreview(checked: boolean) {
     negativeText: '取消',
     onPositiveClick: async () => {
       startPreviewLoading();
-      const { error } = await fetchUpdateConfigByKey({
-        configKey: 'sys.oss.previewListResource',
-        configValue: String(checked)
-      });
-      if (error) {
+      try {
+        await fetchUpdateConfigByKey({
+          configKey: 'sys.oss.previewListResource',
+          configValue: String(checked)
+        });
+        setPreview(checked);
+        window.$message?.success('更新成功');
+      } catch {
         setPreview(!checked);
+      } finally {
         endPreviewLoading();
-        return;
       }
-      setPreview(checked);
-      window.$message?.success('更新成功');
-      endPreviewLoading();
     },
     onNegativeClick: () => {
       setPreview(!checked);

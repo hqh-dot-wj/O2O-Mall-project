@@ -181,16 +181,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteTenant(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteTenant(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleDelete(id: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteTenant([id]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteTenant([id]);
+    onDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function edit(id: CommonType.IdType) {
@@ -204,10 +210,13 @@ async function handleSyncTenantDict() {
     positiveText: '确认',
     negativeText: '取消',
     onPositiveClick: async () => {
-      const { error } = await fetchSyncTenantDict();
-      if (error) return;
-      window.$message?.success('同步租户字典成功');
-      await getData();
+      try {
+        await fetchSyncTenantDict();
+        window.$message?.success('同步租户字典成功');
+        await getData();
+      } catch {
+        // error handled by request interceptor
+      }
     }
   });
 }
@@ -219,10 +228,13 @@ async function handleSyncTenantConfig() {
     positiveText: '确认',
     negativeText: '取消',
     onPositiveClick: async () => {
-      const { error } = await fetchSyncTenantConfig();
-      if (error) return;
-      window.$message?.success('同步租户参数配置成功');
-      await getData();
+      try {
+        await fetchSyncTenantConfig();
+        window.$message?.success('同步租户参数配置成功');
+        await getData();
+      } catch {
+        // error handled by request interceptor
+      }
     }
   });
 }
@@ -232,10 +244,13 @@ async function handleSyncTenantPackage(row: Api.System.Tenant) {
     tenantId: row.tenantId,
     packageId: row.packageId
   };
-  const { error } = await fetchSyncTenantPackage(params);
-  if (error) return;
-  window.$message?.success('同步租户套餐成功');
-  await getData();
+  try {
+    await fetchSyncTenantPackage(params);
+    window.$message?.success('同步租户套餐成功');
+    await getData();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleExport() {

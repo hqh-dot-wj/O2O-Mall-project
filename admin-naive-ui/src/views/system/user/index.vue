@@ -213,16 +213,22 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteUser(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteUser(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleDelete(userId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteUser([userId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteUser([userId]);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function edit(userId: CommonType.IdType) {
@@ -242,11 +248,14 @@ const selectedKeys = ref<string[]>([]);
 
 async function getTreeData() {
   startTreeLoading();
-  const { data: tree, error } = await fetchGetDeptTree();
-  if (!error) {
+  try {
+    const { data: tree } = await fetchGetDeptTree();
     deptData.value = tree;
+  } catch {
+    // 错误消息已在请求工具中显示
+  } finally {
+    endTreeLoading();
   }
-  endTreeLoading();
 }
 
 getTreeData();
@@ -272,16 +281,17 @@ async function handleStatusChange(
   value: Api.Common.EnableStatus,
   callback: (flag: boolean) => void
 ) {
-  const { error } = await fetchUpdateUserStatus({
-    userId: row.userId,
-    status: value
-  });
-
-  callback(!error);
-
-  if (!error) {
+  try {
+    await fetchUpdateUserStatus({
+      userId: row.userId,
+      status: value
+    });
+    callback(true);
     window.$message?.success($t('page.system.user.statusChangeSuccess'));
     getData();
+  } catch {
+    callback(false);
+    // 错误消息已在请求工具中显示
   }
 }
 

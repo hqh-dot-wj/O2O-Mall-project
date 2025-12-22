@@ -196,15 +196,21 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedR
   useTableOperate(data, getData);
 
 async function handleBatchDelete() {
-  const { error } = await fetchDeleteJob(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchDeleteJob(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function handleDelete(jobId: CommonType.IdType) {
-  const { error } = await fetchDeleteJob(jobId);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchDeleteJob(jobId);
+    onDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 async function edit(jobId: CommonType.IdType) {
@@ -216,18 +222,22 @@ async function handleStatusChange(
   value: Api.Common.EnableStatus,
   callback: (flag: boolean) => void
 ) {
-  const { error } = await fetchChangeJobStatus(row.jobId, value);
-  callback(!error);
-  if (!error) {
+  try {
+    await fetchChangeJobStatus(row.jobId, value);
+    callback(true);
     window.$message?.success('状态修改成功');
     getData();
+  } catch {
+    callback(false);
   }
 }
 
 async function handleRun(row: Api.Monitor.Job) {
-  const { error } = await fetchRunJob(row.jobId, row.jobGroup);
-  if (!error) {
+  try {
+    await fetchRunJob(row.jobId, row.jobGroup);
     window.$message?.success('执行成功');
+  } catch {
+    // error handled by request interceptor
   }
 }
 

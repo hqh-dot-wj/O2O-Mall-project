@@ -3,6 +3,7 @@ import { ref, reactive } from 'vue';
 import { NModal, NCard, NForm, NFormItem, NTree, NButton, NSpace, useMessage } from 'naive-ui';
 import type { TreeOption } from 'naive-ui';
 import { fetchGetFolderTree, fetchMoveFiles } from '@/service/api';
+import { $t } from '@/locales';
 
 const message = useMessage();
 const emit = defineEmits<{
@@ -52,13 +53,13 @@ async function openModal(fileIds: string[]) {
         const { data } = await fetchGetFolderTree();
         treeData.value = buildTreeData(data || []);
     } catch (error) {
-        message.error('加载文件夹失败');
+        message.error($t('page.fileManager.loadFoldersFailed'));
     }
 }
 
 async function handleMove() {
     if (selectedFolderId.value === null) {
-        message.warning('请选择目标文件夹');
+        message.warning($t('page.fileManager.selectTargetFolder'));
         return;
     }
 
@@ -69,11 +70,11 @@ async function handleMove() {
             targetFolderId: selectedFolderId.value
         });
 
-        message.success('移动成功');
+        message.success($t('page.fileManager.moveSuccess'));
         visible.value = false;
         emit('success');
     } catch (error) {
-        message.error('移动失败');
+        message.error($t('page.fileManager.moveFailed'));
     } finally {
         loading.value = false;
     }

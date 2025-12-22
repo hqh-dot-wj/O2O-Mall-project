@@ -148,9 +148,12 @@ const { drawerVisible, operateType, editingData, handleAdd, handleEdit, onDelete
 
 async function handleDelete(deptId: CommonType.IdType) {
   // request
-  const { error } = await fetchBatchDeleteDept([deptId]);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchBatchDeleteDept([deptId]);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function edit(row: TableDataWithIndex<Api.System.Dept>) {

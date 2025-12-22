@@ -164,15 +164,21 @@ const {
 const { checkedRowKeys, onBatchDeleted, onDeleted } = useTableOperate(data, getData);
 
 async function handleBatchDelete() {
-  const { error } = await fetchDeleteJobLog(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchDeleteJobLog(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleDelete(jobLogId: CommonType.IdType) {
-  const { error } = await fetchDeleteJobLog(jobLogId);
-  if (error) return;
-  onDeleted();
+  try {
+    await fetchDeleteJobLog(jobLogId);
+    onDeleted();
+  } catch {
+    // 错误消息已在请求工具中显示
+  }
 }
 
 async function handleClean() {
@@ -182,10 +188,12 @@ async function handleClean() {
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
-      const { error } = await fetchCleanJobLog();
-      if (!error) {
+      try {
+        await fetchCleanJobLog();
         window.$message?.success('清空成功');
         getData();
+      } catch {
+        // 错误消息已在请求工具中显示
       }
     }
   });

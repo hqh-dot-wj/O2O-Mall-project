@@ -2,6 +2,7 @@
 import { ref, reactive } from 'vue';
 import { NModal, NCard, NForm, NFormItem, NInput, NInputNumber, NButton, NSpace, useMessage } from 'naive-ui';
 import { fetchCreateFolder, fetchUpdateFolder } from '@/service/api';
+import { $t } from '@/locales';
 
 const message = useMessage();
 const emit = defineEmits<{
@@ -66,10 +67,10 @@ async function handleSubmit() {
             // 创建时不发送 folderId
             const { folderId, ...createData } = formModel;
             await fetchCreateFolder(createData);
-            message.success('创建成功');
+            message.success($t('common.addSuccess'));
         } else {
             await fetchUpdateFolder(formModel);
-            message.success('更新成功');
+            message.success($t('common.updateSuccess'));
         }
 
         visible.value = false;

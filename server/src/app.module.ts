@@ -1,8 +1,11 @@
 import { Module, Global, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AppConfigService } from './config/app-config.service';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bull';
 import configuration from './config/index';
 import { validate } from './config/env.validation';
+import { AppConfigModule } from './config/app-config.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { PermissionGuard } from 'src/common/guards/permission.guard';
@@ -25,7 +28,7 @@ import { PrismaModule } from './prisma/prisma.module';
 @Global()
 @Module({
   imports: [
-    // 配置模块
+    // 配置模块 - 强类型配置验证
     ConfigModule.forRoot({
       cache: true,
       load: [configuration],
@@ -37,6 +40,8 @@ import { PrismaModule } from './prisma/prisma.module';
         abortEarly: false,
       },
     }),
+    // 类型安全的配置服务模块
+    AppConfigModule,
     // Pino 日志模块
     LoggerModule,
     // CLS 上下文模块 (Request ID)
@@ -52,6 +57,18 @@ import { PrismaModule } from './prisma/prisma.module';
       ttl: 60000,
       limit: 100,
     }]),
+    // Bull 队列模块 (用于异步任务处理)
+    BullModule.forRootAsync({
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        redis: {
+          host: config.redis.host,
+          port: config.redis.port,
+          password: config.redis.password,
+          db: config.redis.db,
+        },
+      }),
+    }),
 
     MainModule,
     UploadModule,
@@ -72,24 +89,27 @@ import { PrismaModule } from './prisma/prisma.module';
       provide: APP_INTERCEPTOR,
       useClass: TransactionalInterceptor,
     },
-    // 租户守卫
-    {
-      provide: APP_GUARD,
-      useClass: TenantGuard,
-    },
-    // API 限流守卫
+    // API 限流守卫 - 最先执行，防止DDoS攻击
     {
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
     },
+    // JWT 认证守卫 - 第二执行，验证用户身份
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    // 租户守卫 - 基于已认证用户设置租户上下文
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
+    },
+    // 角色守卫 - 检查用户角色
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    // 权限守卫 - 检查API权限
     {
       provide: APP_GUARD,
       useClass: PermissionGuard,

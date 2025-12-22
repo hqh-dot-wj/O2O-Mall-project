@@ -145,9 +145,12 @@ const { drawerVisible, editingData, handleEdit, checkedRowKeys, onBatchDeleted }
 
 async function handleBatchDelete() {
   // request
-  const { error } = await fetchBatchDeleteOperLog(checkedRowKeys.value);
-  if (error) return;
-  onBatchDeleted();
+  try {
+    await fetchBatchDeleteOperLog(checkedRowKeys.value);
+    onBatchDeleted();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 async function view(operId: CommonType.IdType) {
   handleEdit('operId', operId);
@@ -164,10 +167,13 @@ async function handleCleanOperLog() {
     positiveText: '确认清空',
     negativeText: '取消',
     onPositiveClick: async () => {
-      const { error } = await fetchCleanOperLog();
-      if (error) return;
-      window.$message?.success('清空成功');
-      await getData();
+      try {
+        await fetchCleanOperLog();
+        window.$message?.success('清空成功');
+        await getData();
+      } catch {
+        // error handled by request interceptor
+      }
     }
   });
 }

@@ -136,9 +136,12 @@ const { columns, columnChecks, data, getData, loading, mobilePagination, searchP
 
 async function handleForceLogout(tokenId: string) {
   // request
-  const { error } = await fetchForceLogout(tokenId);
-  if (error) return;
-  getData();
+  try {
+    await fetchForceLogout(tokenId);
+    getData();
+  } catch {
+    // error handled by request interceptor
+  }
 }
 </script>
 

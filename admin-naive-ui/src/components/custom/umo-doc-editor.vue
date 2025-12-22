@@ -64,8 +64,11 @@ function handleFileDelete(id: CommonType.IdType) {
     positiveText: '确认删除',
     negativeText: '取消',
     onPositiveClick: async () => {
-      const { error } = await fetchBatchDeleteOss([id]);
-      if (error) throw new Error(error.message || '文件删除失败');
+      try {
+        await fetchBatchDeleteOss([id]);
+      } catch (error: any) {
+        throw new Error(error.message || '文件删除失败');
+      }
     }
   });
   return true;
@@ -78,14 +81,8 @@ defineExpose({
 
 <template>
   <div class="umo-editor size-full">
-    <UmoEditor
-      v-bind="attrs"
-      ref="umoEditorRef"
-      :theme="themeStore.darkMode ? 'dark' : 'light'"
-      @save="handleSave"
-      @file-upload="handleFileUpload"
-      @file-delete="handleFileDelete"
-    />
+    <UmoEditor v-bind="attrs" ref="umoEditorRef" :theme="themeStore.darkMode ? 'dark' : 'light'" @save="handleSave"
+      @file-upload="handleFileUpload" @file-delete="handleFileDelete" />
   </div>
 </template>
 

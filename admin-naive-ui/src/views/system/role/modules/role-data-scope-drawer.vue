@@ -86,20 +86,22 @@ async function handleSubmit() {
 
   const { roleId, roleName, roleKey, roleSort, dataScope, deptIds, menuIds } = model;
 
-  const { error } = await fetchUpdateRoleDataScope({
-    roleId,
-    roleName,
-    roleKey,
-    roleSort,
-    dataScope,
-    deptIds: dataScope === '2' ? deptIds : [],
-    menuIds
-  });
-  if (error) return;
-
-  window.$message?.success($t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+  try {
+    await fetchUpdateRoleDataScope({
+      roleId,
+      roleName,
+      roleKey,
+      roleSort,
+      dataScope,
+      deptIds: dataScope === '2' ? deptIds : [],
+      menuIds
+    });
+    window.$message?.success($t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 watch(visible, () => {
@@ -130,15 +132,8 @@ watch(visible, () => {
           <NSelect v-model:value="model.dataScope" :options="dataScopeOptions" />
         </NFormItem>
         <NFormItem v-if="model.dataScope === '2'" label="数据权限" path="deptIds" class="pr-24px">
-          <DeptTree
-            v-if="visible"
-            ref="deptTreeRef"
-            v-model:value="model.deptIds"
-            v-model:options="deptOptions"
-            v-model:loading="deptLoading"
-            v-model:cascade="model.deptCheckStrictly"
-            :immediate="false"
-          />
+          <DeptTree v-if="visible" ref="deptTreeRef" v-model:value="model.deptIds" v-model:options="deptOptions"
+            v-model:loading="deptLoading" v-model:cascade="model.deptCheckStrictly" :immediate="false" />
         </NFormItem>
       </NForm>
       <template #footer>

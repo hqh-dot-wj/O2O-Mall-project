@@ -129,12 +129,14 @@ async function handleSubmit() {
   genTable.columns = genTableInfo.value?.rows;
 
   // request
-  const { error } = await fetchUpdateGenTable(genTable);
-  if (error) return;
-  window.$message?.success('修改成功');
-
-  closeDrawer();
-  emit('submitted');
+  try {
+    await fetchUpdateGenTable(genTable);
+    window.$message?.success('修改成功');
+    closeDrawer();
+    emit('submitted');
+  } catch {
+    // error handled by request interceptor
+  }
 }
 
 watch(visible, () => {
