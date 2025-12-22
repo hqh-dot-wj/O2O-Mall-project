@@ -68,7 +68,7 @@ async function handleSubmit() {
     window.$message?.success($t('common.updateSuccess'));
     closeDrawer();
     emit('submitted');
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   }
 }

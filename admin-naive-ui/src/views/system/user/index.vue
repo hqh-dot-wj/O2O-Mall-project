@@ -216,7 +216,7 @@ async function handleBatchDelete() {
   try {
     await fetchBatchDeleteUser(checkedRowKeys.value);
     onBatchDeleted();
-  } catch {
+  } catch (error) {
     // 错误消息已在请求工具中显示
   }
 }
@@ -226,7 +226,7 @@ async function handleDelete(userId: CommonType.IdType) {
   try {
     await fetchBatchDeleteUser([userId]);
     onDeleted();
-  } catch {
+  } catch (error) {
     // 错误消息已在请求工具中显示
   }
 }
@@ -251,7 +251,7 @@ async function getTreeData() {
   try {
     const { data: tree } = await fetchGetDeptTree();
     deptData.value = tree;
-  } catch {
+  } catch (error) {
     // 错误消息已在请求工具中显示
   } finally {
     endTreeLoading();
@@ -289,7 +289,7 @@ async function handleStatusChange(
     callback(true);
     window.$message?.success($t('page.system.user.statusChangeSuccess'));
     getData();
-  } catch {
+  } catch (error) {
     callback(false);
     // 错误消息已在请求工具中显示
   }

@@ -55,7 +55,7 @@ const callbackByCode = async (data: Api.Auth.SocialLoginForm) => {
       grantType: 'social'
     });
     await processResponse();
-  } catch {
+  } catch (error) {
     handleError();
   }
 };
@@ -65,7 +65,7 @@ const loginByCode = async (data: Api.Auth.SocialLoginForm) => {
     await authStore.logout();
     await authStore.login(data);
     await processResponse();
-  } catch {
+  } catch (error) {
     handleError();
   }
 };

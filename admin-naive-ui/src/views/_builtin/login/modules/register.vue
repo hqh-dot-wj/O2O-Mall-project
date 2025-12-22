@@ -61,7 +61,7 @@ async function handleSubmit() {
     window.$message?.success('注册成功');
     // 注册成功后跳转到登录页
     toggleLoginModule('pwd-login');
-  } catch {
+  } catch (error) {
     handleFetchCaptchaCode();
   } finally {
     endRegisterLoading();
@@ -81,7 +81,7 @@ async function handleFetchTenantList() {
         value: tenant.tenantId
       };
     });
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   }
 }
@@ -100,7 +100,7 @@ async function handleFetchCaptchaCode() {
       model.uuid = data.uuid;
       codeUrl.value = `data:image/gif;base64,${data.img}`;
     }
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   } finally {
     endCodeLoading();

@@ -75,7 +75,7 @@ async function handleFetchTenantList() {
         };
       });
     }
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   } finally {
     endTenantLoading();
@@ -96,7 +96,7 @@ async function handleSubmit() {
   }
   try {
     await authStore.login(model);
-  } catch {
+  } catch (error) {
     handleFetchCaptchaCode();
   }
 }
@@ -120,7 +120,7 @@ async function handleFetchCaptchaCode() {
         codeUrl.value = `data:image/gif;base64,${data.img}`;
       }
     }
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   } finally {
     endCodeLoading();
@@ -150,7 +150,7 @@ async function handleSocialLogin(type: Api.System.SocialSource) {
   try {
     const { data } = await fetchSocialAuthBinding(type, model.tenantId);
     window.location.href = data;
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   }
 }

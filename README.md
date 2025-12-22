@@ -16,6 +16,10 @@
 
 [在线演示](https://www.linlingqin.top/) | [快速开始](#快速开始) | [文档](#文档) | [更新日志](CHANGELOG.md) | [🎯 优化报告](server/docs/OPTIMIZATION_README.md)
 
+**🎮 演示账户**
+- 账号：`demo` | 密码：`demo123` | 租户：`000000`
+- 权限：仅查看权限（无法修改数据）
+
 </div>
 
 ---

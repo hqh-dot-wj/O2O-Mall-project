@@ -91,7 +91,7 @@ async function getUserInfo(id: CommonType.IdType = '') {
       label: role.roleName,
       value: role.roleId
     }));
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   } finally {
     endLoading();
@@ -160,7 +160,7 @@ async function handleSubmit() {
     window.$message?.success(props.operateType === 'add' ? $t('common.addSuccess') : $t('common.updateSuccess'));
     closeDrawer();
     emit('submitted');
-  } catch {
+  } catch (error) {
     // error handled by request interceptor
   }
 }

@@ -28,10 +28,7 @@ async function getCacheInfo() {
       // 单独调用内存图表更新
       updateMemoryChart();
     });
-  } catch {
-      fetchError.value = '获取缓存信息失败';
-    }
-  } catch {
+  } catch (error) {
     fetchError.value = '获取缓存信息出错';
   } finally {
     endLoading();

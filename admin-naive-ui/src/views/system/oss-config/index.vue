@@ -184,7 +184,7 @@ async function handleBatchDelete() {
   try {
     await fetchBatchDeleteOssConfig(checkedRowKeys.value);
     onBatchDeleted();
-  } catch {
+  } catch (error) {
     // 错误消息已在请求工具中显示
   }
 }
@@ -194,7 +194,7 @@ async function handleDelete(ossConfigId: CommonType.IdType) {
   try {
     await fetchBatchDeleteOssConfig([ossConfigId]);
     onDeleted();
-  } catch {
+  } catch (error) {
     // 错误消息已在请求工具中显示
   }
 }
@@ -218,7 +218,7 @@ async function handleStatusChange(
     callback(true);
     window.$message?.success('状态修改成功');
     getData();
-  } catch {
+  } catch (error) {
     callback(false);
     // 错误消息已在请求工具中显示
   }

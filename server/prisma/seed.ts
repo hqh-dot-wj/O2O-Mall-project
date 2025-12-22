@@ -1147,6 +1147,23 @@ async function main() {
         remark: '普通角色',
         tenantId: '000000',
       },
+      {
+        roleId: 3,
+        roleName: '演示角色',
+        roleKey: 'demo',
+        roleSort: 10,
+        dataScope: '5',
+        menuCheckStrictly: true,
+        deptCheckStrictly: true,
+        status: '0',
+        delFlag: '0',
+        createBy: 'admin',
+        createTime: new Date('2025-02-28 16:52:10.000000'),
+        updateBy: '',
+        updateTime: null,
+        remark: '演示账户角色，仅拥有查看权限',
+        tenantId: '000000',
+      },
     ],
     skipDuplicates: true,
   });
@@ -3643,6 +3660,28 @@ async function main() {
         loginDate: null,
         tenantId: '000000',
       },
+      {
+        userId: 3,
+        deptId: 103,
+        userName: 'demo',
+        nickName: '演示账号',
+        userType: '00',
+        email: 'demo@example.com',
+        phonenumber: '13800138000',
+        sex: '0',
+        password: '$2b$10$UrJrjy0kxyrTO1UvhRVsvex35mB1s1jzAraIA9xtzPmlLmRtZXEXS',
+        status: '0',
+        delFlag: '0',
+        loginIp: '127.0.0.1',
+        createBy: 'admin',
+        createTime: new Date('2025-02-28 16:52:10.000000'),
+        updateBy: '',
+        updateTime: null,
+        remark: '演示账户，密码：demo123',
+        avatar: '',
+        loginDate: null,
+        tenantId: '000000',
+      },
     ],
     skipDuplicates: true,
   });
@@ -4183,6 +4222,58 @@ async function main() {
         roleId: 2,
         menuId: 1078,
       },
+      // 演示角色权限 - 仅包含查询、列表、导出权限
+      { roleId: 3, menuId: 1 }, // 系统管理
+      { roleId: 3, menuId: 100 }, // 用户管理
+      { roleId: 3, menuId: 1000 }, // 用户查询
+      { roleId: 3, menuId: 1006 }, // 用户导出
+      { roleId: 3, menuId: 101 }, // 角色管理
+      { roleId: 3, menuId: 1007 }, // 角色查询
+      { roleId: 3, menuId: 1012 }, // 角色导出
+      { roleId: 3, menuId: 102 }, // 菜单管理
+      { roleId: 3, menuId: 1013 }, // 菜单查询
+      { roleId: 3, menuId: 103 }, // 部门管理
+      { roleId: 3, menuId: 1017 }, // 部门查询
+      { roleId: 3, menuId: 104 }, // 岗位管理
+      { roleId: 3, menuId: 1021 }, // 岗位查询
+      { roleId: 3, menuId: 1026 }, // 岗位导出
+      { roleId: 3, menuId: 105 }, // 字典管理
+      { roleId: 3, menuId: 1027 }, // 字典查询
+      { roleId: 3, menuId: 1032 }, // 字典导出
+      { roleId: 3, menuId: 106 }, // 参数设置
+      { roleId: 3, menuId: 1033 }, // 参数查询
+      { roleId: 3, menuId: 1038 }, // 参数导出
+      { roleId: 3, menuId: 107 }, // 通知公告
+      { roleId: 3, menuId: 1039 }, // 公告查询
+      { roleId: 3, menuId: 108 }, // 日志管理
+      { roleId: 3, menuId: 500 }, // 操作日志
+      { roleId: 3, menuId: 1043 }, // 操作查询
+      { roleId: 3, menuId: 1046 }, // 操作导出
+      { roleId: 3, menuId: 501 }, // 登录日志
+      { roleId: 3, menuId: 1047 }, // 登录查询
+      { roleId: 3, menuId: 1050 }, // 登录导出
+      { roleId: 3, menuId: 109 }, // 在线用户
+      { roleId: 3, menuId: 1051 }, // 在线查询
+      { roleId: 3, menuId: 110 }, // 定时任务
+      { roleId: 3, menuId: 1055 }, // 任务查询
+      { roleId: 3, menuId: 1060 }, // 任务导出
+      { roleId: 3, menuId: 112 }, // 客户端管理
+      { roleId: 3, menuId: 113 }, // 租户管理
+      { roleId: 3, menuId: 1063 }, // 租户查询
+      { roleId: 3, menuId: 1068 }, // 租户导出
+      { roleId: 3, menuId: 114 }, // 租户套餐管理
+      { roleId: 3, menuId: 1069 }, // 套餐查询
+      { roleId: 3, menuId: 115 }, // 文件管理
+      { roleId: 3, menuId: 1075 }, // 文件查询
+      { roleId: 3, menuId: 2 }, // 系统监控
+      { roleId: 3, menuId: 116 }, // 缓存监控
+      { roleId: 3, menuId: 117 }, // 缓存列表
+      { roleId: 3, menuId: 118 }, // 服务监控
+      { roleId: 3, menuId: 3 }, // 系统工具
+      { roleId: 3, menuId: 119 }, // 表单构建
+      { roleId: 3, menuId: 120 }, // 代码生成
+      { roleId: 3, menuId: 1076 }, // 生成查询
+      { roleId: 3, menuId: 4 }, // 关于
     ],
     skipDuplicates: true,
   });
@@ -4198,6 +4289,10 @@ async function main() {
         userId: 2,
         postId: 2,
       },
+      {
+        userId: 3,
+        postId: 1,
+      },
     ],
     skipDuplicates: true,
   });
@@ -4212,6 +4307,10 @@ async function main() {
       {
         userId: 2,
         roleId: 2,
+      },
+      {
+        userId: 3,
+        roleId: 3,
       },
     ],
     skipDuplicates: true,
