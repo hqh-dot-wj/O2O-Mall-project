@@ -136,7 +136,7 @@ export default () => {
       password: process.env.REDIS_PASSWORD || '',
       port: num(process.env.REDIS_PORT, 6379),
       db: num(process.env.REDIS_DB, env === 'production' ? 0 : 2),
-      keyPrefix: process.env.REDIS_KEY_PREFIX || (env === 'production' ? 'nest-admin-soybean:' : ''),
+      keyPrefix: process.env.REDIS_KEY_PREFIX || '',
     },
 
     jwt: {

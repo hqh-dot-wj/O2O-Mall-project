@@ -73,8 +73,8 @@ export class MainController {
   @NotRequireAuth()
   @Get('/registerUser')
   async registerUser() {
-    //是否开启验证码
-    const res = await this.configService.getConfigValue('sys.account.registerUser');
+    // 使用 getSystemConfigValue 不依赖租户上下文（登录前调用）
+    const res = await this.configService.getSystemConfigValue('sys.account.registerUser');
     const enable = res === 'true';
     return Result.ok(enable, '操作成功');
   }
