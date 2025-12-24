@@ -23,6 +23,7 @@ const tableToModelMap: Record<string, string> = {
   sys_dict_data: 'sysDictData',
   sys_dict_type: 'sysDictType',
   sys_job: 'sysJob',
+  sys_logininfor: 'sysLogininfor',
   sys_menu: 'sysMenu',
   sys_notice: 'sysNotice',
   sys_post: 'sysPost',
@@ -125,9 +126,9 @@ function parseValues(valuesStr: string): string[] {
 
 // 解析单条 INSERT 语句
 function parseInsertStatement(sql: string): { tableName: string; columns: string[]; rows: any[] } | null {
-  // 匹配 INSERT INTO `table_name` (`col1`, `col2`, ...) VALUES (...), (...)
+  // 匹配 PostgreSQL: INSERT INTO "public"."table_name" 或 MySQL: INSERT INTO `table_name`
   const insertRegex =
-    /INSERT\s+INTO\s+`?(\w+)`?\s*\(([^)]+)\)\s*VALUES\s*(.+)/is;
+    /INSERT\s+INTO\s+(?:"public"\.)?["']?(\w+)["']?\s*\(([^)]+)\)\s*VALUES\s*(.+)/is;
   const match = sql.match(insertRegex);
 
   if (!match) {
@@ -138,9 +139,9 @@ function parseInsertStatement(sql: string): { tableName: string; columns: string
   const columnsStr = match[2];
   const valuesStr = match[3];
 
-  // 解析列名
+  // 解析列名 (去除引号：双引号、单引号、反引号)
   const columns = columnsStr.split(',').map((col) => {
-    return col.trim().replace(/`/g, '');
+    return col.trim().replace(/["`']/g, '');
   });
 
   // 解析所有 VALUES 组
@@ -328,6 +329,7 @@ async function main() {
     'sys_user',
     'sys_notice',
     'sys_job',
+    'sys_logininfor',
     'sys_role_dept',
     'sys_role_menu',
     'sys_user_post',
