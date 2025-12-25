@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Nest-Admin-Soybean",
   description: "企业级全栈管理系统 - 开箱即用的解决方案",
+  base: '/Nest-Admin-Soybean/',
   
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
