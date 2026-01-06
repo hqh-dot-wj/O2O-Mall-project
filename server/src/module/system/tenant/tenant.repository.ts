@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysTenant } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StatusEnum, DelFlagEnum } from 'src/common/enum';
@@ -10,13 +11,28 @@ import { TenantContext } from 'src/common/tenant/tenant.context';
  */
 @Injectable()
 export class TenantRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cls: ClsService,
+  ) { }
+
+  /**
+   * 获取 Prisma 原始客户端（用于复杂查询）
+   * 如果在事务上下文中，返回事务客户端
+   */
+  protected get client(): PrismaService | Prisma.TransactionClient {
+    const tx = this.cls.get<Prisma.TransactionClient>('PRISMA_TX');
+    if (tx) {
+      return tx;
+    }
+    return this.prisma;
+  }
 
   /**
    * 根据租户ID查找租户
    */
   async findByTenantId(tenantId: string): Promise<SysTenant | null> {
-    return this.prisma.sysTenant.findUnique({
+    return this.client.sysTenant.findUnique({
       where: { tenantId },
     });
   }
@@ -25,7 +41,7 @@ export class TenantRepository {
    * 查找所有活跃租户
    */
   async findAllActive(): Promise<SysTenant[]> {
-    return this.prisma.sysTenant.findMany({
+    return this.client.sysTenant.findMany({
       where: {
         status: StatusEnum.NORMAL,
         delFlag: DelFlagEnum.NORMAL,
@@ -38,7 +54,7 @@ export class TenantRepository {
    * 查找所有非超级管理员租户
    */
   async findAllNonSuper(): Promise<Array<Pick<SysTenant, 'tenantId' | 'companyName' | 'status' | 'expireTime'>>> {
-    return this.prisma.sysTenant.findMany({
+    return this.client.sysTenant.findMany({
       where: {
         status: StatusEnum.NORMAL,
         delFlag: DelFlagEnum.NORMAL,
@@ -57,7 +73,7 @@ export class TenantRepository {
    * 根据公司名称查找租户
    */
   async findByCompanyName(companyName: string): Promise<SysTenant | null> {
-    return this.prisma.sysTenant.findFirst({
+    return this.client.sysTenant.findFirst({
       where: {
         companyName,
         delFlag: DelFlagEnum.NORMAL,
@@ -69,7 +85,7 @@ export class TenantRepository {
    * 获取最后创建的租户（用于生成新租户ID）
    */
   async findLastTenant(): Promise<SysTenant | null> {
-    return this.prisma.sysTenant.findFirst({
+    return this.client.sysTenant.findFirst({
       where: {
         tenantId: { not: TenantContext.SUPER_TENANT_ID },
       },
@@ -81,7 +97,7 @@ export class TenantRepository {
    * 检查租户ID是否存在
    */
   async existsByTenantId(tenantId: string): Promise<boolean> {
-    const count = await this.prisma.sysTenant.count({
+    const count = await this.client.sysTenant.count({
       where: { tenantId },
     });
     return count > 0;
@@ -95,30 +111,47 @@ export class TenantRepository {
     skip: number,
     take: number,
   ): Promise<{ list: SysTenant[]; total: number }> {
-    const [list, total] = await this.prisma.$transaction([
-      this.prisma.sysTenant.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { createTime: 'desc' },
-      }),
-      this.prisma.sysTenant.count({ where }),
-    ]);
-    return { list, total };
+    const client = this.client;
+    // 如果已经在事务中，或者 simple client，我们使用 Promise.all 模拟
+    // 只有 PrismaClient 实例有 $transaction 方法 (且不带 Client generic 时的调用方式)
+    // 但这里我们简单判断: 如果是 TransactionClient，它没有 $transaction 属性
+    // PrismaService extends PrismaClient so it has it.
+
+    // 注意: this.client 返回 PrismaService | Prisma.TransactionClient
+    // 运行时判断
+    let promises: [Promise<SysTenant[]>, Promise<number>];
+
+    const findMany = client.sysTenant.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createTime: 'desc' },
+    });
+    const count = client.sysTenant.count({ where });
+
+    if ('$transaction' in client) {
+      // It's the main client
+      const [list, total] = await (client as PrismaService).$transaction([findMany, count]);
+      return { list, total };
+    } else {
+      // It's a transaction client, just run parallel
+      const [list, total] = await Promise.all([findMany, count]);
+      return { list, total };
+    }
   }
 
   /**
    * 创建租户
    */
   async create(data: Prisma.SysTenantCreateInput): Promise<SysTenant> {
-    return this.prisma.sysTenant.create({ data });
+    return this.client.sysTenant.create({ data });
   }
 
   /**
    * 更新租户
    */
   async update(tenantId: string, data: Prisma.SysTenantUpdateInput): Promise<SysTenant> {
-    return this.prisma.sysTenant.update({
+    return this.client.sysTenant.update({
       where: { tenantId },
       data,
     });
@@ -128,7 +161,7 @@ export class TenantRepository {
    * 更新租户状态
    */
   async updateStatus(tenantId: string, status: StatusEnum): Promise<SysTenant> {
-    return this.prisma.sysTenant.update({
+    return this.client.sysTenant.update({
       where: { tenantId },
       data: { status },
     });
@@ -138,7 +171,7 @@ export class TenantRepository {
    * 软删除
    */
   async softDelete(tenantId: string): Promise<SysTenant> {
-    return this.prisma.sysTenant.update({
+    return this.client.sysTenant.update({
       where: { tenantId },
       data: { delFlag: DelFlagEnum.DELETE },
     });
@@ -148,7 +181,7 @@ export class TenantRepository {
    * 批量更新租户套餐
    */
   async updatePackageForTenants(tenantIds: string[], packageId: number): Promise<number> {
-    const result = await this.prisma.sysTenant.updateMany({
+    const result = await this.client.sysTenant.updateMany({
       where: {
         tenantId: { in: tenantIds },
       },

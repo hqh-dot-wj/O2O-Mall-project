@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from 'src/config/app-config.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Status } from '@prisma/client';
 import { TenantContext } from './tenant.context';
 
 /**
@@ -70,7 +70,7 @@ export class TenantHelper {
    * ```typescript
    * // 简单查询
    * const users = await this.prisma.sysUser.findMany({
-   *   where: this.tenantHelper.addTenantFilter({ status: '0' }),
+   *   where: this.tenantHelper.addTenantFilter({ status: Status.NORMAL }),
    * });
    *
    * // 复杂查询

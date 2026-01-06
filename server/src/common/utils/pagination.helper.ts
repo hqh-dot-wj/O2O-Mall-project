@@ -38,8 +38,8 @@ export class PaginationHelper {
     countArgs?: Prisma.Args<any, 'count'>,
   ): Promise<PaginatedResult<T>> {
     const [rows, total] = await prisma.$transaction([
-      prisma[model].findMany(findManyArgs),
-      prisma[model].count(countArgs || { where: findManyArgs?.where }),
+      (prisma as any)[model].findMany(findManyArgs),
+      (prisma as any)[model].count(countArgs || { where: findManyArgs?.where }),
     ]);
     return { rows, total };
   }

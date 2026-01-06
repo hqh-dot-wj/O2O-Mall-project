@@ -1,6 +1,6 @@
 import * as Lodash from 'lodash';
 
-export const entityTem = (options) => {
+export const entityTem = (options: any) => {
   const { BusinessName, tableComment } = options;
   const contentTem = content(options);
   return `
@@ -13,11 +13,11 @@ ${contentTem}
 `;
 };
 
-const content = (options) => {
+const content = (options: any) => {
   const { columns } = options;
-  const sortedColumns = [...columns].sort((a, b) => b.isPk - a.isPk);
+  const sortedColumns = [...columns].sort((a: any, b: any) => b.isPk - a.isPk);
   return sortedColumns
-    .map((column) => {
+    .map((column: any) => {
       const { javaType, javaField, columnComment, isRequired } = column;
       const type = mapJavaTypeToTs(javaType);
       const optionalFlag = isRequired == '1' ? '' : '?';

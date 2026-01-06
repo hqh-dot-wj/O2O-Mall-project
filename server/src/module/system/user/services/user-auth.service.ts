@@ -35,7 +35,7 @@ export class UserAuthService {
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
     private readonly roleService: RoleService,
-  ) {}
+  ) { }
 
   /**
    * 用户登录
@@ -76,9 +76,9 @@ export class UserAuthService {
 
     const roles = (userData.roles ?? []).map((item) => item.roleKey);
 
-    const safeDept = (userData.dept as any) ?? ({} as any);
-    const safeRoles = (userData.roles as any) ?? [];
-    const safePosts = (userData.posts as any) ?? [];
+    const safeDept = (userData.dept || {}) as any;
+    const safeRoles = (userData.roles || []) as any;
+    const safePosts = (userData.posts || []) as any;
     const userInfo: Partial<UserType> = {
       browser: clientInfo.browser,
       ipaddr: clientInfo.ipaddr,
@@ -101,7 +101,7 @@ export class UserAuthService {
     };
 
     // 添加额外的用户信息
-    (userInfo.user as any).deptName = deptData?.deptName || '';
+    (userInfo.user as UserWithRelations & { deptName?: string }).deptName = deptData?.deptName || '';
 
     await this.updateRedisToken(uuid, userInfo);
 
@@ -248,13 +248,13 @@ export class UserAuthService {
 
     const posts = postRelations.length
       ? await this.prisma.sysPost.findMany({
-          where: {
-            delFlag: DelFlagEnum.NORMAL,
-            postId: {
-              in: postRelations.map((item) => item.postId),
-            },
+        where: {
+          delFlag: DelFlagEnum.NORMAL,
+          postId: {
+            in: postRelations.map((item) => item.postId),
           },
-        })
+        },
+      })
       : [];
 
     const roles = roleIds.length

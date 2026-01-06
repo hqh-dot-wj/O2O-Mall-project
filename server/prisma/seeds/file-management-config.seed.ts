@@ -52,8 +52,8 @@ export async function seedFileManagementConfig() {
                 data: {
                     ...config,
                     tenantId: '000000',
-                    status: '0',
-                    delFlag: '0',
+                    status: 'NORMAL',
+                    delFlag: 'NORMAL',
                     createBy: 'admin',
                     updateBy: 'admin',
                 },
@@ -85,7 +85,7 @@ export async function seedFileManagementJobs() {
             cronExpression: '0 0 9 * * ?',
             misfirePolicy: '1',
             concurrent: '0',
-            status: '0',
+            status: 'NORMAL',
             remark: '每天早上9点检查租户存储使用情况，超过80%发送预警通知',
         },
         {
@@ -95,7 +95,7 @@ export async function seedFileManagementJobs() {
             cronExpression: '0 0 2 * * ?',
             misfirePolicy: '1',
             concurrent: '0',
-            status: '0',
+            status: 'NORMAL',
             remark: '每天凌晨2点批量扫描并清理超过maxVersions限制的旧版本文件',
         },
     ];
@@ -111,7 +111,7 @@ export async function seedFileManagementJobs() {
         if (!existing) {
             await prisma.sysJob.create({
                 data: {
-                    ...job,
+                    ...job as any,
                     tenantId: '000000',
                     createBy: 'admin',
                     updateBy: 'admin',
@@ -133,7 +133,7 @@ export async function updateTenantStorageQuota() {
     console.log('开始更新租户存储配额...');
 
     const tenants = await prisma.sysTenant.findMany({
-        where: { delFlag: '0' },
+        where: { delFlag: 'NORMAL' },
     });
 
     for (const tenant of tenants) {

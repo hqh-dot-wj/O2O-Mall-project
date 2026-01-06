@@ -15,14 +15,14 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { Response } from 'express';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { RequireRole } from 'src/common/decorators/require-role.decorator';
 import { UploadService } from 'src/module/upload/upload.service';
 import {
   CreateUserDto,
   UpdateUserDto,
   ListUserDto,
-  ChangeUserStatusDto,
+  ChangeStatusDto,
   ResetPwdDto,
   UpdateProfileDto,
   UpdatePwdDto,
@@ -43,7 +43,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly uploadService: UploadService,
-  ) {}
+  ) { }
 
   /**
    * 获取当前登录用户信息 - 供 Soybean 前端调用
@@ -189,7 +189,7 @@ export class UserController {
   })
   @RequireRole('admin')
   @Put('authRole')
-  updateAuthRole(@Query() query) {
+  updateAuthRole(@Query() query: any) {
     return this.userService.updateAuthRole(query);
   }
 
@@ -227,12 +227,12 @@ export class UserController {
   @Api({
     summary: '用户-修改状态',
     description: '启用或停用用户账号',
-    body: ChangeUserStatusDto,
+    body: ChangeStatusDto,
   })
   @RequireRole('admin')
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put('changeStatus')
-  changeStatus(@Body() changeStatusDto: ChangeUserStatusDto) {
+  changeStatus(@Body() changeStatusDto: ChangeStatusDto) {
     return this.userService.changeStatus(changeStatusDto);
   }
 

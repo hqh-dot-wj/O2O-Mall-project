@@ -75,23 +75,22 @@ export const tenantExtension = Prisma.defineExtension((client) => {
 });
 
 /**
- * 需要租户隔离的模型列表
+ * 获取所有包含 tenantId 字段的业务模型
  */
-const TENANT_MODELS = [
-  'SysConfig',
-  'SysDept',
-  'SysDictData',
-  'SysDictType',
-  'SysJob',
-  'SysLogininfor',
-  'SysMenu',
-  'SysNotice',
-  'SysOperLog',
-  'SysPost',
-  'SysRole',
-  'SysUpload',
-  'SysUser',
-];
+function getTenantModels(): string[] {
+  const models = Prisma.dmmf.datamodel.models;
+  return models
+    .filter((model) => {
+      // 必须包含 tenantId 字段
+      const hasTenantId = model.fields.some((f) => f.name === 'tenantId');
+      // 排除租户管理模型本身
+      const isNotTenantModel = model.name !== 'SysTenant';
+      return hasTenantId && isNotTenantModel;
+    })
+    .map((model) => model.name);
+}
+
+const TENANT_MODELS = getTenantModels();
 
 /**
  * 检查模型是否需要租户过滤

@@ -102,7 +102,7 @@ export class ServerService {
    * @param bytes {number} 要转换的字节数。
    * @returns {string} 返回转换后的GB数，保留两位小数。
    */
-  bytesToGB(bytes) {
+  bytesToGB(bytes: number) {
     // 计算字节到GB的转换率
     const gb = bytes / (1024 * 1024 * 1024);
     // 将结果四舍五入到小数点后两位

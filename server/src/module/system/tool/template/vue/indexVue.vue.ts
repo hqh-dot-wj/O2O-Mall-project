@@ -1,4 +1,4 @@
-export const indexVue = (options) => {
+export const indexVue = (options: any) => {
   const html = htmlTemplate(options);
   const script = indexScript(options);
   return `
@@ -7,7 +7,7 @@ export const indexVue = (options) => {
   
   `;
 };
-const htmlTemplate = (options) => {
+const htmlTemplate = (options: any) => {
   const { columns, moduleName, businessName } = options;
   const queryTem = indexQueryTemplate(columns);
   const buttonTem = indexButtomTemplate(moduleName, businessName);
@@ -40,7 +40,7 @@ const htmlTemplate = (options) => {
   return html;
 };
 
-const indexScript = (options) => {
+const indexScript = (options: any) => {
   const { columns, BusinessName, moduleName, businessName, primaryKey } = options;
   const dicts = indexScriptDicts(columns);
   const exportScript = handlerExport(moduleName, businessName);
@@ -128,10 +128,10 @@ const indexScript = (options) => {
 
   return script;
 };
-const indexQueryTemplate = (columns) => {
+const indexQueryTemplate = (columns: any[]) => {
   let html = ``;
-  let dictType, AttrName, parentheseIndex, comment;
-  columns.forEach((item) => {
+  let dictType: string, AttrName: string, parentheseIndex: number, comment: string;
+  columns.forEach((item: any) => {
     if (item.isQuery === '1') {
       dictType = item.dictType;
       AttrName = item.javaField.substring(0, 1).toUpperCase() + item.javaField.substring(1);
@@ -210,7 +210,7 @@ const indexQueryTemplate = (columns) => {
     `;
   return html;
 };
-const indexButtomTemplate = (moduleName, businessName) => {
+const indexButtomTemplate = (moduleName: string, businessName: string) => {
   return `
     <el-row :gutter="10" class="mb8">
         <el-col :span="1.5">
@@ -255,11 +255,11 @@ const indexButtomTemplate = (moduleName, businessName) => {
     </el-row>
     `;
 };
-const indexTableTemplate = (columns, businessName, moduleName) => {
-  let javaField, parentheseIndex, comment;
+const indexTableTemplate = (columns: any[], businessName: string, moduleName: string) => {
+  let javaField: string, parentheseIndex: number, comment: string;
   let html = `<el-table-column type="selection" width="55" align="center" />
             `;
-  columns.forEach((item) => {
+  columns.forEach((item: any) => {
     javaField = item.javaField;
     parentheseIndex = item.columnComment.indexOf('（');
     if (parentheseIndex != -1) {
@@ -313,10 +313,10 @@ const indexTableTemplate = (columns, businessName, moduleName) => {
   return html;
 };
 
-export const indexScriptDicts = (columns) => {
+export const indexScriptDicts = (columns: any[]) => {
   let script = '';
-  const dicts = [];
-  columns.forEach((item) => {
+  const dicts: string[] = [];
+  columns.forEach((item: any) => {
     if (item.dictType != '') {
       dicts.push(item.dictType);
     }
@@ -331,7 +331,7 @@ export const indexScriptDicts = (columns) => {
   }
   return script;
 };
-const handlerExport = (moduleName, businessName) => {
+const handlerExport = (moduleName: string, businessName: string) => {
   let h = '';
   h += `const  handleExport = () =>{`;
   h += ` proxy.download('${moduleName}/${businessName}/export', {`;

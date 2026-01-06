@@ -8,7 +8,7 @@ import { ExportTable } from 'src/common/utils/export';
 import { DataScopeEnum, DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { MenuService } from '../menu/menu.service';
-import { CreateRoleDto, UpdateRoleDto, ListRoleDto, ChangeRoleStatusDto } from './dto/index';
+import { CreateRoleDto, UpdateRoleDto, ListRoleDto, ChangeStatusDto } from './dto/index';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RoleRepository } from './role.repository';
 import { Uniq } from 'src/common/utils/index';
@@ -19,7 +19,7 @@ export class RoleService {
     private readonly prisma: PrismaService,
     private readonly roleRepo: RoleRepository,
     private readonly menuService: MenuService,
-  ) {}
+  ) { }
   @Transactional()
   async create(createRoleDto: CreateRoleDto) {
     const { menuIds = [], ...rolePayload } = createRoleDto as CreateRoleDto & { menuIds?: number[] };
@@ -28,7 +28,7 @@ export class RoleService {
       data: {
         ...rolePayload,
         roleSort: rolePayload.roleSort ?? 0,
-        status: rolePayload.status ?? '0',
+        status: rolePayload.status ?? StatusEnum.NORMAL,
         delFlag: DelFlagEnum.NORMAL,
       },
     });
@@ -65,7 +65,7 @@ export class RoleService {
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     if (query.params?.beginTime && query.params?.endTime) {
@@ -129,7 +129,7 @@ export class RoleService {
     return Result.ok(res);
   }
 
-  async changeStatus(changeStatusDto: ChangeRoleStatusDto) {
+  async changeStatus(changeStatusDto: ChangeStatusDto) {
     const res = await this.prisma.sysRole.update({
       where: { roleId: changeStatusDto.roleId },
       data: { status: changeStatusDto.status },
@@ -145,7 +145,7 @@ export class RoleService {
         },
       },
       data: {
-        delFlag: '1',
+        delFlag: DelFlagEnum.DELETE,
       },
     });
     return Result.ok(data.count);

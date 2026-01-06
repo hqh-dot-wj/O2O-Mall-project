@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IPaginatedData } from '../response/response.interface';
@@ -62,14 +63,20 @@ export type PrismaDelegate = {
  * }
  * ```
  */
-export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegate> {
+export abstract class BaseRepository<
+  T,
+  CreateInput = any,
+  UpdateInput = any,
+  D extends PrismaDelegate = PrismaDelegate,
+> {
   protected readonly delegate: D;
 
   constructor(
     protected readonly prisma: PrismaService,
+    protected readonly cls: ClsService,
     protected readonly modelName: keyof PrismaClient,
   ) {
-    this.delegate = (prisma as any)[modelName] as D;
+    this.delegate = (this.client as any)[modelName] as D;
   }
 
   /**
@@ -86,7 +93,7 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
    * 根据条件查询单条记录
    */
   async findOne(where: any, options?: { include?: any; select?: any }): Promise<T | null> {
-    return this.delegate.findFirst({
+    return (this.delegate as any).findFirst({
       where,
       ...options,
     });
@@ -104,6 +111,13 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
       select,
       orderBy: orderBy ? { [orderBy]: order || 'asc' } : undefined,
     });
+  }
+
+  /**
+   * 原始 findMany 查询
+   */
+  async findMany(args?: any): Promise<T[]> {
+    return this.delegate.findMany(args);
   }
 
   /**
@@ -137,7 +151,7 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
   /**
    * 创建记录
    */
-  async create(data: any, options?: { include?: any; select?: any }): Promise<T> {
+  async create(data: CreateInput, options?: { include?: any; select?: any }): Promise<T> {
     return this.delegate.create({
       data,
       ...options,
@@ -160,7 +174,11 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
   /**
    * 更新记录
    */
-  async update(id: number | string, data: any, options?: { include?: any; select?: any }): Promise<T> {
+  async update(
+    id: number | string,
+    data: UpdateInput,
+    options?: { include?: any; select?: any },
+  ): Promise<T> {
     return this.delegate.update({
       where: { [this.getPrimaryKeyName()]: id },
       data,
@@ -235,14 +253,18 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
    * 软删除（设置 delFlag）
    */
   async softDelete(id: number | string): Promise<T> {
-    return this.update(id, { delFlag: '1' });
+    return this.update(id, { delFlag: DelFlagEnum.DELETE } as unknown as UpdateInput);
   }
 
   /**
    * 批量软删除
    */
-  async softDeleteMany(ids: (number | string)[]): Promise<{ count: number }> {
-    return this.updateMany({ [this.getPrimaryKeyName()]: { in: ids } }, { delFlag: '1' });
+  async softDeleteBatch(ids: (number | string)[]): Promise<number> {
+    const result = await this.updateMany(
+      { [this.getPrimaryKeyName()]: { in: ids } },
+      { delFlag: DelFlagEnum.DELETE } as unknown as UpdateInput,
+    );
+    return result.count;
   }
 
   /**
@@ -255,8 +277,13 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
 
   /**
    * 获取 Prisma 原始客户端（用于复杂查询）
+   * 如果在事务上下文中，返回事务客户端
    */
-  protected get client(): PrismaService {
+  protected get client(): PrismaService | Prisma.TransactionClient {
+    const tx = this.cls.get<Prisma.TransactionClient>('PRISMA_TX');
+    if (tx) {
+      return tx;
+    }
     return this.prisma;
   }
 }
@@ -266,7 +293,12 @@ export abstract class BaseRepository<T, D extends PrismaDelegate = PrismaDelegat
  *
  * @description 自动在查询条件中添加 delFlag = '0' 过滤
  */
-export abstract class SoftDeleteRepository<T, D extends PrismaDelegate = PrismaDelegate> extends BaseRepository<T, D> {
+export abstract class SoftDeleteRepository<
+  T,
+  CreateInput = any,
+  UpdateInput = any,
+  D extends PrismaDelegate = PrismaDelegate,
+> extends BaseRepository<T, CreateInput, UpdateInput, D> {
   /**
    * 获取默认的查询条件（排除已删除）
    */
@@ -296,6 +328,13 @@ export abstract class SoftDeleteRepository<T, D extends PrismaDelegate = PrismaD
     return super.findPage({
       ...options,
       where: this.mergeWhere(options.where),
+    });
+  }
+
+  async findMany(args?: any): Promise<T[]> {
+    return super.findMany({
+      ...args,
+      where: this.mergeWhere(args?.where),
     });
   }
 

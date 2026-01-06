@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysJob } from '@prisma/client';
 import { BaseRepository } from 'src/common/repository/base.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -10,9 +11,14 @@ import { StatusEnum } from 'src/common/enum';
  * @description 封装定时任务的数据访问逻辑
  */
 @Injectable()
-export class JobRepository extends BaseRepository<SysJob, Prisma.SysJobDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysJob');
+export class JobRepository extends BaseRepository<
+  SysJob,
+  Prisma.SysJobCreateInput,
+  Prisma.SysJobUpdateInput,
+  Prisma.SysJobDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysJob');
   }
 
   /**
@@ -75,7 +81,7 @@ export class JobRepository extends BaseRepository<SysJob, Prisma.SysJobDelegate>
         jobId: { in: jobIds },
       },
       data: {
-        status,
+        status: status as any,
         updateBy,
         updateTime: new Date(),
       },

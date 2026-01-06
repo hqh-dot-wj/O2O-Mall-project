@@ -1,0 +1,25 @@
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy, ExtractJwt } from 'passport-jwt';
+import { AppConfigService } from 'src/config/app-config.service';
+import { UnauthorizedException, Injectable } from '@nestjs/common';
+import { RedisService } from 'src/module/common/redis/redis.service';
+import { CacheEnum } from 'src/common/enum/index';
+
+@Injectable()
+export class MemberStrategy extends PassportStrategy(Strategy, 'member-jwt') {
+    constructor(
+        private readonly config: AppConfigService,
+        private readonly redisService: RedisService,
+    ) {
+        super({
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            secretOrKey: config.jwt.secretkey,
+        });
+    }
+
+    async validate(payload: { uuid: string; memberId: string; iat: Date }) {
+        const user = await this.redisService.get(`${CacheEnum.LOGIN_TOKEN_KEY}${payload.uuid}`);
+        if (!user) throw new UnauthorizedException('登录已过期，请重新登录');
+        return user;
+    }
+}

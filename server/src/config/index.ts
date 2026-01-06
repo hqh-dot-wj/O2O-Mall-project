@@ -168,6 +168,11 @@ export default () => {
       defaultClientId: process.env.CLIENT_DEFAULT_ID || 'pc',
       defaultGrantType: process.env.CLIENT_DEFAULT_GRANT_TYPE || 'password',
     },
+
+    wechat: {
+      appid: process.env.WECHAT_APPID || '',
+      secret: process.env.WECHAT_SECRET || '',
+    },
   };
 
   // 应用配置转换器进行类型验证

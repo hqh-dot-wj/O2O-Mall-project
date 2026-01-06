@@ -52,7 +52,7 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema, required: false })
   @IsOptional()

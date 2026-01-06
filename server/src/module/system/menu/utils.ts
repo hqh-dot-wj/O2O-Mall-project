@@ -6,11 +6,11 @@ import * as UserConstants from 'src/module/system/user/user.constant';
  * 菜单列表转树形结构
  * @param arr
  */
-export const buildMenus = (arr) => {
+export const buildMenus = (arr: any[]) => {
   //保证父级菜单排在前面
   arr.sort((a, b) => a.parentId - b.parentId);
-  const kData = {}; // 以id做key的对象 暂时储存数据
-  const lData = []; // 最终的数据 arr
+  const kData: Record<string, any> = {}; // 以id做key的对象 暂时储存数据
+  const lData: any[] = []; // 最终的数据 arr
   arr.forEach((m) => {
     m = {
       ...m,
@@ -94,8 +94,8 @@ const formatTreeNodeBuildMenus = (menus: any[]): any[] => {
 /**
  * 设置meta信息
  */
-const setMeta = (menu) => {
-  const meta = {
+const setMeta = (menu: any) => {
+  const meta: any = {
     title: menu.menuName,
     icon: menu.icon,
     noCache: menu.isCache === '1',
@@ -114,7 +114,7 @@ const setMeta = (menu) => {
  * @param menu 菜单信息
  * @return 路由名称
  */
-const getRouteName = (menu) => {
+const getRouteName = (menu: any) => {
   let routerName = Lodash.capitalize(menu.path);
   // 非外链并且是一级目录（类型为目录）
   if (isMenuFrame(menu)) {
@@ -128,7 +128,7 @@ const getRouteName = (menu) => {
  * @param menu 菜单信息
  * @return 结果
  */
-const isMenuFrame = (menu): boolean => {
+const isMenuFrame = (menu: any): boolean => {
   return menu.parentId === 0 && menu.menuType === UserConstants.TYPE_MENU && menu.isFrame === UserConstants.NO_FRAME;
 };
 
@@ -138,7 +138,7 @@ const isMenuFrame = (menu): boolean => {
  * @param menu 菜单信息
  * @return 结果
  */
-const isInnerLink = (menu): boolean => {
+const isInnerLink = (menu: any): boolean => {
   return menu.isFrame === UserConstants.NO_FRAME && isURL(menu.path);
 };
 
@@ -148,7 +148,7 @@ const isInnerLink = (menu): boolean => {
  * @param menu 菜单信息
  * @return 结果
  */
-const isParentView = (menu): boolean => {
+const isParentView = (menu: any): boolean => {
   return menu.parentId !== 0 && menu.menuType === UserConstants.TYPE_DIR;
 };
 
@@ -158,7 +158,7 @@ const isParentView = (menu): boolean => {
  * @param menu 菜单信息
  * @return 组件信息
  */
-const getComponent = (menu): string => {
+const getComponent = (menu: any): string => {
   let component = UserConstants.LAYOUT;
   if (menu.component && !isMenuFrame(menu)) {
     component = menu.component;
@@ -198,7 +198,7 @@ const innerLinkReplaceEach = (path: string): string => {
  * @param menu 菜单信息
  * @return 路由地址
  */
-const getRouterPath = (menu): string => {
+const getRouterPath = (menu: any): string => {
   let routerPath = menu.path;
   // 内链打开外网方式
   if (menu.parentId !== 0 && isInnerLink(menu)) {

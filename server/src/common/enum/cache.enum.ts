@@ -37,4 +37,7 @@ export enum CacheEnum {
 
   /** 菜单缓存 */
   SYS_MENU_KEY = 'sys_menu:',
+
+  /** 微信Access Token缓存 */
+  WECHAT_ACCESS_TOKEN_KEY = 'wechat_token:',
 }

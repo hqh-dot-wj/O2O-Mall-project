@@ -24,6 +24,7 @@ import { CommonModule } from './module/common/common.module';
 import { MonitorModule } from './module/monitor/monitor.module';
 import { ResourceModule } from './module/resource/resource.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ClientModule } from './module/client/client.module';
 
 @Global()
 @Module({
@@ -79,6 +80,7 @@ import { PrismaModule } from './prisma/prisma.module';
     SystemModule,
     MonitorModule,
     ResourceModule,
+    ClientModule,
   ],
   providers: [
     // 解密拦截器 (解密前端加密请求)

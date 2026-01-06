@@ -1,6 +1,7 @@
 import { IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PageQueryDto } from 'src/common/dto/index';
+import { StatusEnum } from 'src/common/enum';
 
 export class ListTenantPackageDto extends PageQueryDto {
   @ApiProperty({ required: false, description: '套餐名称' })
@@ -11,5 +12,5 @@ export class ListTenantPackageDto extends PageQueryDto {
   @ApiProperty({ required: false, description: '状态(0正常 1停用)' })
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: StatusEnum;
 }

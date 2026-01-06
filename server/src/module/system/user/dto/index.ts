@@ -10,7 +10,7 @@ export { UpdateUserDto } from './update-user.dto';
 export { ListUserDto, AllocatedListDto } from './list-user.dto';
 
 // 状态变更
-export { ChangeUserStatusDto } from './change-user-status.dto';
+export { ChangeStatusDto } from './change-status.dto';
 
 // 密码相关
 export { ResetPwdDto } from './reset-pwd.dto';

@@ -31,5 +31,5 @@ export class ListLoginlogDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 }

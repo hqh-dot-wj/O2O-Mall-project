@@ -13,5 +13,5 @@ export class ChangeStatusDto {
   @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: true })
   @IsString()
   @IsEnum(StatusEnum)
-  status: string;
+  status: StatusEnum;
 }

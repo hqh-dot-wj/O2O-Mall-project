@@ -1,4 +1,4 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata, Logger } from '@nestjs/common';
 import { RedisService } from 'src/module/common/redis/redis.service';
 
 /**
@@ -62,7 +62,7 @@ export function SystemCacheable(options: { key: string | ((args: any[]) => strin
         }
       } catch (error) {
         // 缓存读取失败，继续执行原方法
-        console.warn(`[SystemCacheable] Cache read error for key ${fullKey}:`, error);
+        Logger.warn(`[SystemCacheable] Cache read error for key ${fullKey}:`, error, 'SystemCache');
       }
 
       // 执行原方法
@@ -74,7 +74,7 @@ export function SystemCacheable(options: { key: string | ((args: any[]) => strin
           await redisService.set(fullKey, JSON.stringify(result), options.ttl || 3600);
         } catch (error) {
           // 缓存写入失败不影响业务逻辑
-          console.warn(`[SystemCacheable] Cache write error for key ${fullKey}:`, error);
+          Logger.warn(`[SystemCacheable] Cache write error for key ${fullKey}:`, error, 'SystemCache');
         }
       }
 
@@ -128,7 +128,7 @@ export function ClearSystemCache(keys: string[]) {
               await redisService.del(fullKey);
             }
           } catch (error) {
-            console.warn(`[ClearSystemCache] Cache clear error for key ${key}:`, error);
+            Logger.warn(`[ClearSystemCache] Cache clear error for key ${key}:`, error, 'SystemCache');
           }
         }
       }

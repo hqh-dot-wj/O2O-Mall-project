@@ -14,15 +14,18 @@ import { Api } from 'src/common/decorators/api.decorator';
 import { LoginVo, CaptchaVo, GetInfoVo } from './vo/main.vo';
 import { RouterVo } from 'src/module/system/menu/vo/menu.vo';
 
+import { AuthService } from '../auth/auth.service';
+
 @ApiTags('根目录')
 @Controller('/')
 @ApiBearerAuth('Authorization')
 export class MainController {
   constructor(
     private readonly mainService: MainService,
+    private readonly authService: AuthService,
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Api({
     summary: '用户登录',
@@ -35,7 +38,7 @@ export class MainController {
   @Post('/login')
   @HttpCode(200)
   login(@Body() user: LoginDto, @ClientInfo() clientInfo: ClientInfoDto) {
-    return this.mainService.login(user, clientInfo);
+    return this.authService.login(user, clientInfo);
   }
 
   @Api({
@@ -49,7 +52,7 @@ export class MainController {
     if (user?.token) {
       await this.redisService.del(`${CacheEnum.LOGIN_TOKEN_KEY}${user.token}`);
     }
-    return this.mainService.logout(clientInfo);
+    return this.authService.logout(clientInfo);
   }
 
   @Api({
@@ -62,7 +65,7 @@ export class MainController {
   @Post('/register')
   @HttpCode(200)
   register(@Body() user: RegisterDto) {
-    return this.mainService.register(user);
+    return this.authService.register(user);
   }
 
   @Api({

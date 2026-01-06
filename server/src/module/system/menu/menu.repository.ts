@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 import { Prisma, SysMenu } from '@prisma/client';
 import { BaseRepository } from '../../../common/repository/base.repository';
@@ -8,9 +9,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * 菜单仓储层
  */
 @Injectable()
-export class MenuRepository extends BaseRepository<SysMenu, Prisma.SysMenuDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysMenu');
+export class MenuRepository extends BaseRepository<
+  SysMenu,
+  Prisma.SysMenuCreateInput,
+  Prisma.SysMenuUpdateInput,
+  Prisma.SysMenuDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysMenu');
   }
 
   /**
@@ -98,7 +104,7 @@ export class MenuRepository extends BaseRepository<SysMenu, Prisma.SysMenuDelega
     const where: Prisma.SysMenuWhereInput = {};
 
     if (query?.status) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     if (query?.parentId !== undefined) {

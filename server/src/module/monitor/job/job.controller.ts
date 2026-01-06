@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JobService } from './job.service';
 import { CreateJobDto, ListJobDto } from './dto/create-job.dto';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Operlog } from 'src/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
@@ -13,7 +13,7 @@ import { User } from 'src/module/system/user/user.decorator';
 @Controller('monitor/job')
 @ApiBearerAuth('Authorization')
 export class JobController {
-  constructor(private readonly jobService: JobService) {}
+  constructor(private readonly jobService: JobService) { }
 
   @Api({
     summary: '获取定时任务列表',
@@ -56,7 +56,7 @@ export class JobController {
   @RequirePermission('monitor:job:changeStatus')
   @Operlog({ businessType: BusinessType.UPDATE })
   changeStatus(@Body('jobId') jobId: number, @Body('status') status: string, @User('user.userName') userName: string) {
-    return this.jobService.changeStatus(jobId, status, userName);
+    return this.jobService.changeStatus(jobId, status as any, userName);
   }
 
   @Api({

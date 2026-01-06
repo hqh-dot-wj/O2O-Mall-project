@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -13,9 +14,9 @@ async function migrate() {
   const prisma = new PrismaClient();
 
   try {
-    console.log('开始迁移系统配置表...\n');
+    Logger.log('开始迁移系统配置表...', 'Migrate');
 
-    console.log('1. 创建 sys_system_config 表...');
+    Logger.log('1. 创建 sys_system_config 表...', 'Migrate');
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "sys_system_config" (
         "config_id" SERIAL NOT NULL,
@@ -34,13 +35,13 @@ async function migrate() {
       )
     `);
 
-    console.log('2. 创建唯一索引...');
+    Logger.log('2. 创建唯一索引...', 'Migrate');
     await prisma.$executeRawUnsafe(`
       CREATE UNIQUE INDEX IF NOT EXISTS "sys_system_config_config_key_key" 
       ON "sys_system_config"("config_key")
     `);
 
-    console.log('3. 创建普通索引...');
+    Logger.log('3. 创建普通索引...', 'Migrate');
     await prisma.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS "sys_system_config_status_idx" 
       ON "sys_system_config"("status")
@@ -58,7 +59,7 @@ async function migrate() {
       ON "sys_system_config"("create_time")
     `);
 
-    console.log('4. 迁移超级租户配置数据...');
+    Logger.log('4. 迁移超级租户配置数据...', 'Migrate');
     await prisma.$executeRawUnsafe(`
       INSERT INTO "sys_system_config" (
         "config_name",
@@ -90,8 +91,8 @@ async function migrate() {
       ON CONFLICT ("config_key") DO NOTHING
     `);
 
-    console.log('\n✅ 迁移成功完成！');
-    console.log('\n验证数据...');
+    Logger.log('✅ 迁移成功完成！', 'Migrate');
+    Logger.log('验证数据...', 'Migrate');
 
     // 验证数据
     const systemConfigs = await prisma.$queryRaw`
@@ -100,14 +101,14 @@ async function migrate() {
       WHERE del_flag = '0'
     `;
 
-    console.log(`\n系统配置表记录数: ${(systemConfigs as any[]).length}`);
-    console.log('\n前5条记录:');
+    Logger.log(`系统配置表记录数: ${(systemConfigs as any[]).length}`, 'Migrate');
+    Logger.log('前5条记录:', 'Migrate');
     (systemConfigs as any[]).slice(0, 5).forEach((config: any) => {
-      console.log(`  - ${config.config_key}: ${config.config_value}`);
+      Logger.log(`  - ${config.config_key}: ${config.config_value}`, 'Migrate');
     });
 
   } catch (error) {
-    console.error('\n❌ 迁移失败:', error);
+    Logger.error('❌ 迁移失败:', error, 'Migrate');
     process.exit(1);
   } finally {
     await prisma.$disconnect();

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, SysNotice } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
+import { Prisma, SysNotice, Status } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../common/repository/soft-delete.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
 
@@ -7,9 +8,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * 通知公告仓储层
  */
 @Injectable()
-export class NoticeRepository extends SoftDeleteRepository<SysNotice, Prisma.SysNoticeDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysNotice');
+export class NoticeRepository extends SoftDeleteRepository<
+  SysNotice,
+  Prisma.SysNoticeCreateInput,
+  Prisma.SysNoticeUpdateInput,
+  Prisma.SysNoticeDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysNotice');
   }
 
   /**
@@ -66,9 +72,9 @@ export class NoticeRepository extends SoftDeleteRepository<SysNotice, Prisma.Sys
   /**
    * 统计某个状态的通知数量
    */
-  async countByStatus(status: string): Promise<number> {
+  async countByStatus(status: Status): Promise<number> {
     return this.delegate.count({
-      where: { status },
+      where: { status: status as Status },
     });
   }
 }

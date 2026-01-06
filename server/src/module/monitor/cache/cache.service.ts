@@ -5,7 +5,7 @@ import { Result } from 'src/common/response';
 
 @Injectable()
 export class CacheService {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(private readonly redisService: RedisService) { }
 
   private readonly caches = [
     {
@@ -77,9 +77,9 @@ export class CacheService {
     return Result.ok(data);
   }
 
-  async getValue(params) {
+  async getValue(params: any) {
     const list = DeepClone(this.caches);
-    const data = list.find((item) => item.cacheName === params.cacheName);
+    const data: any = list.find((item: any) => item.cacheName === params.cacheName);
     const cacheValue = await this.redisService.get(params.cacheKey);
     data.cacheValue = JSON.stringify(cacheValue);
     data.cacheKey = params.cacheKey;

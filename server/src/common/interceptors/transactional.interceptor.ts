@@ -2,6 +2,7 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } fr
 import { Reflector } from '@nestjs/core';
 import { Observable, from } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   TRANSACTIONAL_KEY,
@@ -33,7 +34,8 @@ export class TransactionalInterceptor implements NestInterceptor {
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
-  ) {}
+    private readonly cls: ClsService,
+  ) { }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const options = this.reflector.get<TransactionalOptions>(TRANSACTIONAL_KEY, context.getHandler());
@@ -74,7 +76,7 @@ export class TransactionalInterceptor implements NestInterceptor {
       this.prisma.$transaction(
         async (tx) => {
           // 将事务客户端注入到请求上下文
-          // 这里需要配合 CLS 模块使用
+          this.cls.set('PRISMA_TX', tx);
           return new Promise((resolve, reject) => {
             next.handle().subscribe({
               next: (value) => resolve(value),

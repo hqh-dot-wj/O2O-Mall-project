@@ -1,3 +1,4 @@
+import { DelFlag } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -32,7 +33,7 @@ export class VersionService {
                         { uploadId: parentFileId },
                         { parentFileId: parentFileId },
                     ],
-                    delFlag: '0',
+                    delFlag: DelFlag.NORMAL,
                 },
                 orderBy: { version: 'desc' },
             });
@@ -122,7 +123,7 @@ export class VersionService {
     private async getConfigValue(key: string, defaultValue: string): Promise<string> {
         try {
             const config = await this.prisma.sysConfig.findFirst({
-                where: { configKey: key, delFlag: '0' },
+                where: { configKey: key, delFlag: DelFlag.NORMAL },
             });
             return config?.configValue || defaultValue;
         } catch (error) {

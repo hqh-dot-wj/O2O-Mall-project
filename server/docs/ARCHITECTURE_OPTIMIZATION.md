@@ -6,15 +6,15 @@
 
 ### 1.1 原有问题清单
 
-| 问题类别 | 具体问题 | 严重程度 |
-|---------|---------|---------|
-| 响应结构 | `ResultData` 缺乏泛型支持，响应码散落各处 | 🔴 高 |
-| 异常处理 | 异常类型单一，缺乏细分，错误码与消息未统一管理 | 🔴 高 |
-| 架构分层 | Service 层职责过重，缺乏 Repository 层抽象 | 🟡 中 |
-| 事务管理 | 手动管理事务，缺乏声明式事务支持 | 🟡 中 |
-| DTO 验证 | 分页 DTO 设计简陋，缺乏工具方法 | 🟡 中 |
-| 目录结构 | 存在重复目录（interceptor/interceptors） | 🟢 低 |
-| 测试覆盖 | 缺乏单元测试和集成测试 | 🔴 高 |
+| 问题类别   | 具体问题                             | 严重程度 |
+| ------ | -------------------------------- | ---- |
+| 响应结构   | `ResultData` 缺乏泛型支持，响应码散落各处      | 🔴 高 |
+| 异常处理   | 异常类型单一，缺乏细分，错误码与消息未统一管理          | 🔴 高 |
+| 架构分层   | Service 层职责过重，缺乏 Repository 层抽象  | 🟡 中 |
+| 事务管理   | 手动管理事务，缺乏声明式事务支持                 | 🟡 中 |
+| DTO 验证 | 分页 DTO 设计简陋，缺乏工具方法               | 🟡 中 |
+| 目录结构   | 存在重复目录（interceptor/interceptors） | 🟢 低 |
+| 测试覆盖   | 缺乏单元测试和集成测试                      | 🔴 高 |
 
 ---
 
@@ -23,6 +23,7 @@
 ### 2.1 统一响应结构体系
 
 **新增文件：**
+
 - [response/response.interface.ts](src/common/response/response.interface.ts) - 响应接口定义
 - [response/result.ts](src/common/response/result.ts) - 统一响应类
 
@@ -54,9 +55,11 @@ return Result.page(users, total, pageNum, pageSize);
 ### 2.2 完善异常处理体系
 
 **更新文件：**
+
 - [exceptions/business.exception.ts](src/common/exceptions/business.exception.ts)
 
 **新增文件：**
+
 - [filters/global-exception.filter.ts](src/common/filters/global-exception.filter.ts)
 
 **核心改进：**
@@ -78,6 +81,7 @@ BusinessException.throwIfEmpty(users, ResponseCode.DATA_NOT_FOUND);
 ### 2.3 Repository 层抽象
 
 **新增文件：**
+
 - [repository/base.repository.ts](src/common/repository/base.repository.ts)
 
 **核心特性：**
@@ -114,6 +118,7 @@ export class UserRepository extends SoftDeleteRepository<SysUser, Prisma.SysUser
 ### 2.4 声明式事务管理
 
 **新增文件：**
+
 - [decorators/transactional.decorator.ts](src/common/decorators/transactional.decorator.ts)
 - [interceptors/transactional.interceptor.ts](src/common/interceptors/transactional.interceptor.ts)
 
@@ -138,6 +143,7 @@ async transferMoney(from: number, to: number, amount: number) {
 ### 2.5 优化 DTO 验证体系
 
 **新增文件：**
+
 - [dto/base.dto.ts](src/common/dto/base.dto.ts)
 
 **核心改进：**
@@ -181,6 +187,7 @@ async findAll(query: ListUserDto) {
 ### 2.6 单元测试示例
 
 **新增测试文件：**
+
 - [response/result.spec.ts](src/common/response/result.spec.ts)
 - [exceptions/business.exception.spec.ts](src/common/exceptions/business.exception.spec.ts)
 - [filters/global-exception.filter.spec.ts](src/common/filters/global-exception.filter.spec.ts)
@@ -269,6 +276,7 @@ export class DatabaseHealthIndicator extends HealthIndicator {
 ### 3.5 日志增强
 
 **建议：**
+
 - 添加链路追踪 ID（已有 requestId）
 - 添加业务日志装饰器
 - 添加审计日志
@@ -289,6 +297,7 @@ async create(dto: CreateUserDto) { }
 ### 4.1 响应类迁移
 
 **旧代码：**
+
 ```typescript
 import { ResultData } from 'src/common/utils/result';
 return ResultData.ok(data);
@@ -296,6 +305,7 @@ return ResultData.fail(500, '操作失败');
 ```
 
 **新代码：**
+
 ```typescript
 import { Result, ResponseCode } from 'src/common/response';
 return Result.ok(data);
@@ -305,11 +315,13 @@ return Result.fail(ResponseCode.OPERATION_FAILED);
 ### 4.2 异常迁移
 
 **旧代码：**
+
 ```typescript
 throw new BusinessException(500, '用户不存在');
 ```
 
 **新代码：**
+
 ```typescript
 throw new BusinessException(ResponseCode.USER_NOT_FOUND);
 // 或使用便捷方法
@@ -319,11 +331,13 @@ BusinessException.throwIfNull(user, ResponseCode.USER_NOT_FOUND, '用户不存�
 ### 4.3 分页 DTO 迁移
 
 **旧代码：**
+
 ```typescript
 export class ListUserDto extends PagingDto { }
 ```
 
 **新代码：**
+
 ```typescript
 export class ListUserDto extends PageQueryDto {
   // 可直接使用 skip, take, getOrderBy() 等方法
@@ -380,6 +394,7 @@ server/src/
 ## 六、性能建议
 
 1. **数据库连接池优化**
+   
    ```typescript
    // prisma.service.ts
    new PrismaClient({
@@ -391,11 +406,13 @@ server/src/
    ```
 
 2. **Redis 缓存策略**
+   
    - 使用 `@Cacheable` 装饰器统一缓存
    - 设置合理的 TTL
    - 使用 Redis Pipeline 批量操作
 
 3. **查询优化**
+   
    - 使用 `select` 减少字段返回
    - 合理使用索引
    - 避免 N+1 查询问题
@@ -405,16 +422,19 @@ server/src/
 ## 七、安全建议
 
 1. **敏感信息处理**
+   
    - 配置加密存储（已支持 RSA 加密）
    - 日志脱敏（已实现）
    - 响应数据脱敏
 
 2. **API 安全**
+   
    - Rate Limiting（已实现）
    - CORS 配置
    - CSRF 保护（可选启用）
 
 3. **认证安全**
+   
    - Token 刷新机制
    - 密码强度验证（已实现）
    - 登录失败锁定

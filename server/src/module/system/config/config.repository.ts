@@ -1,15 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysConfig } from '@prisma/client';
-import { SoftDeleteRepository } from '../../../common/repository/soft-delete.repository';
+import { SoftDeleteRepository } from '../../../common/repository/base.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 /**
  * 配置仓储层
  */
 @Injectable()
-export class ConfigRepository extends SoftDeleteRepository<SysConfig, Prisma.SysConfigDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysConfig');
+export class ConfigRepository extends SoftDeleteRepository<
+  SysConfig,
+  Prisma.SysConfigCreateInput,
+  Prisma.SysConfigUpdateInput,
+  Prisma.SysConfigDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysConfig');
   }
 
   /**
@@ -57,9 +63,10 @@ export class ConfigRepository extends SoftDeleteRepository<SysConfig, Prisma.Sys
    * 批量查询配置（用于同步租户配置）
    */
   async findByTenantId(tenantId: string): Promise<SysConfig[]> {
-    return this.findMany({
+    return this.findAll({
       where: { tenantId },
-      orderBy: { configId: 'asc' },
+      orderBy: 'configId',
+      order: 'asc',
     });
   }
 

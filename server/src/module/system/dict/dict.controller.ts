@@ -9,7 +9,7 @@ import {
   UpdateDictDataDto,
   ListDictData,
 } from './dto/index';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { DictTypeVo, DictTypeListVo, DictDataVo, DictDataListVo } from './vo/dict.vo';
@@ -21,7 +21,7 @@ import { UserTool, UserToolType } from '../user/user.decorator';
 @Controller('system/dict')
 @ApiBearerAuth('Authorization')
 export class DictController {
-  constructor(private readonly dictService: DictService) {}
+  constructor(private readonly dictService: DictService) { }
 
   //字典类型
   @Api({

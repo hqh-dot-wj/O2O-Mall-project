@@ -1,7 +1,7 @@
 import { Controller, Get, Delete, Query, Post, Res, Body } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JobLogService } from './job-log.service';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { ListJobLogDto } from './dto/create-job.dto';
 import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
@@ -12,7 +12,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @Controller('monitor/jobLog')
 @ApiBearerAuth('Authorization')
 export class JobLogController {
-  constructor(private readonly jobLogService: JobLogService) {}
+  constructor(private readonly jobLogService: JobLogService) { }
 
   @Api({
     summary: '获取定时任务日志列表',

@@ -37,5 +37,5 @@ export class CreateDictTypeDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 }

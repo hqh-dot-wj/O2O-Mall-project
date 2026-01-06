@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, SysLogininfor } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
+import { Prisma, SysLogininfor, Status } from '@prisma/client';
 import { BaseRepository } from 'src/common/repository/base.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -9,9 +10,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * @description 封装登录日志的数据访问逻辑
  */
 @Injectable()
-export class LoginlogRepository extends BaseRepository<SysLogininfor, Prisma.SysLogininforDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysLogininfor');
+export class LoginlogRepository extends BaseRepository<
+  SysLogininfor,
+  Prisma.SysLogininforCreateInput,
+  Prisma.SysLogininforUpdateInput,
+  Prisma.SysLogininforDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysLogininfor');
   }
 
   /**
@@ -88,7 +94,7 @@ export class LoginlogRepository extends BaseRepository<SysLogininfor, Prisma.Sys
    */
   async countSuccessLogin(userName?: string): Promise<number> {
     const where: Prisma.SysLogininforWhereInput = {
-      status: '0', // 0表示成功
+      status: Status.NORMAL, // 0表示成功
     };
 
     if (userName) {
@@ -103,7 +109,7 @@ export class LoginlogRepository extends BaseRepository<SysLogininfor, Prisma.Sys
    */
   async countFailedLogin(userName?: string): Promise<number> {
     const where: Prisma.SysLogininforWhereInput = {
-      status: '1', // 1表示失败
+      status: Status.STOP, // 1表示失败
     };
 
     if (userName) {

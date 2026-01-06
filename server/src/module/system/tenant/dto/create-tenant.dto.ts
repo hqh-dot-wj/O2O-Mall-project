@@ -69,7 +69,7 @@ export class CreateTenantDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ required: false, description: '备注' })
   @IsOptional()

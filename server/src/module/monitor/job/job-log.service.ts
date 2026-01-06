@@ -26,7 +26,7 @@ export class JobLogService {
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     // 使用 getDateRange 便捷方法

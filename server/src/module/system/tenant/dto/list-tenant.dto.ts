@@ -1,6 +1,7 @@
 import { IsString, IsOptional, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PageQueryDto } from 'src/common/dto/index';
+import { StatusEnum } from 'src/common/enum';
 
 export class ListTenantDto extends PageQueryDto {
   @ApiProperty({ required: false, description: '租户ID' })
@@ -26,7 +27,7 @@ export class ListTenantDto extends PageQueryDto {
   @ApiProperty({ required: false, description: '状态(0正常 1停用)' })
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ required: false, description: '开始时间' })
   @IsOptional()

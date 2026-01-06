@@ -31,7 +31,7 @@ export class CreateNoticeDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ required: false, description: '公告内容' })
   @IsOptional()

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysDictType, SysDictData } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../common/repository/soft-delete.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -7,9 +8,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * 字典类型仓储层
  */
 @Injectable()
-export class DictTypeRepository extends SoftDeleteRepository<SysDictType, Prisma.SysDictTypeDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysDictType');
+export class DictTypeRepository extends SoftDeleteRepository<
+  SysDictType,
+  Prisma.SysDictTypeCreateInput,
+  Prisma.SysDictTypeUpdateInput,
+  Prisma.SysDictTypeDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysDictType');
   }
 
   /**
@@ -79,9 +85,14 @@ export class DictTypeRepository extends SoftDeleteRepository<SysDictType, Prisma
  * 字典数据仓储层
  */
 @Injectable()
-export class DictDataRepository extends SoftDeleteRepository<SysDictData, Prisma.SysDictDataDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysDictData');
+export class DictDataRepository extends SoftDeleteRepository<
+  SysDictData,
+  Prisma.SysDictDataCreateInput,
+  Prisma.SysDictDataUpdateInput,
+  Prisma.SysDictDataDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysDictData');
   }
 
   /**

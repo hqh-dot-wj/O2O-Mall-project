@@ -9,6 +9,7 @@
 ### 1. 缓存键缺少租户ID
 
 **问题代码** (`config.service.ts`):
+
 ```typescript
 @Cacheable(CacheEnum.SYS_CONFIG_KEY, '{configKey}')
 async getConfigValue(configKey: string) {
@@ -27,6 +28,7 @@ async getConfigValue(configKey: string) {
 ### 2. `/auth/code` 接口未忽略租户隔离
 
 **问题代码** (`auth.controller.ts`):
+
 ```typescript
 @Get('code')
 @NotRequireAuth()
@@ -52,11 +54,11 @@ export function Cacheable(CACHE_NAME: string, CACHE_KEY: string, CACHE_EXPIRESIN
   // ...
   descriptor.value = async function (...args: any[]) {
     const key = paramsKeyFormat(originMethod, CACHE_KEY, args);
-    
+
     // 包含租户ID到缓存键中（如果存在）
     const tenantId = TenantContext.getTenantId();
     const fullKey = tenantId ? `${CACHE_NAME}${tenantId}:${key}` : `${CACHE_NAME}${key}`;
-    
+
     const cacheResult = await this.redis.get(fullKey);
     // ...
   };
@@ -64,6 +66,7 @@ export function Cacheable(CACHE_NAME: string, CACHE_KEY: string, CACHE_EXPIRESIN
 ```
 
 **变化**:
+
 - 旧格式: `SYS_CONFIG:sys.account.captchaEnabled`
 - 新格式: `SYS_CONFIG:000000:sys.account.captchaEnabled` (带租户ID)
 - 无租户: `SYS_CONFIG:sys.account.captchaEnabled` (无租户场景)
@@ -84,6 +87,7 @@ async getCaptchaCode(): Promise<Result> {
 ```
 
 **效果**:
+
 - 所有验证码请求都使用超级租户 `000000` 的配置
 - 与 `/auth/tenant/list` 保持一致的行为
 
@@ -111,6 +115,7 @@ npx tsx scripts/clear-config-cache.ts
 ```
 
 或手动清理 Redis：
+
 ```bash
 redis-cli -a 123456 -n 2
 > KEYS SYS_CONFIG:*
@@ -126,6 +131,7 @@ pm2 restart nest-admin-soybean
 ```
 
 或在开发环境：
+
 ```bash
 pnpm start:dev
 ```
@@ -152,6 +158,7 @@ curl https://linlingqin.top/prod-api/auth/code
 ### 2. 检查缓存键
 
 连接 Redis 查看新的缓存键格式：
+
 ```bash
 redis-cli -a 123456 -n 2
 > KEYS SYS_CONFIG:*
@@ -183,6 +190,7 @@ redis-cli -a 123456 -n 2
 ### 何时使用 `@IgnoreTenant()`
 
 对于登录前可访问的端点，应添加此装饰器：
+
 - ✅ `/auth/code` - 验证码
 - ✅ `/auth/tenant/list` - 租户列表
 - ✅ `/auth/login` - 登录（已存在）

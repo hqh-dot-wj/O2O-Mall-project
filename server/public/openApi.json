@@ -1645,766 +1645,6 @@
         ]
       }
     },
-    "/api/common/upload": {
-      "post": {
-        "description": "上传单个文件",
-        "operationId": "UploadController_singleFileUpload",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "上传的文件"
-                  }
-                },
-                "required": [
-                  "file"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "summary": "文件上传",
-        "tags": [
-          "通用-文件上传"
-        ]
-      }
-    },
-    "/api/common/upload/chunk/uploadId": {
-      "get": {
-        "description": "初始化切片上传，获取任务ID",
-        "operationId": "UploadController_getChunkUploadId",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "summary": "获取切片上传任务Id",
-        "tags": [
-          "通用-文件上传"
-        ]
-      }
-    },
-    "/api/common/upload/chunk": {
-      "post": {
-        "description": "上传文件分片",
-        "operationId": "UploadController_chunkFileUpload",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "文件分片数据"
-                  }
-                },
-                "required": [
-                  "file"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "summary": "文件分片上传",
-        "tags": [
-          "通用-文件上传"
-        ]
-      }
-    },
-    "/api/common/upload/chunk/merge": {
-      "post": {
-        "description": "合并所有分片为完整文件",
-        "operationId": "UploadController_chunkMergeFile",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChunkMergeFileDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "summary": "文件分片合并",
-        "tags": [
-          "通用-文件上传"
-        ]
-      }
-    },
-    "/api/common/upload/chunk/result": {
-      "get": {
-        "description": "查询切片上传任务的状态",
-        "operationId": "UploadController_getChunkUploadResult",
-        "parameters": [
-          {
-            "name": "uploadId",
-            "required": true,
-            "in": "query",
-            "description": "上传任务ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "summary": "获取切片上传任务结果",
-        "tags": [
-          "通用-文件上传"
-        ]
-      }
-    },
-    "/api/common/upload/cos/authorization": {
-      "get": {
-        "description": "获取腾讯云COS上传临时授权密钥",
-        "operationId": "UploadController_getAuthorization",
-        "parameters": [
-          {
-            "name": "key",
-            "required": true,
-            "in": "query",
-            "description": "文件对象路径",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "summary": "获取cos授权",
-        "tags": [
-          "通用-文件上传"
-        ]
-      }
-    },
     "/api/system/config": {
       "post": {
         "description": "创建系统参数配置",
@@ -5941,7 +5181,7 @@
             "in": "query",
             "description": "状态（0正常 1停用）",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Object"
             }
           }
         ],
@@ -6807,7 +6047,7 @@
             "in": "query",
             "description": "菜单状态",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Object"
             }
           },
           {
@@ -10468,7 +9708,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChangeRoleStatusDto"
+                "$ref": "#/components/schemas/ChangeStatusDto"
               }
             }
           }
@@ -11822,7 +11062,7 @@
             "in": "query",
             "description": "状态(0正常 1停用)",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Object"
             }
           },
           {
@@ -13009,7 +12249,7 @@
             "in": "query",
             "description": "状态(0正常 1停用)",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Object"
             }
           }
         ],
@@ -16841,7 +16081,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChangeUserStatusDto"
+                "$ref": "#/components/schemas/ChangeStatusDto"
               }
             }
           }
@@ -20461,7 +19701,7 @@
             "in": "query",
             "description": "状态（0正常 1暂停）",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Object"
             }
           }
         ],
@@ -21509,7 +20749,7 @@
             "in": "query",
             "description": "状态（0正常 1暂停）",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Object"
             }
           }
         ],
@@ -25099,6 +24339,766 @@
         ]
       }
     },
+    "/api/common/upload": {
+      "post": {
+        "description": "上传单个文件",
+        "operationId": "UploadController_singleFileUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "上传的文件"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "文件上传",
+        "tags": [
+          "通用-文件上传"
+        ]
+      }
+    },
+    "/api/common/upload/chunk/uploadId": {
+      "get": {
+        "description": "初始化切片上传，获取任务ID",
+        "operationId": "UploadController_getChunkUploadId",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "获取切片上传任务Id",
+        "tags": [
+          "通用-文件上传"
+        ]
+      }
+    },
+    "/api/common/upload/chunk": {
+      "post": {
+        "description": "上传文件分片",
+        "operationId": "UploadController_chunkFileUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "文件分片数据"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "文件分片上传",
+        "tags": [
+          "通用-文件上传"
+        ]
+      }
+    },
+    "/api/common/upload/chunk/merge": {
+      "post": {
+        "description": "合并所有分片为完整文件",
+        "operationId": "UploadController_chunkMergeFile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChunkMergeFileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "文件分片合并",
+        "tags": [
+          "通用-文件上传"
+        ]
+      }
+    },
+    "/api/common/upload/chunk/result": {
+      "get": {
+        "description": "查询切片上传任务的状态",
+        "operationId": "UploadController_getChunkUploadResult",
+        "parameters": [
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "query",
+            "description": "上传任务ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "获取切片上传任务结果",
+        "tags": [
+          "通用-文件上传"
+        ]
+      }
+    },
+    "/api/common/upload/cos/authorization": {
+      "get": {
+        "description": "获取腾讯云COS上传临时授权密钥",
+        "operationId": "UploadController_getAuthorization",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "query",
+            "description": "文件对象路径",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "获取cos授权",
+        "tags": [
+          "通用-文件上传"
+        ]
+      }
+    },
     "/api/resource/sse": {
       "get": {
         "operationId": "SseController_sse",
@@ -25220,6 +25220,56 @@
         "summary": "获取在线连接数",
         "tags": [
           "SSE消息推送"
+        ]
+      }
+    },
+    "/api/client/auth/check-login": {
+      "post": {
+        "operationId": "AuthController_checkLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "静默登录检查",
+        "tags": [
+          "C端-认证模块"
+        ]
+      }
+    },
+    "/api/client/auth/register-mobile": {
+      "post": {
+        "operationId": "AuthController_registerMobile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterMobileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "手机号一键注册/登录",
+        "tags": [
+          "C端-认证模块"
         ]
       }
     }
@@ -25387,8 +25437,8 @@
         "type": "string",
         "description": "数据状态枚举\n- NORMAL (0): 正常/启用\n- STOP (1): 停用/禁用",
         "enum": [
-          "0",
-          "1"
+          "NORMAL",
+          "STOP"
         ]
       },
       "RoleInfoVo": {
@@ -25928,28 +25978,6 @@
         "required": [
           "source",
           "socialCode"
-        ]
-      },
-      "ChunkMergeFileDto": {
-        "type": "object",
-        "properties": {
-          "uploadId": {
-            "type": "string",
-            "description": "上传标识ID"
-          },
-          "fileName": {
-            "type": "string",
-            "description": "文件名称"
-          },
-          "folderId": {
-            "type": "number",
-            "description": "文件夹ID",
-            "default": 0
-          }
-        },
-        "required": [
-          "uploadId",
-          "fileName"
         ]
       },
       "ConfigTypeEnum": {
@@ -26733,6 +26761,10 @@
           "total"
         ]
       },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
       "ListDictType": {
         "type": "object",
         "properties": {
@@ -26970,7 +27002,7 @@
             "description": "是否为外链（0是 1否）"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "菜单状态（0正常 1停用）"
           },
           "visible": {
@@ -27092,7 +27124,7 @@
             "description": "是否为外链（0是 1否）"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "菜单状态（0正常 1停用）"
           },
           "visible": {
@@ -27813,15 +27845,14 @@
           "roleId"
         ]
       },
-      "ChangeRoleStatusDto": {
+      "ChangeStatusDto": {
         "type": "object",
         "properties": {
-          "roleId": {
+          "userId": {
             "type": "number",
-            "description": "角色ID"
+            "description": "用户ID"
           },
           "status": {
-            "description": "角色状态（0正常 1停用）",
             "allOf": [
               {
                 "$ref": "#/components/schemas/StatusEnum"
@@ -27830,7 +27861,7 @@
           }
         },
         "required": [
-          "roleId",
+          "userId",
           "status"
         ]
       },
@@ -28218,7 +28249,7 @@
             "description": "企业名称"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "状态(0正常 1停用)"
           },
           "beginTime": {
@@ -28447,7 +28478,7 @@
             "description": "套餐名称"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "状态(0正常 1停用)"
           }
         }
@@ -28863,26 +28894,6 @@
           "roles"
         ]
       },
-      "ChangeUserStatusDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "number",
-            "description": "用户ID"
-          },
-          "status": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StatusEnum"
-              }
-            ]
-          }
-        },
-        "required": [
-          "userId",
-          "status"
-        ]
-      },
       "UpdateUserDto": {
         "type": "object",
         "properties": {
@@ -29203,7 +29214,7 @@
             "description": "是否并发执行（0允许 1禁止）"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "状态（0正常 1暂停）"
           },
           "remark": {
@@ -29266,7 +29277,7 @@
             "description": "任务组名"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "状态（0正常 1暂停）"
           }
         }
@@ -29318,7 +29329,7 @@
             "description": "任务组名"
           },
           "status": {
-            "type": "string",
+            "type": "object",
             "description": "状态（0正常 1暂停）"
           }
         }
@@ -29922,6 +29933,89 @@
             ]
           }
         }
+      },
+      "ChunkMergeFileDto": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "description": "上传标识ID"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "文件名称"
+          },
+          "folderId": {
+            "type": "number",
+            "description": "文件夹ID",
+            "default": 0
+          }
+        },
+        "required": [
+          "uploadId",
+          "fileName"
+        ]
+      },
+      "CheckLoginDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "微信登录临时凭证 code"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "UserInfoObj": {
+        "type": "object",
+        "properties": {
+          "nickName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nickName",
+          "avatarUrl"
+        ]
+      },
+      "RegisterMobileDto": {
+        "type": "object",
+        "properties": {
+          "loginCode": {
+            "type": "string",
+            "description": "微信登录临时凭证 code (用于换取OpenID)"
+          },
+          "phoneCode": {
+            "type": "string",
+            "description": "手机号获取凭证 code (用于换取手机号)"
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "当前定位到的租户ID"
+          },
+          "referrerId": {
+            "type": "string",
+            "description": "推荐人ID"
+          },
+          "userInfo": {
+            "description": "用户信息(昵称头像)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserInfoObj"
+              }
+            ]
+          }
+        },
+        "required": [
+          "loginCode",
+          "phoneCode",
+          "tenantId"
+        ]
       }
     }
   }

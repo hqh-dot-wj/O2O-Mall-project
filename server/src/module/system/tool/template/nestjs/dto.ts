@@ -1,6 +1,6 @@
 import * as Lodash from 'lodash';
 import { GenConstants } from 'src/common/constant/gen.constant';
-export const dtoTem = (options) => {
+export const dtoTem = (options: any) => {
   const { BusinessName } = options;
   const insertExclude = getExcludeClounmByType(options, 'isInsert');
   const editExclude = getExcludeClounmByType(options, 'isEdit');
@@ -36,13 +36,13 @@ export class List${Lodash.upperFirst(BusinessName)}Dto extends ${getOmitTypeStr(
  * @param type
  * @returns
  */
-const getExcludeClounmByType = (options, type) => {
+const getExcludeClounmByType = (options: any, type: string) => {
   const { columns } = options;
   return columns
-    .filter((column) => {
+    .filter((column: any) => {
       return column[type] === '0';
     })
-    .map((column) => {
+    .map((column: any) => {
       const { javaField } = column;
       return `'${javaField}'`;
     })
@@ -55,10 +55,10 @@ const getExcludeClounmByType = (options, type) => {
  * @param type
  * @returns
  */
-const getAllBaseDto = (options) => {
+const getAllBaseDto = (options: any) => {
   const { columns } = options;
   return columns
-    .map((column) => {
+    .map((column: any) => {
       const { javaType, javaField, isRequired, columnComment, columnType, queryType } = column;
       const type = lowercaseFirstLetter(javaType, queryType);
       const decorators = [
@@ -74,7 +74,7 @@ const getAllBaseDto = (options) => {
     .join('\n');
 };
 
-function getValidatorDecorator(javaType, queryType) {
+function getValidatorDecorator(javaType: string, queryType: string) {
   switch (javaType) {
     case 'String':
       return `@IsString()`;
@@ -89,14 +89,14 @@ function getValidatorDecorator(javaType, queryType) {
   }
 }
 
-function lowercaseFirstLetter(str, queryType) {
+function lowercaseFirstLetter(str: string, queryType: string) {
   if (str === 'Date') {
     return queryType === GenConstants.QUERY_BETWEEN ? 'Array<string>' : 'string';
   }
   return str.charAt(0).toLowerCase() + str.slice(1);
 }
 
-function getOmitTypeStr(str, excludesStr) {
+function getOmitTypeStr(str: string, excludesStr: string) {
   if (excludesStr) {
     return `OmitType(${str}, [${excludesStr}])`;
   } else {

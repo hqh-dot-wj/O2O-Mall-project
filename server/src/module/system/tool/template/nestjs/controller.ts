@@ -1,12 +1,12 @@
 import * as Lodash from 'lodash';
-export const controllerTem = (options) => {
+export const controllerTem = (options: any) => {
   const { BusinessName, businessName, functionName, moduleName, primaryKey } = options;
   const serviceName = `${Lodash.upperFirst(BusinessName)}Service`;
   const serviceInstance = `${businessName}Service`;
   return `
 import { Controller, Get, Post, Put, Body, Query, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { ${serviceName} } from './${businessName}.service';
 import { Create${Lodash.upperFirst(BusinessName)}Dto, Base${Lodash.upperFirst(BusinessName)}Dto, Update${Lodash.upperFirst(BusinessName)}Dto, Query${Lodash.upperFirst(
     BusinessName,
@@ -55,7 +55,7 @@ export class ${Lodash.upperFirst(BusinessName)}Controller {
   @RequirePermission('${moduleName}:${businessName}:remove')
   @Delete(':${primaryKey}')
   remove(@Param('${primaryKey}') ${primaryKey}: string) {
-    const ${primaryKey}s = ${primaryKey}.split(',').map((${primaryKey}) => +${primaryKey});
+    const ${primaryKey}s = ${primaryKey}.split(',').map((${primaryKey}: any) => +${primaryKey});
     return this.${serviceInstance}.remove(${primaryKey}s);
   }
 }`;

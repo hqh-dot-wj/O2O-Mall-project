@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import * as Lodash from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
@@ -20,9 +21,9 @@ import { DataScopeEnum } from '../enum/index';
  * @param getLabel
  * @returns
  */
-export function ListToTree(arr, getId, getLabel) {
-  const kData = {}; // 以id做key的对象 暂时储存数据
-  const lData = []; // 最终的数据 arr
+export function ListToTree(arr: any[], getId: (m: any) => any, getLabel: (m: any) => any) {
+  const kData: Record<string, any> = {}; // 以id做key的对象 暂时储存数据
+  const lData: any[] = []; // 最终的数据 arr
 
   // 第一次遍历，构建 kData
   arr.forEach((m) => {
@@ -52,7 +53,7 @@ export function ListToTree(arr, getId, getLabel) {
       if (kData[parentId]) {
         kData[parentId].children.push(kData[id]);
       } else {
-        console.warn(`Parent menuId: ${parentId} not found for child menuId: ${id}`);
+        Logger.warn(`Parent menuId: ${parentId} not found for child menuId: ${id}`, 'Utils');
       }
     }
   });
@@ -95,7 +96,7 @@ export function FormatDateFields<T>(
   }
 
   if (typeof obj === 'object') {
-    const formatted = { ...obj };
+    const formatted: Record<string, any> = { ...obj };
     for (const field of dateFields) {
       if (field in formatted && formatted[field]) {
         // 处理 Date 对象
@@ -111,7 +112,7 @@ export function FormatDateFields<T>(
         }
       }
     }
-    return formatted;
+    return formatted as T;
   }
 
   return obj;
@@ -209,7 +210,7 @@ export async function DataScopeFilter<T>(entity: any, dataScope: DataScopeEnum):
  * @param item
  * @returns {boolean}
  */
-export function isObject(item) {
+export function isObject(item: any) {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
@@ -218,7 +219,7 @@ export function isObject(item) {
  * @param target
  * @param ...sources
  */
-export function mergeDeep(target, ...sources) {
+export function mergeDeep(target: any, ...sources: any[]) {
   if (!sources.length) return target;
   const source = sources.shift();
 

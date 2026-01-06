@@ -1,3 +1,4 @@
+import { DelFlag, SysUpload } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from 'src/config/app-config.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -32,7 +33,7 @@ export class VersionService {
                         { uploadId: parentFileId },
                         { parentFileId: parentFileId },
                     ],
-                    delFlag: '0',
+                    delFlag: DelFlag.NORMAL,
                 },
                 orderBy: { version: 'desc' },
             });
@@ -57,7 +58,7 @@ export class VersionService {
     /**
      * 删除单个版本（物理文件和数据库记录）
      */
-    private async deleteVersion(version: any): Promise<void> {
+    private async deleteVersion(version: SysUpload): Promise<void> {
         try {
             // 删除物理文件
             await this.deletePhysicalFile(version);
@@ -76,7 +77,7 @@ export class VersionService {
     /**
      * 删除物理文件
      */
-    async deletePhysicalFile(file: any): Promise<void> {
+    async deletePhysicalFile(file: SysUpload): Promise<void> {
         try {
             if (file.storageType === 'local') {
                 // 删除本地文件
@@ -122,7 +123,7 @@ export class VersionService {
     private async getConfigValue(key: string, defaultValue: string): Promise<string> {
         try {
             const config = await this.prisma.sysConfig.findFirst({
-                where: { configKey: key, delFlag: '0' },
+                where: { configKey: key, delFlag: DelFlag.NORMAL },
             });
             return config?.configValue || defaultValue;
         } catch (error) {

@@ -9,6 +9,7 @@ import { QueryOperLogDto } from './dto/operLog.dto';
 import { ExportTable } from 'src/common/utils/export';
 import { DictService } from 'src/module/system/dict/dict.service';
 import { isEmpty } from 'src/common/utils';
+import { StatusEnum } from 'src/common/enum';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -20,7 +21,7 @@ export class OperlogService {
     private readonly axiosService: AxiosService,
     @Inject(DictService)
     private readonly dictService: DictService,
-  ) {}
+  ) { }
 
   async findAll(query: QueryOperLogDto) {
     const where: Prisma.SysOperLogWhereInput = {};
@@ -74,14 +75,14 @@ export class OperlogService {
       };
     }
     if (!isEmpty(query.status)) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     const orderBy =
       query.orderByColumn && query.isAsc
         ? ({
-            [query.orderByColumn]: query.isAsc === 'asc' ? 'asc' : 'desc',
-          } as Prisma.SysOperLogOrderByWithRelationInput)
+          [query.orderByColumn]: query.isAsc === 'asc' ? 'asc' : 'desc',
+        } as Prisma.SysOperLogOrderByWithRelationInput)
         : undefined;
 
     const findManyArgs: Prisma.SysOperLogFindManyArgs = {
@@ -175,7 +176,7 @@ export class OperlogService {
       businessType: businessType ?? 0,
       operatorType: 1,
       operTime: new Date(),
-      status: errorMsg ? '1' : '0',
+      status: errorMsg ? StatusEnum.STOP : StatusEnum.NORMAL,
     };
 
     // 确保errorMsg是字符串类型
@@ -197,8 +198,8 @@ export class OperlogService {
     delete body.pageSize;
     const list = await this.findAll(body);
     const { data: operatorTypeDict } = await this.dictService.findOneDataType('sys_oper_type');
-    const operatorTypeDictMap = {};
-    operatorTypeDict.forEach((item) => {
+    const operatorTypeDictMap: Record<string, string> = {};
+    operatorTypeDict.forEach((item: any) => {
       operatorTypeDictMap[item.dictValue] = item.dictLabel;
     });
     const options = {
@@ -215,7 +216,7 @@ export class OperlogService {
         {
           title: '消耗时间',
           dataIndex: 'costTime',
-          formateStr(value) {
+          formateStr(value: number) {
             return value + 'ms';
           },
         },

@@ -29,7 +29,7 @@ export class ListRoleDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ required: false, description: '角色ID' })
   @IsOptional()

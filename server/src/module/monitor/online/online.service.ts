@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { Result } from 'src/common/response';
 import { RedisService } from 'src/module/common/redis/redis.service';
@@ -6,13 +7,13 @@ import { FormatDateFields, Paginate } from 'src/common/utils/index';
 
 @Injectable()
 export class OnlineService {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(private readonly redisService: RedisService) { }
   /**
    * 日志列表-分页
    * @param query
    * @returns
    */
-  async findAll(query) {
+  async findAll(query: any) {
     const keys = await this.redisService.keys(`${CacheEnum.LOGIN_TOKEN_KEY}*`);
 
     // 如果没有在线用户，返回空数据
@@ -24,8 +25,8 @@ export class OnlineService {
 
     // 过滤掉空值并映射为在线用户对象
     const allUsers = data
-      .filter((item) => item && item.token)
-      .map((item) => ({
+      .filter((item: any) => item && item.token)
+      .map((item: any) => ({
         tokenId: item.token,
         deptName: item.user?.deptName || '',
         userName: item.userName,
@@ -34,7 +35,7 @@ export class OnlineService {
         browser: item.browser,
         os: item.os,
         loginTime: item.loginTime,
-        deviceType: item.deviceType || '0',
+        deviceType: item.deviceType || Status.NORMAL,
       }));
 
     // 分页处理

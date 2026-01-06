@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import * as Lodash from 'lodash';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
@@ -27,7 +28,7 @@ export interface ExportOptions {
 /**
  * 通用枚举映射配置
  */
-export const commonExportMap = {
+export const commonExportMap: Record<string, any> = {
   status: {
     [StatusEnum.NORMAL]: '正常',
     [StatusEnum.STOP]: '停用',
@@ -62,13 +63,13 @@ export async function ExportTable(options: ExportOptions, res: Response) {
 
   // 数据过滤+排序
   data = data.map((item) => {
-    const newItem = {};
+    const newItem: Record<string, any> = {};
     options.header.forEach((field) => {
       const dataIndex = field.dataIndex;
       const dataValue = Lodash.get(item, dataIndex);
       /**字典映射 */
       if (dictMap && dictMap[dataIndex]) {
-        newItem[dataIndex] = dictMap[dataIndex][dataValue] !== undefined ? dictMap[dataIndex][dataValue] : dataValue;
+        newItem[dataIndex] = dictMap[dataIndex][dataValue as string | number] !== undefined ? dictMap[dataIndex][dataValue as string | number] : dataValue;
       } else {
         newItem[dataIndex] = dataValue;
       }
@@ -120,7 +121,7 @@ export async function ExportTable(options: ExportOptions, res: Response) {
 
   // 检查响应头是否已发送
   if (res.headersSent) {
-    console.error('Headers already sent, cannot export file');
+    Logger.error('Headers already sent, cannot export file', 'Export');
     return;
   }
 

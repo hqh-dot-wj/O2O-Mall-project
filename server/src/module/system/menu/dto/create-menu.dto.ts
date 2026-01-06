@@ -63,7 +63,7 @@ export class CreateMenuDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status: string;
+  status: StatusEnum;
 
   @ApiProperty({ required: false, description: '显示状态（0显示 1隐藏）' })
   @IsOptional()

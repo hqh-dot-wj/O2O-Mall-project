@@ -44,5 +44,5 @@ export class CreateDictDataDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 }

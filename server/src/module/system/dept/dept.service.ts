@@ -45,7 +45,7 @@ export class DeptService {
       leader: createDeptDto.leader ?? '',
       phone: createDeptDto.phone ?? '',
       email: createDeptDto.email ?? '',
-      status: createDeptDto.status ?? '0',
+      status: createDeptDto.status ?? StatusEnum.NORMAL,
       delFlag: DelFlagEnum.NORMAL,
       ...createDeptDto,
       remark: null,
@@ -66,7 +66,7 @@ export class DeptService {
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     const res = await this.prisma.sysDept.findMany({

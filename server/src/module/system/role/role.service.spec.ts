@@ -99,7 +99,7 @@ describe('RoleService', () => {
         roleKey: 'test',
         roleSort: 1,
         dataScope: '2',
-        status: '0',
+        status: StatusEnum.NORMAL,
         menuIds: [1, 2, 3],
       };
 
@@ -126,7 +126,7 @@ describe('RoleService', () => {
         roleKey: 'test',
         roleSort: 1,
         dataScope: '2',
-        status: '0',
+        status: StatusEnum.NORMAL,
       };
 
       (prisma.sysRole.create as jest.Mock).mockResolvedValue(mockRole);
@@ -206,12 +206,12 @@ describe('RoleService', () => {
     it('should change role status', async () => {
       const changeStatusDto = {
         roleId: 1,
-        status: '1',
+        status: StatusEnum.STOP,
       };
 
       (prisma.sysRole.update as jest.Mock).mockResolvedValue({
         ...mockRole,
-        status: '1',
+        status: StatusEnum.STOP,
       });
 
       const result = await service.changeStatus(changeStatusDto);
@@ -219,7 +219,7 @@ describe('RoleService', () => {
       expect(result.code).toBe(ResponseCode.SUCCESS);
       expect(prisma.sysRole.update).toHaveBeenCalledWith({
         where: { roleId: 1 },
-        data: { status: '1' },
+        data: { status: StatusEnum.STOP },
       });
     });
   });
@@ -234,7 +234,7 @@ describe('RoleService', () => {
       expect(result.data).toBe(2);
       expect(prisma.sysRole.updateMany).toHaveBeenCalledWith({
         where: { roleId: { in: [1, 2] } },
-        data: { delFlag: '1' },
+        data: { delFlag: DelFlagEnum.DELETE },
       });
     });
   });

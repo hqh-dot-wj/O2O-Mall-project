@@ -15,7 +15,7 @@ import { Transactional } from 'src/common/decorators/transactional.decorator';
 export class TenantPackageService {
   private readonly logger = new Logger(TenantPackageService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * 创建租户套餐
@@ -39,7 +39,7 @@ export class TenantPackageService {
         packageName: createTenantPackageDto.packageName,
         menuIds,
         menuCheckStrictly: createTenantPackageDto.menuCheckStrictly ?? false,
-        status: createTenantPackageDto.status ?? '0',
+        status: createTenantPackageDto.status ?? StatusEnum.NORMAL,
         remark: createTenantPackageDto.remark,
         delFlag: DelFlagEnum.NORMAL,
       },
@@ -64,7 +64,7 @@ export class TenantPackageService {
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     const [list, total] = await this.prisma.$transaction([
@@ -187,7 +187,7 @@ export class TenantPackageService {
         packageId: { in: packageIds },
       },
       data: {
-        delFlag: '1',
+        delFlag: DelFlagEnum.DELETE,
       },
     });
 
@@ -198,7 +198,7 @@ export class TenantPackageService {
    * 修改租户套餐状态
    */
   @IgnoreTenant()
-  async changeStatus(packageId: number, status: string) {
+  async changeStatusEnum(packageId: number, status: StatusEnum) {
     const existPackage = await this.prisma.sysTenantPackage.findUnique({
       where: { packageId },
     });

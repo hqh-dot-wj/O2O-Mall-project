@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Query, Put, Param, Delete } from '@nestjs/
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MenuService } from './menu.service';
 import { CreateMenuDto, UpdateMenuDto, ListMenuDto } from './dto/index';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
 import { MenuVo, MenuTreeVo, RoleMenuTreeSelectVo } from './vo/menu.vo';
 import { User, UserDto } from 'src/module/system/user/user.decorator';
@@ -14,7 +14,7 @@ import { UserTool, UserToolType } from '../user/user.decorator';
 @Controller('system/menu')
 @ApiBearerAuth('Authorization')
 export class MenuController {
-  constructor(private readonly menuService: MenuService) {}
+  constructor(private readonly menuService: MenuService) { }
 
   @Api({
     summary: '菜单管理-获取路由',

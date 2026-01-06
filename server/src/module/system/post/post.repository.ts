@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysPost } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../common/repository/soft-delete.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -7,9 +8,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * 岗位仓储层
  */
 @Injectable()
-export class PostRepository extends SoftDeleteRepository<SysPost, Prisma.SysPostDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysPost');
+export class PostRepository extends SoftDeleteRepository<
+  SysPost,
+  Prisma.SysPostCreateInput,
+  Prisma.SysPostUpdateInput,
+  Prisma.SysPostDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysPost');
   }
 
   /**

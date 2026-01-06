@@ -10,7 +10,7 @@ export { UpdateRoleDto } from './update-role.dto';
 export { ListRoleDto } from './list-role.dto';
 
 // 状态变更
-export { ChangeRoleStatusDto } from './change-role-status.dto';
+export { ChangeStatusDto } from './change-status.dto';
 
 // 用户授权
 export { AuthUserCancelDto, AuthUserCancelAllDto, AuthUserSelectAllDto } from './auth-user.dto';

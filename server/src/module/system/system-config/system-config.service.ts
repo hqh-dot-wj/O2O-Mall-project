@@ -3,6 +3,7 @@ import { SystemPrismaService } from 'src/common/prisma/system-prisma.service';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { SystemCacheable, ClearSystemCache } from 'src/common/decorators/system-cache.decorator';
 import { SysSystemConfig } from '@prisma/client';
+import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 
 /**
  * SystemConfigService - 系统级配置服务
@@ -25,7 +26,7 @@ export class SystemConfigService {
   constructor(
     private readonly systemPrisma: SystemPrismaService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   /**
    * 获取系统配置值
@@ -47,8 +48,8 @@ export class SystemConfigService {
     const config = await this.systemPrisma.sysSystemConfig.findFirst({
       where: {
         configKey,
-        delFlag: '0',
-        status: '0',
+        delFlag: DelFlagEnum.NORMAL,
+        status: StatusEnum.NORMAL,
       },
     });
 
@@ -69,7 +70,7 @@ export class SystemConfigService {
     return this.systemPrisma.sysSystemConfig.findFirst({
       where: {
         configKey,
-        delFlag: '0',
+        delFlag: DelFlagEnum.NORMAL,
       },
     });
   }
@@ -86,8 +87,8 @@ export class SystemConfigService {
   async getAllConfigs(): Promise<SysSystemConfig[]> {
     return this.systemPrisma.sysSystemConfig.findMany({
       where: {
-        delFlag: '0',
-        status: '0',
+        delFlag: DelFlagEnum.NORMAL,
+        status: StatusEnum.NORMAL,
       },
       orderBy: {
         createTime: 'desc',
@@ -109,8 +110,8 @@ export class SystemConfigService {
     return this.systemPrisma.sysSystemConfig.findMany({
       where: {
         configType,
-        delFlag: '0',
-        status: '0',
+        delFlag: DelFlagEnum.NORMAL,
+        status: StatusEnum.NORMAL,
       },
       orderBy: {
         createTime: 'desc',
@@ -136,8 +137,8 @@ export class SystemConfigService {
     return this.systemPrisma.sysSystemConfig.create({
       data: {
         ...data,
-        status: '0',
-        delFlag: '0',
+        status: StatusEnum.NORMAL,
+        delFlag: DelFlagEnum.NORMAL,
         createBy: data.createBy || 'system',
         updateBy: data.createBy || 'system',
       },
@@ -158,7 +159,7 @@ export class SystemConfigService {
       configValue?: string;
       configName?: string;
       remark?: string;
-      status?: string;
+      status?: StatusEnum;
       updateBy?: string;
     },
   ): Promise<SysSystemConfig> {
@@ -184,7 +185,7 @@ export class SystemConfigService {
     return this.systemPrisma.sysSystemConfig.update({
       where: { configKey },
       data: {
-        delFlag: '2',
+        delFlag: DelFlagEnum.DELETE,
         updateBy: deleteBy || 'system',
         updateTime: new Date(),
       },
@@ -246,7 +247,7 @@ export class SystemConfigService {
     const count = await this.systemPrisma.sysSystemConfig.count({
       where: {
         configKey,
-        delFlag: '0',
+        delFlag: DelFlagEnum.NORMAL,
       },
     });
     return count > 0;

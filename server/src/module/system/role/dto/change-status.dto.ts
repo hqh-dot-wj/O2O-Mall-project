@@ -19,5 +19,5 @@ export class ChangeStatusDto {
   })
   @IsString()
   @IsEnum(StatusEnum)
-  status: string;
+  status: StatusEnum;
 }

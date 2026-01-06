@@ -41,7 +41,7 @@ export class CreateRoleDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ required: false, description: '数据范围' })
   @IsOptional()

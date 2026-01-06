@@ -1,6 +1,6 @@
 import { indexScriptDicts } from './indexVue.vue';
 
-export const dialogVue = (options) => {
+export const dialogVue = (options: any) => {
   const html = generateTemplate(options);
   const script = generateScriptSetup(options);
   return `
@@ -9,9 +9,9 @@ export const dialogVue = (options) => {
   `;
 };
 
-const generateTemplate = ({ columns }) => {
+const generateTemplate = ({ columns }: any) => {
   let html = '';
-  columns.forEach((item) => {
+  columns.forEach((item: any) => {
     if (item.isEdit === '1' && item.isPk === '0') {
       const comment = item.columnComment.split('(')[0];
       const field = item.javaField;
@@ -94,7 +94,7 @@ const generateTemplate = ({ columns }) => {
             <el-input v-model="form.${field}" type="textarea" placeholder="请输入内容" />
           </el-form-item>
         `,
-      };
+      } as Record<string, string>;
 
       html += htmlMap[htmlType] || '';
     }
@@ -117,7 +117,7 @@ const generateTemplate = ({ columns }) => {
   `;
 };
 
-const generateScriptSetup = ({ columns, BusinessName, moduleName, businessName, primaryKey, functionName }) => {
+const generateScriptSetup = ({ columns, BusinessName, moduleName, businessName, primaryKey, functionName }: any) => {
   const dicts = indexScriptDicts(columns);
   const form = generateFormData(columns);
   const rules = generateRulesData(columns);
@@ -177,19 +177,19 @@ const generateScriptSetup = ({ columns, BusinessName, moduleName, businessName, 
   `;
 };
 
-const generateFormData = (columns) => {
+const generateFormData = (columns: any[]) => {
   return columns
-    .filter((item) => item.isInsert === '1' && item.isPk === '0')
+    .filter((item: any) => item.isInsert === '1' && item.isPk === '0')
     .map(
-      (item) => `
+      (item: any) => `
     ${item.javaField}: ${item.htmlType === 'checkbox' ? '[]' : '""'}`,
     )
     .join(',\n');
 };
 
-const generateRulesData = (columns) => {
+const generateRulesData = (columns: any[]) => {
   return columns
-    .filter((item) => item.isRequired === '1')
-    .map((item) => `${item.javaField}: [{ required: true, message: "${item.columnComment}不能为空", trigger: "blur" }]`)
+    .filter((item: any) => item.isRequired === '1')
+    .map((item: any) => `${item.javaField}: [{ required: true, message: "${item.columnComment}不能为空", trigger: "blur" }]`)
     .join(',\n');
 };

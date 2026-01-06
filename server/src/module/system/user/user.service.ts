@@ -17,7 +17,7 @@ import {
   CreateUserDto,
   UpdateUserDto,
   ListUserDto,
-  ChangeUserStatusDto,
+  ChangeStatusDto,
   ResetPwdDto,
   AllocatedListDto,
   UpdateProfileDto,
@@ -64,36 +64,10 @@ export class UserService {
     @Inject(forwardRef(() => UserRoleService))
     private readonly userRoleService: UserRoleService,
     private readonly userExportService: UserExportService,
-  ) {}
+  ) { }
 
   // ==================== 私有辅助方法 ====================
 
-  private async attachDeptInfo(users: SysUser[]): Promise<UserWithDept[]> {
-    if (!users.length) {
-      return users;
-    }
-    const deptIds = Array.from(
-      new Set(
-        users
-          .map((item) => item.deptId)
-          .filter((deptId): deptId is number => typeof deptId === 'number' && !Number.isNaN(deptId)),
-      ),
-    );
-    if (!deptIds.length) {
-      return users;
-    }
-    const depts = await this.prisma.sysDept.findMany({
-      where: {
-        deptId: { in: deptIds },
-        delFlag: DelFlagEnum.NORMAL,
-      },
-    });
-    const deptMap = new Map<number, SysDept>(depts.map((dept) => [dept.deptId, dept]));
-    return users.map((item) => ({
-      ...item,
-      dept: deptMap.get(item.deptId) ?? null,
-    }));
-  }
 
   private async buildDataScopeConditions(currentUser?: UserType['user']): Promise<Prisma.SysUserWhereInput[]> {
     if (!currentUser) {
@@ -199,8 +173,8 @@ export class UserService {
       ...userPayload,
       userType: SYS_USER_TYPE.CUSTOM,
       phonenumber: userPayload.phonenumber ?? '',
-      sex: userPayload.sex ?? '0',
-      status: userPayload.status ?? '0',
+      sex: userPayload.sex ?? StatusEnum.NORMAL,
+      status: userPayload.status ?? StatusEnum.NORMAL,
       avatar: '',
       delFlag: DelFlagEnum.NORMAL,
       loginIp: '',
@@ -257,7 +231,7 @@ export class UserService {
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as StatusEnum;
     }
 
     const createTime = PaginationHelper.buildDateRange(query.params);
@@ -268,7 +242,7 @@ export class UserService {
     const { skip, take } = PaginationHelper.getPagination(query);
 
     // 使用 PaginationHelper 优化分页查询
-    const { rows: list, total } = await PaginationHelper.paginateWithTransaction<SysUser>(
+    const { rows: list, total } = await PaginationHelper.paginateWithTransaction<UserWithDept>(
       this.prisma,
       'sysUser',
       {
@@ -276,14 +250,13 @@ export class UserService {
         skip,
         take,
         orderBy: { createTime: 'desc' },
+        include: { dept: true },
       },
       { where },
     );
 
-    const listWithDept = await this.attachDeptInfo(list);
-
     // 格式化返回数据,添加 deptName 和格式化时间
-    const rows = listWithDept.map((user) => ({
+    const rows = list.map((user) => ({
       ...user,
       deptName: user.dept?.deptName || '',
       createTime: FormatDate(user.createTime),
@@ -378,12 +351,12 @@ export class UserService {
       });
     }
 
-    const updateData = { ...rest } as Prisma.SysUserUpdateInput;
-    delete (updateData as any).password;
-    delete (updateData as any).dept;
-    delete (updateData as any).roles;
-    delete (updateData as any).roleIds;
-    delete (updateData as any).postIds;
+    const updateData: any = { ...rest };
+    delete updateData.password;
+    delete updateData.dept;
+    delete updateData.roles;
+    delete updateData.roleIds;
+    delete updateData.postIds;
 
     const data = await this.prisma.sysUser.update({
       where: { userId: updateUserDto.userId },
@@ -398,7 +371,7 @@ export class UserService {
     return Result.ok({ count });
   }
 
-  async changeStatus(changeStatusDto: ChangeUserStatusDto) {
+  async changeStatus(changeStatusDto: ChangeStatusDto) {
     const userData = await this.userRepo.findById(changeStatusDto.userId);
     if (userData?.userType === SYS_USER_TYPE.SYS) {
       return Result.fail(ResponseCode.BUSINESS_ERROR, '系统角色不可停用');
@@ -486,7 +459,7 @@ export class UserService {
 
   // ==================== 个人资料相关 - 委托给 UserProfileService ====================
 
-  async profile(user) {
+  async profile(user: UserType) {
     return this.userProfileService.profile(user);
   }
 
@@ -509,7 +482,7 @@ export class UserService {
   }
 
   @Transactional()
-  async updateAuthRole(query) {
+  async updateAuthRole(query: any) {
     return this.userRoleService.updateAuthRole(query);
   }
 

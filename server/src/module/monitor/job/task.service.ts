@@ -1,3 +1,4 @@
+import { Status, DelFlag } from '@prisma/client';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Task, TaskRegistry } from 'src/common/decorators/task.decorator';
@@ -23,7 +24,7 @@ export class TaskService implements OnModuleInit {
     private prisma: PrismaService,
     private noticeService: NoticeService,
     private versionService: VersionService,
-  ) {}
+  ) { }
 
   onModuleInit() {
     this.initializeTasks();
@@ -34,8 +35,6 @@ export class TaskService implements OnModuleInit {
    */
   private async initializeTasks() {
     const tasks = TaskRegistry.getInstance().getTasks();
-
-    // 打印所有模块
 
     for (const { classOrigin, methodName, metadata } of tasks) {
       try {
@@ -69,7 +68,7 @@ export class TaskService implements OnModuleInit {
    */
   async executeTask(invokeTarget: string, jobName?: string, jobGroup?: string) {
     const startTime = new Date();
-    let status = '0';
+    let status: Status = Status.NORMAL;
     let jobMessage = '执行成功';
     let exceptionInfo = '';
 
@@ -89,8 +88,8 @@ export class TaskService implements OnModuleInit {
       // 执行任务
       await taskFn(...params);
       return true;
-    } catch (error) {
-      status = '1';
+    } catch (error: any) {
+      status = Status.STOP;
       jobMessage = '执行失败';
       exceptionInfo = error.message;
       this.logger.error(`执行任务失败: ${error.message}`);
@@ -104,7 +103,7 @@ export class TaskService implements OnModuleInit {
         jobName: jobName || '未知任务',
         jobGroup: jobGroup || 'DEFAULT',
         invokeTarget,
-        status,
+        status: status as Status,
         jobMessage: `${jobMessage}，耗时 ${duration}ms`,
         exceptionInfo,
         createTime: startTime,
@@ -114,14 +113,6 @@ export class TaskService implements OnModuleInit {
 
   /**
    * 解析参数字符串
-   * 支持以下格式:
-   * - 字符串: 'text' 或 "text"
-   * - 数字: 123 或 123.45
-   * - 布尔值: true 或 false
-   * - null
-   * - undefined
-   * - 数组: [1, 'text', true]
-   * - 对象: {a: 1, b: 'text'}
    */
   private parseParams(paramsStr: string): any[] {
     if (!paramsStr.trim()) {
@@ -137,7 +128,7 @@ export class TaskService implements OnModuleInit {
 
       // 尝试解析为 JSON
       return Function(`return [${normalizedStr}]`)();
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`解析参数失败: ${error.message}`);
       return [];
     }
@@ -202,8 +193,8 @@ export class TaskService implements OnModuleInit {
       // 查询所有正常状态的租户
       const tenants = await this.prisma.sysTenant.findMany({
         where: {
-          status: '0',
-          delFlag: '0',
+          status: Status.NORMAL,
+          delFlag: DelFlag.NORMAL,
         },
         select: {
           tenantId: true,
@@ -251,7 +242,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
               noticeTitle: `存储空间${status}`,
               noticeType: '1', // 系统通知
               noticeContent,
-              status: '0',
+              status: Status.NORMAL,
             });
           });
 
@@ -261,7 +252,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
       }
 
       this.logger.log(`存储配额预警任务执行完成，共发送 ${alertCount} 条预警通知`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`存储配额预警任务执行失败: ${error.message}`, error.stack);
       throw error;
     }
@@ -284,7 +275,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
       const autoCleanConfig = await this.prisma.sysConfig.findFirst({
         where: {
           configKey: 'sys.file.autoCleanVersions',
-          delFlag: '0',
+          delFlag: DelFlag.NORMAL,
         },
       });
 
@@ -297,7 +288,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
       const maxVersionsConfig = await this.prisma.sysConfig.findFirst({
         where: {
           configKey: 'sys.file.maxVersions',
-          delFlag: '0',
+          delFlag: DelFlag.NORMAL,
         },
       });
 
@@ -309,7 +300,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
         by: ['parentFileId'],
         where: {
           parentFileId: { not: null },
-          delFlag: '0',
+          delFlag: DelFlag.NORMAL,
         },
         _count: {
           uploadId: true,
@@ -332,7 +323,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
         const versions = await this.prisma.sysUpload.findMany({
           where: {
             OR: [{ uploadId: parentFileId }, { parentFileId: parentFileId }],
-            delFlag: '0',
+            delFlag: DelFlag.NORMAL,
           },
           orderBy: { version: 'desc' },
         });
@@ -353,7 +344,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
 
               totalCleaned++;
               this.logger.log(`已清理版本: ${version.uploadId}, 文件: ${version.fileName}, 版本号: ${version.version}`);
-            } catch (error) {
+            } catch (error: any) {
               this.logger.error(`清理版本失败: ${version.uploadId}, 错误: ${error.message}`);
             }
           }
@@ -361,7 +352,7 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
       }
 
       this.logger.log(`清理旧文件版本任务执行完成，共清理 ${totalCleaned} 个旧版本`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`清理旧文件版本任务执行失败: ${error.message}`, error.stack);
       throw error;
     }

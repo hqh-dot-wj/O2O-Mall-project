@@ -1,6 +1,6 @@
 import { get } from 'lodash';
 
-function getArgs(func) {
+function getArgs(func: Function) {
   const funcString = func.toString();
   return funcString.slice(funcString.indexOf('(') + 1, funcString.indexOf(')')).match(/([^\s,]+)/g);
 }
@@ -12,9 +12,9 @@ const stringFormat = (str: string, callback: (key: string) => string): string =>
 export function paramsKeyFormat(func: () => any, formatKey: string, args: any[]) {
   const originMethodArgs = getArgs(func);
 
-  const paramsMap = {};
+  const paramsMap: Record<string, any> = {};
 
-  originMethodArgs?.forEach((arg, index) => {
+  originMethodArgs?.forEach((arg: string, index: number) => {
     paramsMap[arg] = args[index];
   });
 
@@ -35,9 +35,9 @@ export function paramsKeyFormat(func: () => any, formatKey: string, args: any[])
 export function paramsKeyGetObj(func: () => any, formatKey: string | undefined, args: any[]): any {
   const originMethodArgs = getArgs(func);
 
-  const paramsMap = {};
+  const paramsMap: Record<string, any> = {};
 
-  originMethodArgs?.forEach((arg, index) => {
+  originMethodArgs?.forEach((arg: string, index: number) => {
     paramsMap[arg] = args[index];
   });
 

@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysTenantPackage } from '@prisma/client';
 import { SoftDeleteRepository } from 'src/common/repository/base.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 
 /**
  * 租户套餐仓储层
@@ -9,9 +11,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * @description 封装租户套餐的数据访问逻辑
  */
 @Injectable()
-export class TenantPackageRepository extends SoftDeleteRepository<SysTenantPackage, Prisma.SysTenantPackageDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysTenantPackage');
+export class TenantPackageRepository extends SoftDeleteRepository<
+  SysTenantPackage,
+  Prisma.SysTenantPackageCreateInput,
+  Prisma.SysTenantPackageUpdateInput,
+  Prisma.SysTenantPackageDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysTenantPackage');
   }
 
   /**
@@ -42,7 +49,7 @@ export class TenantPackageRepository extends SoftDeleteRepository<SysTenantPacka
   async findByPackageName(packageName: string, excludeId?: number): Promise<SysTenantPackage | null> {
     const where: Prisma.SysTenantPackageWhereInput = {
       packageName,
-      delFlag: '0',
+      delFlag: DelFlagEnum.NORMAL,
     };
 
     if (excludeId) {
@@ -59,7 +66,7 @@ export class TenantPackageRepository extends SoftDeleteRepository<SysTenantPacka
     const count = await this.prisma.sysTenant.count({
       where: {
         packageId,
-        delFlag: '0',
+        delFlag: DelFlagEnum.NORMAL,
       },
     });
 
@@ -72,8 +79,8 @@ export class TenantPackageRepository extends SoftDeleteRepository<SysTenantPacka
   async findAllNormalPackages(): Promise<SysTenantPackage[]> {
     return this.delegate.findMany({
       where: {
-        status: '0',
-        delFlag: '0',
+        status: StatusEnum.NORMAL,
+        delFlag: DelFlagEnum.NORMAL,
       },
       orderBy: { createTime: 'desc' },
     });

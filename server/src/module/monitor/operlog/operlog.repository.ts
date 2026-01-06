@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { Prisma, SysOperLog } from '@prisma/client';
 import { BaseRepository } from 'src/common/repository/base.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -9,9 +10,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * @description 封装操作日志的数据访问逻辑
  */
 @Injectable()
-export class OperlogRepository extends BaseRepository<SysOperLog, Prisma.SysOperLogDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysOperLog');
+export class OperlogRepository extends BaseRepository<
+  SysOperLog,
+  Prisma.SysOperLogCreateInput,
+  Prisma.SysOperLogUpdateInput,
+  Prisma.SysOperLogDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysOperLog');
   }
 
   /**

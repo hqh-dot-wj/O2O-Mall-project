@@ -20,5 +20,5 @@ export class ListDictData extends PageQueryDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 }

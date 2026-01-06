@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 
 export class FileUploadDto {
   @ApiProperty({ type: 'string', format: 'binary', description: '上传文件' })
-  file: any;
+  file: Express.Multer.File;
 
   @ApiProperty({ required: false, description: '文件夹ID', default: 0 })
   @IsOptional()

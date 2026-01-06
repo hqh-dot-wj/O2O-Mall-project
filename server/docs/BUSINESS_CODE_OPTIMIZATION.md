@@ -3,6 +3,7 @@
 ## 🎯 优化目标
 
 将所有业务代码从硬编码错误码、分散的异常处理，升级为使用企业级 API：
+
 - ✅ ResponseCode 统一错误码枚举
 - ✅ BusinessException 断言 API
 - ✅ PageQueryDto 便捷方法
@@ -13,11 +14,13 @@
 ### 1. 响应结构统一
 
 **优化文件**:
+
 - `src/module/main/main.controller.ts`
 - `src/module/main/auth.controller.ts`
 - 所有 Service 文件的分页响应
 
 **变化**:
+
 ```typescript
 // ❌ 旧代码
 return Result.fail(500, '生成验证码错误，请重试');
@@ -33,12 +36,14 @@ return Result.fail(ResponseCode.NOT_IMPLEMENTED, '社交登录功能暂未实现
 ### 2. 异常处理优化
 
 **优化文件**:
+
 - `src/module/system/config/config.service.ts`
 - `src/module/system/file-manager/file-manager.service.ts`
 - `src/module/monitor/job/job.service.ts`
 - `src/module/monitor/job/task.service.ts`
 
 **变化**:
+
 ```typescript
 // ❌ 旧代码
 if (!config) {
@@ -56,6 +61,7 @@ BusinessException.throwIfNull(job, '任务不存在', ResponseCode.DATA_NOT_FOUN
 ### 3. 断言式异常抛出
 
 **新增特性**:
+
 ```typescript
 // 条件检查
 BusinessException.throwIf(exists !== null, '同级目录下已存在相同名称的文件夹', ResponseCode.DATA_ALREADY_EXISTS);
@@ -70,6 +76,7 @@ BusinessException.throwIfEmpty(list, '列表为空', ResponseCode.DATA_NOT_FOUND
 ### 4. 导入统一
 
 所有使用新 API 的文件已添加必要的导入：
+
 ```typescript
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions/index';
@@ -80,12 +87,14 @@ import { BusinessException } from 'src/common/exceptions/index';
 ### 1. 批量优化脚本
 
 `scripts/optimize-business-code.sh`:
+
 - 自动替换所有硬编码错误码 (500, 400, 404, 501)
 - 自动添加 ResponseCode 导入
 
 ### 2. 异常类导出
 
 创建 `src/common/exceptions/index.ts`:
+
 ```typescript
 export * from './business.exception';
 ```
@@ -97,12 +106,14 @@ export * from './business.exception';
 ### 需要修正的模式
 
 **文件列表**:
+
 - `src/module/system/tool/tool.service.ts` (5处)
 - `src/module/system/user/user.service.ts` (3处)
 - `src/module/system/tenant/tenant.service.ts` (7处)
 - `src/module/system/tenant-package/tenant-package.service.ts` (6处)
 
 **问题代码**:
+
 ```typescript
 // ❌ 自动替换产生的错误代码
 BusinessException.throwIf(true, '用户不存在');
@@ -110,6 +121,7 @@ if (!table) BusinessException.throwIf(true, '同步数据失败，原表结构�
 ```
 
 **正确写法**:
+
 ```typescript
 // ✅ 方式1：直接抛出
 throw new BusinessException(ResponseCode.DATA_NOT_FOUND, '用户不存在');
@@ -140,30 +152,33 @@ cd server
 
 ## 📊 优化统计
 
-| 优化项 | 文件数 | 代码行数 | 状态 |
-|--------|--------|----------|------|
-| ResponseCode 替换 | 15+ | 50+ | ✅ 完成 |
-| BusinessException 引入 | 8 | 30+ | ⚠️ 部分完成 |
-| throwIfNull 使用 | 6 | 20+ | ✅ 完成 |
-| throwIf 使用 | 4 | 10+ | ⚠️ 需修正 |
-| 导入添加 | 20+ | 20+ | ✅ 完成 |
+| 优化项                  | 文件数 | 代码行数 | 状态      |
+| -------------------- | --- | ---- | ------- |
+| ResponseCode 替换      | 15+ | 50+  | ✅ 完成    |
+| BusinessException 引入 | 8   | 30+  | ⚠️ 部分完成 |
+| throwIfNull 使用       | 6   | 20+  | ✅ 完成    |
+| throwIf 使用           | 4   | 10+  | ⚠️ 需修正  |
+| 导入添加                 | 20+ | 20+  | ✅ 完成    |
 
 ## 🎯 最终目标状态
 
 所有业务代码应该：
 
 1. **使用 ResponseCode 枚举**:
+   
    ```typescript
    return Result.fail(ResponseCode.XXX, message);
    ```
 
 2. **使用断言 API**:
+   
    ```typescript
    BusinessException.throwIfNull(value, message);
    BusinessException.throwIf(condition, message);
    ```
 
 3. **统一响应结构**:
+   
    ```typescript
    return Result.page(list, total);  // 分页
    return Result.ok(data);           // 成功
@@ -171,6 +186,7 @@ cd server
    ```
 
 4. **完整的类型支持**:
+   
    ```typescript
    return Result.ok<UserVo>(user);  // 类型安全
    ```

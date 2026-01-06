@@ -1,5 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Status } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { ExportTable } from 'src/common/utils/export';
@@ -26,7 +26,7 @@ export class PostService {
       postCategory: createPostDto.postCategory,
       postName: createPostDto.postName,
       postSort: createPostDto.postSort ?? 0,
-      status: createPostDto.status ?? '0',
+      status: createPostDto.status ?? Status.NORMAL,
       remark: createPostDto.remark ?? '',
       delFlag: DelFlagEnum.NORMAL,
       ...createPostDto,
@@ -52,7 +52,7 @@ export class PostService {
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as any;
     }
 
     if (query.belongDeptId) {

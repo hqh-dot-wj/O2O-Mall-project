@@ -20,7 +20,7 @@ export class ListPostDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({ required: false, description: '所属部门ID' })
   @IsOptional()

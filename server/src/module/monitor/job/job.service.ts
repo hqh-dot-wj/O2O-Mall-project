@@ -9,6 +9,7 @@ import { FormatDateFields } from 'src/common/utils/index';
 import { TaskService } from './task.service';
 import { ExportTable } from 'src/common/utils/export';
 import { StatusEnum } from 'src/common/enum/index';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
@@ -21,6 +22,7 @@ export class JobService {
     private schedulerRegistry: SchedulerRegistry,
     private readonly prisma: PrismaService,
     private taskService: TaskService,
+    private readonly redisService: RedisService,
   ) {
     void this.initializeJobs();
   }
@@ -44,7 +46,7 @@ export class JobService {
       where.jobGroup = query.jobGroup;
     }
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as StatusEnum;
     }
 
     const [list, total] = await this.prisma.$transaction([
@@ -81,7 +83,7 @@ export class JobService {
     });
 
     // 如果状态为正常，则添加到调度器
-    if (job.status === '0') {
+    if (job.status === StatusEnum.NORMAL) {
       this.addCronJob(job.jobName, job.cronExpression, createJobDto.invokeTarget);
     }
 
@@ -108,7 +110,7 @@ export class JobService {
         this.deleteCronJob(job.jobName);
       }
 
-      if (nextStatus === '0') {
+      if (nextStatus === StatusEnum.NORMAL) {
         this.addCronJob(job.jobName, nextCron, nextInvokeTarget);
       }
     }
@@ -149,13 +151,13 @@ export class JobService {
   }
 
   // 改变任务状态
-  async changeStatus(jobId: number, status: string, userName: string) {
+  async changeStatus(jobId: number, status: StatusEnum, userName: string) {
     const job = await this.prisma.sysJob.findUnique({ where: { jobId: Number(jobId) } });
     BusinessException.throwIfNull(job, '任务不存在', ResponseCode.DATA_NOT_FOUND);
 
     const cronJob = this.getCronJob(job.jobName);
 
-    if (status === '0') {
+    if (status === StatusEnum.NORMAL) {
       // 启用
       if (!cronJob) {
         this.addCronJob(job.jobName, job.cronExpression, job.invokeTarget);
@@ -172,7 +174,7 @@ export class JobService {
     await this.prisma.sysJob.update({
       where: { jobId: Number(jobId) },
       data: {
-        status,
+        status: status as StatusEnum,
         updateBy: userName,
         updateTime: new Date(),
       },
@@ -195,8 +197,21 @@ export class JobService {
   private addCronJob(name: string, cronTime: string, invokeTarget: string) {
     cronTime = cronTime.replace('?', '*'); // 不支持问号，则将cron的问号转成*
     const job = new CronJob(cronTime, async () => {
-      this.logger.warn(`定时任务 ${name} 正在执行，调用方法: ${invokeTarget}`);
-      await this.taskService.executeTask(invokeTarget, name);
+      const lockKey = `sys:job:${name}`;
+      // 尝试获取锁，默认锁30秒，根据业务调整
+      const hasLock = await this.redisService.tryLock(lockKey, 30000);
+
+      if (!hasLock) {
+        this.logger.warn(`定时任务 ${name} 未获取到锁，跳过本次执行`);
+        return;
+      }
+
+      try {
+        this.logger.warn(`定时任务 ${name} 正在执行，调用方法: ${invokeTarget}`);
+        await this.taskService.executeTask(invokeTarget, name);
+      } finally {
+        await this.redisService.unlock(lockKey);
+      }
     });
 
     this.schedulerRegistry.addCronJob(name, job as any);
@@ -211,7 +226,7 @@ export class JobService {
   // 获取 cron 任务
   private getCronJob(name: string): CronJob | null {
     try {
-      return this.schedulerRegistry.getCronJob(name) as any;
+      return this.schedulerRegistry.getCronJob(name) as unknown as CronJob;
     } catch (error) {
       return null;
     }

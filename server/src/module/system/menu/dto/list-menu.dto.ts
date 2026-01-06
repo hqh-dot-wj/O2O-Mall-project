@@ -19,7 +19,7 @@ export class ListMenuDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: string;
+  status?: StatusEnum;
 
   @ApiProperty({
     required: false,

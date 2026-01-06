@@ -18,10 +18,10 @@ const templates = {
   'tool/template/vue/dialogVue.vue.vm': dialogVue,
 };
 
-export const index = (options) => {
-  const result = {};
+export const index = (options: any) => {
+  const result: Record<string, string> = {};
   for (const [path, templateFunc] of Object.entries(templates)) {
-    result[path] = templateFunc(options);
+    result[path] = (templateFunc as Function)(options);
   }
   return result;
 };

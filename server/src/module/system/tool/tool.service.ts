@@ -42,7 +42,7 @@ type GenTableWithColumns = GenTable & { columns: GenTableColumn[] };
 
 @Injectable()
 export class ToolService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async fetchTableDetail(where: Prisma.GenTableWhereInput): Promise<GenTableWithColumns | null> {
     const criteria: Prisma.GenTableWhereInput = { delFlag: DelFlagEnum.NORMAL, ...where };
@@ -77,8 +77,8 @@ export class ToolService {
       dictType: column.dictType ?? '',
       columnDefault: column.columnDefault,
       sort: Number(column.sort),
-      status: column.status ?? '0',
-      delFlag: column.delFlag ?? '0',
+      status: column.status ?? StatusEnum.NORMAL,
+      delFlag: column.delFlag ?? StatusEnum.NORMAL,
       createBy: column.createBy ?? 'admin',
       createTime: column.createTime ?? new Date(),
       updateBy: column.updateBy ?? 'admin',
@@ -168,7 +168,7 @@ export class ToolService {
   async synchDb(tableName: string) {
     const table = await this.findOneByTableName(tableName);
     if (!table) throw new BusinessException(ResponseCode.BUSINESS_ERROR, '同步数据失败，原表结构不存在！');
-    const tableColumns = table.columns ?? [];
+    const tableColumns = (table as any).columns as GenTableColumn[] ?? [];
     //更改后的数据库表的列信息
     const columns: DbColumnRow[] = await this.getTableColumnInfo(tableName);
 
@@ -363,7 +363,7 @@ export class ToolService {
 
     archive.pipe(output);
     for (const item of tableList) {
-      const list = templateIndex(item);
+      const list = templateIndex(item) as Record<string, string>;
       const templates = [
         {
           content: list['tool/template/nestjs/entity.ts.vm'],
@@ -431,7 +431,7 @@ export class ToolService {
     }
     const primaryKey = await this.getPrimaryKey(data.columns);
     const info = { primaryKey, BusinessName: capitalize(data.businessName), ...data, columns: data.columns };
-    return Result.ok(templateIndex(info));
+    return Result.ok(templateIndex(info) as Record<string, string>);
   }
   /**
    * 查询db数据库列表
@@ -509,8 +509,8 @@ export class ToolService {
     column.createTime = column.createTime || new Date();
     column.updateBy = 'admin';
     column.updateTime = new Date();
-    column.status = column.status || '0';
-    column.delFlag = column.delFlag || '0';
+    column.status = column.status || StatusEnum.NORMAL;
+    column.delFlag = column.delFlag || StatusEnum.NORMAL;
     column.dictType = column.dictType || '';
     column.isInsert = column.isInsert ?? GenConstants.NOT_REQUIRE;
     column.isEdit = column.isEdit ?? GenConstants.NOT_REQUIRE;

@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { Prisma, SysUser } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../common/repository/base.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { SysDept } from '@prisma/client';
+
+export type UserWithDept = SysUser & { dept?: Partial<SysDept> | null };
+
 
 /**
  * 用户仓储层
@@ -10,9 +15,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * @description 封装用户相关的数据访问逻辑
  */
 @Injectable()
-export class UserRepository extends SoftDeleteRepository<SysUser, Prisma.SysUserDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysUser');
+export class UserRepository extends SoftDeleteRepository<
+  SysUser,
+  Prisma.SysUserCreateInput,
+  Prisma.SysUserUpdateInput,
+  Prisma.SysUserDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysUser');
   }
 
   /**
@@ -99,9 +109,9 @@ export class UserRepository extends SoftDeleteRepository<SysUser, Prisma.SysUser
     skip: number,
     take: number,
     orderBy?: Prisma.SysUserOrderByWithRelationInput,
-  ): Promise<{ list: any[]; total: number }> {
+  ): Promise<{ list: UserWithDept[]; total: number }> {
     const [list, total] = await this.prisma.$transaction([
-      (this.prisma.sysUser.findMany as any)({
+      this.prisma.sysUser.findMany({
         where,
         skip,
         take,
@@ -113,7 +123,7 @@ export class UserRepository extends SoftDeleteRepository<SysUser, Prisma.SysUser
               deptName: true,
             },
           },
-        },
+        } as any,
       }),
       this.prisma.sysUser.count({ where }),
     ]);
@@ -150,7 +160,7 @@ export class UserRepository extends SoftDeleteRepository<SysUser, Prisma.SysUser
         userId: { in: userIds },
         delFlag: DelFlagEnum.NORMAL,
       },
-      data: { delFlag: '2' },
+      data: { delFlag: DelFlagEnum.DELETE },
     });
 
     return result.count;

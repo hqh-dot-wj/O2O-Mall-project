@@ -8,12 +8,12 @@ const createModelMock = () =>
   new Proxy(
     {},
     {
-      get(target, prop: string) {
+      get(target: Record<string, any>, prop: string) {
         if (!Object.prototype.hasOwnProperty.call(target, prop)) {
           // eslint-disable-next-line @typescript-eslint/ban-types
           target[prop] = jest.fn();
         }
-        return target[prop];
+        return target[prop] as any;
       },
     },
   );

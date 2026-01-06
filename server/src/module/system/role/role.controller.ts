@@ -6,13 +6,13 @@ import {
   CreateRoleDto,
   UpdateRoleDto,
   ListRoleDto,
-  ChangeRoleStatusDto,
+  ChangeStatusDto,
   AuthUserCancelDto,
   AuthUserCancelAllDto,
   AuthUserSelectAllDto,
 } from './dto/index';
 import { AllocatedListDto } from '../user/dto/index';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
 import { RoleVo, RoleListVo, RoleDeptTreeVo, AllocatedUserListVo } from './vo/role.vo';
 import { Operlog } from 'src/common/decorators/operlog.decorator';
@@ -28,7 +28,7 @@ export class RoleController {
   constructor(
     private readonly roleService: RoleService,
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   @Api({
     summary: '角色管理-创建',
@@ -116,12 +116,12 @@ export class RoleController {
   @Api({
     summary: '角色管理-修改状态',
     description: '启用或停用角色',
-    body: ChangeRoleStatusDto,
+    body: ChangeStatusDto,
   })
   @RequirePermission('system:role:edit')
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put('changeStatus')
-  changeStatus(@Body() changeStatusDto: ChangeRoleStatusDto) {
+  changeStatus(@Body() changeStatusDto: ChangeStatusDto) {
     return this.roleService.changeStatus(changeStatusDto);
   }
 

@@ -1,10 +1,10 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import * as Useragent from 'useragent';
-import { GetNowDate } from 'src/common/utils';
 
 export const ClientInfo = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
-  const agent = Useragent.parse(request.headers['user-agent']);
+  const userAgentStr = request.headers['user-agent'] || '';
+  const agent = Useragent.parse(userAgentStr);
   const os = agent.os.toJSON().family;
   const browser = agent.toAgent();
 
@@ -23,7 +23,7 @@ export const ClientInfo = createParamDecorator((data: unknown, ctx: ExecutionCon
     browser: browser,
     os: os,
     loginLocation: '',
-    userName: request.user?.user?.userName,
+    userName: (request as any).user?.user?.userName,
     deviceType: deviceType,
   };
 

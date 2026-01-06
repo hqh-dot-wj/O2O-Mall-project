@@ -13,7 +13,7 @@ import {
   GetShareDto,
 } from './dto';
 import { User, NotRequireAuth } from 'src/module/system/user/user.decorator';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Operlog } from 'src/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
@@ -22,7 +22,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @ApiBearerAuth('Authorization')
 @Controller('system/file-manager')
 export class FileManagerController {
-  constructor(private readonly fileManagerService: FileManagerService) {}
+  constructor(private readonly fileManagerService: FileManagerService) { }
 
   // ==================== 文件夹管理 ====================
 

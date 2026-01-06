@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@ne
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto, ListPostDto } from './dto/index';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { PostVo, PostListVo } from './vo/post.vo';
@@ -14,7 +14,7 @@ import { UserTool, UserToolType } from '../user/user.decorator';
 @Controller('system/post')
 @ApiBearerAuth('Authorization')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(private readonly postService: PostService) { }
 
   @Api({
     summary: '岗位管理-创建',

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Query, Request, Put, Delete 
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { NoticeService } from './notice.service';
 import { CreateNoticeDto, UpdateNoticeDto, ListNoticeDto } from './dto/index';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { GetNowDate } from 'src/common/utils';
 import { Api } from 'src/common/decorators/api.decorator';
 import { NoticeVo, NoticeListVo } from './vo/notice.vo';
@@ -14,7 +14,7 @@ import { UserTool, UserToolType } from '../user/user.decorator';
 @Controller('system/notice')
 @ApiBearerAuth('Authorization')
 export class NoticeController {
-  constructor(private readonly noticeService: NoticeService) {}
+  constructor(private readonly noticeService: NoticeService) { }
 
   @Api({
     summary: '通知公告-创建',

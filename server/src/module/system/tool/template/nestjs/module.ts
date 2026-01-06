@@ -1,5 +1,5 @@
 import * as Lodash from 'lodash';
-export const moduleTem = (options) => {
+export const moduleTem = (options: any) => {
   const { BusinessName, businessName } = options;
 
   return `

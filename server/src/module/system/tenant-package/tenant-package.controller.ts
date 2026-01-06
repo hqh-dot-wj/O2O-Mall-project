@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@ne
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantPackageService } from './tenant-package.service';
 import { CreateTenantPackageDto, UpdateTenantPackageDto, ListTenantPackageDto } from './dto/index';
-import { RequirePermission } from 'src/common/decorators/require-premission.decorator';
+import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
 import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { TenantPackageVo, TenantPackageListVo, TenantPackageSelectVo } from './vo/tenant-package.vo';
@@ -13,7 +13,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @Controller('system/tenant/package')
 @ApiBearerAuth('Authorization')
 export class TenantPackageController {
-  constructor(private readonly tenantPackageService: TenantPackageService) {}
+  constructor(private readonly tenantPackageService: TenantPackageService) { }
 
   @Api({
     summary: '租户套餐管理-创建',

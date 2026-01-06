@@ -1,3 +1,4 @@
+import { DelFlag } from '@prisma/client';
 import { Injectable, Inject, BadRequestException, Logger } from '@nestjs/common';
 import { AppConfigService } from 'src/config/app-config.service';
 import { InjectQueue } from '@nestjs/bull';
@@ -70,7 +71,7 @@ export class UploadService {
       where: {
         fileMd5,
         tenantId,
-        delFlag: '0',
+        delFlag: DelFlag.NORMAL,
       },
     });
 
@@ -95,8 +96,8 @@ export class UploadService {
           version: 1,
           isLatest: true,
           downloadCount: 0,
-          status: '0',
-          delFlag: '0',
+          status: StatusEnum.NORMAL,
+          delFlag: DelFlag.NORMAL,
         },
       });
 
@@ -137,7 +138,7 @@ export class UploadService {
           fileName: originalFilename,
           folderId: folderId || 0,
           tenantId,
-          delFlag: '0',
+          delFlag: DelFlag.NORMAL,
         },
         orderBy: { version: 'desc' },
       });
@@ -171,10 +172,10 @@ export class UploadService {
           fileName: originalFilename,
           folderId: folderId || 0,
           tenantId,
-          delFlag: '0',
+          delFlag: DelFlag.NORMAL,
         },
         data: {
-          delFlag: '1',
+          delFlag: DelFlag.DELETE,
           updateTime: new Date(),
         },
       });
@@ -200,8 +201,8 @@ export class UploadService {
         parentFileId,
         isLatest,
         downloadCount: 0,
-        status: '0',
-        delFlag: '0',
+        status: StatusEnum.NORMAL,
+        delFlag: DelFlag.NORMAL,
       },
     });
 
@@ -296,7 +297,7 @@ export class UploadService {
   private async getConfigValue(key: string, defaultValue: string): Promise<string> {
     try {
       const config = await this.prisma.sysConfig.findFirst({
-        where: { configKey: key, delFlag: '0' },
+        where: { configKey: key, delFlag: DelFlag.NORMAL },
       });
       return config?.configValue || defaultValue;
     } catch (error) {
@@ -340,7 +341,7 @@ export class UploadService {
    * @param uploadId
    * @param index
    */
-  async checkChunkFile(body) {
+  async checkChunkFile(body: any) {
     const rootPath = process.cwd();
     const baseDirPath = path.posix.join(rootPath, this.config.app.file.location);
     const chunckDirPath = path.posix.join(baseDirPath, this.thunkDir, body.uploadId);
@@ -357,7 +358,7 @@ export class UploadService {
    * @param dirname
    * @returns
    */
-  mkdirsSync(dirname) {
+  mkdirsSync(dirname: string) {
     if (fs.existsSync(dirname)) {
       return true;
     } else {
@@ -443,18 +444,18 @@ export class UploadService {
    * @param {string} sourceFiles 源文件目录
    * @param {string} targetFile 目标文件路径
    */
-  async thunkStreamMerge(sourceFilesDir, targetFile) {
+  async thunkStreamMerge(sourceFilesDir: string, targetFile: string) {
     const fileList = fs
       .readdirSync(sourceFilesDir)
       .filter((file) => fs.lstatSync(path.posix.join(sourceFilesDir, file)).isFile())
-      .sort((a, b) => parseInt(a.split('@')[1]) - parseInt(b.split('@')[1]))
+      .sort((a: string, b: string) => parseInt(a.split('@')[1]) - parseInt(b.split('@')[1]))
       .map((name) => ({
         name,
         filePath: path.posix.join(sourceFilesDir, name),
       }));
 
     const fileWriteStream = fs.createWriteStream(targetFile);
-    let onResolve: (value) => void;
+    let onResolve: (value?: any) => void;
     const callbackPromise = new Promise((resolve) => {
       onResolve = resolve;
     });
@@ -468,7 +469,7 @@ export class UploadService {
    * @param {WritableStream} fileWriteStream 最终的写入结果流
    * @param {string} sourceFilesDir 源文件目录
    */
-  thunkStreamMergeProgress(fileList, fileWriteStream, sourceFilesDir, onResolve) {
+  thunkStreamMergeProgress(fileList: any[], fileWriteStream: fs.WriteStream, sourceFilesDir: string, onResolve: (value?: any) => void) {
     if (!fileList.length) {
       // 删除临时目录
       fs.rmdirSync(sourceFilesDir, { recursive: true });
@@ -618,7 +619,7 @@ export class UploadService {
     if (data) {
       return Result.ok({
         data: data,
-        msg: data.status === '0' ? '上传成功' : '上传中',
+        msg: data.status === StatusEnum.NORMAL ? '上传成功' : '上传中',
       });
     } else {
       return Result.fail(ResponseCode.INTERNAL_SERVER_ERROR, '文件不存在');

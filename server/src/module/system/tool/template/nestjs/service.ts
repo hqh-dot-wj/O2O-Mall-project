@@ -1,7 +1,7 @@
 import * as Lodash from 'lodash';
 import { GenConstants } from 'src/common/constant/gen.constant';
 
-export const serviceTem = (options) => {
+export const serviceTem = (options: any) => {
   const { BusinessName, primaryKey, businessName, className } = options;
   const modelName = className || Lodash.upperFirst(BusinessName);
   const delegateName = lowercaseFirst(modelName);
@@ -11,7 +11,7 @@ export const serviceTem = (options) => {
   const selectLine = listSelectDefinition ? '      select: listSelect,\n' : '';
   return `
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, DelFlag } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Create${Lodash.upperFirst(BusinessName)}Dto, Update${Lodash.upperFirst(BusinessName)}Dto, Query${Lodash.upperFirst(BusinessName)}Dto } from './dto/${businessName}.dto';
@@ -30,7 +30,7 @@ export class ${Lodash.upperFirst(BusinessName)}Service {
 
   async findAll(query: Query${Lodash.upperFirst(BusinessName)}Dto) {
 ${listSelectDefinition || ''}    const where: Prisma.${modelName}WhereInput = {
-      delFlag: '0',
+      delFlag: DelFlag.NORMAL,
     };
 ${queryConditions || ''}    const pageSize = Number(query.pageSize ?? 10);
     const pageNum = Number(query.pageNum ?? 1);
@@ -58,7 +58,7 @@ ${selectLine}    };
   async findOne(${primaryKey}: ${primaryKeyType}) {
     const res = await this.prisma.${delegateName}.findFirst({
       where: {
-        delFlag: '0',
+        delFlag: DelFlag.NORMAL,
         ${primaryKey}: ${primaryKey},
       },
     });
@@ -83,7 +83,7 @@ ${selectLine}    };
         },
       },
       data: {
-        delFlag: '1',
+        delFlag: DelFlag.DELETE,
       },
     });
     return Result.ok({ value: res.count >= 1 });
@@ -91,20 +91,20 @@ ${selectLine}    };
 }`;
 };
 
-const getListSelectDefinition = (options, modelName) => {
+const getListSelectDefinition = (options: any, modelName: string) => {
   const { columns } = options;
-  const fields = columns.filter((column) => column.isList == '1').map((column) => column.javaField);
+  const fields = columns.filter((column: any) => column.isList == '1').map((column: any) => column.javaField);
   if (!fields.length) {
     return '';
   }
-  return `    const listSelect: Prisma.${modelName}Select = {\n${fields.map((field) => `      ${field}: true,`).join('\n')}\n    };\n`;
+  return `    const listSelect: Prisma.${modelName}Select = {\n${fields.map((field: any) => `      ${field}: true,`).join('\n')}\n    };\n`;
 };
 
-const getListQueryStr = (options) => {
+const getListQueryStr = (options: any) => {
   const { columns } = options;
   const statements = columns
-    .filter((column) => column.isQuery == '1')
-    .map((column) => {
+    .filter((column: any) => column.isQuery == '1')
+    .map((column: any) => {
       const field = column.javaField;
       switch (column.queryType) {
         case GenConstants.QUERY_EQ:
@@ -131,17 +131,17 @@ const getListQueryStr = (options) => {
   return statements.join('');
 };
 
-const getPrimaryKeyType = (options) => {
+const getPrimaryKeyType = (options: any) => {
   const { primaryKey, columns } = options;
 
   if (!primaryKey) {
     return 'string';
   }
-  const primaryKeyColumn = columns.find((item) => item.javaField === primaryKey);
+  const primaryKeyColumn = columns.find((item: any) => item.javaField === primaryKey);
   return mapJavaTypeToTs(primaryKeyColumn?.javaType);
 };
 
-const lowercaseFirst = (str) => {
+const lowercaseFirst = (str: string) => {
   if (!str) {
     return '';
   }

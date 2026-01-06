@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { CacheService } from './cache/cache.service';
 import { JobLogService } from './job/job-log.service';
 import { JobService } from './job/job.service';
@@ -112,12 +113,12 @@ describe('Monitor module services', () => {
     it('should create job and register cron when status is normal', async () => {
       (prisma.sysJob.create as jest.Mock).mockResolvedValue({
         jobName: 'demo',
-        status: '0',
+        status: Status.NORMAL,
         cronExpression: '* * * * * *',
         invokeTarget: 'task',
       });
       await service.create(
-        { jobName: 'demo', cronExpression: '* * * * * *', invokeTarget: 'task', status: '0' } as any,
+        { jobName: 'demo', cronExpression: '* * * * * *', invokeTarget: 'task', status: Status.NORMAL } as any,
         'admin',
       );
       expect(prisma.sysJob.create).toHaveBeenCalled();
@@ -130,7 +131,7 @@ describe('Monitor module services', () => {
         jobName: 'demo',
         cronExpression: '* * * * * *',
         invokeTarget: 'task',
-        status: '0',
+        status: Status.NORMAL,
       });
       const cronRef = { start: jest.fn(), stop: jest.fn() };
       schedulerRegistry.getCronJob.mockReturnValue(cronRef);
@@ -189,13 +190,13 @@ describe('Monitor module services', () => {
       handler.mockResolvedValue(undefined);
       const result = await service.executeTask('demoTask');
       expect(result).toBe(true);
-      expect(jobLogService.addJobLog).toHaveBeenCalledWith(expect.objectContaining({ status: '0' }));
+      expect(jobLogService.addJobLog).toHaveBeenCalledWith(expect.objectContaining({ status: Status.NORMAL }));
     });
 
     it('should log failure when task is missing', async () => {
       const result = await service.executeTask('missingTask');
       expect(result).toBe(false);
-      expect(jobLogService.addJobLog).toHaveBeenCalledWith(expect.objectContaining({ status: '1' }));
+      expect(jobLogService.addJobLog).toHaveBeenCalledWith(expect.objectContaining({ status: Status.STOP }));
     });
 
     it('should expose registered task keys', () => {

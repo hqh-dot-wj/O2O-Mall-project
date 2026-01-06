@@ -8,7 +8,7 @@ import { UserService } from 'src/module/system/user/user.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  private globalWhiteList = [];
+  private globalWhiteList: any[] = [];
   constructor(
     private readonly reflector: Reflector,
     @Inject(UserService)
@@ -27,13 +27,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
 
+    // 针对 Client 端接口直接放行，由 Client 端的 Guard 自行处理
+    const req = ctx.switchToHttp().getRequest();
+    // 兼容带 /api 前缀的情况
+    if (req.path.includes('/client/')) {
+      return true;
+    }
+
     const isInWhiteList = this.checkWhiteList(ctx);
     if (isInWhiteList) {
       await this.jumpActivate(ctx);
       return true;
     }
 
-    const req = ctx.switchToHttp().getRequest();
     const accessToken = req.get('Authorization');
 
     if (!accessToken) throw new ForbiddenException('请重新登录');

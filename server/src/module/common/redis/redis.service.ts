@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService {
-  constructor(@InjectRedis() private readonly client: Redis) {}
+  constructor(@InjectRedis() private readonly client: Redis) { }
 
   getClient(): Redis {
     return this.client;
@@ -19,11 +19,15 @@ export class RedisService {
     const rawInfo = await this.client.info();
     // 按行分割字符串
     const lines = rawInfo.split('\r\n');
-    const parsedInfo = {};
+    const parsedInfo: Record<string, string> = {};
     // 遍历每一行并分割键值对
-    lines.forEach((line) => {
-      const [key, value] = line.split(':');
-      parsedInfo[key?.trim()] = value?.trim();
+    lines.forEach((line: string) => {
+      const parts = line.split(':');
+      if (parts.length === 2) {
+        const key = parts[0].trim();
+        const value = parts[1].trim();
+        parsedInfo[key] = value;
+      }
     });
     return parsedInfo;
   }
@@ -57,9 +61,9 @@ export class RedisService {
     const rawInfo = await this.client.info('commandstats');
     // 按行分割字符串
     const lines = rawInfo.split('\r\n');
-    const commandStats = [];
+    const commandStats: any[] = [];
     // 遍历每一行并分割键值对
-    lines.forEach((line) => {
+    lines.forEach((line: string) => {
       const [key, value] = line.split(':');
       if (key && value) {
         commandStats.push({
@@ -363,6 +367,27 @@ export class RedisService {
   async lPoplPush(sourceKey: string, destinationKey: string, timeout: number): Promise<string> {
     if (!sourceKey || !destinationKey) return null;
     return await this.client.brpoplpush(sourceKey, destinationKey, timeout);
+  }
+
+  /* ----------------------- Distributed Lock ----------------------- */
+
+  /**
+   * 尝试获取分布式锁
+   * @param key 锁键
+   * @param ttl 过期时间(毫秒)
+   * @returns true:获取成功 false:获取失败
+   */
+  async tryLock(key: string, ttl: number = 10000): Promise<boolean> {
+    const result = await this.client.set(key, '1', 'PX', ttl, 'NX');
+    return result === 'OK';
+  }
+
+  /**
+   * 释放分布式锁
+   * @param key 锁键
+   */
+  async unlock(key: string): Promise<number> {
+    return await this.client.del(key);
   }
 
   /**

@@ -25,13 +25,13 @@ UserService (主服务)
 
 ### 职责划分
 
-| 服务 | 职责 | 核心方法 |
-|------|------|----------|
-| **UserService** | 用户管理主服务，协调子服务 | `findAll`, `create`, `update`, `remove` |
-| **UserAuthService** | 认证与密码管理 | `validateUser`, `resetPwd`, `changePassword` |
-| **UserProfileService** | 用户资料维护 | `getProfile`, `updateProfile`, `updateAvatar` |
-| **UserRoleService** | 角色与权限管理 | `getUserRoles`, `authRole`, `getAuthUserRoles` |
-| **UserExportService** | 批量操作 | `importData`, `exportExcel` |
+| 服务                     | 职责            | 核心方法                                           |
+| ---------------------- | ------------- | ---------------------------------------------- |
+| **UserService**        | 用户管理主服务，协调子服务 | `findAll`, `create`, `update`, `remove`        |
+| **UserAuthService**    | 认证与密码管理       | `validateUser`, `resetPwd`, `changePassword`   |
+| **UserProfileService** | 用户资料维护        | `getProfile`, `updateProfile`, `updateAvatar`  |
+| **UserRoleService**    | 角色与权限管理       | `getUserRoles`, `authRole`, `getAuthUserRoles` |
+| **UserExportService**  | 批量操作          | `importData`, `exportExcel`                    |
 
 ## 实现细节
 
@@ -40,12 +40,14 @@ UserService (主服务)
 **文件路径**：`src/module/system/user/user.service.ts`
 
 **核心功能**：
+
 - CRUD 基础操作
 - 用户列表查询（分页、筛选）
 - 用户信息获取
 - 委托子服务处理专门业务
 
 **示例代码**：
+
 ```typescript
 @Injectable()
 export class UserService {
@@ -86,12 +88,14 @@ export class UserService {
 **文件路径**：`src/module/system/user/services/user-auth.service.ts`
 
 **核心功能**：
+
 - 用户名/密码验证
 - 密码重置
 - 密码修改
 - 密码加密/验证
 
 **关键实现**：
+
 ```typescript
 @Injectable()
 export class UserAuthService {
@@ -99,33 +103,33 @@ export class UserAuthService {
     const user = await this.prisma.sysUser.findUnique({
       where: { userName: username }
     });
-    
+
     if (!user || user.delFlag === DelFlagEnum.DELETED) {
       throw new BusinessException(ErrorEnum.USER_NOT_FOUND);
     }
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       throw new BusinessException(ErrorEnum.INVALID_PASSWORD);
     }
-    
+
     return user;
   }
 
   async changePassword(userId: number, oldPwd: string, newPwd: string) {
     const user = await this.findById(userId);
-    
+
     const isMatch = await bcrypt.compare(oldPwd, user.password);
     if (!isMatch) {
       throw new BusinessException(ErrorEnum.OLD_PASSWORD_INCORRECT);
     }
-    
+
     const hashedPassword = await bcrypt.hash(newPwd, 10);
     await this.prisma.sysUser.update({
       where: { userId },
       data: { password: hashedPassword }
     });
-    
+
     return ResponseSuccess();
   }
 }
@@ -136,12 +140,14 @@ export class UserAuthService {
 **文件路径**：`src/module/system/user/services/user-profile.service.ts`
 
 **核心功能**：
+
 - 获取用户详细资料
 - 更新个人资料
 - 头像上传/更新
 - 用户信息展示
 
 **关键实现**：
+
 ```typescript
 @Injectable()
 export class UserProfileService {
@@ -155,18 +161,18 @@ export class UserProfileService {
         }
       }
     });
-    
+
     return ResponseSuccess(user);
   }
 
   async updateProfile(userId: number, updateDto: UpdateProfileDto) {
     const { nickName, phonenumber, email, sex } = updateDto;
-    
+
     await this.prisma.sysUser.update({
       where: { userId },
       data: { nickName, phonenumber, email, sex }
     });
-    
+
     return ResponseSuccess();
   }
 }
@@ -177,12 +183,14 @@ export class UserProfileService {
 **文件路径**：`src/module/system/user/services/user-role.service.ts`
 
 **核心功能**：
+
 - 用户角色分配
 - 用户角色查询
 - 批量授权/取消授权
 - 角色用户列表
 
 **关键实现**：
+
 ```typescript
 @Injectable()
 export class UserRoleService {
@@ -191,7 +199,7 @@ export class UserRoleService {
     await this.prisma.sysUserRole.deleteMany({
       where: { userId }
     });
-    
+
     // 批量插入新角色
     if (roleIds?.length > 0) {
       await this.prisma.sysUserRole.createMany({
@@ -199,7 +207,7 @@ export class UserRoleService {
         skipDuplicates: true
       });
     }
-    
+
     return ResponseSuccess();
   }
 
@@ -208,7 +216,7 @@ export class UserRoleService {
       where: { userId },
       include: { role: true }
     });
-    
+
     return userRoles.map(ur => ur.role);
   }
 }
@@ -219,12 +227,14 @@ export class UserRoleService {
 **文件路径**：`src/module/system/user/services/user-export.service.ts`
 
 **核心功能**：
+
 - Excel 导入用户数据
 - Excel 导出用户数据
 - 数据验证与转换
 - 导入模板下载
 
 **关键实现**：
+
 ```typescript
 @Injectable()
 export class UserExportService {
@@ -232,13 +242,13 @@ export class UserExportService {
     const workbook = XLSX.read(file.buffer);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(sheet);
-    
+
     const results = {
       success: 0,
       failed: 0,
       errors: []
     };
-    
+
     for (const row of data) {
       try {
         await this.importUser(row, updateSupport);
@@ -251,13 +261,13 @@ export class UserExportService {
         });
       }
     }
-    
+
     return ResponseSuccess(results);
   }
 
   async exportExcel(query: ListUserDto) {
     const users = await this.userRepo.findAllWithDept(query);
-    
+
     const data = users.map(user => ({
       '用户名': user.userName,
       '昵称': user.nickName,
@@ -266,11 +276,11 @@ export class UserExportService {
       '部门': user.dept?.deptName,
       '状态': user.status === '0' ? '正常' : '停用'
     }));
-    
+
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, '用户列表');
-    
+
     return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   }
 }
@@ -307,6 +317,7 @@ export class UserModule {}
 **问题场景**：获取用户列表时需要关联部门信息
 
 **优化方案**：
+
 ```typescript
 // ❌ 优化前
 async findAll(query: ListUserDto) {
@@ -322,17 +333,17 @@ async findAll(query: ListUserDto) {
 // ✅ 优化后
 async findAll(query: ListUserDto) {
   const users = await this.prisma.sysUser.findMany({ ... });
-  
+
   const deptIds = users.map(u => u.deptId).filter(Boolean);
   const depts = await this.prisma.sysDept.findMany({
     where: { deptId: { in: deptIds } }
   });
-  
+
   const deptMap = new Map(depts.map(d => [d.deptId, d]));
   users.forEach(user => {
     user.dept = deptMap.get(user.deptId);
   });
-  
+
   return users;
 }
 ```
@@ -371,11 +382,11 @@ describe('UserAuthService', () => {
         password: await bcrypt.hash('admin123', 10),
         delFlag: '0'
       };
-      
+
       jest.spyOn(prisma.sysUser, 'findUnique').mockResolvedValue(mockUser);
-      
+
       const result = await service.validateUser('admin', 'admin123');
-      
+
       expect(result).toBeDefined();
       expect(result.userName).toBe('admin');
     });
@@ -387,9 +398,9 @@ describe('UserAuthService', () => {
         password: await bcrypt.hash('admin123', 10),
         delFlag: '0'
       };
-      
+
       jest.spyOn(prisma.sysUser, 'findUnique').mockResolvedValue(mockUser);
-      
+
       await expect(
         service.validateUser('admin', 'wrongpass')
       ).rejects.toThrow();
@@ -405,6 +416,7 @@ describe('UserAuthService', () => {
 **向后兼容**：UserService 保留所有原有方法，只是内部实现改为委托调用
 
 **示例**：
+
 ```typescript
 // 调用方代码无需修改
 class SomeController {

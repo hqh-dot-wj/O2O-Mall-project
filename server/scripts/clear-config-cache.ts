@@ -1,7 +1,8 @@
 import Redis from 'ioredis';
+import { Logger } from '@nestjs/common';
 
 async function main() {
-  console.log('🧹 清理旧的配置缓存...\n');
+  Logger.log('🧹 清理旧的配置缓存...', 'ClearCache');
 
   // 使用生产环境Redis配置
   const redisConfig = {
@@ -11,7 +12,7 @@ async function main() {
     db: 2,
   };
 
-  console.log(`连接 Redis: ${redisConfig.host}:${redisConfig.port} (DB: ${redisConfig.db})`);
+  Logger.log(`连接 Redis: ${redisConfig.host}:${redisConfig.port} (DB: ${redisConfig.db})`, 'ClearCache');
 
   const client = new Redis({
     host: redisConfig.host,
@@ -23,21 +24,21 @@ async function main() {
   try {
     // 查找所有配置缓存键
     const keys = await client.keys('SYS_CONFIG:*');
-    
-    console.log(`找到 ${keys.length} 个旧缓存键\n`);
-    
+
+    Logger.log(`找到 ${keys.length} 个旧缓存键`, 'ClearCache');
+
     if (keys.length > 0) {
-      console.log('将删除以下缓存键:');
-      keys.forEach(key => console.log(`  - ${key}`));
-      
+      Logger.log('将删除以下缓存键:', 'ClearCache');
+      keys.forEach(key => Logger.log(`  - ${key}`, 'ClearCache'));
+
       // 删除所有旧缓存
       const deleted = await client.del(keys);
-      console.log(`\n✅ 成功删除 ${deleted} 个缓存键`);
+      Logger.log(`✅ 成功删除 ${deleted} 个缓存键`, 'ClearCache');
     } else {
-      console.log('✅ 没有需要清理的缓存');
+      Logger.log('✅ 没有需要清理的缓存', 'ClearCache');
     }
   } catch (error) {
-    console.error('❌ 清理缓存失败:', error);
+    Logger.error('❌ 清理缓存失败:', error, 'ClearCache');
   } finally {
     await client.quit();
   }
@@ -45,10 +46,10 @@ async function main() {
 
 main()
   .then(() => {
-    console.log('\n✨ 清理完成！');
+    Logger.log('✨ 清理完成！', 'ClearCache');
     process.exit(0);
   })
   .catch((e) => {
-    console.error('❌ 执行失败:', e);
+    Logger.error('❌ 执行失败:', e, 'ClearCache');
     process.exit(1);
   });

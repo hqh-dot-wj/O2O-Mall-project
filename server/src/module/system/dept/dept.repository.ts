@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { Prisma, SysDept } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../common/repository/base.repository';
@@ -8,9 +9,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * 部门仓储层
  */
 @Injectable()
-export class DeptRepository extends SoftDeleteRepository<SysDept, Prisma.SysDeptDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysDept');
+export class DeptRepository extends SoftDeleteRepository<
+  SysDept,
+  Prisma.SysDeptCreateInput,
+  Prisma.SysDeptUpdateInput,
+  Prisma.SysDeptDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysDept');
   }
 
   /**
@@ -46,7 +52,7 @@ export class DeptRepository extends SoftDeleteRepository<SysDept, Prisma.SysDept
     };
 
     if (status) {
-      where.status = status;
+      where.status = status as any;
     }
 
     return this.delegate.findMany({
@@ -107,7 +113,7 @@ export class DeptRepository extends SoftDeleteRepository<SysDept, Prisma.SysDept
         deptId: { in: deptIds },
         delFlag: DelFlagEnum.NORMAL,
       },
-      data: { delFlag: '2' },
+      data: { delFlag: DelFlagEnum.DELETE },
     });
 
     return result.count;

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { Prisma, SysRole } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../common/repository/base.repository';
@@ -8,9 +9,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * 角色仓储层
  */
 @Injectable()
-export class RoleRepository extends SoftDeleteRepository<SysRole, Prisma.SysRoleDelegate> {
-  constructor(prisma: PrismaService) {
-    super(prisma, 'sysRole');
+export class RoleRepository extends SoftDeleteRepository<
+  SysRole,
+  Prisma.SysRoleCreateInput,
+  Prisma.SysRoleUpdateInput,
+  Prisma.SysRoleDelegate
+> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysRole');
   }
 
   /**
@@ -124,7 +130,7 @@ export class RoleRepository extends SoftDeleteRepository<SysRole, Prisma.SysRole
         roleId: { in: roleIds },
         delFlag: DelFlagEnum.NORMAL,
       },
-      data: { delFlag: '2' },
+      data: { delFlag: DelFlagEnum.DELETE },
     });
 
     return result.count;
