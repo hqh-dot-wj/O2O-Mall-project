@@ -1,0 +1,19 @@
+{
+  "name": "nest-admin-soybean-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter @apps/backend run start:dev",
+    "build:backend": "pnpm --filter @apps/backend run build:dev",
+    "dev:admin": "pnpm --filter @apps/admin-web run dev",
+    "build:admin": "pnpm --filter @apps/admin-web run build"
+  },
+  "devDependencies": {},
+  "pnpm": {
+    "overrides": {
+      "unconfig": "7.4.2",
+      "string-width": "4.2.3",
+      "bin-wrapper": "npm:bin-wrapper-china"
+    }
+  }
+}

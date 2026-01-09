@@ -1,0 +1,918 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 默认使用 DATABASE_URL，但我们会在 Nest 的 PrismaService 中按需注入连接串。
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  NORMAL @map("0")
+  STOP   @map("1")
+}
+
+enum DelFlag {
+  NORMAL @map("0")
+  DELETE @map("1")
+}
+
+// ==================== C端/SaaS 业务表 (Refactored) ====================
+
+enum MemberStatus {
+  NORMAL   @map("1")
+  DISABLED @map("2")
+}
+
+enum SocialPlatform {
+  MP_MALL
+  MP_WORK
+  APP_MAIN
+}
+
+enum WorkerStatus {
+  WORKING  @map("1")
+  RESTING  @map("2")
+  FROZEN   @map("3")
+  RESIGNED @map("4")
+}
+
+enum AuditStatus {
+  PENDING  @map("0")
+  APPROVED @map("1")
+  REJECTED @map("2")
+}
+
+enum WorkerLevel {
+  PRIMARY @map("1")
+  GOLD    @map("2")
+  // Add others as needed
+}
+
+enum Gender {
+  UNKNOWN @map("0")
+  MALE    @map("1")
+  FEMALE  @map("2")
+}
+
+enum MediaType {
+  IMAGE @map("1")
+  VIDEO @map("2")
+}
+
+enum SkillLevel {
+  GENERAL @map("1")
+  MASTER  @map("2")
+}
+
+/// C端会员表 (一切业务的源头)
+model UmsMember {
+  memberId String @id @default(uuid()) @map("member_id")
+  tenantId String @default("000000") @map("tenant_id") // 归属租户(如果是分销拉新的，可能归属特定租户)
+
+  // 基础信息
+  nickname String? @db.VarChar(64)
+  avatar   String? @db.VarChar(500)
+  mobile   String? @unique @db.VarChar(20) // 手机号全局唯一
+  password String? @db.VarChar(200) // 预留给未来App做手机号+密码登录
+
+  // 状态
+  status MemberStatus @default(NORMAL)
+
+  // 关联分销 (这层关系必须在Member表)
+  referrerId String? @map("referrer_id") // 谁推荐我进来的
+
+  // 关联
+  socials SysSocialUser[]
+  worker  SrvWorker? // 如果他是技师，会有一条关联记录
+
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@map("ums_member")
+}
+
+/// 社交账号绑定表 (解决多小程序、App统一身份的关键)
+model SysSocialUser {
+  socialId String @id @default(uuid()) @map("social_id")
+  memberId String @map("member_id")
+
+  // 平台标识 (非常重要)
+  platform SocialPlatform
+
+  openid  String  @db.VarChar(64) // 在该平台下的唯一ID
+  unionid String? @db.VarChar(64) // 在开放平台下的唯一ID (用于跨端识别)
+
+  // 冗余社交信息
+  nickname   String?
+  avatar     String?
+  sessionKey String? @map("session_key") // 微信SessionKey(用于解密手机号)
+
+  member UmsMember @relation(fields: [memberId], references: [memberId])
+
+  @@unique([platform, openid]) // 同一个平台下OpenID唯一
+  @@index([memberId])
+  @@index([unionid])
+  @@map("sys_social_user")
+}
+
+/// 劳动者表 (这里只放核心关联)
+model SrvWorker {
+  workerId Int    @id @default(autoincrement()) @map("worker_id")
+  memberId String @unique @map("member_id") // 必须先是会员，实名认证后成为技师
+  tenantId String @map("tenant_id") // 归属分公司
+
+  // --- 核心展示信息 ---
+  name     String  @db.VarChar(50) // 真实姓名
+  nickName String? @map("nick_name") // 艺名/称呼 (如: 王阿姨)
+  avatar   String? @db.VarChar(500) // 头像
+  phone    String  @db.VarChar(20) // 接单电话
+
+  // --- 业务状态 (最关键) ---
+  status      WorkerStatus @default(WORKING)
+  auditStatus AuditStatus  @default(PENDING) @map("audit_status")
+
+  // --- 派单权重 ---
+  rating     Decimal     @default(5.0) @db.Decimal(2, 1) // 综合评分
+  orderCount Int         @default(0) @map("order_count") // 接单总数
+  seniority  WorkerLevel @default(PRIMARY) // 等级/工龄 (1:初级 2:金牌...)
+
+  // --- 简单标签 (JSON存储，避免连表，如 ["只做饭", "不做带娃"]) ---
+  tags Json?
+
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // --- 关联 ---
+  profile SrvWorkerProfile? // 1:1 关联档案
+  certs   SrvWorkerCert[] // 1:N 关联证书
+  skills  SrvWorkerSkill[] // 1:N 关联技能
+  works   SrvWorkerWork[] // 1:N 关联过往案例/作品
+
+  member UmsMember @relation(fields: [memberId], references: [memberId])
+
+  @@index([tenantId, status]) // 核心派单索引
+  @@index([phone])
+  @@map("srv_worker")
+}
+
+/// 劳动者详细档案表 (低频访问，简历信息)
+model SrvWorkerProfile {
+  profileId Int @id @default(autoincrement()) @map("profile_id")
+  workerId  Int @unique @map("worker_id") // 外键
+
+  // --- 个人隐私信息 ---
+  idCard      String? @map("id_card") @db.VarChar(20) // 身份证号 (需加密存储)
+  idCardFront String? @map("id_card_front") @db.VarChar(500) // 身份证正面图
+  idCardBack  String? @map("id_card_back") @db.VarChar(500) // 身份证背面图
+
+  // --- 简历基本面 ---
+  gender        Gender  @default(UNKNOWN) // 0:未知 1:男 2:女
+  age           Int?
+  nativePlace   String? @map("native_place") // 籍贯 (如: 湖南益阳)
+  education     String? @db.VarChar(20) // 学历
+  startWorkYear Int?    @map("start_work_year") // 哪一年开始工作的 (计算工龄)
+
+  // --- 身体状况 (家政/搬家很重要) ---
+  height     Int? // 身高(cm)
+  weight     Int? // 体重(kg)
+  healthInfo String? @map("health_info") // 健康状况描述
+
+  // --- 自我介绍 ---
+  intro      String? @db.Text // 纯文本介绍
+  voiceIntro String? @map("voice_intro") // 语音介绍URL (增加亲切感)
+  videoIntro String? @map("video_intro") // 视频介绍URL
+
+  // --- 银行卡/结算信息 ---
+  bankName String? @map("bank_name")
+  bankNo   String? @map("bank_no")
+
+  worker SrvWorker @relation(fields: [workerId], references: [workerId])
+
+  @@map("srv_worker_profile")
+}
+
+/// 劳动者证书表
+model SrvWorkerCert {
+  certId   Int @id @default(autoincrement()) @map("cert_id")
+  workerId Int @map("worker_id")
+
+  name   String  @db.VarChar(50) // 证书名称 (如: 健康证)
+  certNo String? @map("cert_no") // 证书编号
+  images Json? // 证书照片 (可能是多页)
+
+  issueDate  DateTime? @map("issue_date") // 发证日期
+  expireDate DateTime? @map("expire_date") // 过期日期 (系统需监控此字段)
+
+  isVerified Boolean @default(false) @map("is_verified") // 平台是否已核验
+
+  worker SrvWorker @relation(fields: [workerId], references: [workerId])
+
+  @@index([workerId])
+  @@index([expireDate]) // 用于定时任务查过期
+  @@map("srv_worker_cert")
+}
+
+/// 劳动者技能表
+model SrvWorkerSkill {
+  id       Int @id @default(autoincrement())
+  workerId Int @map("worker_id")
+
+  categoryId Int    @map("cat_id") // 关联 PmsCategory (商品分类ID)
+  skillName  String @map("skill_name") // 冗余分类名称 (如: 空调维修)
+
+  level SkillLevel @default(GENERAL) // 技能熟练度 (1:一般 2:精通)
+
+  worker SrvWorker @relation(fields: [workerId], references: [workerId])
+
+  @@unique([workerId, categoryId]) // 同一个分类只能添加一次
+  @@map("srv_worker_skill")
+}
+
+/// 劳动者作品/案例表
+model SrvWorkerWork {
+  workId   Int @id @default(autoincrement()) @map("work_id")
+  workerId Int @map("worker_id")
+
+  title       String  @db.VarChar(100) // 标题 (如: 某某小区开荒保洁)
+  description String? @db.Text // 描述
+
+  mediaType MediaType @default(IMAGE) // 1:图片 2:视频
+  mediaUrls Json // 图片/视频 URL 数组
+
+  workDate DateTime? @map("work_date") // 什么时候干的
+
+  worker SrvWorker @relation(fields: [workerId], references: [workerId])
+
+  @@index([workerId])
+  @@map("srv_worker_work")
+}
+
+// ==================== 租户相关表 ====================
+
+/// 租户表
+model SysTenant {
+  id              Int       @id @default(autoincrement())
+  tenantId        String    @unique @map("tenant_id") @db.VarChar(20)
+  contactUserName String?   @map("contact_user_name") @db.VarChar(50)
+  contactPhone    String?   @map("contact_phone") @db.VarChar(20)
+  companyName     String    @map("company_name") @db.VarChar(100)
+  licenseNumber   String?   @map("license_number") @db.VarChar(50)
+  address         String?   @db.VarChar(200)
+  intro           String?   @db.Text
+  domain          String?   @db.VarChar(100)
+  packageId       Int?      @map("package_id")
+  expireTime      DateTime? @map("expire_time") @db.Timestamp(6)
+  accountCount    Int       @default(-1) @map("account_count")
+  storageQuota    Int       @default(10240) @map("storage_quota") // 存储配额(MB)，默认10GB
+  storageUsed     Int       @default(0) @map("storage_used") // 已使用存储(MB)
+  status          Status    @default(NORMAL)
+  delFlag         DelFlag   @default(NORMAL) @map("del_flag")
+  createBy        String    @default("") @map("create_by") @db.VarChar(64)
+  createTime      DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy        String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime      DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark          String?   @db.VarChar(500)
+
+  @@index([delFlag])
+  @@map("sys_tenant")
+}
+
+/// 租户套餐表
+model SysTenantPackage {
+  packageId         Int       @id @default(autoincrement()) @map("package_id")
+  packageName       String    @map("package_name") @db.VarChar(50)
+  menuIds           String?   @map("menu_ids") @db.Text
+  menuCheckStrictly Boolean   @default(false) @map("menu_check_strictly")
+  status            Status    @default(NORMAL)
+  delFlag           DelFlag   @default(NORMAL) @map("del_flag")
+  createBy          String    @default("") @map("create_by") @db.VarChar(64)
+  createTime        DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy          String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime        DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark            String?   @db.VarChar(500)
+
+  @@index([delFlag])
+  @@map("sys_tenant_package")
+}
+
+/// 客户端表
+model SysClient {
+  id            Int       @id @default(autoincrement())
+  clientId      String    @unique @map("client_id") @db.VarChar(64)
+  clientKey     String    @map("client_key") @db.VarChar(64)
+  clientSecret  String    @map("client_secret") @db.VarChar(255)
+  grantTypeList String?   @map("grant_type_list") @db.VarChar(255)
+  deviceType    String?   @map("device_type") @db.VarChar(20)
+  activeTimeout Int       @default(1800) @map("active_timeout")
+  timeout       Int       @default(86400)
+  status        Status    @default(NORMAL)
+  delFlag       DelFlag   @default(NORMAL) @map("del_flag")
+  createBy      String    @default("") @map("create_by") @db.VarChar(64)
+  createTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy      String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+
+  @@index([delFlag])
+  @@map("sys_client")
+}
+
+// ==================== LBS 位置服务模块 ====================
+
+/// 行政区划表 (标准数据)
+model SysRegion {
+  code     String  @id @map("code") @db.VarChar(20) // 行政区划代码 (如 110101)
+  name     String  @map("name") @db.VarChar(100) // 名称 (如 东城区)
+  parentId String? @map("parent_id") @db.VarChar(20) // 父级代码
+  level    Int     @default(0) // 层级 (1:省 2:市 3:区 4:街道)
+
+  // 中心点坐标 (可选，用于前端地图定位)
+  latitude  Float?
+  longitude Float?
+
+  parent   SysRegion?  @relation("RegionChildren", fields: [parentId], references: [code])
+  children SysRegion[] @relation("RegionChildren")
+
+  @@index([parentId])
+  @@map("sys_region")
+}
+
+/// 网站/站点表 (租户网点)
+model SysStation {
+  stationId Int    @id @default(autoincrement()) @map("station_id")
+  tenantId  String @map("tenant_id") @db.VarChar(20)
+
+  name    String  @db.VarChar(100)
+  address String? @db.VarChar(500)
+
+  // 展示用坐标 (WGS84)
+  latitude  Float?
+  longitude Float?
+
+  status     Status   @default(NORMAL)
+  createBy   String   @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+  updateBy   String   @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // 关联围栏
+  fences SysGeoFence[]
+
+  @@index([tenantId])
+  @@map("sys_station")
+}
+
+/// 电子围栏表 (核心 GIS 表)
+model SysGeoFence {
+  fenceId   Int @id @default(autoincrement()) @map("fence_id")
+  stationId Int @map("station_id")
+
+  // 围栏类型: SERVICE(服务区), BLOCK(禁行区)
+  type String @default("SERVICE") @db.VarChar(20)
+
+  // 核心 GIS 数据: 多边形
+  // 注意: Prisma 不支持 Geometry 类型，需使用 Unsupported
+  // 实际类型: geometry(Polygon, 4326)
+  geom Unsupported("geometry")?
+
+  // 扩展配置 (如: 该区域配送费)
+  config Json?
+
+  station SysStation @relation(fields: [stationId], references: [stationId], onDelete: Cascade)
+
+  @@index([stationId])
+  @@map("sys_geo_fence")
+}
+
+// ==================== 业务表 ====================
+
+model GenTable {
+  tableId        Int       @id @default(autoincrement()) @map("table_id")
+  tableName      String    @map("table_name") @db.VarChar(200)
+  tableComment   String    @map("table_comment") @db.VarChar(500)
+  subTableName   String?   @map("sub_table_name") @db.VarChar(64)
+  subTableFkName String?   @map("sub_table_fk_name") @db.VarChar(64)
+  className      String    @map("class_name") @db.VarChar(100)
+  tplCategory    String    @map("tpl_category") @db.VarChar(200)
+  tplWebType     String    @map("tpl_web_type") @db.VarChar(30)
+  packageName    String    @map("package_name") @db.VarChar(100)
+  moduleName     String    @map("module_name") @db.VarChar(30)
+  businessName   String    @map("business_name") @db.VarChar(30)
+  functionName   String    @map("function_name") @db.VarChar(50)
+  functionAuthor String    @map("function_author") @db.VarChar(50)
+  genType        String    @map("gen_type") @db.Char(1)
+  genPath        String    @map("gen_path") @db.VarChar(200)
+  options        String    @db.VarChar(1000)
+  status         Status
+  delFlag        DelFlag   @map("del_flag")
+  createBy       String    @map("create_by") @db.VarChar(64)
+  createTime     DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy       String    @map("update_by") @db.VarChar(64)
+  updateTime     DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark         String?   @db.VarChar(500)
+
+  columns GenTableColumn[]
+
+  @@index([delFlag])
+  @@map("gen_table")
+}
+
+model GenTableColumn {
+  columnId      Int       @id @default(autoincrement()) @map("column_id")
+  tableId       Int       @map("table_id")
+  columnName    String    @map("column_name") @db.VarChar(200)
+  columnComment String    @map("column_comment") @db.VarChar(500)
+  columnType    String    @map("column_type") @db.VarChar(100)
+  javaType      String    @map("java_type") @db.VarChar(500)
+  javaField     String    @map("java_field") @db.VarChar(200)
+  isPk          String    @map("is_pk") @db.Char(1)
+  isIncrement   String    @map("is_increment") @db.Char(1)
+  isRequired    String    @map("is_required") @db.Char(1)
+  isInsert      String    @map("is_insert") @db.Char(1)
+  isEdit        String?   @map("is_edit") @db.Char(1)
+  isList        String?   @map("is_list") @db.Char(1)
+  isQuery       String?   @map("is_query") @db.Char(1)
+  queryType     String    @map("query_type") @db.VarChar(200)
+  htmlType      String    @map("html_type") @db.VarChar(200)
+  dictType      String    @map("dict_type") @db.VarChar(200)
+  columnDefault String?   @map("column_default") @db.VarChar(200)
+  sort          Int       @db.Integer
+  status        Status
+  delFlag       DelFlag   @map("del_flag")
+  createBy      String    @map("create_by") @db.VarChar(64)
+  createTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy      String    @map("update_by") @db.VarChar(64)
+  updateTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark        String?   @db.VarChar(500)
+
+  table GenTable @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+
+  @@index([delFlag])
+  @@map("gen_table_column")
+}
+
+/// 系统级配置表（全局，无租户隔离）
+model SysSystemConfig {
+  configId    Int       @id @default(autoincrement()) @map("config_id")
+  configName  String    @map("config_name") @db.VarChar(100)
+  configKey   String    @unique @map("config_key") @db.VarChar(100)
+  configValue String    @map("config_value") @db.VarChar(500)
+  configType  String    @map("config_type") @db.Char(1)
+  createBy    String    @default("") @map("create_by") @db.VarChar(64)
+  createTime  DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy    String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime  DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark      String?   @db.VarChar(500)
+  status      Status    @default(NORMAL)
+  delFlag     DelFlag   @default(NORMAL) @map("del_flag")
+
+  @@index([status])
+  @@index([configType])
+  @@index([delFlag, status])
+  @@index([createTime])
+  @@index([delFlag])
+  @@map("sys_system_config")
+}
+
+/// 租户级配置表（多租户隔离）
+model SysConfig {
+  configId    Int       @id @default(autoincrement()) @map("config_id")
+  tenantId    String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  configName  String    @map("config_name") @db.VarChar(100)
+  configKey   String    @map("config_key") @db.VarChar(100)
+  configValue String    @map("config_value") @db.VarChar(500)
+  configType  String    @map("config_type") @db.Char(1)
+  createBy    String    @default("") @map("create_by") @db.VarChar(64)
+  createTime  DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy    String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime  DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark      String?   @db.VarChar(500)
+  status      Status    @default(NORMAL)
+  delFlag     DelFlag   @default(NORMAL) @map("del_flag")
+
+  @@unique([tenantId, configKey], name: "unique_tenant_config_key")
+  @@index([tenantId, status])
+  @@index([tenantId, configType])
+  @@index([tenantId, delFlag, status])
+  @@index([configKey])
+  @@index([createTime])
+  @@index([delFlag])
+  @@map("sys_config")
+}
+
+model SysDept {
+  deptId     Int       @id @default(autoincrement()) @map("dept_id")
+  tenantId   String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  parentId   Int       @map("parent_id")
+  ancestors  String    @db.VarChar(50)
+  deptName   String    @map("dept_name") @db.VarChar(30)
+  orderNum   Int       @map("order_num")
+  leader     String    @default("") @db.VarChar(20)
+  phone      String    @default("") @db.VarChar(11)
+  email      String    @default("") @db.VarChar(50)
+  status     Status    @default(NORMAL)
+  delFlag    DelFlag   @default(NORMAL) @map("del_flag")
+  createBy   String    @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy   String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  users      SysUser[]
+  remark     String?   @db.VarChar(500)
+
+  @@index([tenantId, status])
+  @@index([tenantId, parentId])
+  @@index([status])
+  @@index([tenantId, delFlag, status])
+  @@index([parentId])
+  @@index([delFlag])
+  @@map("sys_dept")
+}
+
+model SysDictData {
+  dictCode   Int       @id @default(autoincrement()) @map("dict_code")
+  tenantId   String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  dictSort   Int       @default(0) @map("dict_sort")
+  dictLabel  String    @map("dict_label") @db.VarChar(100)
+  dictValue  String    @map("dict_value") @db.VarChar(100)
+  dictType   String    @map("dict_type") @db.VarChar(100)
+  cssClass   String    @default("") @map("css_class") @db.VarChar(100)
+  listClass  String    @default("") @map("list_class") @db.VarChar(100)
+  isDefault  String    @default("N") @map("is_default") @db.Char(1)
+  status     Status    @default(NORMAL)
+  createBy   String    @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy   String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark     String?   @db.VarChar(500)
+  delFlag    DelFlag   @default(NORMAL) @map("del_flag")
+
+  @@unique([tenantId, dictType, dictValue], name: "unique_tenant_dict_data")
+  @@index([tenantId, dictType, status])
+  @@index([dictType])
+  @@index([delFlag])
+  @@map("sys_dict_data")
+}
+
+model SysDictType {
+  dictId     Int       @id @default(autoincrement()) @map("dict_id")
+  tenantId   String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  dictName   String    @map("dict_name") @db.VarChar(100)
+  dictType   String    @map("dict_type") @db.VarChar(100)
+  status     Status    @default(NORMAL)
+  createBy   String    @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy   String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark     String?   @db.VarChar(500)
+  delFlag    DelFlag   @default(NORMAL) @map("del_flag")
+
+  @@unique([tenantId, dictType], name: "unique_tenant_dict_type")
+  @@index([tenantId, status])
+  @@index([dictType])
+  @@index([delFlag])
+  @@map("sys_dict_type")
+}
+
+model SysJob {
+  jobId          Int       @id @default(autoincrement()) @map("job_id")
+  tenantId       String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  jobName        String    @map("job_name") @db.VarChar(64)
+  jobGroup       String    @map("job_group") @db.VarChar(64)
+  invokeTarget   String    @map("invoke_target") @db.VarChar(500)
+  cronExpression String?   @map("cron_expression") @db.VarChar(255)
+  misfirePolicy  String?   @map("misfire_policy") @db.VarChar(20)
+  concurrent     String?   @db.Char(1)
+  status         Status?
+  createBy       String    @map("create_by") @db.VarChar(64)
+  createTime     DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy       String    @map("update_by") @db.VarChar(64)
+  updateTime     DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark         String?   @db.VarChar(500)
+
+  @@index([tenantId, status])
+  @@index([invokeTarget])
+  @@map("sys_job")
+}
+
+model SysJobLog {
+  jobLogId      Int      @id @default(autoincrement()) @map("job_log_id")
+  jobName       String   @map("job_name") @db.VarChar(64)
+  jobGroup      String   @map("job_group") @db.VarChar(64)
+  invokeTarget  String   @map("invoke_target") @db.VarChar(500)
+  jobMessage    String?  @map("job_message") @db.VarChar(500)
+  status        Status
+  exceptionInfo String?  @map("exception_info") @db.VarChar(2000)
+  createTime    DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+
+  @@map("sys_job_log")
+}
+
+model SysLogininfor {
+  infoId        Int      @id @default(autoincrement()) @map("info_id")
+  tenantId      String   @default("000000") @map("tenant_id") @db.VarChar(20)
+  userName      String   @map("user_name") @db.VarChar(50)
+  ipaddr        String   @db.VarChar(128)
+  loginLocation String   @default("") @map("login_location") @db.VarChar(255)
+  browser       String   @db.VarChar(50)
+  os            String   @db.VarChar(50)
+  deviceType    String   @default("0") @map("device_type") @db.Char(1)
+  status        Status
+  msg           String   @db.VarChar(255)
+  delFlag       DelFlag  @default(NORMAL) @map("del_flag")
+  loginTime     DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("login_time") @db.Timestamp(6)
+
+  @@index([tenantId, loginTime])
+  @@index([userName])
+  @@index([status])
+  @@index([loginTime])
+  @@index([tenantId, userName, loginTime])
+  @@index([tenantId, status, loginTime])
+  @@index([delFlag])
+  @@map("sys_logininfor")
+}
+
+model SysMenu {
+  menuId     Int       @id @default(autoincrement()) @map("menu_id")
+  tenantId   String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  menuName   String    @map("menu_name") @db.VarChar(50)
+  parentId   Int       @map("parent_id")
+  orderNum   Int       @map("order_num")
+  path       String    @default("") @db.VarChar(200)
+  component  String?   @db.VarChar(255)
+  query      String    @default("") @db.VarChar(255)
+  isFrame    String    @map("is_frame") @db.Char(1)
+  isCache    String    @map("is_cache") @db.Char(1)
+  menuType   String    @map("menu_type") @db.Char(1)
+  visible    String    @db.Char(1)
+  status     Status
+  perms      String    @default("") @db.VarChar(100)
+  icon       String    @default("") @db.VarChar(100)
+  createBy   String    @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy   String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark     String?   @db.VarChar(500)
+  delFlag    DelFlag   @default(NORMAL) @map("del_flag")
+
+  @@index([tenantId, status])
+  @@index([tenantId, parentId])
+  @@index([status])
+  @@index([tenantId, delFlag, status])
+  @@index([parentId, orderNum])
+  @@index([delFlag])
+  @@map("sys_menu")
+}
+
+model SysNotice {
+  noticeId      Int       @id @default(autoincrement()) @map("notice_id")
+  tenantId      String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  noticeTitle   String    @map("notice_title") @db.VarChar(50)
+  noticeType    String    @map("notice_type") @db.Char(1)
+  noticeContent String?   @map("notice_content") @db.Text
+  status        Status    @default(NORMAL)
+  createBy      String    @default("") @map("create_by") @db.VarChar(64)
+  createTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy      String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  delFlag       DelFlag   @default(NORMAL) @map("del_flag")
+  remark        String?   @db.VarChar(500)
+
+  @@index([tenantId, status])
+  @@index([tenantId, noticeType])
+  @@index([tenantId, createTime])
+  @@index([tenantId, delFlag, status])
+  @@index([createTime])
+  @@index([delFlag])
+  @@map("sys_notice")
+}
+
+model SysOperLog {
+  operId        Int      @id @default(autoincrement()) @map("oper_id")
+  tenantId      String   @default("000000") @map("tenant_id") @db.VarChar(20)
+  title         String   @db.VarChar(50)
+  businessType  Int      @map("business_type")
+  requestMethod String   @map("request_method") @db.VarChar(10)
+  operatorType  Int      @map("operator_type")
+  operName      String   @map("oper_name") @db.VarChar(50)
+  deptName      String   @map("dept_name") @db.VarChar(50)
+  operUrl       String   @map("oper_url") @db.VarChar(255)
+  operLocation  String   @map("oper_location") @db.VarChar(255)
+  operParam     String   @map("oper_param") @db.VarChar(2000)
+  jsonResult    String   @map("json_result") @db.VarChar(2000)
+  errorMsg      String   @map("error_msg") @db.VarChar(2000)
+  method        String   @db.VarChar(100)
+  operIp        String   @map("oper_ip") @db.VarChar(255)
+  operTime      DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("oper_time") @db.Timestamp(6)
+  status        Status
+  costTime      Int      @map("cost_time")
+
+  @@index([tenantId, operTime])
+  @@index([operName])
+  @@index([status])
+  @@index([operTime])
+  @@index([businessType])
+  @@index([tenantId, status, operTime])
+  @@index([tenantId, operName, operTime])
+  @@map("sys_oper_log")
+}
+
+model SysPost {
+  postId       Int       @id @default(autoincrement()) @map("post_id")
+  tenantId     String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  deptId       Int?      @map("dept_id")
+  postCode     String    @map("post_code") @db.VarChar(64)
+  postCategory String?   @map("post_category") @db.VarChar(100)
+  postName     String    @map("post_name") @db.VarChar(50)
+  postSort     Int       @default(0) @map("post_sort")
+  status       Status    @default(NORMAL)
+  createBy     String    @default("") @map("create_by") @db.VarChar(64)
+  createTime   DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy     String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime   DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark       String?   @db.VarChar(500)
+  delFlag      DelFlag   @default(NORMAL) @map("del_flag")
+
+  @@index([tenantId, status])
+  @@index([deptId])
+  @@index([tenantId, delFlag, status])
+  @@index([delFlag])
+  @@map("sys_post")
+}
+
+model SysRole {
+  roleId            Int       @id @default(autoincrement()) @map("role_id")
+  tenantId          String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  roleName          String    @map("role_name") @db.VarChar(30)
+  roleKey           String    @map("role_key") @db.VarChar(100)
+  roleSort          Int       @map("role_sort")
+  dataScope         String    @default("1") @map("data_scope") @db.Char(1)
+  menuCheckStrictly Boolean   @default(false) @map("menu_check_strictly")
+  deptCheckStrictly Boolean   @default(false) @map("dept_check_strictly")
+  status            Status    @default(NORMAL)
+  delFlag           DelFlag   @default(NORMAL) @map("del_flag")
+  createBy          String    @default("") @map("create_by") @db.VarChar(64)
+  createTime        DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy          String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime        DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark            String?   @db.VarChar(500)
+
+  @@index([tenantId, status])
+  @@index([tenantId, delFlag, status])
+  @@index([tenantId, roleKey])
+  @@index([roleKey])
+  @@index([delFlag])
+  @@map("sys_role")
+}
+
+model SysRoleDept {
+  roleId Int @map("role_id")
+  deptId Int @map("dept_id")
+
+  @@id([roleId, deptId])
+  @@map("sys_role_dept")
+}
+
+model SysRoleMenu {
+  roleId Int @map("role_id")
+  menuId Int @map("menu_id")
+
+  @@id([roleId, menuId])
+  @@index([roleId])
+  @@index([menuId])
+  @@map("sys_role_menu")
+}
+
+/// 文件夹表
+model SysFileFolder {
+  folderId   Int       @id @default(autoincrement()) @map("folder_id")
+  tenantId   String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  parentId   Int       @default(0) @map("parent_id")
+  folderName String    @map("folder_name") @db.VarChar(100)
+  folderPath String    @map("folder_path") @db.VarChar(500)
+  orderNum   Int       @default(0) @map("order_num")
+  status     Status    @default(NORMAL)
+  delFlag    DelFlag   @default(NORMAL) @map("del_flag")
+  createBy   String    @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy   String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark     String?   @db.VarChar(500)
+
+  @@index([tenantId, parentId])
+  @@index([delFlag])
+  @@map("sys_file_folder")
+}
+
+/// 文件表（扩展原 SysUpload）
+model SysUpload {
+  uploadId      String    @id @map("upload_id") @db.VarChar(255)
+  tenantId      String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  folderId      Int       @default(0) @map("folder_id")
+  size          Int
+  fileName      String    @map("file_name") @db.VarChar(255)
+  newFileName   String    @map("new_file_name") @db.VarChar(255)
+  url           String    @db.VarChar(500)
+  ext           String?   @db.VarChar(50)
+  mimeType      String?   @map("mime_type") @db.VarChar(100)
+  storageType   String    @default("local") @map("storage_type") @db.VarChar(20)
+  fileMd5       String?   @map("file_md5") @db.VarChar(32)
+  thumbnail     String?   @db.VarChar(500) // 缩略图URL
+  parentFileId  String?   @map("parent_file_id") @db.VarChar(255) // 父文件ID（用于版本控制）
+  version       Int       @default(1) // 版本号
+  isLatest      Boolean   @default(true) @map("is_latest") // 是否最新版本
+  downloadCount Int       @default(0) @map("download_count")
+  status        Status    @default(NORMAL)
+  delFlag       DelFlag   @default(NORMAL) @map("del_flag")
+  createBy      String    @default("") @map("create_by") @db.VarChar(64)
+  createTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy      String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  remark        String?   @db.VarChar(500)
+
+  // Relations
+  shares SysFileShare[]
+
+  @@index([tenantId, folderId])
+  @@index([fileMd5, delFlag])
+  @@index([parentFileId, version])
+  @@index([delFlag])
+  @@map("sys_upload")
+}
+
+/// 文件分享表
+model SysFileShare {
+  shareId       String    @id @default(uuid()) @map("share_id") @db.VarChar(64)
+  tenantId      String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  uploadId      String    @map("upload_id") @db.VarChar(255)
+  shareCode     String?   @map("share_code") @db.VarChar(6)
+  expireTime    DateTime? @map("expire_time") @db.Timestamp(6)
+  maxDownload   Int       @default(-1) @map("max_download")
+  downloadCount Int       @default(0) @map("download_count")
+  status        Status    @default(NORMAL)
+  createBy      String    @default("") @map("create_by") @db.VarChar(64)
+  createTime    DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+
+  // Relations
+  upload SysUpload @relation(fields: [uploadId], references: [uploadId], onDelete: Cascade)
+
+  @@index([shareId, shareCode])
+  @@index([uploadId])
+  @@map("sys_file_share")
+}
+
+model SysUser {
+  userId      Int       @id @default(autoincrement()) @map("user_id")
+  tenantId    String    @default("000000") @map("tenant_id") @db.VarChar(20)
+  deptId      Int?      @map("dept_id")
+  userName    String    @map("user_name") @db.VarChar(30)
+  nickName    String    @map("nick_name") @db.VarChar(30)
+  userType    String    @map("user_type") @db.VarChar(2)
+  email       String    @default("") @db.VarChar(50)
+  phonenumber String    @default("") @db.VarChar(11)
+  sex         String    @default("0") @db.Char(1)
+  avatar      String    @default("") @db.VarChar(255)
+  password    String    @db.VarChar(200)
+  status      Status    @default(NORMAL)
+  delFlag     DelFlag   @default(NORMAL) @map("del_flag")
+  loginIp     String    @default("") @map("login_ip") @db.VarChar(128)
+  loginDate   DateTime? @map("login_date") @db.Timestamp(6)
+  createBy    String    @default("") @map("create_by") @db.VarChar(64)
+  createTime  DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("create_time") @db.Timestamp(6)
+  updateBy    String    @default("") @map("update_by") @db.VarChar(64)
+  updateTime  DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
+  dept        SysDept?  @relation(fields: [deptId], references: [deptId])
+  remark      String?   @db.VarChar(500)
+
+  @@index([tenantId, status])
+  @@index([tenantId, userName])
+  @@index([tenantId, createTime])
+  @@index([tenantId, phonenumber])
+  @@index([tenantId, email])
+  @@index([tenantId, delFlag, status])
+  @@index([userName])
+  @@index([deptId])
+  @@index([status])
+  @@index([phonenumber])
+  @@index([email])
+  @@index([delFlag])
+  @@map("sys_user")
+}
+
+model SysUserPost {
+  userId Int @map("user_id")
+  postId Int @map("post_id")
+
+  @@id([userId, postId])
+  @@index([postId])
+  @@map("sys_user_post")
+}
+
+model SysUserRole {
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("sys_user_role")
+}
