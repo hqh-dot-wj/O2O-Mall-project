@@ -70,7 +70,7 @@ function createDefaultModel(): Model {
 type RuleKey = Extract<keyof Model, 'userName' | 'nickName' | 'password' | 'status' | 'phonenumber' | 'roleIds'>;
 
 const rules: Record<RuleKey, App.Global.FormRule[]> = {
-  userName: [createRequiredRule($t('page.system.user.form.userName.required'))],
+  userName: [createRequiredRule($t('page.system.user.form.userName.required')), patternRules.userName],
   nickName: [createRequiredRule($t('page.system.user.form.nickName.required'))],
   password: [{ ...patternRules.pwd, required: props.operateType === 'add' }],
   phonenumber: [patternRules.phone],

@@ -71,10 +71,11 @@ interface Props {
   modelValue?: Point;
   address?: string;
   fence?: any; // GeoJSON Polygon or MultiPolygon
+  radius?: number; // Service radius in meters
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['update:modelValue', 'update:address', 'update:fence']);
+const emit = defineEmits(['update:modelValue', 'update:address', 'update:fence', 'update:radius']);
 
 // State
 const loading = ref(true);
@@ -99,7 +100,17 @@ let currentPolygons: any[] = []; // Array of AMap.Polygon
 let currentCircle: any = null; // AMap.Circle
 
 // Circle Mode Data
-const circleRadiusKm = ref(3);
+const circleRadiusKm = ref(props.radius ? props.radius / 1000 : 3);
+
+watch(
+  () => props.radius,
+  val => {
+    if (val) {
+      circleRadiusKm.value = val / 1000;
+      updateCircle();
+    }
+  }
+);
 
 // Polygon Mode Data
 const isDrawing = ref(false);
@@ -356,6 +367,7 @@ function updateCircle() {
         circleEditor.on('adjust', (event: any) => {
             const r = event.radius;
             circleRadiusKm.value = Number((r / 1000).toFixed(2));
+            emit('update:radius', Math.round(r));
             generateCircleGeoJson(); // Sync data
         });
 
@@ -377,6 +389,9 @@ function updateCircle() {
     // Fit view only if we just created it or significant shift? 
     // Constantly fitting view might be annoying during editing.
     // map.setFitView([currentCircle]);
+    
+    // Emit radius update when slider/input changes
+    emit('update:radius', Math.round(radiusMeters));
 }
 
 function generateCircleGeoJson() {

@@ -18,7 +18,7 @@ declare namespace NaiveUI {
    */
   type CustomColumnKey = 'operate';
 
-  type SetTableColumnKey<C, T> = Omit<C, 'key'> & { key: keyof T | CustomColumnKey };
+  type SetTableColumnKey<C, T> = Omit<C, 'key'> & { key: (keyof T & (string | number)) | CustomColumnKey };
 
   type TableData = Api.Common.CommonRecord<object>;
 
@@ -26,7 +26,7 @@ declare namespace NaiveUI {
 
   type TableColumn<T> = TableColumnWithKey<T> | DataTableSelectionColumn<T> | DataTableExpandColumn<T>;
 
-  type TableApiFn<T = any, R = Api.Common.CommonSearchParams> = (
+  type TableApiFn<T = any, R = any> = (
     params: R,
   ) => Promise<FlatResponseData<Api.Common.PaginatingQueryRecord<T>>>;
 

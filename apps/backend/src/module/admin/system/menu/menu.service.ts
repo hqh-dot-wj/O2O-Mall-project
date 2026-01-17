@@ -2,7 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { DelFlagEnum, StatusEnum, CacheEnum } from 'src/common/enum/index';
-import { Cacheable } from 'src/common/decorators/redis.decorator';
+import { Cacheable, CacheEvict } from 'src/common/decorators/redis.decorator';
 import { CreateMenuDto, UpdateMenuDto, ListMenuDto } from './dto/index';
 import { ListToTree, Uniq } from 'src/common/utils/index';
 import { UserService } from '../user/user.service';
@@ -19,9 +19,13 @@ export class MenuService {
     private readonly menuRepo: MenuRepository,
   ) { }
 
+  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async create(createMenuDto: CreateMenuDto) {
+    const { queryParam, status, ...data } = createMenuDto;
     const res = await this.menuRepo.create({
-      ...createMenuDto,
+      ...data,
+      status: status === '0' ? StatusEnum.NORMAL : StatusEnum.STOP,
+      query: queryParam ?? '',
       path: createMenuDto.path ?? '',
       icon: createMenuDto.icon ?? '',
       delFlag: DelFlagEnum.NORMAL,
@@ -31,7 +35,12 @@ export class MenuService {
 
   async findAll(query: ListMenuDto) {
     const res = await this.menuRepo.findAllMenus(query);
-    return Result.ok(res);
+    const list = res.map((item) => ({
+      ...item,
+      status: item.status === StatusEnum.NORMAL ? '0' : '1',
+      queryParam: item.query,
+    }));
+    return Result.ok(list);
   }
 
   async treeSelect() {
@@ -93,14 +102,33 @@ export class MenuService {
 
   async findOne(menuId: number) {
     const res = await this.menuRepo.findById(menuId);
+    if (res) {
+      return Result.ok({
+        ...res,
+        status: res.status === StatusEnum.NORMAL ? '0' : '1',
+        queryParam: res.query,
+      });
+    }
     return Result.ok(res);
   }
 
+  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async update(updateMenuDto: UpdateMenuDto) {
-    const res = await this.menuRepo.update(updateMenuDto.menuId, updateMenuDto);
+    const { queryParam, status, ...data } = updateMenuDto;
+    const updateData: any = {
+      ...data,
+      query: queryParam ?? '',
+    };
+
+    if (status) {
+      updateData.status = status === '0' ? StatusEnum.NORMAL : StatusEnum.STOP;
+    }
+
+    const res = await this.menuRepo.update(updateMenuDto.menuId, updateData);
     return Result.ok(res);
   }
 
+  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async remove(menuId: number) {
     const data = await this.menuRepo.softDelete(menuId);
     return Result.ok(data);
@@ -109,6 +137,7 @@ export class MenuService {
   /**
    * 级联删除菜单
    */
+  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async cascadeRemove(menuIds: number[]) {
     const data = await this.prisma.sysMenu.updateMany({
       where: {

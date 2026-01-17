@@ -537,6 +537,8 @@ declare namespace Api {
       status: Common.EnableStatus;
       /** 删除标志（0代表存在 1代表删除） */
       delFlag: string;
+      regionCode?: string;
+      isDirect?: boolean;
     }>;
 
     /** tenant search params */
@@ -569,6 +571,9 @@ declare namespace Api {
         latitude?: number;
         longitude?: number;
         fence?: any;
+        regionCode?: string;
+        isDirect?: boolean;
+        serviceRadius?: number;
       }
     >;
 

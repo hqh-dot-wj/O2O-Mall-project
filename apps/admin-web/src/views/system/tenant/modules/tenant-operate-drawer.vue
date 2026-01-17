@@ -40,7 +40,9 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
-type Model = Api.System.TenantOperateParams;
+type Model = Omit<Api.System.TenantOperateParams, 'isDirect'> & {
+  isDirect?: boolean;
+};
 
 const model: Model = reactive(createDefaultModel());
 
@@ -64,6 +66,9 @@ function createDefaultModel(): Model {
     latitude: undefined,
     longitude: undefined,
     fence: undefined,
+    regionCode: '',
+    isDirect: true,
+    serviceRadius: 3000,
   };
 }
 
@@ -153,6 +158,12 @@ async function handleSubmit() {
         status,
         username,
         password,
+        regionCode,
+        isDirect,
+        serviceRadius,
+        latitude,
+        longitude,
+        fence
       } = model;
       await fetchCreateTenant({
         contactUserName,
@@ -169,6 +180,12 @@ async function handleSubmit() {
         expireTime,
         accountCount,
         status,
+        regionCode,
+        isDirect,
+        serviceRadius,
+        latitude,
+        longitude,
+        fence
       });
     } else if (props.operateType === 'edit') {
       const {
@@ -186,6 +203,12 @@ async function handleSubmit() {
         expireTime,
         accountCount,
         status,
+        regionCode,
+        isDirect,
+        serviceRadius,
+        latitude,
+        longitude,
+        fence
       } = model;
       await fetchUpdateTenant({
         id,
@@ -202,6 +225,12 @@ async function handleSubmit() {
         expireTime,
         accountCount,
         status,
+        regionCode,
+        isDirect,
+        serviceRadius,
+        latitude,
+        longitude,
+        fence
       });
     }
 
@@ -213,6 +242,7 @@ async function handleSubmit() {
   }
 }
 
+import RegionCascader from '@/components/custom/RegionCascader.vue';
 import LbsMapPicker from '@/components/custom/LbsMapPicker.vue';
 
 // ... (existing imports)
@@ -233,6 +263,10 @@ function handleAddressUpdate(addr: string) {
 
 function handleFenceUpdate(fence: any) {
   model.fence = fence;
+}
+
+function handleRadiusUpdate(radius: number) {
+  model.serviceRadius = radius;
 }
 
 watch(currentPoint, (val) => {
@@ -327,6 +361,18 @@ watch(visible, () => {
           <DictRadio v-model:value="model.status" dict-code="sys_normal_disable" />
         </NFormItem>
         <NDivider>企业信息 (LBS)</NDivider>
+        <NFormItem label="行政区域" path="regionCode">
+             <RegionCascader v-model:value="model.regionCode" />
+        </NFormItem>
+        <NFormItem label="经营模式" path="isDirect">
+             <NSwitch v-model:value="model.isDirect">
+                <template #checked>直营</template>
+                <template #unchecked>加盟</template>
+             </NSwitch>
+        </NFormItem>
+         <NFormItem label="服务半径(米)" path="serviceRadius">
+            <NInputNumber v-model:value="model.serviceRadius" :min="0" :step="100" />
+        </NFormItem>
         <NFormItem label="经营地址" path="address">
           <NInputGroup>
             <NInput v-model:value="model.address" placeholder="请选择或输入经营地址" />
@@ -356,8 +402,9 @@ watch(visible, () => {
         v-model="currentPoint"
         :address="model.address || ''"
         :fence="model.fence"
+        :radius="model.serviceRadius || 0"
         @update:address="handleAddressUpdate"
-
+        @update:radius="handleRadiusUpdate"
         @update:fence="handleFenceUpdate"
       />
     </NModal>

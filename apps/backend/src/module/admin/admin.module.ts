@@ -4,6 +4,7 @@ import { MonitorModule } from './monitor/monitor.module';
 import { UploadModule } from './upload/upload.module';
 import { ResourceModule } from './resource/resource.module';
 import { AuthModule } from './auth/auth.module';
+import { MemberModule } from './member/member.module';
 // import { ToolModule } from './tool/tool.module'; // Tool module missing/skipped
 
 @Module({
@@ -13,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
         MonitorModule,
         UploadModule,
         ResourceModule,
+        MemberModule,
     ],
 })
 export class AdminModule { }

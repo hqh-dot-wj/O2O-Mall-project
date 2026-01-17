@@ -63,8 +63,10 @@ const local: App.I18n.Schema = {
     update: '更新',
     saveSuccess: '保存成功',
     updateSuccess: '更新成功',
+    sort: '排序',
     noChange: '没有进行任何操作',
     userCenter: '个人中心',
+    name: '名称',
     yesOrNo: {
       yes: '是',
       no: '否',
@@ -296,7 +298,7 @@ const local: App.I18n.Schema = {
     monitor_job: '定时任务',
     'monitor_job-log': '任务日志',
     monitor_server: '服务监控',
-    system_oss: '文件管理',
+    system_oss: '对象存储',
     'system_oss-config': 'OSS 配置',
     monitor_cache: '缓存监控',
     monitor_cache_list: '缓存列表',
@@ -307,6 +309,7 @@ const local: App.I18n.Schema = {
     demo: '测试',
     demo_demo: '测试单表',
     demo_tree: '测试树表',
+    member: '会员管理',
     tool_build: '表单构建',
     tool_swagger: '系统API',
     exception: '异常页',
@@ -1253,6 +1256,136 @@ const local: App.I18n.Schema = {
         selectFilesToDelete: '请选择要删除的文件',
       },
     },
+    member: {
+      title: 'C端用户',
+      userInfo: '用户信息',
+      tenant: '租户',
+      referrer: '推荐人',
+      status: '状态',
+      registerTime: '注册时间',
+      editReferrer: '编辑推荐人',
+      editTenant: '编辑租户',
+      form: {
+        referrerId: '推荐人ID',
+        tenantId: '租户ID',
+      },
+      confirm: {
+        updateStatus: '确认要{action}该用户吗？',
+        statusUpdated: '状态更新成功',
+        updateSuccess: '更新成功',
+      },
+    },
+    pms: {
+      brand: {
+        title: '品牌管理',
+        brandName: '品牌名称',
+        brandLogo: '品牌 Logo',
+        addBrand: '新增品牌',
+        editBrand: '编辑品牌',
+        searchBrandName: '请输入品牌名称',
+        form: {
+          brandName: {
+            required: '请输入品牌名称',
+            invalid: '品牌名称无效',
+          },
+          logo: {
+            required: '请输入品牌 Logo 链接',
+            invalid: '品牌 Logo 链接无效',
+          }
+        }
+      },
+      category: {
+        title: '类目管理',
+        categoryName: '类目名称',
+        icon: '图标',
+        categoryDetail: '类目详情',
+        subCategoryList: '子类目列表',
+        addCategory: '新增类目',
+        editCategory: '编辑类目',
+        addSubCategory: '新增子类目',
+        parentCategory: '上级类目',
+        selectParent: '选择上级 (为空则为根类目)',
+        bindType: '绑定类型',
+        realProduct: '实物商品',
+        serviceProduct: '服务商品',
+        attributeTemplate: '参数模板',
+        selectAttributeTemplate: '选择参数模板',
+        form: {
+          categoryName: {
+            required: '请输入类目名称',
+            invalid: '类目名称无效',
+          },
+          sort: {
+            required: '请输入排序',
+            invalid: '排序无效',
+          }
+        }
+      },
+      attribute: {
+        attributeCount: '属性数量',
+        title: '参数模板',
+        addTemplate: '新增模板',
+        editTemplate: '编辑模板',
+        attributeConfig: '属性配置',
+        addAttribute: '添加属性',
+        attributeName: '属性名称',
+        usageType: '属性用途',
+        inputType: '录入方式',
+        inputList: '候选值列表 (逗号分隔)',
+        applyType: '适用类型',
+        noAttributes: '暂无属性，请点击上方按钮添加',
+        validate: {
+          attributeNameRequired: '属性名称不能为空'
+        },
+        usage: {
+          param: '基本参数',
+          spec: '销售属性'
+        },
+        input: {
+          manual: '手工录入',
+          select: '列表选择'
+        },
+        apply: {
+          common: '通用',
+          real: '实物专用',
+          service: '服务专用'
+        },
+        placeholder: {
+          attributeName: '请输入名称',
+          inputList: '红,黄,蓝'
+        }
+      },
+      product: {
+        title: '标准商品列表',
+        add: '新增商品',
+        edit: '编辑商品',
+        name: '商品名称',
+      }
+    },
+    pms_category: {
+      title: '类目管理',
+    },
+    pms_brand: {
+      title: '品牌管理',
+    },
+    'pms_global-product': {
+      title: '标准商品库',
+    },
+    pms_attribute: {
+      title: '参数规格模板',
+    },
+    store_product_market: {
+      title: '选品中心',
+    },
+    store_product_list: {
+      title: '我的商品',
+    },
+    store_stock: {
+      title: '库存管理',
+    },
+    store_marketing: {
+      title: '营销活动',
+    },
   },
   form: {
     required: '不能为空',
@@ -1281,6 +1414,7 @@ const local: App.I18n.Schema = {
       invalid: '邮箱格式不正确',
     },
   },
+
   dropdown: {
     closeCurrent: '关闭',
     closeOther: '关闭其它',

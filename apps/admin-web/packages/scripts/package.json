@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@soybeanjs/changelog": "0.3.25",
+    "@types/node": "^22.10.1",
     "bumpp": "10.3.1",
     "c12": "3.3.2",
     "cac": "6.7.14",

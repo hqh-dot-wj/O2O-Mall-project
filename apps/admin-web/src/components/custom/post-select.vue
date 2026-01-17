@@ -27,10 +27,6 @@ const postOptions = ref<CommonType.Option<CommonType.IdType>[]>([]);
 watch(
   () => props.deptId,
   () => {
-    if (!props.deptId) {
-      postOptions.value = [];
-      return;
-    }
     getPostOptions();
   },
   { immediate: true },
@@ -39,7 +35,7 @@ watch(
 async function getPostOptions() {
   startPostLoading();
   try {
-    const { data } = await fetchGetPostSelect(props.deptId!);
+    const { data } = await fetchGetPostSelect(props.deptId || undefined);
     if (data) {
       postOptions.value = data.map((item) => ({
         label: item.postName,

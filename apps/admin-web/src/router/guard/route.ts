@@ -24,7 +24,6 @@ export function createRouteGuard(router: Router) {
       next(location);
       return;
     }
-
     const authStore = useAuthStore();
 
     const rootRoute: RouteKey = 'root';
@@ -37,27 +36,31 @@ export function createRouteGuard(router: Router) {
 
     const hasRole = authStore.userInfo.roles.some((role) => routeRoles.includes(role));
     const hasAuth = authStore.isStaticSuper || !routeRoles.length || hasRole;
-
+    console.log(!hasAuth, authStore.isStaticSuper, !routeRoles.length, hasRole);
     // if it is login route when logged in, then switch to the root page
     if (to.name === loginRoute && isLogin) {
+
       next({ name: rootRoute });
       return;
     }
 
     // if the route does not need login, then it is allowed to access directly
     if (!needLogin) {
+
       handleRouteSwitch(to, from, next);
       return;
     }
 
     // the route need login but the user is not logged in, then switch to the login page
     if (!isLogin) {
+
       next({ name: loginRoute, query: { redirect: to.fullPath } });
       return;
     }
 
     // if the user is logged in but does not have authorization, then switch to the 403 page
     if (!hasAuth) {
+
       next({ name: noAuthorizationRoute });
       return;
     }
@@ -151,6 +154,7 @@ async function initRoute(to: RouteLocationNormalized): Promise<RouteLocationRaw 
   const noPermissionRoute: RouteKey = '403';
 
   if (exist) {
+
     const location: RouteLocationRaw = {
       name: noPermissionRoute,
     };

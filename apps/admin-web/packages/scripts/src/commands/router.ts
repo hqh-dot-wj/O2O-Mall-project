@@ -12,31 +12,45 @@ interface PromptObject {
 }
 
 /** generate route */
-export async function generateRoute() {
-  const result = await prompt<PromptObject>([
-    {
-      name: 'routeName',
-      type: 'text',
-      message: 'please enter route name',
-      initial: 'demo-route_child',
-    },
-    {
-      name: 'addRouteParams',
-      type: 'confirm',
-      message: 'add route params?',
-      initial: false,
-    },
-  ]);
+export async function generateRoute(params?: { routeName?: string; routeParams?: string }) {
+  let result: PromptObject = {
+    routeName: '',
+    addRouteParams: false,
+    routeParams: '',
+  };
 
-  if (result.addRouteParams) {
-    const answers = await prompt<PromptObject>({
-      name: 'routeParams',
-      type: 'text',
-      message: 'please enter route params',
-      initial: 'id',
-    });
+  if (params?.routeName) {
+    result.routeName = params.routeName;
+    if (params.routeParams) {
+      result.addRouteParams = true;
+      result.routeParams = params.routeParams;
+    }
+  } else {
+    result = await prompt<PromptObject>([
+      {
+        name: 'routeName',
+        type: 'text',
+        message: 'please enter route name',
+        initial: 'demo-route_child',
+      },
+      {
+        name: 'addRouteParams',
+        type: 'confirm',
+        message: 'add route params?',
+        initial: false,
+      },
+    ]);
 
-    Object.assign(result, answers);
+    if (result.addRouteParams) {
+      const answers = await prompt<PromptObject>({
+        name: 'routeParams',
+        type: 'text',
+        message: 'please enter route params',
+        initial: 'id',
+      });
+
+      Object.assign(result, answers);
+    }
   }
 
   const PAGE_DIR_NAME_PATTERN = /^[\w-]+[0-9a-zA-Z]+$/;

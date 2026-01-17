@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 // Prisma 默认使用 DATABASE_URL，但我们会在 Nest 的 PrismaService 中按需注入连接串。
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
 }
 
 enum Status {
@@ -21,8 +23,8 @@ enum DelFlag {
 // ==================== C端/SaaS 业务表 (Refactored) ====================
 
 enum MemberStatus {
-  NORMAL   @map("1")
-  DISABLED @map("2")
+  NORMAL   @map("1") // 正常
+  DISABLED @map("2") // 禁用
 }
 
 enum SocialPlatform {
@@ -32,159 +34,474 @@ enum SocialPlatform {
 }
 
 enum WorkerStatus {
-  WORKING  @map("1")
-  RESTING  @map("2")
-  FROZEN   @map("3")
-  RESIGNED @map("4")
+  WORKING  @map("1") // 接单中 (营业)
+  RESTING  @map("2") // 休息中 (打烊)
+  FROZEN   @map("3") // 冻结中 (暂停)
+  RESIGNED @map("4") // 离职中 (离职)
 }
 
 enum AuditStatus {
-  PENDING  @map("0")
-  APPROVED @map("1")
-  REJECTED @map("2")
+  PENDING  @map("0") // 待审核
+  APPROVED @map("1") // 通过
+  REJECTED @map("2") // 驳回
 }
 
 enum WorkerLevel {
-  PRIMARY @map("1")
-  GOLD    @map("2")
-  // Add others as needed
+  PRIMARY @map("1") // 初级
+  MIDDLE  @map("2") // 中级
+  SENIOR  @map("3") // 高级
+  GOLD    @map("4") // 金牌
 }
 
 enum Gender {
-  UNKNOWN @map("0")
-  MALE    @map("1")
-  FEMALE  @map("2")
+  UNKNOWN @map("0") // 未知
+  MALE    @map("1") // 男
+  FEMALE  @map("2") // 女
 }
 
 enum MediaType {
-  IMAGE @map("1")
-  VIDEO @map("2")
+  IMAGE @map("1") // 图片
+  VIDEO @map("2") // 视频
 }
 
 enum SkillLevel {
-  GENERAL @map("1")
-  MASTER  @map("2")
+  GENERAL @map("1") // 一般
+  MASTER  @map("2") // 精通
+}
+
+enum WageType {
+  HOURLY     @map("1") // 时薪制 (如: 保洁 80/小时)
+  PERCENTAGE @map("2") // 分成制 (如: 维修 平台抽20%)
+  FIXED      @map("3") // 一口价 (如: 搬家 200/次)
+}
+
+enum AttrUsageType {
+  PARAM // 参数 (详情页展示)
+  SPEC // 规格 (SKU生成用)
+}
+
+enum SettleType {
+  WALLET // 进App钱包
+  BANK // 银行卡/线下打款
+}
+
+enum ProductType {
+  REAL // 实物商品 (需发货，扣绝对库存)
+  SERVICE // 服务商品 (需核销，扣时间片/每日运力)
+}
+
+enum PublishStatus {
+  OFF_SHELF // 下架
+  ON_SHELF // 上架
+}
+
+// ==========================================
+// 📌 商品类别与属性
+// ==========================================
+
+/// 商品分类表 (树形结构)
+model PmsCategory {
+  catId    Int     @id @default(autoincrement()) @map("cat_id")
+  parentId Int?    @map("parent_id")
+  name     String  @db.VarChar(50)
+  level    Int // 1, 2, 3
+  icon     String?
+  sort     Int     @default(0)
+
+  // --- 关键：类型绑定 ---
+  // 比如"保洁"分类只能发服务，"清洁剂"分类只能发实物
+  bindType ProductType? @map("bind_type")
+
+  // [新增] 关联属性模板 ID
+  attrTemplateId Int? @map("attr_template_id")
+
+  attrTemplate PmsAttrTemplate? @relation(fields: [attrTemplateId], references: [templateId])
+
+  parent   PmsCategory?  @relation("CatTree", fields: [parentId], references: [catId])
+  children PmsCategory[] @relation("CatTree")
+  products PmsProduct[]
+
+  @@map("pms_category")
+}
+
+/// 品牌表 (主要用于实物)
+model PmsBrand {
+  brandId Int     @id @default(autoincrement()) @map("brand_id")
+  name    String
+  logo    String?
+
+  products PmsProduct[]
+
+  @@map("pms_brand")
+}
+
+// ==========================================
+// 📌 [新增] 商品参数/属性模板系统
+// ==========================================
+
+/// 1. 属性分类/模板表 (Attribute Group)
+/// 作用：将一堆属性打包。例如: "手机参数模板", "家政保洁模板"
+model PmsAttrTemplate {
+  templateId Int    @id @default(autoincrement()) @map("template_id")
+  name       String @db.VarChar(64)
+
+  // 关联分类 (通常是一对多，一个模板可以给多个分类用)
+  categories PmsCategory[]
+  attributes PmsAttribute[]
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@map("pms_attr_template")
+}
+
+/// 2. 属性名定义表 (Attribute Key)
+/// 作用：定义具体的字段。如: "材质", "服务时长"
+model PmsAttribute {
+  attrId     Int @id @default(autoincrement()) @map("attr_id")
+  templateId Int @map("template_id")
+
+  name String @db.VarChar(64) // 属性名: "材质" / "服务范围"
+
+  // --- 核心类型区分 ---
+  // PARAM: 基本参数 (纯展示，如: 产地)
+  // SPEC:  销售属性 (决定SKU，如: 颜色)
+  usageType AttrUsageType @map("usage_type")
+
+  // --- 适用商品类型 (实物/服务) ---
+  // 0:通用 1:实物专用 2:服务专用
+  // 比如 "保修期" 是实物专用，"上门时间" 是服务专用
+  applyType Int @default(0) @map("apply_type")
+
+  // --- 录入方式 ---
+  // 0: 手工录入 (Input)
+  // 1: 列表选择 (Select)
+  inputType Int @default(0) @map("input_type")
+
+  // --- 可选值列表 (逗号分隔) ---
+  // 如: "棉,麻,丝绸" 或 "挂机,柜机"
+  inputList String? @map("input_list")
+
+  sort Int @default(0)
+
+  template PmsAttrTemplate       @relation(fields: [templateId], references: [templateId])
+  values   PmsProductAttrValue[]
+
+  @@map("pms_attribute")
+}
+
+/// 3. 商品属性值存储表 (Attribute Value)
+/// 作用：记录某个商品选了什么值。如: 商品A - 材质 - 棉
+model PmsProductAttrValue {
+  id        Int    @id @default(autoincrement())
+  productId String @map("product_id")
+  attrId    Int    @map("attr_id")
+
+  // 冗余属性名，防止模板删了商品显示不出来
+  attrName String @map("attr_name")
+
+  // 实际选的值 (如: "棉")
+  value String @map("value")
+
+  product   PmsProduct   @relation(fields: [productId], references: [productId])
+  attribute PmsAttribute @relation(fields: [attrId], references: [attrId])
+
+  @@index([productId])
+  @@map("pms_product_attr_value")
+}
+
+// ==========================================
+// 📌 商品标准库 (总部视角 - Global SPU)
+// ==========================================
+
+model PmsProduct {
+  productId  String @id @default(uuid()) @map("product_id")
+  categoryId Int    @map("cat_id")
+  brandId    Int?   @map("brand_id")
+
+  // --- 基础信息 ---
+  name       String   @db.VarChar(100)
+  subTitle   String?  @map("sub_title") // 卖点描述
+  mainImages String[] @map("main_images") // 轮播图
+  detailHtml String   @map("detail_html") @db.Text // 富文本详情
+
+  // --- 核心类型区分 ---
+  type ProductType
+
+  // --- [差异化字段] 实物特有 ---
+  weight     Int? // 重量(克)，用于算运费
+  isFreeShip Boolean @default(false) @map("is_free_ship") // 是否包邮
+
+  // --- [差异化字段] 服务特有 ---
+  serviceDuration Int?    @map("service_duration") // 服务时长(分钟)，用于排班占位
+  serviceRadius   Int?    @map("service_radius") // 默认服务半径(米)，门店可重写
+  needBooking     Boolean @default(true) @map("need_booking") // 是否需要预约
+
+  // --- 规格定义 ---
+  // 存储: [{"name": "颜色", "values": ["红", "蓝"]}]
+  specDef Json @map("spec_def")
+
+  // --- [新增] 上架状态 (Selection Center可见性) ---
+  publishStatus PublishStatus @default(ON_SHELF) @map("publish_status")
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  // 关联
+  category       PmsCategory           @relation(fields: [categoryId], references: [catId])
+  brand          PmsBrand?             @relation(fields: [brandId], references: [brandId])
+  // [新增] 关联属性值
+  attrValues     PmsProductAttrValue[]
+  globalSkus     PmsGlobalSku[]
+  tenantProducts PmsTenantProduct[]
+
+  @@index([categoryId])
+  @@map("pms_product")
+}
+
+/// 标准 SKU 表 (总部定价参考)
+model PmsGlobalSku {
+  skuId     String @id @default(uuid()) @map("sku_id")
+  productId String @map("product_id")
+
+  // --- 规格组合 ---
+  // 实物: {"颜色":"红", "尺寸":"L"}
+  // 服务: {"时长":"2小时", "级别":"金牌技师"}
+  specValues Json @map("spec_values")
+
+  // --- 索引图 ---
+  skuImage String? @map("sku_image")
+
+  // --- 总部指导价 ---
+  guidePrice Decimal @map("guide_price") @db.Decimal(10, 2)
+
+  // --- [新增] 总部指导分佣配置 ---
+  distMode DistributionMode @default(RATIO) @map("dist_mode")
+
+  // 指导比例 (0.10 代表 10%) 或 指导金额 (10.00元)
+  guideRate Decimal @default(0.00) @map("guide_rate") @db.Decimal(10, 2)
+
+  // [新增] 必须加这两个字段，否则无法实现"不能比总部低/高"的管控
+  minDistRate Decimal @default(0.00) @map("min_dist_rate") @db.Decimal(10, 2) // 最低允许比例 (如 5%)
+  maxDistRate Decimal @default(50.00) @map("max_dist_rate") @db.Decimal(10, 2) // 最高允许比例 (如 30%)
+
+  // 成本价 (用于风控校验 (price - cost) > commission)
+  costPrice Decimal @default(0.00) @map("cost_price") @db.Decimal(10, 2)
+
+  product       PmsProduct     @relation(fields: [productId], references: [productId])
+  pmsTenantSkus PmsTenantSku[]
+
+  @@map("pms_global_sku")
+}
+
+// ==========================================
+// 📌 门店经营库 (分公司视角 - Tenant SPU)
+// ==========================================
+
+model PmsTenantProduct {
+  id        String @id @default(uuid())
+  tenantId  String @map("tenant_id") // 归属门店
+  productId String @map("product_id") // 引用总部商品
+
+  // --- 经营状态 ---
+  status PublishStatus @default(OFF_SHELF)
+  isHot  Boolean       @default(false) // 是否设为店长推荐
+  sort   Int           @default(0)
+
+  // --- 门店重写数据 (Override) ---
+  // 如果填了，就覆盖总部的标题/图片；没填就继承
+  customTitle String? @map("custom_title")
+
+  // --- [服务特有] 门店派单规则 ---
+  // 比如这家店只接方圆3公里的单，另一家能接10公里
+  overrideRadius Int? @map("override_radius")
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  product PmsProduct     @relation(fields: [productId], references: [productId])
+  skus    PmsTenantSku[] // 门店的SKU价格库存
+
+  @@unique([tenantId, productId]) // 一个店不能重复上架同一个商品
+  @@map("pms_tenant_product")
+}
+
+/// 门店 SKU 表 (真正的价格和库存都在这里)
+model PmsTenantSku {
+  id              String       @id @default(uuid())
+  tenantProductId String       @map("tenant_prod_id")
+  globalSkuId     String       @map("global_sku_id") // 对应哪个标准SKU
+  globalSku       PmsGlobalSku @relation(fields: [globalSkuId], references: [skuId])
+
+  // --- 核心经营数据 ---
+  price Decimal @db.Decimal(10, 2) // 门店实际售价
+
+  // --- 库存/运力定义的歧义处理 ---
+  // 1. 实物: 真实的物理库存。卖一个少一个。
+  // 2. 服务: 每日最大接单量 (Capacity)。如果不限制填 -1。
+  //    (注意: 服务的真正"库存"是根据技师排班表实时计算的，这个字段仅做硬性上限)
+  stock Int @default(0)
+
+  isActive Boolean @default(true) // 比如这家店"红色"卖完了，可以单独下架这个SKU
+
+  // --- [新增] 门店实际分佣配置 ---
+  // 门店有权修改这个比例 (通常不能低于总部设定的底线，后端可做校验)
+  distMode DistributionMode @default(RATIO) @map("dist_mode")
+
+  // 实际执行比例 (例如总部建议 10%，门店想多推销，设为 15%)
+  distRate Decimal @default(0.00) @map("dist_rate") @db.Decimal(10, 2)
+
+  tenantProd PmsTenantProduct @relation(fields: [tenantProductId], references: [id])
+
+  @@map("pms_tenant_sku")
+}
+
+enum DistributionMode {
+  RATIO // 按比例 (如: 销售额的 10%)
+  FIXED // 按固定金额 (如: 每单固定分 10 元)
+  NONE // 不参与分销 (如: 特价引流品)
 }
 
 /// C端会员表 (一切业务的源头)
 model UmsMember {
   memberId String @id @default(uuid()) @map("member_id")
-  tenantId String @default("000000") @map("tenant_id") // 归属租户(如果是分销拉新的，可能归属特定租户)
+  tenantId String @default("000000") @map("tenant_id") // 归属租户
 
-  // 基础信息
+  // --- 基础信息 ---
   nickname String? @db.VarChar(64)
   avatar   String? @db.VarChar(500)
-  mobile   String? @unique @db.VarChar(20) // 手机号全局唯一
-  password String? @db.VarChar(200) // 预留给未来App做手机号+密码登录
+  mobile   String? @unique @db.VarChar(20)
+  password String? @db.VarChar(200)
 
-  // 状态
-  status MemberStatus @default(NORMAL)
+  // --- 状态与等级 ---
+  status  MemberStatus @default(NORMAL)
+  levelId Int?         @map("level_id") // 会员等级(关联 MemberLevel)
 
-  // 关联分销 (这层关系必须在Member表)
+  // --- 钱包资产 (分销核心) ---
+  balance       Decimal @default(0.00) @db.Decimal(10, 2) // 可提现余额
+  frozenBalance Decimal @default(0.00) @db.Decimal(10, 2) // 冻结余额
+  points        Int     @default(0) // 积分
+
+  // --- 分销关系链 ---
   referrerId String? @map("referrer_id") // 谁推荐我进来的
 
-  // 关联
-  socials SysSocialUser[]
-  worker  SrvWorker? // 如果他是技师，会有一条关联记录
-
+  // --- 时间 ---
   createTime DateTime @default(now()) @map("create_time")
   updateTime DateTime @updatedAt @map("update_time")
 
+  // --- 关联 ---
+  referrer UmsMember?  @relation("Referral", fields: [referrerId], references: [memberId])
+  children UmsMember[] @relation("Referral") // 我的下线
+
+  socials         SysSocialUser[]
+  worker          SrvWorker? // 1:1 技师关联
+  sysRegionAgents SysRegionAgent[]
+
+  @@index([mobile])
+  @@index([referrerId])
   @@map("ums_member")
 }
 
-/// 社交账号绑定表 (解决多小程序、App统一身份的关键)
+/// 社交账号绑定表
 model SysSocialUser {
   socialId String @id @default(uuid()) @map("social_id")
   memberId String @map("member_id")
 
-  // 平台标识 (非常重要)
-  platform SocialPlatform
+  platform SocialPlatform // 平台标识
 
-  openid  String  @db.VarChar(64) // 在该平台下的唯一ID
-  unionid String? @db.VarChar(64) // 在开放平台下的唯一ID (用于跨端识别)
+  openid  String  @db.VarChar(64)
+  unionid String? @db.VarChar(64) // 跨端识别关键
 
-  // 冗余社交信息
   nickname   String?
   avatar     String?
-  sessionKey String? @map("session_key") // 微信SessionKey(用于解密手机号)
+  sessionKey String? @map("session_key")
 
   member UmsMember @relation(fields: [memberId], references: [memberId])
 
-  @@unique([platform, openid]) // 同一个平台下OpenID唯一
+  @@unique([platform, openid])
   @@index([memberId])
   @@index([unionid])
   @@map("sys_social_user")
 }
 
-/// 劳动者表 (这里只放核心关联)
+// ==========================================
+// 📌 劳动者/技师核心 (Service Worker)
+// ==========================================
+
+/// 劳动者主表 (高频访问核心表)
 model SrvWorker {
   workerId Int    @id @default(autoincrement()) @map("worker_id")
-  memberId String @unique @map("member_id") // 必须先是会员，实名认证后成为技师
+  memberId String @unique @map("member_id") // 关联C端账号
   tenantId String @map("tenant_id") // 归属分公司
 
-  // --- 核心展示信息 ---
-  name     String  @db.VarChar(50) // 真实姓名
-  nickName String? @map("nick_name") // 艺名/称呼 (如: 王阿姨)
-  avatar   String? @db.VarChar(500) // 头像
-  phone    String  @db.VarChar(20) // 接单电话
+  // --- 核心展示 ---
+  name     String  @db.VarChar(50)
+  nickName String? @map("nick_name")
+  avatar   String? @db.VarChar(500)
+  phone    String  @db.VarChar(20)
 
-  // --- 业务状态 (最关键) ---
+  // --- 业务状态 ---
   status      WorkerStatus @default(WORKING)
   auditStatus AuditStatus  @default(PENDING) @map("audit_status")
+  isOnline    Boolean      @default(true) @map("is_online") // 接单开关
 
-  // --- 派单权重 ---
-  rating     Decimal     @default(5.0) @db.Decimal(2, 1) // 综合评分
-  orderCount Int         @default(0) @map("order_count") // 接单总数
-  seniority  WorkerLevel @default(PRIMARY) // 等级/工龄 (1:初级 2:金牌...)
+  // --- LBS 派单核心 (新增) ---
+  currentLat    Float? @map("current_lat") // 实时纬度 (Redis也会存，这里存最后一次)
+  currentLng    Float? @map("current_lng") // 实时经度
+  serviceRadius Int    @default(5000) @map("service_radius") // 服务半径(米)
 
-  // --- 简单标签 (JSON存储，避免连表，如 ["只做饭", "不做带娃"]) ---
-  tags Json?
+  // --- 薪资配置 (新增 - 用于算工资) ---
+  wageType WageType @default(HOURLY) @map("wage_type")
+  baseWage Decimal  @default(0.00) @map("base_wage") @db.Decimal(10, 2) // 时薪或分成比例
+
+  // --- 权重数据 ---
+  rating     Decimal     @default(5.0) @db.Decimal(2, 1)
+  orderCount Int         @default(0) @map("order_count")
+  seniority  WorkerLevel @default(PRIMARY)
+  tags       Json? // ["擅长收纳", "自带工具"]
 
   createTime DateTime @default(now()) @map("create_time")
   updateTime DateTime @updatedAt @map("update_time")
 
   // --- 关联 ---
-  profile SrvWorkerProfile? // 1:1 关联档案
-  certs   SrvWorkerCert[] // 1:N 关联证书
-  skills  SrvWorkerSkill[] // 1:N 关联技能
-  works   SrvWorkerWork[] // 1:N 关联过往案例/作品
-
   member UmsMember @relation(fields: [memberId], references: [memberId])
 
-  @@index([tenantId, status]) // 核心派单索引
+  profile   SrvWorkerProfile?
+  certs     SrvWorkerCert[]
+  skills    SrvWorkerSkill[]
+  works     SrvWorkerWork[]
+  schedules SrvWorkerSchedule[] // 排班记录
+
+  @@index([tenantId, status]) // 租户筛选+状态筛选
   @@index([phone])
   @@map("srv_worker")
 }
 
-/// 劳动者详细档案表 (低频访问，简历信息)
+/// 劳动者详细档案 (隐私/低频信息)
 model SrvWorkerProfile {
   profileId Int @id @default(autoincrement()) @map("profile_id")
-  workerId  Int @unique @map("worker_id") // 外键
+  workerId  Int @unique @map("worker_id")
 
-  // --- 个人隐私信息 ---
-  idCard      String? @map("id_card") @db.VarChar(20) // 身份证号 (需加密存储)
-  idCardFront String? @map("id_card_front") @db.VarChar(500) // 身份证正面图
-  idCardBack  String? @map("id_card_back") @db.VarChar(500) // 身份证背面图
+  // --- 隐私信息 (需加密) ---
+  idCard      String? @map("id_card") @db.VarChar(20)
+  idCardFront String? @map("id_card_front") @db.VarChar(500)
+  idCardBack  String? @map("id_card_back") @db.VarChar(500)
 
-  // --- 简历基本面 ---
-  gender        Gender  @default(UNKNOWN) // 0:未知 1:男 2:女
+  // --- 基础画像 ---
+  gender        Gender  @default(UNKNOWN)
   age           Int?
-  nativePlace   String? @map("native_place") // 籍贯 (如: 湖南益阳)
-  education     String? @db.VarChar(20) // 学历
-  startWorkYear Int?    @map("start_work_year") // 哪一年开始工作的 (计算工龄)
+  nativePlace   String? @map("native_place")
+  education     String? @db.VarChar(20)
+  startWorkYear Int?    @map("start_work_year")
 
-  // --- 身体状况 (家政/搬家很重要) ---
-  height     Int? // 身高(cm)
-  weight     Int? // 体重(kg)
-  healthInfo String? @map("health_info") // 健康状况描述
+  // --- 身体状况 ---
+  height     Int?
+  weight     Int?
+  healthInfo String? @map("health_info")
 
-  // --- 自我介绍 ---
-  intro      String? @db.Text // 纯文本介绍
-  voiceIntro String? @map("voice_intro") // 语音介绍URL (增加亲切感)
-  videoIntro String? @map("video_intro") // 视频介绍URL
+  // --- 介绍 ---
+  intro      String? @db.Text
+  voiceIntro String? @map("voice_intro")
+  videoIntro String? @map("video_intro")
 
-  // --- 银行卡/结算信息 ---
+  // --- 结算账户 ---
   bankName String? @map("bank_name")
   bankNo   String? @map("bank_no")
 
@@ -193,60 +510,85 @@ model SrvWorkerProfile {
   @@map("srv_worker_profile")
 }
 
-/// 劳动者证书表
+/// 劳动者证书
 model SrvWorkerCert {
   certId   Int @id @default(autoincrement()) @map("cert_id")
   workerId Int @map("worker_id")
 
-  name   String  @db.VarChar(50) // 证书名称 (如: 健康证)
-  certNo String? @map("cert_no") // 证书编号
-  images Json? // 证书照片 (可能是多页)
+  name   String  @db.VarChar(50)
+  certNo String? @map("cert_no")
+  images Json?
 
-  issueDate  DateTime? @map("issue_date") // 发证日期
-  expireDate DateTime? @map("expire_date") // 过期日期 (系统需监控此字段)
+  issueDate  DateTime? @map("issue_date")
+  expireDate DateTime? @map("expire_date") // 过期需提醒
 
-  isVerified Boolean @default(false) @map("is_verified") // 平台是否已核验
+  isVerified Boolean @default(false) @map("is_verified")
 
   worker SrvWorker @relation(fields: [workerId], references: [workerId])
 
   @@index([workerId])
-  @@index([expireDate]) // 用于定时任务查过期
   @@map("srv_worker_cert")
 }
 
-/// 劳动者技能表
+/// 劳动者技能 (关联商品分类)
 model SrvWorkerSkill {
   id       Int @id @default(autoincrement())
   workerId Int @map("worker_id")
 
-  categoryId Int    @map("cat_id") // 关联 PmsCategory (商品分类ID)
-  skillName  String @map("skill_name") // 冗余分类名称 (如: 空调维修)
+  categoryId Int    @map("cat_id") // 核心：关联商品分类ID，决定能接什么单
+  skillName  String @map("skill_name")
 
-  level SkillLevel @default(GENERAL) // 技能熟练度 (1:一般 2:精通)
+  level SkillLevel @default(GENERAL)
 
   worker SrvWorker @relation(fields: [workerId], references: [workerId])
 
-  @@unique([workerId, categoryId]) // 同一个分类只能添加一次
+  @@unique([workerId, categoryId])
   @@map("srv_worker_skill")
 }
 
-/// 劳动者作品/案例表
+/// 劳动者作品案例
 model SrvWorkerWork {
   workId   Int @id @default(autoincrement()) @map("work_id")
   workerId Int @map("worker_id")
 
-  title       String  @db.VarChar(100) // 标题 (如: 某某小区开荒保洁)
-  description String? @db.Text // 描述
+  title       String  @db.VarChar(100)
+  description String? @db.Text
 
-  mediaType MediaType @default(IMAGE) // 1:图片 2:视频
-  mediaUrls Json // 图片/视频 URL 数组
+  mediaType MediaType @default(IMAGE)
+  mediaUrls Json
 
-  workDate DateTime? @map("work_date") // 什么时候干的
+  workDate DateTime? @map("work_date")
 
   worker SrvWorker @relation(fields: [workerId], references: [workerId])
 
   @@index([workerId])
   @@map("srv_worker_work")
+}
+
+// ==========================================
+// 📌 [新增] 劳动者排班/日程表
+// ==========================================
+// 用于解决: "这个技师明天下午2点有没有空?"
+
+model SrvWorkerSchedule {
+  id       BigInt @id @default(autoincrement()) // 数据量大，用BigInt
+  workerId Int    @map("worker_id")
+
+  // 日期 (YYYY-MM-DD)
+  date DateTime @db.Date
+
+  // 时间段 (0-23 或者 0-47 半小时制)
+  // 简单做法: 存JSON ["09:00-10:00", "14:00-16:00"] 表示被占用的时间
+  // 高级做法: BitMap 或 48个 0/1 字段
+  busySlots Json @map("busy_slots")
+
+  // 当天状态
+  status String @default("OPEN") // OPEN:可接单, FULL:约满, OFF:休息
+
+  worker SrvWorker @relation(fields: [workerId], references: [workerId])
+
+  @@unique([workerId, date]) // 一个技师一天只有一条记录
+  @@map("srv_worker_schedule")
 }
 
 // ==================== 租户相关表 ====================
@@ -275,8 +617,72 @@ model SysTenant {
   updateTime      DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("update_time") @db.Timestamp(6)
   remark          String?   @db.VarChar(500)
 
+  // --- [新增] O2O 核心字段 ---
+  regionCode String? @map("region_code") // 行政归属
+  isDirect   Boolean @default(true) @map("is_direct") // 直营/加盟
+
+  // 关联
+  geoConfig SysTenantGeo?
+
   @@index([delFlag])
   @@map("sys_tenant")
+}
+
+/// [新增] 租户地理配置表 (一对一)
+model SysTenantGeo {
+  id       Int    @id @default(autoincrement())
+  tenantId String @unique @map("tenant_id")
+
+  // --- LBS 经营属性 ---
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  serviceRadius Int     @default(3000) @map("service_radius")
+
+  // 复杂的围栏数据
+  geoFence Json? @map("geo_fence")
+
+  tenant SysTenant @relation(fields: [tenantId], references: [tenantId])
+
+  @@map("sys_tenant_geo")
+}
+
+/// [新增] 区域代理商表 (O2O 分销)
+model SysRegionAgent {
+  agentId Int @id @default(autoincrement()) @map("agent_id")
+
+  // --- 1. 身份定义 ---
+  regionCode String @unique @map("region_code") // 独家盘口 "430103"
+  agentName  String @map("agent_name") // 代理商名称 (如: "长沙聚力有限公司" 或 "王总")
+  phone      String @map("phone") // 联系电话 (用于通知)
+
+  // --- 2. 关联 C 端账号 (变为可选) ---
+  // 如果这个代理商想在 App 上看报表，就绑定一个账号；
+  // 如果他只等着每月收钱，完全不用 App，这里就是 null。
+  memberId String? @map("member_id")
+
+  // --- 3. 利益分配 ---
+  level Int     @default(3) // 1:省 2:市 3:区
+  rate  Decimal @db.Decimal(5, 4) // 分红比例 0.05
+
+  // --- 4. 独立的 B 端结算档案 (核心) ---
+  settleType  SettleType @default(BANK) // BANK:银行转账, WALLET:钱包
+  bankName    String?    @map("bank_name") // 开户行 (招商银行长沙分行)
+  accountName String?    @map("account_name") // 户名 (张三 / xx公司)
+  accountNo   String?    @map("account_no") // 卡号
+
+  // --- 5. 独立的 B 端账本 ---
+  // 代理商的钱不进 Member 钱包，在这里单独统计
+  totalIncome   Decimal @default(0.00) @map("total_income") // 累计总收益
+  pendingSettle Decimal @default(0.00) @map("pending_settle") // 待结算金额 (上个月赚的，还没打款)
+  alreadySettle Decimal @default(0.00) @map("already_settle") // 已打款金额
+
+  createTime DateTime @default(now())
+
+  // 关联 (可选)
+  member UmsMember? @relation(fields: [memberId], references: [memberId])
+
+  @@map("sys_region_agent")
 }
 
 /// 租户套餐表

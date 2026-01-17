@@ -27,6 +27,7 @@ declare module "@elegant-router/types" {
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
+    "member": "/member";
     "monitor": "/monitor";
     "monitor_cache": "/monitor/cache";
     "monitor_cache_list": "/monitor/cache/list";
@@ -36,7 +37,19 @@ declare module "@elegant-router/types" {
     "monitor_online": "/monitor/online";
     "monitor_operlog": "/monitor/operlog";
     "monitor_server": "/monitor/server";
+    "pms": "/pms";
+    "pms_attribute": "/pms/attribute";
+    "pms_brand": "/pms/brand";
+    "pms_category": "/pms/category";
+    "pms_global-product": "/pms/global-product";
+    "pms_global-product_create": "/pms/global-product/create";
     "social-callback": "/social-callback";
+    "store": "/store";
+    "store_marketing": "/store/marketing";
+    "store_product": "/store/product";
+    "store_product_list": "/store/product/list";
+    "store_product_market": "/store/product/market";
+    "store_stock": "/store/stock";
     "system": "/system";
     "system_client": "/system/client";
     "system_config": "/system/config";
@@ -98,8 +111,11 @@ declare module "@elegant-router/types" {
     | "home"
     | "iframe-page"
     | "login"
+    | "member"
     | "monitor"
+    | "pms"
     | "social-callback"
+    | "store"
     | "system"
     | "tool"
     | "user-center"
@@ -128,6 +144,7 @@ declare module "@elegant-router/types" {
     | "social-callback"
     | "user-center"
     | "home"
+    | "member"
     | "monitor_cache"
     | "monitor_cache_list"
     | "monitor_job-log"
@@ -136,6 +153,15 @@ declare module "@elegant-router/types" {
     | "monitor_online"
     | "monitor_operlog"
     | "monitor_server"
+    | "pms_attribute"
+    | "pms_brand"
+    | "pms_category"
+    | "pms_global-product_create"
+    | "pms_global-product"
+    | "store_marketing"
+    | "store_product_list"
+    | "store_product_market"
+    | "store_stock"
     | "system_client"
     | "system_config"
     | "system_dept"

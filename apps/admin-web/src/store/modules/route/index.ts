@@ -109,14 +109,22 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     route.path = route.path.startsWith('/') ? route.path : `/${route.path}`;
     route.path = parent ? parent.path + route.path : route.path;
 
-    route.name = route
+    const routeName = route
       .component!.replace(/\/index$/, '')
       .replace(/\//g, '_')
       .replace(/([A-Z])/g, '-$1')
       .toLowerCase();
+
+    route.name = routeName;
+
     if (isLayout || isFramePage || isParentLayout) {
       const name = humpToLine(route.path.substring(1).replace('/', '_'));
       route.name = parent ? `${parent.name}_${name}` : name;
+    } else {
+      // For normal views, if parent exists, prefix the name to ensure it's not treated as first level route by transform.ts
+      if (parent) {
+        route.name = `${parent.name}_${routeName}`;
+      }
     }
 
     if (route.meta.icon?.startsWith('local-icon-')) {
@@ -147,11 +155,12 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
             // @ts-expect-error no query field
             url: JSON.parse(route.query)?.url,
           };
-        } catch {}
+        } catch { }
       }
       route.component = parent && !isExternalLink ? 'view.iframe-page' : 'layout.base$view.iframe-page';
     } else if (!isLayout && !isParentLayout) {
-      route.component = parent ? `view.${route.name}` : `layout.base$view.${route.name}`;
+      // Use the original routeName (view key) to map to views/imports.ts
+      route.component = parent ? `view.${routeName}` : `layout.base$view.${routeName}`;
     } else {
       route.component = isParentLayout ? undefined : 'layout.base';
     }

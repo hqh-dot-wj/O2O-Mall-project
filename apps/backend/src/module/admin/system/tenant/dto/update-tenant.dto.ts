@@ -13,6 +13,5 @@ export class UpdateTenantDto extends PartialType(
 
   @ApiProperty({ required: true, description: '租户编号' })
   @IsNotEmpty()
-  @IsNotEmpty()
   tenantId: string;
 }

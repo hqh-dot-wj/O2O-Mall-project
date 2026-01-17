@@ -5,6 +5,7 @@ import { useLoading } from '@sa/hooks';
 import { fetchTenantList } from '@/service/api';
 import { fetchChangeTenant, fetchClearTenant } from '@/service/api/system/tenant';
 import { useAppStore } from '@/store/modules/app';
+import { localStg } from '@/utils/storage';
 import { useTabStore } from '@/store/modules/tab';
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
@@ -57,13 +58,19 @@ async function handleChangeTenant(_tenantId: CommonType.IdType) {
   if (lastSelected.value === _tenantId) {
     return;
   }
-  await fetchChangeTenant(_tenantId);
-  closeAndRefresh('切换租户成功', _tenantId);
+  const { data } = await fetchChangeTenant(_tenantId);
+  if (data) {
+    localStg.set('token', data);
+    window.location.reload();
+  }
 }
 
 async function handleClearTenant() {
-  await fetchClearTenant();
-  closeAndRefresh('切换为默认租户');
+  const { data } = await fetchClearTenant();
+  if (data) {
+    localStg.set('token', data);
+    window.location.reload();
+  }
 }
 
 async function handleFetchTenantList() {

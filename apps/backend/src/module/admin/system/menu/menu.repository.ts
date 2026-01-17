@@ -92,6 +92,7 @@ export class MenuRepository extends BaseRepository<
     return this.prisma.sysMenu.findMany({
       where: {
         menuId: { in: menuIds },
+        delFlag: DelFlagEnum.NORMAL,
       },
       orderBy: [{ parentId: 'asc' }, { orderNum: 'asc' }],
     });
@@ -101,7 +102,9 @@ export class MenuRepository extends BaseRepository<
    * 查询所有菜单（树形结构用）
    */
   async findAllMenus(query?: { status?: string; parentId?: number; menuType?: string }): Promise<SysMenu[]> {
-    const where: Prisma.SysMenuWhereInput = {};
+    const where: Prisma.SysMenuWhereInput = {
+      delFlag: DelFlagEnum.NORMAL,
+    };
 
     if (query?.status) {
       where.status = query.status as any;
@@ -168,6 +171,7 @@ export class MenuRepository extends BaseRepository<
           in: menuIds,
         },
         status: StatusEnum.NORMAL,
+        delFlag: DelFlagEnum.NORMAL,
       },
     });
   }

@@ -23,6 +23,8 @@ import { CommonModule } from './module/common/common.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ClientModule } from './module/client/client.module';
 import { LbsModule } from './module/lbs/lbs.module';
+import { StoreModule } from './module/store/store.module';
+import { PmsModule } from './module/pms/pms.module';
 
 @Global()
 @Module({
@@ -76,6 +78,8 @@ import { LbsModule } from './module/lbs/lbs.module';
     CommonModule,
     ClientModule,
     LbsModule,
+    StoreModule,
+    PmsModule,
   ],
   providers: [
     // 解密拦截器 (解密前端加密请求)
@@ -114,6 +118,7 @@ import { LbsModule } from './module/lbs/lbs.module';
       useClass: PermissionGuard,
     },
   ],
+  controllers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -823,7 +823,7 @@ async function main() {
         tenantId: '000000',
         configName: '账号自助-验证码开关',
         configKey: 'sys.account.captchaEnabled',
-        configValue: 'true',
+        configValue: 'false',
         configType: 'Y',
         createBy: 'admin',
         createTime: new Date('2025-02-28 08:52:10'),

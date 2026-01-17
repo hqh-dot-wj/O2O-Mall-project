@@ -111,4 +111,18 @@ export class CreateTenantDto {
     type: 'Polygon';
     coordinates: number[][][];
   };
+
+  @ApiProperty({ required: false, description: '行政区划代码' })
+  @IsOptional()
+  @IsString()
+  regionCode?: string;
+
+  @ApiProperty({ required: false, description: '是否直营', default: true })
+  @IsOptional()
+  isDirect?: boolean;
+
+  @ApiProperty({ required: false, description: '服务半径(米)', default: 3000 })
+  @IsOptional()
+  @IsNumber()
+  serviceRadius?: number;
 }

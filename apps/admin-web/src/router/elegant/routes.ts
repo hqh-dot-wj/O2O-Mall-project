@@ -76,6 +76,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'member',
+    path: '/member',
+    component: 'layout.base$view.member',
+    meta: {
+      title: 'member',
+      i18nKey: 'route.member'
+    }
+  },
+  {
     name: 'monitor',
     path: '/monitor',
     component: 'layout.base',
@@ -161,6 +170,64 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'pms',
+    path: '/pms',
+    component: 'layout.base',
+    meta: {
+      title: 'pms',
+      i18nKey: 'route.pms'
+    },
+    children: [
+      {
+        name: 'pms_attribute',
+        path: '/pms/attribute',
+        component: 'view.pms_attribute',
+        meta: {
+          title: 'pms_attribute',
+          i18nKey: 'route.pms_attribute'
+        }
+      },
+      {
+        name: 'pms_brand',
+        path: '/pms/brand',
+        component: 'view.pms_brand',
+        meta: {
+          title: 'pms_brand',
+          i18nKey: 'route.pms_brand'
+        }
+      },
+      {
+        name: 'pms_category',
+        path: '/pms/category',
+        component: 'view.pms_category',
+        meta: {
+          title: 'pms_category',
+          i18nKey: 'route.pms_category'
+        }
+      },
+      {
+        name: 'pms_global-product',
+        path: '/pms/global-product',
+        component: 'view.pms_global-product',
+        meta: {
+          title: 'pms_global-product',
+          i18nKey: 'route.pms_global-product'
+        },
+        children: [
+          {
+            name: 'pms_global-product_create',
+            path: '/pms/global-product/create',
+            component: 'view.pms_global-product_create',
+            meta: {
+              title: 'pms_global-product_create',
+              i18nKey: 'route.pms_global-product_create'
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
     name: 'social-callback',
     path: '/social-callback',
     component: 'layout.blank$view.social-callback',
@@ -170,6 +237,63 @@ export const generatedRoutes: GeneratedRoute[] = [
       constant: true,
       hideInMenu: true
     }
+  },
+  {
+    name: 'store',
+    path: '/store',
+    component: 'layout.base',
+    meta: {
+      title: 'store',
+      i18nKey: 'route.store'
+    },
+    children: [
+      {
+        name: 'store_marketing',
+        path: '/store/marketing',
+        component: 'view.store_marketing',
+        meta: {
+          title: 'store_marketing',
+          i18nKey: 'route.store_marketing'
+        }
+      },
+      {
+        name: 'store_product',
+        path: '/store/product',
+        meta: {
+          title: 'store_product',
+          i18nKey: 'route.store_product'
+        },
+        children: [
+          {
+            name: 'store_product_list',
+            path: '/store/product/list',
+            component: 'view.store_product_list',
+            meta: {
+              title: 'store_product_list',
+              i18nKey: 'route.store_product_list'
+            }
+          },
+          {
+            name: 'store_product_market',
+            path: '/store/product/market',
+            component: 'view.store_product_market',
+            meta: {
+              title: 'store_product_market',
+              i18nKey: 'route.store_product_market'
+            }
+          }
+        ]
+      },
+      {
+        name: 'store_stock',
+        path: '/store/stock',
+        component: 'view.store_stock',
+        meta: {
+          title: 'store_stock',
+          i18nKey: 'route.store_stock'
+        }
+      }
+    ]
   },
   {
     name: 'system',

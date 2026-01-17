@@ -66,7 +66,7 @@ export function fetchSyncTenantConfig() {
 
 /** 动态切换租户 */
 export function fetchChangeTenant(tenantId: CommonType.IdType) {
-  return request<boolean>({
+  return request<string>({
     url: `/system/tenant/dynamic/${tenantId}`,
     method: 'get',
   });
@@ -74,7 +74,7 @@ export function fetchChangeTenant(tenantId: CommonType.IdType) {
 
 /** 清空租户 */
 export function fetchClearTenant() {
-  return request<boolean>({
+  return request<string>({
     url: '/system/tenant/dynamic/clear',
     method: 'get',
   });

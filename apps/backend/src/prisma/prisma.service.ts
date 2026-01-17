@@ -45,6 +45,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     if (ssl) {
       params.set('sslmode', 'require');
+    } else {
+      params.set('sslmode', 'disable');
     }
 
     const query = params.toString();

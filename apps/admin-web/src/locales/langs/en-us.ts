@@ -49,6 +49,8 @@ const local: App.I18n.Schema = {
     lookForward: 'Coming soon',
     modify: 'Modify',
     modifySuccess: 'Modify Success',
+    copySuccess: 'Copy Success',
+    copyFailed: 'Copy Failed',
     noData: 'No Data',
     operate: 'Operate',
     pleaseCheckValue: 'Please check whether the value is valid',
@@ -63,6 +65,8 @@ const local: App.I18n.Schema = {
     updateSuccess: 'Update Success',
     noChange: 'No actions were taken',
     userCenter: 'User Center',
+    name: 'Name',
+    sort: 'Sort',
     yesOrNo: {
       yes: 'Yes',
       no: 'No',
@@ -308,6 +312,7 @@ const local: App.I18n.Schema = {
     demo: 'Demo',
     demo_demo: 'Demo Table',
     demo_tree: 'Demo Tree',
+    member: 'Member Management',
     tool_build: 'Form Build',
     tool_swagger: 'System API',
     exception: 'Exception',
@@ -1216,6 +1221,175 @@ const local: App.I18n.Schema = {
         importSuccess: 'Import successful',
         statusChangeSuccess: 'Status modified successfully',
       },
+      fileManager: {
+        title: 'File Manager',
+        uploadSuccess: 'Upload success {count} files',
+        uploadPartialSuccess: 'Upload complete: success {successCount}, failed {failedCount}',
+        uploadFailed: 'Upload failed',
+        selectFilesFirst: 'Please select files to upload',
+        deleteSuccess: 'Delete success',
+        deleteFailed: 'Delete failed',
+        renameSuccess: 'Rename success',
+        moveSuccess: 'Move success',
+        moveFailed: 'Move failed',
+        loadFoldersFailed: 'Load folders failed',
+        selectTargetFolder: 'Please select target folder',
+        shareSuccess: 'Share success',
+        createShareSuccess: 'Create share success',
+        batchShareSuccess: 'Successfully created {count} share links',
+        batchSharePartialFailed: '{count} files share failed',
+        batchShareFailed: 'Batch share failed',
+        downloadStarted: 'Download started',
+        getDownloadLinkFailed: 'Get download link failed',
+        copySuccess: 'Copy Success',
+        copyFailed: 'Copy Failed',
+        refreshSuccess: 'Refresh Success',
+        getVersionsFailed: 'Get version history failed',
+        restoreVersion: 'Restore Version',
+        restoreVersionConfirm: 'Are you sure you want to restore to version {version}? This will create a new version.',
+        restoreVersionSuccess: 'Restored to version {version}, new version number is {newVersion}',
+        restoreVersionFailed: 'Restore version failed',
+        fileModified: 'File has been modified, please refresh and retry',
+        getRecycleListFailed: 'Get recycle bin list failed',
+        restoreFile: 'Restore File',
+        restoreFileConfirm: 'Are you sure you want to restore selected {count} files?',
+        restoreFileSuccess: 'Restore success',
+        restoreFileFailed: 'Restore failed',
+        selectFilesToRestore: 'Please select files to restore',
+        permanentDelete: 'Permanent Delete',
+        permanentDeleteConfirm: 'Are you sure you want to permanently delete selected {count} files? This operation cannot be undone!',
+        selectFilesToDelete: 'Please select files to delete',
+      },
+    },
+    member: {
+      title: 'Member Management',
+      userInfo: 'User Info',
+      tenant: 'Tenant',
+      referrer: 'Referrer',
+      status: 'Status',
+      registerTime: 'Register Time',
+      editReferrer: 'Edit Referrer',
+      editTenant: 'Edit Tenant',
+      form: {
+        referrerId: 'Referrer ID',
+        tenantId: 'Tenant ID',
+      },
+      confirm: {
+        updateStatus: 'Are you sure to {action} this user?',
+        statusUpdated: 'Status updated',
+        updateSuccess: 'Update success',
+      },
+    },
+    pms: {
+      brand: {
+        title: 'Brand Management',
+        brandName: 'Brand Name',
+        brandLogo: 'Brand Logo',
+        addBrand: 'Add Brand',
+        editBrand: 'Edit Brand',
+        searchBrandName: 'Please enter brand name',
+        form: {
+          brandName: {
+            required: 'Please enter brand name',
+            invalid: 'Invalid brand name',
+          },
+          logo: {
+            required: 'Please enter brand logo URL',
+            invalid: 'Invalid logo URL',
+          }
+        }
+      },
+      category: {
+        title: 'Category Management',
+        categoryName: 'Category Name',
+        icon: 'Icon',
+        categoryDetail: 'Category Detail',
+        subCategoryList: 'Sub-category List',
+        addCategory: 'Add Category',
+        editCategory: 'Edit Category',
+        addSubCategory: 'Add Sub Category',
+        parentCategory: 'Parent Category',
+        selectParent: 'Select Parent (Empty as Root)',
+        bindType: 'Bind Type',
+        realProduct: 'Real Product',
+        serviceProduct: 'Service Product',
+        attributeTemplate: 'Attribute Template',
+        selectAttributeTemplate: 'Select Attribute Template',
+        form: {
+          categoryName: {
+            required: 'Please enter category name',
+            invalid: 'Invalid category name',
+          },
+          sort: {
+            required: 'Please enter sort',
+            invalid: 'Invalid sort',
+          }
+        }
+      },
+      attribute: {
+        attributeCount: 'Attribute Count',
+        title: 'Attribute Template',
+        addTemplate: 'Add Template',
+        editTemplate: 'Edit Template',
+        attributeConfig: 'Attribute Configuration',
+        addAttribute: 'Add Attribute',
+        attributeName: 'Attribute Name',
+        usageType: 'Usage Type',
+        inputType: 'Input Type',
+        inputList: 'Option List (Comma separated)',
+        applyType: 'Apply Type',
+        noAttributes: 'No attributes defined. Click button to add.',
+        validate: {
+          attributeNameRequired: 'Attribute Name cannot be empty'
+        },
+        usage: {
+          param: 'Parameter',
+          spec: 'Specification'
+        },
+        input: {
+          manual: 'Manual Input',
+          select: 'Select List'
+        },
+        apply: {
+          common: 'Common',
+          real: 'Real Product',
+          service: 'Service'
+        },
+        placeholder: {
+          attributeName: 'Please enter name',
+          inputList: 'Red, Yellow, Blue'
+        }
+      },
+      product: {
+        title: 'Product List',
+        add: 'Add Product',
+        edit: 'Edit Product',
+        name: 'Product Name',
+      }
+    },
+    pms_category: {
+      title: 'Category Management',
+    },
+    pms_brand: {
+      title: 'Brand Management',
+    },
+    'pms_global-product': {
+      title: 'Global Product Library',
+    },
+    pms_attribute: {
+      title: 'Attribute Template',
+    },
+    store_product_market: {
+      title: 'Selection Center',
+    },
+    store_product_list: {
+      title: 'My Products',
+    },
+    store_stock: {
+      title: 'Stock Management',
+    },
+    store_marketing: {
+      title: 'Marketing Activity',
     },
   },
   form: {

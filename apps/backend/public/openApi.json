@@ -11796,6 +11796,245 @@
         ]
       }
     },
+    "/api/system/tenant/dynamic/clear": {
+      "get": {
+        "description": "超级管理员切换到指定租户上下文",
+        "operationId": "TenantController_clearDynamicTenant",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "租户管理-动态切换租户",
+        "tags": [
+          "租户管理"
+        ]
+      }
+    },
+    "/api/system/tenant/dynamic/{tenantId}": {
+      "get": {
+        "description": "超级管理员切换到指定租户上下文",
+        "operationId": "TenantController_dynamicTenant",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "租户管理-动态切换租户",
+        "tags": [
+          "租户管理"
+        ]
+      }
+    },
     "/api/system/tenant/export": {
       "post": {
         "description": "导出租户数据为Excel文件",
@@ -11824,14 +12063,7 @@
                     {
                       "properties": {
                         "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
+                          "$ref": "#/components/schemas/TenantListVo"
                         }
                       }
                     }
@@ -25468,6 +25700,121 @@
         ]
       }
     },
+    "/api/admin/member/list": {
+      "get": {
+        "operationId": "MemberController_list",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderByColumn",
+            "required": false,
+            "in": "query",
+            "description": "排序字段",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isAsc",
+            "required": false,
+            "in": "query",
+            "description": "排序方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "params",
+            "required": false,
+            "in": "query",
+            "description": "时间范围",
+            "schema": {
+              "$ref": "#/components/schemas/DateRangeDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List Members",
+        "tags": [
+          "Admin-Member Management"
+        ]
+      }
+    },
+    "/api/admin/member/referrer": {
+      "put": {
+        "operationId": "MemberController_updateReferrer",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update Referrer",
+        "tags": [
+          "Admin-Member Management"
+        ]
+      }
+    },
+    "/api/admin/member/tenant": {
+      "put": {
+        "operationId": "MemberController_updateTenant",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update Tenant",
+        "tags": [
+          "Admin-Member Management"
+        ]
+      }
+    },
+    "/api/admin/member/status": {
+      "put": {
+        "operationId": "MemberController_updateStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update Status",
+        "tags": [
+          "Admin-Member Management"
+        ]
+      }
+    },
     "/api/client/auth/check-login": {
       "post": {
         "operationId": "AuthController_checkLogin",
@@ -25483,8 +25830,98 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LoginResultVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "201": {
             "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "summary": "静默登录检查",
@@ -25508,8 +25945,98 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LoginResultVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "201": {
             "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "summary": "手机号一键注册/登录",
@@ -25548,7 +26075,94 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClientUserVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -25559,6 +26173,2357 @@
         "summary": "获取用户信息",
         "tags": [
           "C端-用户模块"
+        ]
+      }
+    },
+    "/api/store/stock/list": {
+      "post": {
+        "operationId": "StockController_getList",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListStockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/StockVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取库存列表",
+        "tags": [
+          "库存管理"
+        ]
+      }
+    },
+    "/api/store/stock/update": {
+      "post": {
+        "operationId": "StockController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "更新库存",
+        "tags": [
+          "库存管理"
+        ]
+      }
+    },
+    "/api/store/market/list": {
+      "post": {
+        "operationId": "StoreProductController_getMarketList",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListMarketProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/MarketProductVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "选品中心列表",
+        "tags": [
+          "店铺-商品管理"
+        ]
+      }
+    },
+    "/api/store/product/import": {
+      "post": {
+        "operationId": "StoreProductController_importProduct",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "导入商品",
+        "tags": [
+          "店铺-商品管理"
+        ]
+      }
+    },
+    "/api/store/product/list": {
+      "post": {
+        "operationId": "StoreProductController_findAll",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListStoreProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/StoreProductVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "店铺商品列表",
+        "tags": [
+          "店铺-商品管理"
+        ]
+      }
+    },
+    "/api/store/product/update-price": {
+      "post": {
+        "operationId": "StoreProductController_updateProductPrice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductPriceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "更新商品价格",
+        "tags": [
+          "店铺-商品管理"
+        ]
+      }
+    },
+    "/api/pms/product": {
+      "post": {
+        "operationId": "PmsProductController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "创建商品",
+        "tags": [
+          "商品管理"
+        ]
+      }
+    },
+    "/api/pms/product/list": {
+      "get": {
+        "operationId": "PmsProductController_findAll",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderByColumn",
+            "required": false,
+            "in": "query",
+            "description": "排序字段",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isAsc",
+            "required": false,
+            "in": "query",
+            "description": "排序方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "params",
+            "required": false,
+            "in": "query",
+            "description": "时间范围",
+            "schema": {
+              "$ref": "#/components/schemas/DateRangeDto"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "商品名称",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "分类ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ProductVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "商品列表",
+        "tags": [
+          "商品管理"
+        ]
+      }
+    },
+    "/api/pms/product/{id}": {
+      "get": {
+        "operationId": "PmsProductController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ProductVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "商品详情",
+        "tags": [
+          "商品管理"
+        ]
+      },
+      "put": {
+        "operationId": "PmsProductController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "更新商品",
+        "tags": [
+          "商品管理"
+        ]
+      }
+    },
+    "/api/pms/attribute/template": {
+      "post": {
+        "operationId": "AttributeController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "创建参数模板",
+        "tags": [
+          "PMS-参数规格模板"
+        ]
+      }
+    },
+    "/api/pms/attribute/template/{id}": {
+      "put": {
+        "operationId": "AttributeController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新参数模板(仅改名)",
+        "tags": [
+          "PMS-参数规格模板"
+        ]
+      },
+      "delete": {
+        "operationId": "AttributeController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "删除参数模板",
+        "tags": [
+          "PMS-参数规格模板"
+        ]
+      },
+      "get": {
+        "operationId": "AttributeController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取模板详情(含属性)",
+        "tags": [
+          "PMS-参数规格模板"
+        ]
+      }
+    },
+    "/api/pms/attribute/template/list": {
+      "get": {
+        "operationId": "AttributeController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "分页查询模板列表",
+        "tags": [
+          "PMS-参数规格模板"
+        ]
+      }
+    },
+    "/api/pms/attribute/category/{catId}": {
+      "get": {
+        "operationId": "AttributeController_getByCategory",
+        "parameters": [
+          {
+            "name": "catId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "根据分类ID获取绑定的所有属性(发布商品用)",
+        "tags": [
+          "PMS-参数规格模板"
+        ]
+      }
+    },
+    "/api/pms/category/tree": {
+      "get": {
+        "operationId": "CategoryController_getTree",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取分类树",
+        "tags": [
+          "分类管理"
+        ]
+      }
+    },
+    "/api/pms/category/list": {
+      "get": {
+        "operationId": "CategoryController_getList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "分类管理"
+        ]
+      }
+    },
+    "/api/pms/category": {
+      "post": {
+        "operationId": "CategoryController_create",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "创建分类",
+        "tags": [
+          "分类管理"
+        ]
+      }
+    },
+    "/api/pms/category/{id}": {
+      "put": {
+        "operationId": "CategoryController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "更新分类",
+        "tags": [
+          "分类管理"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "删除分类",
+        "tags": [
+          "分类管理"
+        ]
+      }
+    },
+    "/api/pms/brand/list": {
+      "get": {
+        "operationId": "BrandController_getList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取品牌列表",
+        "tags": [
+          "品牌管理"
+        ]
+      }
+    },
+    "/api/pms/brand": {
+      "post": {
+        "operationId": "BrandController_create",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "创建品牌",
+        "tags": [
+          "品牌管理"
+        ]
+      }
+    },
+    "/api/pms/brand/{id}": {
+      "put": {
+        "operationId": "BrandController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "更新品牌",
+        "tags": [
+          "品牌管理"
+        ]
+      },
+      "delete": {
+        "operationId": "BrandController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "删除品牌",
+        "tags": [
+          "品牌管理"
         ]
       }
     }
@@ -27191,7 +30156,7 @@
             "maxLength": 200,
             "description": "路由地址"
           },
-          "query": {
+          "queryParam": {
             "type": "string",
             "minLength": 0,
             "maxLength": 200,
@@ -27218,23 +30183,47 @@
           },
           "isCache": {
             "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "是否缓存（0缓存 1不缓存）"
           },
           "isFrame": {
             "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "是否为外链（0是 1否）"
           },
           "status": {
-            "type": "object",
+            "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "菜单状态（0正常 1停用）"
           },
           "visible": {
             "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "显示状态（0显示 1隐藏）"
           },
           "perms": {
             "type": "string",
+            "minLength": 0,
+            "maxLength": 100,
             "description": "权限标识"
+          },
+          "remark": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 500,
+            "description": "备注"
           }
         },
         "required": [
@@ -27313,7 +30302,7 @@
             "maxLength": 200,
             "description": "路由地址"
           },
-          "query": {
+          "queryParam": {
             "type": "string",
             "minLength": 0,
             "maxLength": 200,
@@ -27340,23 +30329,47 @@
           },
           "isCache": {
             "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "是否缓存（0缓存 1不缓存）"
           },
           "isFrame": {
             "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "是否为外链（0是 1否）"
           },
           "status": {
-            "type": "object",
+            "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "菜单状态（0正常 1停用）"
           },
           "visible": {
             "type": "string",
+            "enum": [
+              "0",
+              "1"
+            ],
             "description": "显示状态（0显示 1隐藏）"
           },
           "perms": {
             "type": "string",
+            "minLength": 0,
+            "maxLength": 100,
             "description": "权限标识"
+          },
+          "remark": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 500,
+            "description": "备注"
           },
           "menuId": {
             "type": "number",
@@ -28343,6 +31356,20 @@
             "required": [
               "type"
             ]
+          },
+          "regionCode": {
+            "type": "string",
+            "description": "行政区划代码"
+          },
+          "isDirect": {
+            "type": "boolean",
+            "description": "是否直营",
+            "default": true
+          },
+          "serviceRadius": {
+            "type": "number",
+            "description": "服务半径(米)",
+            "default": 3000
           }
         },
         "required": [
@@ -28566,6 +31593,20 @@
             "required": [
               "type"
             ]
+          },
+          "regionCode": {
+            "type": "string",
+            "description": "行政区划代码"
+          },
+          "isDirect": {
+            "type": "boolean",
+            "description": "是否直营",
+            "default": true
+          },
+          "serviceRadius": {
+            "type": "number",
+            "description": "服务半径(米)",
+            "default": 3000
           },
           "id": {
             "type": "number",
@@ -30361,6 +33402,81 @@
           "fileName"
         ]
       },
+      "ClientUserVo": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "用户ID"
+          },
+          "nickname": {
+            "type": "string",
+            "description": "用户昵称"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "用户头像"
+          },
+          "mobile": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "NORMAL",
+              "DISABLED"
+            ]
+          },
+          "balance": {
+            "type": "number",
+            "description": "余额"
+          },
+          "frozenBalance": {
+            "type": "number",
+            "description": "冻结余额"
+          },
+          "points": {
+            "type": "number",
+            "description": "积分"
+          }
+        },
+        "required": [
+          "memberId",
+          "nickname",
+          "avatar",
+          "mobile",
+          "status",
+          "balance",
+          "frozenBalance",
+          "points"
+        ]
+      },
+      "LoginResultVo": {
+        "type": "object",
+        "properties": {
+          "isRegistered": {
+            "type": "boolean",
+            "description": "是否已注册(true:已注册且返回Token, false:未注册)"
+          },
+          "token": {
+            "type": "string",
+            "description": "登录Token"
+          },
+          "userInfo": {
+            "description": "用户信息",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClientUserVo"
+              }
+            ]
+          }
+        },
+        "required": [
+          "isRegistered"
+        ]
+      },
       "CheckLoginDto": {
         "type": "object",
         "properties": {
@@ -30420,6 +33536,682 @@
           "loginCode",
           "phoneCode",
           "tenantId"
+        ]
+      },
+      "StockVo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "SKU ID"
+          },
+          "productName": {
+            "type": "string",
+            "description": "商品名称"
+          },
+          "skuCode": {
+            "type": "string",
+            "description": "SKU编码"
+          },
+          "stock": {
+            "type": "number",
+            "description": "当前库存"
+          },
+          "specs": {
+            "type": "object",
+            "description": "规格信息"
+          }
+        },
+        "required": [
+          "id",
+          "productName",
+          "skuCode",
+          "stock",
+          "specs"
+        ]
+      },
+      "ListStockDto": {
+        "type": "object",
+        "properties": {
+          "pageNum": {
+            "type": "number",
+            "default": 1,
+            "minimum": 1,
+            "description": "页码"
+          },
+          "pageSize": {
+            "type": "number",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "每页条数"
+          },
+          "orderByColumn": {
+            "type": "string",
+            "description": "排序字段"
+          },
+          "isAsc": {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "description": "排序方向"
+          },
+          "params": {
+            "description": "时间范围",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateRangeDto"
+              }
+            ]
+          },
+          "productName": {
+            "type": "string",
+            "description": "商品名称"
+          }
+        }
+      },
+      "UpdateStockDto": {
+        "type": "object",
+        "properties": {
+          "skuId": {
+            "type": "string",
+            "description": "SKU ID"
+          },
+          "stockChange": {
+            "type": "number",
+            "description": "库存变动值"
+          }
+        },
+        "required": [
+          "skuId",
+          "stockChange"
+        ]
+      },
+      "MarketProductVo": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "商品ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商品名称"
+          },
+          "albumPics": {
+            "type": "string",
+            "description": "商品主图"
+          },
+          "type": {
+            "type": "string",
+            "description": "商品类型",
+            "enum": [
+              "REAL",
+              "SERVICE"
+            ]
+          },
+          "hasSku": {
+            "type": "boolean",
+            "description": "是否有SKU",
+            "deprecated": true
+          },
+          "price": {
+            "type": "number",
+            "description": "价格(起)"
+          },
+          "isImported": {
+            "type": "boolean",
+            "description": "是否已引入"
+          }
+        },
+        "required": [
+          "productId",
+          "name",
+          "albumPics",
+          "type",
+          "hasSku",
+          "price",
+          "isImported"
+        ]
+      },
+      "ListMarketProductDto": {
+        "type": "object",
+        "properties": {
+          "pageNum": {
+            "type": "number",
+            "default": 1,
+            "minimum": 1,
+            "description": "页码"
+          },
+          "pageSize": {
+            "type": "number",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "每页条数"
+          },
+          "orderByColumn": {
+            "type": "string",
+            "description": "排序字段"
+          },
+          "isAsc": {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "description": "排序方向"
+          },
+          "params": {
+            "description": "时间范围",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateRangeDto"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "商品名称"
+          },
+          "categoryId": {
+            "type": "number",
+            "description": "分类ID"
+          },
+          "type": {
+            "type": "string",
+            "description": "商品类型",
+            "enum": [
+              "REAL",
+              "SERVICE"
+            ]
+          }
+        }
+      },
+      "ImportSkuDto": {
+        "type": "object",
+        "properties": {
+          "globalSkuId": {
+            "type": "string",
+            "description": "Global SKU ID"
+          },
+          "price": {
+            "type": "number",
+            "description": "Store Sale Price"
+          },
+          "stock": {
+            "type": "number",
+            "description": "Stock or Daily Capacity"
+          },
+          "distRate": {
+            "type": "number",
+            "description": "Distribution Rate"
+          },
+          "distMode": {
+            "enum": [
+              "RATIO",
+              "FIXED",
+              "NONE"
+            ],
+            "type": "string",
+            "description": "Distribution Mode"
+          }
+        },
+        "required": [
+          "globalSkuId",
+          "price",
+          "stock"
+        ]
+      },
+      "ImportProductDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Global Product ID"
+          },
+          "overrideRadius": {
+            "type": "number",
+            "description": "Override Service Radius (Meters)"
+          },
+          "skus": {
+            "description": "SKU Configurations",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportSkuDto"
+            }
+          }
+        },
+        "required": [
+          "productId",
+          "skus"
+        ]
+      },
+      "StoreProductVo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "店铺商品ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商品名称(关联)"
+          },
+          "albumPics": {
+            "type": "string",
+            "description": "商品图片(关联)"
+          },
+          "status": {
+            "type": "string",
+            "description": "上架状态",
+            "enum": [
+              "OFF_SHELF",
+              "ON_SHELF"
+            ]
+          },
+          "isHot": {
+            "type": "boolean",
+            "description": "是否热销"
+          },
+          "price": {
+            "type": "number",
+            "description": "售价(起)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "albumPics",
+          "status",
+          "isHot",
+          "price"
+        ]
+      },
+      "ListStoreProductDto": {
+        "type": "object",
+        "properties": {
+          "pageNum": {
+            "type": "number",
+            "default": 1,
+            "minimum": 1,
+            "description": "页码"
+          },
+          "pageSize": {
+            "type": "number",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "每页条数"
+          },
+          "orderByColumn": {
+            "type": "string",
+            "description": "排序字段"
+          },
+          "isAsc": {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "description": "排序方向"
+          },
+          "params": {
+            "description": "时间范围",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateRangeDto"
+              }
+            ]
+          }
+        }
+      },
+      "UpdateProductPriceDto": {
+        "type": "object",
+        "properties": {
+          "tenantSkuId": {
+            "type": "string",
+            "description": "店铺SKU ID"
+          },
+          "price": {
+            "type": "number",
+            "description": "售价"
+          },
+          "distRate": {
+            "type": "number",
+            "description": "分销费率/金额"
+          }
+        },
+        "required": [
+          "tenantSkuId",
+          "price",
+          "distRate"
+        ]
+      },
+      "CreateSkuDto": {
+        "type": "object",
+        "properties": {
+          "skuId": {
+            "type": "string",
+            "description": "SKU ID (更新时必传)"
+          },
+          "specValues": {
+            "type": "object",
+            "description": "规格值",
+            "example": {
+              "Color": "Red"
+            }
+          },
+          "skuImage": {
+            "type": "string",
+            "description": "SKU图片"
+          },
+          "guidePrice": {
+            "type": "number",
+            "minimum": 0,
+            "description": "指导价"
+          },
+          "distMode": {
+            "enum": [
+              "RATIO",
+              "FIXED",
+              "NONE"
+            ],
+            "type": "string",
+            "description": "分销模式"
+          },
+          "guideRate": {
+            "type": "number",
+            "description": "指导费率"
+          },
+          "minDistRate": {
+            "type": "number",
+            "minimum": 0,
+            "description": "最小分销费率"
+          },
+          "maxDistRate": {
+            "type": "number",
+            "minimum": 0,
+            "description": "最大分销费率"
+          }
+        },
+        "required": [
+          "specValues",
+          "guidePrice",
+          "distMode",
+          "guideRate",
+          "minDistRate",
+          "maxDistRate"
+        ]
+      },
+      "CreateAttrValueDto": {
+        "type": "object",
+        "properties": {
+          "attrId": {
+            "type": "number",
+            "description": "属性ID"
+          },
+          "value": {
+            "type": "string",
+            "description": "属性值"
+          }
+        },
+        "required": [
+          "attrId",
+          "value"
+        ]
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "number",
+            "description": "分类ID"
+          },
+          "brandId": {
+            "type": "number",
+            "description": "品牌ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商品名称"
+          },
+          "subTitle": {
+            "type": "string",
+            "description": "副标题"
+          },
+          "mainImages": {
+            "description": "商品主图列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "detailHtml": {
+            "type": "string",
+            "description": "详情页HTML"
+          },
+          "type": {
+            "enum": [
+              "REAL",
+              "SERVICE"
+            ],
+            "type": "string",
+            "description": "商品类型"
+          },
+          "weight": {
+            "type": "number",
+            "description": "重量(g)"
+          },
+          "isFreeShip": {
+            "type": "boolean",
+            "description": "是否包邮"
+          },
+          "serviceDuration": {
+            "type": "number",
+            "description": "服务时长(分钟)"
+          },
+          "serviceRadius": {
+            "type": "number",
+            "description": "服务半径(km)"
+          },
+          "specDef": {
+            "type": "array",
+            "items": {
+              "required": true,
+              "description": "规格定义",
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "skus": {
+            "description": "SKU列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSkuDto"
+            }
+          },
+          "attrs": {
+            "description": "属性列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateAttrValueDto"
+            }
+          },
+          "publishStatus": {
+            "type": "string",
+            "description": "上架状态",
+            "enum": [
+              "OFF_SHELF",
+              "ON_SHELF"
+            ]
+          }
+        },
+        "required": [
+          "categoryId",
+          "name",
+          "mainImages",
+          "detailHtml",
+          "type",
+          "specDef",
+          "skus",
+          "attrs"
+        ]
+      },
+      "ProductVo": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "商品ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "商品名称"
+          },
+          "categoryId": {
+            "type": "number",
+            "description": "商品分类ID"
+          },
+          "brandId": {
+            "type": "number",
+            "description": "品牌ID"
+          },
+          "subTitle": {
+            "type": "string",
+            "description": "副标题"
+          },
+          "mainImages": {
+            "description": "商品主图",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "albumPics": {
+            "type": "string",
+            "description": "商品相册(兼容字段)"
+          },
+          "detailHtml": {
+            "type": "string",
+            "description": "详情页HTML"
+          },
+          "type": {
+            "type": "string",
+            "description": "商品类型",
+            "enum": [
+              "REAL",
+              "SERVICE"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "description": "重量(g)"
+          },
+          "isFreeShip": {
+            "type": "boolean",
+            "description": "是否包邮"
+          },
+          "serviceDuration": {
+            "type": "number",
+            "description": "服务时长(Service Types)"
+          },
+          "serviceRadius": {
+            "type": "number",
+            "description": "服务半径"
+          },
+          "needBooking": {
+            "type": "boolean",
+            "description": "是否需要预约"
+          },
+          "publishStatus": {
+            "type": "string",
+            "description": "上架状态: 0-下架, 1-上架"
+          },
+          "price": {
+            "type": "number",
+            "description": "价格(起)"
+          }
+        },
+        "required": [
+          "productId",
+          "name",
+          "categoryId",
+          "mainImages",
+          "albumPics",
+          "detailHtml",
+          "type",
+          "needBooking",
+          "publishStatus",
+          "price"
+        ]
+      },
+      "AttributeItemDto": {
+        "type": "object",
+        "properties": {
+          "attrId": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "usageType": {
+            "type": "string",
+            "enum": [
+              "PARAM",
+              "SPEC"
+            ]
+          },
+          "applyType": {
+            "type": "number",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "inputType": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "inputList": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "usageType",
+          "applyType",
+          "inputType",
+          "sort"
+        ]
+      },
+      "CreateTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttributeItemDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "attributes"
         ]
       }
     }

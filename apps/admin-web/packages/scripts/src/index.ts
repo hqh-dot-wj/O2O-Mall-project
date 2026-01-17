@@ -93,14 +93,25 @@ export async function setupCli() {
     },
     'gen-route': {
       desc: 'generate route',
-      action: async () => {
-        await generateRoute();
+      action: async (routeName: any) => {
+        // When using [routeName], cac passes the value directly
+        await generateRoute({ routeName: typeof routeName === 'string' ? routeName : undefined });
       },
     },
   };
 
   for (const [command, { desc, action }] of Object.entries(commands)) {
-    cli.command(command, lightGreen(desc)).action(action);
+    const cmdDef = command === 'gen-route' ? 'gen-route [routeName]' : command;
+    cli.command(cmdDef, lightGreen(desc)).action((...args) => {
+      // For gen-route, args will be [routeName, options]
+      // For others, args might be [options]
+      if (command === 'gen-route') {
+        // The last argument is options, the first is routeName
+        const routeName = args.length > 1 ? args[0] : undefined;
+        return (action as any)(routeName);
+      }
+      return action(args[0]);
+    });
   }
 
   cli.parse();

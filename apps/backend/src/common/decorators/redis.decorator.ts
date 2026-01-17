@@ -35,6 +35,8 @@ export function CacheEvict(CACHE_NAME: string, CACHE_KEY: string) {
     const originMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
+      const result = await originMethod.apply(this, args);
+
       const key = paramsKeyFormat(originMethod, CACHE_KEY, args);
 
       if (key === '*') {
@@ -53,7 +55,7 @@ export function CacheEvict(CACHE_NAME: string, CACHE_KEY: string) {
         await this.redis.del(fullKey);
       }
 
-      return await originMethod.apply(this, args);
+      return result;
     };
   };
 }
@@ -77,6 +79,8 @@ export function CacheEvictMultiple(configs: Array<{ name: string; key: string }>
     const originMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
+      const result = await originMethod.apply(this, args);
+
       for (const config of configs) {
         const key = paramsKeyFormat(originMethod, config.key, args);
 
@@ -90,7 +94,7 @@ export function CacheEvictMultiple(configs: Array<{ name: string; key: string }>
         }
       }
 
-      return await originMethod.apply(this, args);
+      return result;
     };
   };
 }

@@ -31,10 +31,10 @@ export class GeoService {
      * @param lng 经度
      * @returns 所在的服务站 ID (如有重叠，返回第一个)
      */
-    async findStationByPoint(lat: number, lng: number): Promise<{ stationId: number; name: string } | null> {
+    async findStationByPoint(lat: number, lng: number): Promise<{ stationId: number; name: string; tenantId: string } | null> {
         const pointWKT = `POINT(${lng} ${lat})`;
         const sql = `
-      SELECT s.station_id as "stationId", s.name 
+      SELECT s.station_id as "stationId", s.name, s.tenant_id as "tenantId"
       FROM sys_geo_fence f
       JOIN sys_station s ON f.station_id = s.station_id
       WHERE ST_Contains(f.geom, ST_GeomFromText('${pointWKT}', 4326))
@@ -45,6 +45,32 @@ export class GeoService {
         if (result && result.length > 0) {
             return result[0];
         }
-        return null;
+    }
+
+    /**
+     * 计算两点间的距离 (单位: 米)
+     * 使用 PostGIS ST_DistanceSphere (基于球体模型，适合地球表面距离)
+     * @param lat1 点1纬度
+     * @param lng1 点1经度
+     * @param lat2 点2纬度
+     * @param lng2 点2经度
+     */
+    async calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): Promise<number> {
+        // Construct points
+        const p1 = `POINT(${lng1} ${lat1})`;
+        const p2 = `POINT(${lng2} ${lat2})`;
+
+        const sql = `
+            SELECT ST_DistanceSphere(
+                ST_GeomFromText('${p1}', 4326),
+                ST_GeomFromText('${p2}', 4326)
+            ) as distance;
+        `;
+
+        const result = await this.prisma.$queryRawUnsafe<{ distance: number }[]>(sql);
+        if (result && result.length > 0) {
+            return result[0].distance;
+        }
+        return 0;
     }
 }

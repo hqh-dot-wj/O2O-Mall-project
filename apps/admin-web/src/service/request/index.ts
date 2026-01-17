@@ -28,6 +28,12 @@ const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState
       if (token && !isToken) {
         const Authorization = getAuthorization();
         Object.assign(config.headers, { Authorization });
+
+        // Add tenant-id header
+        const authStore = useAuthStore();
+        if (authStore.userInfo.user?.tenantId) {
+          Object.assign(config.headers, { 'tenant-id': authStore.userInfo.user.tenantId });
+        }
       }
 
       // 客户端 ID

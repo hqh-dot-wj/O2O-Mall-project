@@ -12,6 +12,7 @@ import { UserType } from '../dto/user';
 import { ClientInfoDto } from 'src/common/decorators/common.decorator';
 import { CacheEvict, Cacheable } from 'src/common/decorators/redis.decorator';
 import { Captcha } from 'src/module/admin/common/decorators/captcha.decorator';
+import { TenantContext } from 'src/common/tenant';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRepository } from '../user.repository';
 import { SYS_USER_TYPE } from 'src/common/constant/index';
@@ -102,6 +103,13 @@ export class UserAuthService {
 
     // 添加额外的用户信息
     (userInfo.user as UserWithRelations & { deptName?: string }).deptName = deptData?.deptName || '';
+
+    // 关键修复：覆盖用户 stored tenantId 为当前的 tenantId (如果存在)
+    // 这样前端 getInfo 获取到的 tenantId 就是登录时选择的 tenantId
+    const activeTenantId = TenantContext.getTenantId();
+    if (activeTenantId && userInfo.user) {
+      userInfo.user.tenantId = activeTenantId;
+    }
 
     await this.updateRedisToken(uuid, userInfo);
 

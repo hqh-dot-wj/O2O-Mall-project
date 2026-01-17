@@ -11,17 +11,17 @@ declare namespace Api {
       pageNum: number;
       /** page size */
       pageSize: number;
-      /** total count */
-      total: number;
     }
 
     /** common params of paginating query list data */
     interface PaginatingQueryRecord<T = any> extends PaginatingCommonParams {
       rows: T[];
+      /** total count */
+      total: number;
     }
 
     /** common search params of table */
-    type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'pageNum' | 'pageSize'> &
+    type CommonSearchParams = Partial<Pick<Common.PaginatingCommonParams, 'pageNum' | 'pageSize'>> &
       CommonType.RecordNullable<{
         orderByColumn: string;
         isAsc: 'ascending' | 'descending';

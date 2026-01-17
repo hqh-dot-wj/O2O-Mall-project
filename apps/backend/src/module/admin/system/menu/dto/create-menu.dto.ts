@@ -1,4 +1,4 @@
-import { IsString, IsEnum, Length, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsEnum, Length, IsOptional, IsNumber, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { StatusEnum, MenuTypeEnum, MenuTypeEnumSchema } from 'src/common/enum';
 
@@ -28,7 +28,7 @@ export class CreateMenuDto {
   @IsOptional()
   @IsString()
   @Length(0, 200)
-  query: string;
+  queryParam: string;
 
   @ApiProperty({ required: false, description: '组件路径' })
   @IsOptional()
@@ -51,28 +51,35 @@ export class CreateMenuDto {
   @ApiProperty({ required: false, description: '是否缓存（0缓存 1不缓存）' })
   @IsOptional()
   @IsString()
-  @IsEnum(StatusEnum)
+  @IsIn(['0', '1'])
   isCache: string;
 
   @ApiProperty({ required: true, description: '是否为外链（0是 1否）' })
   @IsString()
-  @IsEnum(StatusEnum)
+  @IsIn(['0', '1'])
   isFrame: string;
 
   @ApiProperty({ required: false, description: '菜单状态（0正常 1停用）' })
   @IsOptional()
   @IsString()
-  @IsEnum(StatusEnum)
-  status: StatusEnum;
+  @IsIn(['0', '1'])
+  status: string;
 
   @ApiProperty({ required: false, description: '显示状态（0显示 1隐藏）' })
   @IsOptional()
   @IsString()
-  @IsEnum(StatusEnum)
+  @IsIn(['0', '1'])
   visible: string;
 
   @ApiProperty({ required: false, description: '权限标识' })
   @IsOptional()
   @IsString()
+  @Length(0, 100)
   perms: string;
+
+  @ApiProperty({ required: false, description: '备注' })
+  @IsOptional()
+  @IsString()
+  @Length(0, 500)
+  remark?: string;
 }

@@ -1,4 +1,5 @@
 ﻿import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { User } from 'src/common/decorators/user.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto, UpdateTenantDto, ListTenantDto, SyncTenantPackageDto } from './dto/index';
@@ -106,8 +107,29 @@ export class TenantController {
   }
 
   @Api({
+    summary: '租户管理-动态切换租户',
+    description: '超级管理员切换到指定租户上下文',
+  })
+  @RequirePermission('system:tenant:dynamic')
+  @Get('/dynamic/clear')
+  clearDynamicTenant(@User() user: any) {
+    return this.tenantService.clearDynamicTenant(user.user);
+  }
+
+  @Api({
+    summary: '租户管理-动态切换租户',
+    description: '超级管理员切换到指定租户上下文',
+  })
+  @RequirePermission('system:tenant:dynamic')
+  @Get('/dynamic/:tenantId')
+  dynamicTenant(@Param('tenantId') tenantId: string, @User() user: any) {
+    return this.tenantService.dynamicTenant(tenantId, user.user);
+  }
+
+  @Api({
     summary: '租户管理-导出',
     description: '导出租户数据为Excel文件',
+    type: TenantListVo,
   })
   @RequirePermission('system:tenant:export')
   @Operlog({ businessType: BusinessType.EXPORT })

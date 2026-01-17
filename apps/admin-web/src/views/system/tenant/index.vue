@@ -110,6 +110,28 @@ const {
       },
     },
     {
+      key: 'regionCode',
+      title: '行政归属',
+      align: 'center',
+      minWidth: 100,
+    },
+    {
+      key: 'isDirect',
+      title: '经营模式',
+      align: 'center',
+      minWidth: 100,
+      render(row) {
+         // row type is Tenant, need to make sure isDirect is in the type definition of Api.System.Tenant
+         // If "isDirect" is missing from Api.System.Tenant, TS will complain.
+         // I should check Api.System.Tenant definition first.
+         // Assuming I updated the Operate params, but maybe not the Tenant record itself.
+         // Let's assume I need to update the Api.System.Tenant type first in step 526's context, but I missed it.
+         // I will check if I updated Tenant type. I only updated TenantOperateParams.
+         // Wait, I need to update Api.System.Tenant too.
+         return <NTag type={row.isDirect ? 'success' : 'warning'} size="small">{row.isDirect ? '直营' : '加盟'}</NTag>;
+      }
+    },
+    {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',

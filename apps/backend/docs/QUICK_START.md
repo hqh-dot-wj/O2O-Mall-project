@@ -537,18 +537,12 @@ export class UserController {
 - [ ] 分页响应使用 `Result.page(list, total)`
 - [ ] 异常抛出使用断言 API（如 `BusinessException.throwIfNull()`）
 - [ ] Service 层数据库操作考虑使用 Repository 模式
+ [ ] Service 层的方法都要写好详细中文注解，然后不能有硬编码
 - [ ] 需要事务的操作使用 `@Transactional()` 装饰器
 - [ ] Controller 使用 `@Api()` 装饰器统一 Swagger 文档
 
 ---
 
-## 🚀 下一步
 
-1. 运行测试验证：`pnpm test`
-2. 启动开发服务器：`pnpm start:dev`
-3. 检查 Swagger 文档：`http://localhost:8080/api/docs`
-4. 阅读完整文档：[ARCHITECTURE_OPTIMIZATION.md](./ARCHITECTURE_OPTIMIZATION.md)
-
----
 
 **恭喜！你现在已经掌握了企业级 NestJS 项目的核心开发模式！** 🎉

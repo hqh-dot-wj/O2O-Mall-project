@@ -11,6 +11,7 @@ import { CacheEnum } from 'src/common/enum';
 import { LOGIN_TOKEN_EXPIRESIN } from 'src/common/constant';
 import { Result } from 'src/common/response';
 import { WechatService } from '../common/service/wechat.service';
+import { BusinessException } from 'src/common/exceptions';
 
 @Injectable()
 export class AuthService {
@@ -27,9 +28,8 @@ export class AuthService {
     async checkLogin(dto: CheckLoginDto) {
         // 1. 换取 OpenID
         const wxRes = await this.wechatService.code2Session(dto.code);
-        if (!wxRes.success) {
-            return Result.fail(500, wxRes.msg);
-        }
+        BusinessException.throwIf(!wxRes.success, wxRes.msg);
+
         const { openid } = wxRes.data;
 
         // 2. 查 SysSocialUser
@@ -43,6 +43,11 @@ export class AuthService {
 
         // 3. 已注册 -> 发 Token
         if (socialUser) {
+            BusinessException.throwIf(
+                socialUser.member?.status === MemberStatus.DISABLED,
+                '账号已禁用，请联系客服'
+            );
+
             const token = await this.genToken(socialUser.member);
             return Result.ok({
                 isRegistered: true,
@@ -66,12 +71,13 @@ export class AuthService {
     async registerMobile(dto: RegisterMobileDto) {
         // 1. 再次换取 OpenID (确保 Session 最新，也可以用 checkLogin 缓存的 session，这里简化为重新换取)
         const wxRes = await this.wechatService.code2Session(dto.loginCode);
-        if (!wxRes.success) return Result.fail(500, wxRes.msg);
+        BusinessException.throwIf(!wxRes.success, wxRes.msg);
+
         const { openid, unionid, session_key } = wxRes.data;
 
         // 2. 解密/获取手机号
         const phone = await this.wechatService.getPhoneNumber(dto.phoneCode);
-        if (!phone) return Result.fail(500, '获取手机号失败');
+        BusinessException.throwIf(!phone, '获取手机号失败');
 
         // 3. 开启事务处理注册逻辑
         let finalMember = null;
@@ -84,9 +90,9 @@ export class AuthService {
 
                 if (member) {
                     // 情况 A: 手机号已存在 (老用户) -> 仅绑定社交账号
-                    // 也可以选择在这里更新租户ID，这取决于业务规则。
-                    // 假设业务规则是：保留首次注册租户，或者更新为最近活跃租户?
-                    // 这里暂不更新 tenantId，只做绑定
+                    if (member.status === MemberStatus.DISABLED) {
+                        throw new Error('账号已禁用，请联系客服'); // 事务内抛错回滚
+                    }
                 } else {
                     // 情况 B: 纯新用户 -> 创建 Member
                     // 校验租户
@@ -137,9 +143,10 @@ export class AuthService {
 
                 return member;
             });
-        } catch (e) {
-            console.error(e);
-            return Result.fail(500, '注册事务失败: ' + e.message);
+        } catch (e: any) {
+            // 如果是事务内主动抛出的业务错误，直接往上抛 let Exception Filter handle it
+            // 这里为了 unified catch, convert error -> BusinessException
+            throw new BusinessException(e.message || '注册事务失败');
         }
 
         // 4. 发 Token

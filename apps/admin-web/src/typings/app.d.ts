@@ -376,6 +376,8 @@ declare namespace App {
         logoutConfirm: string;
         lookForward: string;
         modify: string;
+        copySuccess: string;
+        copyFailed: string;
         modifySuccess: string;
         noData: string;
         operate: string;
@@ -391,6 +393,8 @@ declare namespace App {
         saveSuccess: string;
         noChange: string;
         userCenter: string;
+        name: string;
+        sort: string;
         yesOrNo: {
           yes: string;
           no: string;
@@ -436,17 +440,17 @@ declare namespace App {
             apply: string;
             applySuccess: string;
             [key: string]:
-              | {
-                  name: string;
-                  desc: string;
-                }
-              | string;
+            | {
+              name: string;
+              desc: string;
+            }
+            | string;
           };
         };
         layout: {
           layoutMode: { title: string } & Record<UnionKey.ThemeLayoutMode, string> & {
-              [K in `${UnionKey.ThemeLayoutMode}_detail`]: string;
-            };
+            [K in `${UnionKey.ThemeLayoutMode}_detail`]: string;
+          };
           tab: {
             title: string;
             visible: string;
@@ -532,9 +536,10 @@ declare namespace App {
           striped: string;
         };
       };
-      route: Record<I18nRouteKey, string>;
+      route: Record<string, string>;
       menu: Record<string, string>;
       dict: Record<string, Record<string, string>>;
+
       page: {
         common: {
           id: string;
@@ -1017,6 +1022,164 @@ declare namespace App {
             importSuccess: string;
             statusChangeSuccess: string;
           };
+          fileManager: {
+            title: string;
+            uploadSuccess: string;
+            uploadPartialSuccess: string;
+            uploadFailed: string;
+            selectFilesFirst: string;
+            deleteSuccess: string;
+            deleteFailed: string;
+            renameSuccess: string;
+            moveSuccess: string;
+            moveFailed: string;
+            loadFoldersFailed: string;
+            selectTargetFolder: string;
+            shareSuccess: string;
+            createShareSuccess: string;
+            batchShareSuccess: string;
+            batchSharePartialFailed: string;
+            batchShareFailed: string;
+            downloadStarted: string;
+            getDownloadLinkFailed: string;
+            copySuccess: string;
+            copyFailed: string;
+            refreshSuccess: string;
+            getVersionsFailed: string;
+            restoreVersion: string;
+            restoreVersionConfirm: string;
+            restoreVersionSuccess: string;
+            restoreVersionFailed: string;
+            fileModified: string;
+            getRecycleListFailed: string;
+            restoreFile: string;
+            restoreFileConfirm: string;
+            restoreFileSuccess: string;
+            restoreFileFailed: string;
+            selectFilesToRestore: string;
+            permanentDelete: string;
+            permanentDeleteConfirm: string;
+            selectFilesToDelete: string;
+          };
+
+        };
+        member: {
+          title: string;
+          userInfo: string;
+          tenant: string;
+          referrer: string;
+          status: string;
+          registerTime: string;
+          editReferrer: string;
+          editTenant: string;
+          form: {
+            referrerId: string;
+            tenantId: string;
+          };
+          confirm: {
+            updateStatus: string;
+            statusUpdated: string;
+            updateSuccess: string;
+          };
+        };
+        pms: {
+          brand: {
+            title: string;
+            brandName: string;
+            brandLogo: string;
+            addBrand: string;
+            editBrand: string;
+            searchBrandName: string;
+            form: {
+              brandName: FormMsg;
+              logo: FormMsg;
+            };
+          };
+          category: {
+            title: string;
+            categoryName: string;
+            icon: string;
+            categoryDetail: string;
+            subCategoryList: string;
+            addCategory: string;
+            editCategory: string;
+            addSubCategory: string;
+            parentCategory: string;
+            selectParent: string;
+            bindType: string;
+            realProduct: string;
+            serviceProduct: string;
+            attributeTemplate: string;
+            selectAttributeTemplate: string;
+            form: {
+              categoryName: FormMsg;
+              sort: FormMsg;
+            };
+          };
+          attribute: {
+            attributeCount: string;
+            title: string;
+            addTemplate: string;
+            editTemplate: string;
+            attributeConfig: string;
+            addAttribute: string;
+            attributeName: string;
+            usageType: string;
+            inputType: string;
+            inputList: string;
+            applyType: string;
+            noAttributes: string;
+            validate: {
+              attributeNameRequired: string;
+            };
+            usage: {
+              param: string;
+              spec: string;
+            };
+            input: {
+              manual: string;
+              select: string;
+            };
+            apply: {
+              common: string;
+              real: string;
+              service: string;
+            };
+            placeholder: {
+              attributeName: string;
+              inputList: string;
+            };
+          };
+          product: {
+            title: string;
+            add: string;
+            edit: string;
+            name: string;
+          };
+        };
+        pms_category: {
+          title: string;
+        };
+        pms_brand: {
+          title: string;
+        };
+        'pms_global-product': {
+          title: string;
+        };
+        pms_attribute: {
+          title: string;
+        };
+        store_product_market: {
+          title: string;
+        };
+        store_product_list: {
+          title: string;
+        };
+        store_stock: {
+          title: string;
+        };
+        store_marketing: {
+          title: string;
         };
       };
       form: {
@@ -1048,8 +1211,8 @@ declare namespace App {
 
     type GetI18nKey<T extends Record<string, unknown>, K extends keyof T = keyof T> = K extends string
       ? T[K] extends Record<string, unknown>
-        ? `${K}.${GetI18nKey<T[K]>}`
-        : K
+      ? `${K}.${GetI18nKey<T[K]>}`
+      : K
       : never;
 
     type I18nKey = GetI18nKey<Schema>;
@@ -1067,55 +1230,55 @@ declare namespace App {
       (key: I18nKey, named: Record<string, unknown>, plural: number): string;
       (key: I18nKey, named: Record<string, unknown>, defaultMsg: string): string;
     }
-  }
 
-  /** Service namespace */
-  namespace Service {
-    /** Other baseURL key */
-    type OtherBaseURLKey = 'demo';
+    /** Service namespace */
+    namespace Service {
+      /** Other baseURL key */
+      type OtherBaseURLKey = 'demo';
 
-    interface ServiceConfigItem {
-      /** The backend service base url */
-      baseURL: string;
-      /** The proxy pattern of the backend service base url */
-      proxyPattern: string;
-      ws?: boolean;
-    }
+      interface ServiceConfigItem {
+        /** The backend service base url */
+        baseURL: string;
+        /** The proxy pattern of the backend service base url */
+        proxyPattern: string;
+        ws?: boolean;
+      }
 
-    interface OtherServiceConfigItem extends ServiceConfigItem {
-      key: OtherBaseURLKey;
-    }
+      interface OtherServiceConfigItem extends ServiceConfigItem {
+        key: OtherBaseURLKey;
+      }
 
-    /** The backend service config */
-    interface ServiceConfig extends ServiceConfigItem {
-      /** Other backend service config */
-      other: OtherServiceConfigItem[];
-    }
+      /** The backend service config */
+      interface ServiceConfig extends ServiceConfigItem {
+        /** Other backend service config */
+        other: OtherServiceConfigItem[];
+      }
 
-    interface SimpleServiceConfig extends Pick<ServiceConfigItem, 'baseURL'> {
-      other: Record<OtherBaseURLKey, string>;
-    }
+      interface SimpleServiceConfig extends Pick<ServiceConfigItem, 'baseURL'> {
+        other: Record<OtherBaseURLKey, string>;
+      }
 
-    /** The backend service response data */
-    type Response<T = unknown> = {
-      /** The backend service response code */
-      code: string;
-      /** The backend service response message */
-      msg: string;
       /** The backend service response data */
-      data: T;
-      rows?: any[];
-      total?: number;
-    };
+      type Response<T = unknown> = {
+        /** The backend service response code */
+        code: string;
+        /** The backend service response message */
+        msg: string;
+        /** The backend service response data */
+        data: T;
+        rows?: any[];
+        total?: number;
+      };
 
-    /** The demo backend service response data */
-    type DemoResponse<T = unknown> = {
-      /** The backend service response code */
-      status: string;
-      /** The backend service response message */
-      message: string;
-      /** The backend service response data */
-      result: T;
-    };
+      /** The demo backend service response data */
+      type DemoResponse<T = unknown> = {
+        /** The backend service response code */
+        status: string;
+        /** The backend service response message */
+        message: string;
+        /** The backend service response data */
+        result: T;
+      };
+    }
   }
 }

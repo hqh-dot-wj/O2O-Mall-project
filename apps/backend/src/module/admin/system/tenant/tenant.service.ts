@@ -1,11 +1,11 @@
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Result, ResponseCode } from 'src/common/response';
 import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 import { SYS_USER_TYPE } from 'src/common/constant/index';
 import { BusinessException } from 'src/common/exceptions';
 import { ExportTable } from 'src/common/utils/export';
-import { FormatDateFields } from 'src/common/utils/index';
+import { FormatDateFields, GenerateUUID } from 'src/common/utils/index';
 import { Response } from 'express';
 import { CreateTenantDto, UpdateTenantDto, ListTenantDto, SyncTenantPackageDto } from './dto/index';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -17,6 +17,8 @@ import { CacheEnum } from 'src/common/enum/cache.enum';
 import { hashSync } from 'bcryptjs';
 
 import { StationService } from 'src/module/lbs/station/station.service';
+import { UserAuthService } from '../user/services/user-auth.service';
+import { UserType } from '../user/dto/user';
 
 @Injectable()
 export class TenantService {
@@ -26,6 +28,8 @@ export class TenantService {
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
     private readonly stationService: StationService,
+    @Inject(forwardRef(() => UserAuthService))
+    private readonly userAuthService: UserAuthService,
   ) { }
 
   /**
@@ -84,6 +88,9 @@ export class TenantService {
           status: createTenantDto.status ?? StatusEnum.NORMAL,
           remark: createTenantDto.remark,
           delFlag: DelFlagEnum.NORMAL,
+          // [新增] O2O 字段
+          regionCode: createTenantDto.regionCode,
+          isDirect: createTenantDto.isDirect,
         },
       });
 
@@ -100,16 +107,29 @@ export class TenantService {
         },
       });
 
-      // LBS: 自动创建默认站点 (如果提供了地址或围栏)
+      // [新增] 创建租户地理配置 (SysTenantGeo)
+      if (createTenantDto.address || createTenantDto.latitude) {
+        await this.prisma.sysTenantGeo.create({
+          data: {
+            tenantId,
+            address: createTenantDto.address,
+            latitude: createTenantDto.latitude,
+            longitude: createTenantDto.longitude,
+            serviceRadius: createTenantDto.serviceRadius,
+            geoFence: createTenantDto.fence as any,
+          }
+        });
+      }
+
+      // LBS: 自动同步主站点 (Adapter Pattern)
       if (createTenantDto.address || createTenantDto.fence || (createTenantDto.latitude && createTenantDto.longitude)) {
-        this.logger.log(`Creating default station for tenant ${tenantId}`);
-        await this.stationService.create({
-          tenantId,
-          name: `${createTenantDto.companyName} - 主站点`,
+        this.logger.log(`Syncing main station for tenant ${tenantId}`);
+        await this.stationService.upsertMainStation(tenantId, {
           address: createTenantDto.address,
           latitude: createTenantDto.latitude,
           longitude: createTenantDto.longitude,
-          fence: createTenantDto.fence
+          fence: createTenantDto.fence,
+          regionCode: createTenantDto.regionCode
         });
       }
 
@@ -246,8 +266,59 @@ export class TenantService {
 
     await this.prisma.sysTenant.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        // Explicitly map new fields if needed, or rely on updateData spreading if DTO matches Prisma types
+        // Prisma update input for regionCode/isDirect should match DTO
+      },
     });
+
+    // [新增] 同步更新 O2O 地理配置
+    const o2oFields = ['address', 'latitude', 'longitude', 'serviceRadius', 'fence', 'regionCode'];
+    const hasO2OUpdate = o2oFields.some(field => Object.prototype.hasOwnProperty.call(updateData, field));
+
+    if (hasO2OUpdate) {
+      const tenantId = existTenant.tenantId;
+
+      // 1. Upsert SysTenantGeo
+      const geoData = {
+        address: updateData.address,
+        latitude: updateData.latitude,
+        longitude: updateData.longitude,
+        serviceRadius: updateData.serviceRadius,
+        geoFence: updateData.fence as any
+      };
+
+      // Remove undefined fields
+      Object.keys(geoData).forEach((key) => {
+        const k = key as keyof typeof geoData;
+        if (geoData[k] === undefined) delete geoData[k];
+      });
+
+      const existGeo = await this.prisma.sysTenantGeo.findUnique({ where: { tenantId } });
+      if (existGeo) {
+        await this.prisma.sysTenantGeo.update({
+          where: { tenantId },
+          data: geoData
+        });
+      } else {
+        await this.prisma.sysTenantGeo.create({
+          data: {
+            tenantId,
+            ...geoData
+          }
+        });
+      }
+
+      // 2. Sync to SysStation
+      await this.stationService.upsertMainStation(tenantId, {
+        address: updateData.address,
+        latitude: updateData.latitude,
+        longitude: updateData.longitude,
+        fence: updateData.fence,
+        regionCode: updateData.regionCode
+      });
+    }
 
     return Result.ok();
   }
@@ -533,5 +604,63 @@ export class TenantService {
       ],
     };
     return await ExportTable(options, res);
+  }
+  /**
+   * 动态切换租户
+   */
+  @IgnoreTenant()
+  async dynamicTenant(tenantId: string, user: UserType['user']) {
+    if (user.userId !== 1) {
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '只有超级管理员才能切换租户');
+    }
+
+    const tenant = await this.prisma.sysTenant.findFirst({
+      where: { tenantId },
+    });
+
+    if (!tenant) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, '租户不存在');
+    }
+
+    return this.switchTenantContext(user, tenantId);
+  }
+
+  @IgnoreTenant()
+  async clearDynamicTenant(user: UserType['user']) {
+    if (user.userId !== 1) {
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '只有超级管理员才能切换租户');
+    }
+    // Switch back to default tenant 000000
+    return this.switchTenantContext(user, TenantContext.SUPER_TENANT_ID);
+  }
+
+  private async switchTenantContext(user: UserType['user'], targetTenantId: string) {
+    const uuid = GenerateUUID();
+
+    // Explicitly cast to UserType['user'] to avoid implicit any errors
+    const newUserObj = {
+      ...user,
+      tenantId: targetTenantId,
+      deptId: null,
+      dept: null,
+      roles: [],
+      posts: []
+    } as unknown as UserType['user'];
+
+    const redisUser: Partial<UserType> = {
+      userId: user.userId,
+      userName: user.userName,
+      deptId: 0, // Use 0 or appropriate number for null deptId
+      token: uuid,
+      user: newUserObj,
+      roles: ['admin'],
+      permissions: ['*:*:*'],
+    };
+
+    await this.userAuthService.updateRedisToken(uuid, redisUser);
+
+    const token = this.userAuthService.createToken({ uuid, userId: user.userId });
+
+    return Result.ok(token);
   }
 }
