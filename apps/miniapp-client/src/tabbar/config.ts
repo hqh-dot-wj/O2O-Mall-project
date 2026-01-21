@@ -50,6 +50,19 @@ export const customTabbarList: CustomTabBarItem[] = [
     icon: 'i-carbon-home',
     // badge: 'dot',
   },
+  {
+    text: '分类',
+    pagePath: 'pages/category/category',
+    iconType: 'unocss',
+    icon: 'i-carbon-ibm-watson-knowledge-catalog',
+  },
+  {
+    text: '购物车',
+    pagePath: 'pages/cart/cart',
+    iconType: 'unocss',
+    icon: 'i-carbon-shopping-cart',
+    // badge: 动态显示购物车数量，在 store.ts 中配置
+  },
   // 鼓包配置示例（2025-12-31）
   // 中间鼓包tabbarItem配置：通常是扫描按钮、发布按钮、更多按钮等，点击触发业务逻辑
   // {

@@ -2,6 +2,7 @@ declare namespace Api {
     namespace Pms {
         type DistributionMode = 'RATIO' | 'FIXED' | 'NONE';
         type ProductType = 'REAL' | 'SERVICE';
+        type PublishStatus = 'OFF_SHELF' | 'ON_SHELF';
 
         type Product = Common.CommonRecord<{
             productId: string;
@@ -11,7 +12,7 @@ declare namespace Api {
             brandId?: number;
             albumPics?: string;
             description?: string;
-            publishStatus: string;
+            publishStatus: PublishStatus;
             price: number;
             detailHtml: string;
             globalSkus: GlobalSku[];
@@ -44,7 +45,7 @@ declare namespace Api {
             detailHtml?: string;  // rich text
             pic?: string; // main pic
             albumPics?: string[]; // strings
-            publishStatus?: string;
+            publishStatus?: PublishStatus;
             sort?: number;
 
             // Type

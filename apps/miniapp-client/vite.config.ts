@@ -98,6 +98,7 @@ export default defineConfig(({ command, mode }) => {
       // 若存在改变 pages.json 的插件，请将 UniKuRoot 放置其后
       UniKuRoot({
         excludePages: ['**/components/**/**.*', '**/sections/**/**.*'],
+        rootFileName: 'KuRoot',
       }),
       Uni(),
       {
@@ -177,13 +178,13 @@ export default defineConfig(({ command, mode }) => {
       // 仅 H5 端生效，其他端不生效（其他端走build，不走devServer)
       proxy: JSON.parse(VITE_APP_PROXY_ENABLE)
         ? {
-            [VITE_APP_PROXY_PREFIX]: {
-              target: VITE_SERVER_BASEURL,
-              changeOrigin: true,
-              // 后端有/api前缀则不做处理，没有则需要去掉
-              rewrite: path => path.replace(new RegExp(`^${VITE_APP_PROXY_PREFIX}`), ''),
-            },
-          }
+          [VITE_APP_PROXY_PREFIX]: {
+            target: VITE_SERVER_BASEURL,
+            changeOrigin: true,
+            // 后端有/api前缀则不做处理，没有则需要去掉
+            rewrite: path => path.replace(new RegExp(`^${VITE_APP_PROXY_PREFIX}`), ''),
+          },
+        }
         : undefined,
     },
     esbuild: {

@@ -134,6 +134,14 @@ export default defineManifestConfig({
     // styleIsolation: 'shared',
     usingComponents: true,
     // __usePrivacyCheck__: true,
+    // 位置权限声明
+    permission: {
+      'scope.userLocation': {
+        desc: '你的位置信息将用于小程序定位，为您匹配附近的服务商家',
+      },
+    },
+    // 隐私接口声明 - 根据微信小程序敏感接口配置规范，必须声明此字段
+    requiredPrivateInfos: ['getLocation'],
   },
   'mp-alipay': {
     usingComponents: true,

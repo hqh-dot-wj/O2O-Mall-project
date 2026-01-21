@@ -1,14 +1,41 @@
 import { Module, Global } from '@nestjs/common';
 import { ClientAuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { ClientProductModule } from './product/product.module';
+import { ClientLocationModule } from './location/location.module';
+import { ClientCartModule } from './cart/cart.module';
+import { ClientOrderModule } from './order/order.module';
+import { AddressModule } from './address/address.module';
+import { ServiceSlotModule } from './service/service-slot.module';
+import { PaymentModule } from './payment/payment.module';
+import { ClientFinanceModule } from './finance/client-finance.module';
 
 @Module({
     imports: [
         ClientAuthModule,
-        UserModule
+        UserModule,
+        ClientProductModule,
+        ClientLocationModule,
+        ClientCartModule,
+        ClientOrderModule,
+        AddressModule,
+        ServiceSlotModule,
+        PaymentModule,
+        ClientFinanceModule,
     ],
     controllers: [],
     providers: [],
-    exports: [ClientAuthModule]
+    exports: [
+        ClientAuthModule,
+        ClientProductModule,
+        ClientLocationModule,
+        ClientCartModule,
+        ClientOrderModule,
+        AddressModule,
+        ServiceSlotModule,
+        PaymentModule,
+    ]
 })
 export class ClientModule { }
+
+

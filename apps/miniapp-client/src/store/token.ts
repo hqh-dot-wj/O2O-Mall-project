@@ -11,10 +11,11 @@ import {
   register as _register,
   wxLogin as _wxLogin,
   mobileLogin as _mobileLogin,
+  wxRegister as _wxRegister,
   getWxCode,
 } from '@/api/login'
 import type { IRegisterForm } from '@/api/login'
-import type { IRegisterMobileParams, ISingleTokenRes } from '@/api/types/login'
+import type { IRegisterMobileParams, ISingleTokenRes, IWxRegisterParams } from '@/api/types/login'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
@@ -243,6 +244,27 @@ export const useTokenStore = defineStore(
       }
     }
 
+    /**
+     * 微信注册 (无需手机号, chooseAvatar + nickname)
+     */
+    const wxRegister = async (params: IWxRegisterParams) => {
+      try {
+        const res = await _wxRegister(params)
+        console.log('微信注册-res:', res)
+        const authRes: IAuthLoginRes = {
+          ...res,
+          expiresIn: 60 * 60 * 24 * 7
+        }
+        await _postLogin(authRes)
+        return authRes
+      } catch (error) {
+        console.error('微信注册失败:', error)
+        throw error
+      } finally {
+        updateNowTime()
+      }
+    }
+
 
     /**
      * 退出登录 并 删除用户信息
@@ -365,11 +387,11 @@ export const useTokenStore = defineStore(
     }
 
     return {
-      // 核心API方法
       login,
       register,
       wxLogin,
       mobileLogin,
+      wxRegister,
       logout,
 
       // 认证状态判断（最常用的）

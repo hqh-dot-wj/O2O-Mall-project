@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/module/common/redis/redis.service';
-import { CheckLoginDto, RegisterMobileDto } from './dto/auth.dto';
+import { CheckLoginDto, RegisterDto, BindPhoneDto } from './dto/auth.dto';
 import { SocialPlatform, MemberStatus } from '@prisma/client';
 import { GenerateUUID } from 'src/common/utils';
 import { CacheEnum } from 'src/common/enum';
@@ -12,6 +10,7 @@ import { LOGIN_TOKEN_EXPIRESIN } from 'src/common/constant';
 import { Result } from 'src/common/response';
 import { WechatService } from '../common/service/wechat.service';
 import { BusinessException } from 'src/common/exceptions';
+import { ResponseCode } from 'src/common/response/response.interface';
 
 @Injectable()
 export class AuthService {
@@ -56,107 +55,204 @@ export class AuthService {
             });
         }
 
-        // 4. 未注册 -> 返回 sessionKey (给前端备用，虽然新版手机号接口不太需要)
-        // 注意：不要把 sessionKey 暴露给前端是最佳实践，但如果是为了兼容旧版获取手机号，可能需要。
-        // 这里我们主要返回 isRegistered: false
+        // 4. 未注册 -> 返回 isRegistered: false
         return Result.ok({
             isRegistered: false,
-            // sessionKey: wxRes.data.session_key 
         });
     }
 
     /**
-     * 阶段三：手机号一键注册
+     * 简化注册：仅需昵称头像 + referrerId（无需手机号）
      */
-    async registerMobile(dto: RegisterMobileDto) {
-        // 1. 再次换取 OpenID (确保 Session 最新，也可以用 checkLogin 缓存的 session，这里简化为重新换取)
+    async register(dto: RegisterDto) {
+        // 1. 换取 OpenID
         const wxRes = await this.wechatService.code2Session(dto.loginCode);
         BusinessException.throwIf(!wxRes.success, wxRes.msg);
 
         const { openid, unionid, session_key } = wxRes.data;
 
-        // 2. 解密/获取手机号
-        const phone = await this.wechatService.getPhoneNumber(dto.phoneCode);
-        BusinessException.throwIf(!phone, '获取手机号失败');
+        // 2. 检查是否已注册
+        const existingSocial = await this.prisma.sysSocialUser.findFirst({
+            where: { platform: SocialPlatform.MP_MALL, openid },
+            include: { member: true },
+        });
 
-        // 3. 开启事务处理注册逻辑
-        let finalMember = null;
-        try {
-            finalMember = await this.prisma.$transaction(async (tx) => {
-                // A. 查手机号是否已存在 (Member表)
-                let member = await tx.umsMember.findUnique({
-                    where: { mobile: phone }
-                });
-
-                if (member) {
-                    // 情况 A: 手机号已存在 (老用户) -> 仅绑定社交账号
-                    if (member.status === MemberStatus.DISABLED) {
-                        throw new Error('账号已禁用，请联系客服'); // 事务内抛错回滚
-                    }
-                } else {
-                    // 情况 B: 纯新用户 -> 创建 Member
-                    // 校验租户
-                    let targetTenantId = '000000';
-                    if (dto.tenantId) {
-                        const t = await tx.sysTenant.findUnique({ where: { tenantId: dto.tenantId } });
-                        if (t) targetTenantId = dto.tenantId;
-                    }
-
-                    member = await tx.umsMember.create({
-                        data: {
-                            tenantId: targetTenantId,
-                            mobile: phone,
-                            status: MemberStatus.NORMAL,
-                            nickname: dto.userInfo?.nickName || `微信用户_${phone.slice(-4)}`,
-                            avatar: dto.userInfo?.avatarUrl || '',
-                            referrerId: dto.referrerId || null,
-                        }
-                    });
-                }
-
-                // 绑定社交账号 (如果还没有绑定该OpenID)
-                // 先查一下防止重复绑定报错
-                const existingSocial = await tx.sysSocialUser.findFirst({
-                    where: { platform: SocialPlatform.MP_MALL, openid: openid }
-                });
-
-                if (!existingSocial) {
-                    await tx.sysSocialUser.create({
-                        data: {
-                            memberId: member.memberId,
-                            platform: SocialPlatform.MP_MALL,
-                            openid: openid,
-                            unionid: unionid,
-                            sessionKey: session_key,
-                            nickname: dto.userInfo?.nickName,
-                            avatar: dto.userInfo?.avatarUrl,
-                        }
-                    });
-                } else {
-                    // 如果已存在关联，但memberId不一致(理论上不应该发生，除非脏数据)，需要处理
-                    // 这里简单更新下 sessionKey
-                    await tx.sysSocialUser.update({
-                        where: { socialId: existingSocial.socialId },
-                        data: { sessionKey: session_key }
-                    });
-                }
-
-                return member;
+        if (existingSocial?.member) {
+            // 已注册，检查状态后直接返回 token
+            BusinessException.throwIf(
+                existingSocial.member.status === MemberStatus.DISABLED,
+                '账号已禁用，请联系客服'
+            );
+            const token = await this.genToken(existingSocial.member);
+            return Result.ok({
+                token,
+                userInfo: existingSocial.member,
+                isNew: false,
             });
-        } catch (e: any) {
-            // 如果是事务内主动抛出的业务错误，直接往上抛 let Exception Filter handle it
-            // 这里为了 unified catch, convert error -> BusinessException
-            throw new BusinessException(e.message || '注册事务失败');
         }
 
-        // 4. 发 Token
-        const token = await this.genToken(finalMember);
+        // 3. 新用户注册（无需手机号）
+        const member = await this.prisma.$transaction(async (tx) => {
+            // 校验租户
+            let targetTenantId = '000000';
+            if (dto.tenantId) {
+                const t = await tx.sysTenant.findUnique({ where: { tenantId: dto.tenantId } });
+                if (t) targetTenantId = dto.tenantId;
+            }
+
+            const newMember = await tx.umsMember.create({
+                data: {
+                    tenantId: targetTenantId,
+                    mobile: null, // 手机号可为空，后续绑定
+                    status: MemberStatus.NORMAL,
+                    nickname: dto.userInfo?.nickName || `微信用户_${openid.slice(-6)}`,
+                    avatar: dto.userInfo?.avatarUrl || '',
+                    referrerId: dto.referrerId || null,
+                }
+            });
+
+            await tx.sysSocialUser.create({
+                data: {
+                    memberId: newMember.memberId,
+                    platform: SocialPlatform.MP_MALL,
+                    openid,
+                    unionid,
+                    sessionKey: session_key,
+                    nickname: dto.userInfo?.nickName,
+                    avatar: dto.userInfo?.avatarUrl,
+                }
+            });
+
+            return newMember;
+        });
+
+        const token = await this.genToken(member);
         return Result.ok({
             token,
-            userInfo: finalMember,
+            userInfo: member,
+            isNew: true,
         });
     }
 
+    /**
+     * 绑定手机号
+     */
+    async bindPhone(memberId: string, dto: BindPhoneDto) {
+        // 1. 获取手机号
+        const phone = await this.wechatService.getPhoneNumber(dto.phoneCode);
+        BusinessException.throwIf(!phone, '获取手机号失败');
+
+        // 2. 检查手机号是否已被其他用户绑定
+        const existingMember = await this.prisma.umsMember.findUnique({
+            where: { mobile: phone }
+        });
+
+        if (existingMember && existingMember.memberId !== memberId) {
+            throw new BusinessException(ResponseCode.BUSINESS_ERROR, '该手机号已被其他账号绑定');
+        }
+
+        // 3. 更新当前用户的手机号
+        const updatedMember = await this.prisma.umsMember.update({
+            where: { memberId },
+            data: { mobile: phone }
+        });
+
+        return Result.ok({
+            userInfo: updatedMember,
+            message: '手机号绑定成功',
+        });
+    }
+
+    /**
+     * 手机号一键登录/注册 (兼容旧前端调用)
+     * 流程: 换OpenID -> 已注册直接登录 / 未注册则创建账号并绑定手机号
+     */
+    async registerMobile(dto: RegisterDto & { phoneCode?: string }) {
+        // 1. 换取 OpenID
+        const wxRes = await this.wechatService.code2Session(dto.loginCode);
+        BusinessException.throwIf(!wxRes.success, wxRes.msg);
+
+        const { openid, unionid, session_key } = wxRes.data;
+
+        // 2. 检查是否已注册
+        const existingSocial = await this.prisma.sysSocialUser.findFirst({
+            where: { platform: SocialPlatform.MP_MALL, openid },
+            include: { member: true },
+        });
+
+        if (existingSocial?.member) {
+            // 已注册，检查状态后直接返回 token
+            BusinessException.throwIf(
+                existingSocial.member.status === MemberStatus.DISABLED,
+                '账号已禁用，请联系客服'
+            );
+
+            // 如果提供了 phoneCode 且用户未绑定手机号，则自动绑定
+            if (dto.phoneCode && !existingSocial.member.mobile) {
+                const phone = await this.wechatService.getPhoneNumber(dto.phoneCode);
+                if (phone) {
+                    await this.prisma.umsMember.update({
+                        where: { memberId: existingSocial.member.memberId },
+                        data: { mobile: phone }
+                    });
+                }
+            }
+
+            const token = await this.genToken(existingSocial.member);
+            return Result.ok({
+                token,
+                userInfo: existingSocial.member,
+                isNew: false,
+            });
+        }
+
+        // 3. 新用户注册 + 绑定手机号
+        let phone: string | null = null;
+        if (dto.phoneCode) {
+            phone = await this.wechatService.getPhoneNumber(dto.phoneCode);
+        }
+
+        const member = await this.prisma.$transaction(async (tx) => {
+            // 校验租户
+            let targetTenantId = '000000';
+            if (dto.tenantId) {
+                const t = await tx.sysTenant.findUnique({ where: { tenantId: dto.tenantId } });
+                if (t) targetTenantId = dto.tenantId;
+            }
+
+            const newMember = await tx.umsMember.create({
+                data: {
+                    tenantId: targetTenantId,
+                    mobile: phone, // 直接绑定手机号
+                    status: MemberStatus.NORMAL,
+                    nickname: dto.userInfo?.nickName || `微信用户_${openid.slice(-6)}`,
+                    avatar: dto.userInfo?.avatarUrl || '',
+                    referrerId: dto.referrerId || null,
+                }
+            });
+
+            await tx.sysSocialUser.create({
+                data: {
+                    memberId: newMember.memberId,
+                    platform: SocialPlatform.MP_MALL,
+                    openid,
+                    unionid,
+                    sessionKey: session_key,
+                    nickname: dto.userInfo?.nickName,
+                    avatar: dto.userInfo?.avatarUrl,
+                }
+            });
+
+            return newMember;
+        });
+
+        const token = await this.genToken(member);
+        return Result.ok({
+            token,
+            userInfo: member,
+            isNew: true,
+        });
+    }
 
     /**
      * 退出登录

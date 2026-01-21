@@ -13,6 +13,13 @@ export function createApp() {
   app.use(routeInterceptor)
   app.use(requestInterceptor)
 
+  // 全局 mixin：每个页面 onShow 时触发事件，用于用户协议弹窗检测
+  app.mixin({
+    onShow() {
+      uni.$emit('page-show')
+    }
+  })
+
   return {
     app,
   }

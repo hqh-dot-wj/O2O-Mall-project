@@ -204,7 +204,9 @@ const columns = computed(() => {
     const cols: any[] = [];
     // 1. 动态生成规格列
     // 根据 specDef 中的规格名生成列
-    const specKeys = props.formModel.specDef.map(d => d.name);
+    const rawSpecDef = props.formModel.specDef;
+    const specList = Array.isArray(rawSpecDef) ? rawSpecDef : [];
+    const specKeys = specList.map(d => d.name);
     
     specKeys.forEach(key => {
         cols.push({

@@ -1,4 +1,4 @@
-import type { IAuthLoginRes, ICaptcha, ICheckLoginRes, IDoubleTokenRes, IRegisterMobileParams, IUpdateInfo, IUpdatePassword, IUserInfoRes } from './types/login'
+import type { IAuthLoginRes, ICaptcha, ICheckLoginRes, IDoubleTokenRes, IRegisterMobileParams, IUpdateInfo, IUpdatePassword, IUserInfoRes, IWxRegisterParams } from './types/login'
 import { http } from '@/http/http'
 import { Crypto } from '@/utils/crypto'
 
@@ -112,7 +112,7 @@ export function getWxCode() {
     uni.login({
       provider: 'weixin',
       success: res => resolve(res),
-      fail: err => reject(new Error(err)),
+      fail: err => reject(err),
     })
   })
 }
@@ -134,4 +134,11 @@ export function wxLogin(data: { code: string }) {
  */
 export function mobileLogin(data: IRegisterMobileParams) {
   return http.post<IAuthLoginRes>('/client/auth/register-mobile', data)
+}
+
+/**
+ * 微信注册 (无需手机号, chooseAvatar + nickname)
+ */
+export function wxRegister(data: IWxRegisterParams) {
+  return http.post<IAuthLoginRes>('/client/auth/register', data)
 }

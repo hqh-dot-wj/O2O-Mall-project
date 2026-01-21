@@ -25,6 +25,11 @@ import { ClientModule } from './module/client/client.module';
 import { LbsModule } from './module/lbs/lbs.module';
 import { StoreModule } from './module/store/store.module';
 import { PmsModule } from './module/pms/pms.module';
+import { FinanceModule } from './module/finance/finance.module';
+import { StoreOrderModule } from './module/store/order/store-order.module';
+import { StoreFinanceModule } from './module/store/finance/store-finance.module';
+import { ClientFinanceModule } from './module/client/finance/client-finance.module';
+import { RiskModule } from './module/risk/risk.module';
 
 @Global()
 @Module({
@@ -79,7 +84,12 @@ import { PmsModule } from './module/pms/pms.module';
     ClientModule,
     LbsModule,
     StoreModule,
+    StoreOrderModule,
+    StoreFinanceModule,
+    ClientFinanceModule,
+    RiskModule,
     PmsModule,
+    FinanceModule,
   ],
   providers: [
     // 解密拦截器 (解密前端加密请求)

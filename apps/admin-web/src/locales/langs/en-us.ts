@@ -319,6 +319,7 @@ const local: App.I18n.Schema = {
     exception_403: '403',
     exception_404: '404',
     exception_500: '500',
+    store_marketing_distribution: 'Distribution Config',
   },
   menu: {
     system_tenant: 'Tenant Management',
@@ -1266,6 +1267,7 @@ const local: App.I18n.Schema = {
       userInfo: 'User Info',
       tenant: 'Tenant',
       referrer: 'Referrer',
+      indirectReferrer: 'Indirect Referrer',
       status: 'Status',
       registerTime: 'Register Time',
       editReferrer: 'Edit Referrer',
@@ -1390,6 +1392,17 @@ const local: App.I18n.Schema = {
     },
     store_marketing: {
       title: 'Marketing Activity',
+    },
+    store_distribution: {
+      title: 'Distribution Config',
+      level1Rate: 'L1 Commission Rate (Direct)',
+      level2Rate: 'L2 Commission Rate (Indirect)',
+      enableLV0: 'Enable LV0 Distribution',
+      lv0Policy: 'LV0 Fund Logic',
+      lv0PolicyDesc: 'LV0 earnings will go to point account, only for deduction or upgrades.',
+      lv1PolicyDesc: 'LV1+ earnings will go to cash balance, withdrawable.',
+      historyTitle: 'Config History',
+      graphTitle: 'Current Model (Model B)',
     },
   },
   form: {

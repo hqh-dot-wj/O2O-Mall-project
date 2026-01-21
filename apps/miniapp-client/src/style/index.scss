@@ -16,6 +16,82 @@ page {
 
   // 修改按钮背景色
   // --wot-button-primary-bg-color: green;
+
+  // ========== Tabbar 布局变量 ==========
+  // 自定义 tabbar 高度（与 tabbar/config.ts 中的 height 保持一致）
+  --tabbar-height: 50px;
+  // 安全区域底部间距（适配 iPhone X 等有底部安全区的设备）
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  // tabbar 总高度 = tabbar高度 + 安全区域
+  --tabbar-total-height: calc(var(--tabbar-height) + var(--safe-bottom));
+}
+
+// ========== Tabbar 布局工具类 ==========
+
+/**
+ * 页面容器类 - 用于有 tabbar 的页面
+ * 使用方式：<view class="page-with-tabbar">页面内容</view>
+ * 特性：
+ * - 使用 min-height 而非 height，允许内容自然撑开
+ * - 预留底部 tabbar 空间，避免内容被遮挡
+ */
+.page-with-tabbar {
+  min-height: 100vh;
+  padding-bottom: var(--tabbar-total-height);
+  box-sizing: border-box;
+}
+
+/**
+ * 固定底部元素类 - 定位在 tabbar 上方
+ * 使用方式：<view class="fixed-bottom">结算栏等</view>
+ * 特性：
+ * - 固定在 tabbar 上方
+ * - 自动适配安全区域
+ */
+.fixed-bottom {
+  position: fixed;
+  bottom: var(--tabbar-total-height);
+  left: 0;
+  right: 0;
+  z-index: 99;
+}
+
+/**
+ * 底部 padding 工具类 - 为 tabbar 预留空间
+ * 使用方式：<view class="pb-tabbar">内容</view>
+ */
+.pb-tabbar {
+  padding-bottom: var(--tabbar-total-height);
+}
+
+/**
+ * 底部 margin 工具类 - 为 tabbar 预留空间
+ * 使用方式：<view class="mb-tabbar">内容</view>
+ */
+.mb-tabbar {
+  margin-bottom: var(--tabbar-total-height);
+}
+
+/**
+ * 页面容器类（无 tabbar 版本）
+ * 用于非 tabbar 页面，但需要处理安全区域
+ */
+.page-full {
+  min-height: 100vh;
+  padding-bottom: var(--safe-bottom);
+  box-sizing: border-box;
+}
+
+/**
+ * 固定底部元素类（无 tabbar 版本）
+ * 用于非 tabbar 页面的底部固定元素
+ */
+.fixed-bottom-safe {
+  position: fixed;
+  bottom: var(--safe-bottom);
+  left: 0;
+  right: 0;
+  z-index: 99;
 }
 
 /*

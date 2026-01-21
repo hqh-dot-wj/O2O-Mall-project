@@ -1,7 +1,7 @@
 import { request } from '@/service/request';
 
 /** Tenant Product List */
-export function fetchGetStoreProductList(data: Pick<Api.Common.PaginatingCommonParams, 'pageNum' | 'pageSize'>) {
+export function fetchGetStoreProductList(data: Api.Store.ListStoreProductParams) {
     return request<Api.Store.TenantProductList>({
         url: '/store/product/list',
         method: 'post',
@@ -18,10 +18,19 @@ export function fetchImportProduct(data: Api.Store.ProductImportParams) {
     });
 }
 
-/** Update Product Price */
+/** Update Product Price & Config */
 export function fetchUpdateStoreProductPrice(data: Api.Store.ProductPriceUpdateParams) {
     return request<boolean>({
-        url: '/store/product/price',
+        url: '/store/product/update-price',
+        method: 'post',
+        data
+    });
+}
+
+/** Update Product SPU Base Info */
+export function fetchUpdateStoreProductBase(data: Api.Store.ProductBaseUpdateParams) {
+    return request<boolean>({
+        url: '/store/product/update-base',
         method: 'post',
         data
     });
@@ -33,5 +42,13 @@ export function fetchGetProductMarketList(data: Api.Store.MarketSearchParams) {
         url: '/store/market/list',
         method: 'post',
         data,
+    });
+}
+
+/** Get Product Market Detail */
+export function fetchGetMarketProductDetail(productId: string) {
+    return request<Api.Store.MarketProduct>({
+        url: `/store/market/detail/${productId}`,
+        method: 'get',
     });
 }

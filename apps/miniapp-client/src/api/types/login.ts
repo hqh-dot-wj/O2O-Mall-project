@@ -119,3 +119,16 @@ export interface IRegisterMobileParams {
   }
 }
 
+/**
+ * 微信注册参数 (无需手机号)
+ */
+export interface IWxRegisterParams {
+  loginCode: string
+  tenantId?: string
+  referrerId?: string
+  userInfo?: {
+    nickName: string
+    avatarUrl: string
+  }
+}
+

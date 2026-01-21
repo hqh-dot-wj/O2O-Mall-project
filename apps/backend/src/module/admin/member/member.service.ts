@@ -61,25 +61,41 @@ export class MemberService {
         // Bulk fetch Referrers
         const referrers = await this.prisma.umsMember.findMany({
             where: { memberId: { in: referrerIds } },
-            select: { memberId: true, nickname: true, mobile: true },
+            select: { memberId: true, nickname: true, mobile: true, referrerId: true },
         });
         const referrerMap = new Map(referrers.map((r) => [r.memberId, r]));
+
+        // Collect Indirect ReferrerIDs
+        const indirectReferrerIds = [...new Set(referrers.map((item) => item.referrerId).filter(Boolean))];
+
+        // Bulk fetch Indirect Referrers
+        const indirectReferrers = await this.prisma.umsMember.findMany({
+            where: { memberId: { in: indirectReferrerIds } },
+            select: { memberId: true, nickname: true, mobile: true },
+        });
+        const indirectReferrerMap = new Map(indirectReferrers.map((r) => [r.memberId, r]));
 
         // Map to VO
         const rows: MemberVo[] = list.map((item) => {
             const ref = item.referrerId ? referrerMap.get(item.referrerId) : null;
+            const indirectRefId = ref?.referrerId;
+            const indirectRef = indirectRefId ? indirectReferrerMap.get(indirectRefId) : null;
+
             return {
                 memberId: item.memberId,
                 nickname: item.nickname,
                 avatar: item.avatar,
                 mobile: item.mobile,
-                status: item.status === 'NORMAL' ? '1' : '2', // Map Enum: NORMAL->1, DISABLED->2
+                status: item.status === 'NORMAL' ? '0' : '1', // Map Enum: NORMAL->0 (enabled), DISABLED->1 (disabled)
                 createTime: item.createTime,
                 tenantId: item.tenantId,
                 tenantName: tenantMap.get(item.tenantId) || 'Platform',
-                referrerId: item.referrerId,
+                referrerId: item.referrerId || undefined,
                 referrerName: ref?.nickname,
                 referrerMobile: ref?.mobile,
+                indirectReferrerId: indirectRefId || undefined,
+                indirectReferrerName: indirectRef?.nickname,
+                indirectReferrerMobile: indirectRef?.mobile,
                 balance: 0,
                 commission: 0,
                 orderCount: 0
@@ -133,7 +149,7 @@ export class MemberService {
     async updateStatus(memberId: string, status: string) {
         await this.prisma.umsMember.update({
             where: { memberId },
-            data: { status: status === '1' ? 'NORMAL' : 'DISABLED' },
+            data: { status: status === '0' ? 'NORMAL' : 'DISABLED' },
         });
         return Result.ok();
     }

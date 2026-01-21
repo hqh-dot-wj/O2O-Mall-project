@@ -7,7 +7,7 @@ import { useAppStore } from '@/store/modules/app';
 import { useThemeStore } from '@/store/modules/theme';
 import { $t } from '@/locales';
 
-type TableData = NaiveUI.TableData;
+type TableData = Record<string, any>;
 type GetTableData<A extends NaiveUI.TableApiFn> = NaiveUI.GetTableData<A>;
 type TableColumn<T> = NaiveUI.TableColumn<T>;
 
@@ -148,8 +148,8 @@ export function useTable<A extends NaiveUI.TableApiFn>(config: NaiveUI.NaiveTabl
     },
     ...(showTotal
       ? {
-          prefix: (page) => $t('datatable.itemCount', { total: page.itemCount }),
-        }
+        prefix: (page) => $t('datatable.itemCount', { total: page.itemCount }),
+      }
       : {}),
   });
 
@@ -246,6 +246,13 @@ export function useTableOperate<T extends TableData = TableData>(data: Ref<T[]>,
     openDrawer();
   }
 
+  function edit(item: T) {
+    operateType.value = 'edit';
+    editingData.value = jsonClone(item);
+
+    openDrawer();
+  }
+
   /** the checked row keys of table */
   const checkedRowKeys = ref<CommonType.IdType[]>([]);
 
@@ -273,6 +280,7 @@ export function useTableOperate<T extends TableData = TableData>(data: Ref<T[]>,
     handleAdd,
     editingData,
     handleEdit,
+    edit,
     checkedRowKeys,
     onBatchDeleted,
     onDeleted,

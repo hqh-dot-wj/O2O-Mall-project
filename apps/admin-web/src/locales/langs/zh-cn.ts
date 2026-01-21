@@ -316,6 +316,17 @@ const local: App.I18n.Schema = {
     exception_403: '403',
     exception_404: '404',
     exception_500: '500',
+    store_marketing_distribution: '分销规则配置',
+    // 订单中心
+    order: '订单中心',
+    order_list: '订单列表',
+    order_detail: '订单详情',
+    // 财务中心
+    finance: '财务中心',
+    finance_dashboard: '资金看板',
+    finance_commission: '佣金明细',
+    finance_withdrawal: '提现审核',
+    finance_ledger: '门店流水',
   },
   menu: {
     system_tenant: '租户管理',
@@ -1261,6 +1272,7 @@ const local: App.I18n.Schema = {
       userInfo: '用户信息',
       tenant: '租户',
       referrer: '推荐人',
+      indirectReferrer: '间接推荐人',
       status: '状态',
       registerTime: '注册时间',
       editReferrer: '编辑推荐人',
@@ -1385,6 +1397,17 @@ const local: App.I18n.Schema = {
     },
     store_marketing: {
       title: '营销活动',
+    },
+    store_distribution: {
+      title: '分销规则配置',
+      level1Rate: '一级分佣比例 (直推)',
+      level2Rate: '二级分佣比例 (间推)',
+      enableLV0: '允许普通用户分销',
+      lv0Policy: '普通用户资金流向',
+      lv0PolicyDesc: '普通用户 (LV0) 产生的收益将进入积分账户，仅限下单抵扣或购买升级包。',
+      lv1PolicyDesc: '正式分销员 (LV1+) 产生的收益将进入现金账户，支持提现。',
+      historyTitle: '规则变更历史',
+      graphTitle: '当前分佣模型 (Model B)',
     },
   },
   form: {

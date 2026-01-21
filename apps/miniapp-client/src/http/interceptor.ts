@@ -1,5 +1,6 @@
 import type { CustomRequestOptions } from '@/http/types'
 import { useTokenStore } from '@/store'
+import { useLocationStore } from '@/store/location'
 import { getEnvBaseUrl } from '@/utils'
 import { stringifyQuery } from './tools/queryString'
 
@@ -44,14 +45,19 @@ const httpInterceptor = {
     }
     // 1. 请求超时
     options.timeout = 60000 // 60s
-    // 2. （可选）添加小程序端请求头标识
-    options.header = {
-      ...options.header,
-    }
-    // 3. 添加 token 请求头标识
+
+    // 2. 添加请求头
     const tokenStore = useTokenStore()
+    const locationStore = useLocationStore()
     const token = tokenStore.updateNowTime().validToken
 
+    options.header = {
+      ...options.header,
+      // 租户ID (复用后端 TenantMiddleware)
+      'tenant-id': locationStore.currentTenantId || '',
+    }
+
+    // 3. 添加 token 请求头标识
     if (token) {
       options.header.Authorization = `Bearer ${token}`
     }

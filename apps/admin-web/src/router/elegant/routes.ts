@@ -40,6 +40,55 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'finance',
+    path: '/finance',
+    component: 'layout.base',
+    meta: {
+      title: 'finance',
+      i18nKey: 'route.finance',
+      icon: 'mdi:currency-usd',
+      order: 5
+    },
+    children: [
+      {
+        name: 'finance_commission',
+        path: '/finance/commission',
+        component: 'view.finance_commission',
+        meta: {
+          title: 'finance_commission',
+          i18nKey: 'route.finance_commission'
+        }
+      },
+      {
+        name: 'finance_dashboard',
+        path: '/finance/dashboard',
+        component: 'view.finance_dashboard',
+        meta: {
+          title: 'finance_dashboard',
+          i18nKey: 'route.finance_dashboard'
+        }
+      },
+      {
+        name: 'finance_ledger',
+        path: '/finance/ledger',
+        component: 'view.finance_ledger',
+        meta: {
+          title: 'finance_ledger',
+          i18nKey: 'route.finance_ledger'
+        }
+      },
+      {
+        name: 'finance_withdrawal',
+        path: '/finance/withdrawal',
+        component: 'view.finance_withdrawal',
+        meta: {
+          title: 'finance_withdrawal',
+          i18nKey: 'route.finance_withdrawal'
+        }
+      }
+    ]
+  },
+  {
     name: 'home',
     path: '/home',
     component: 'layout.base$view.home',
@@ -170,6 +219,38 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'order',
+    path: '/order',
+    component: 'layout.base',
+    meta: {
+      title: 'order',
+      i18nKey: 'route.order',
+      icon: 'mdi:cart-outline',
+      order: 4
+    },
+    children: [
+      {
+        name: 'order_detail',
+        path: '/order/detail',
+        component: 'view.order_detail',
+        meta: {
+          title: 'order_detail',
+          i18nKey: 'route.order_detail',
+          hideInMenu: true
+        }
+      },
+      {
+        name: 'order_list',
+        path: '/order/list',
+        component: 'view.order_list',
+        meta: {
+          title: 'order_list',
+          i18nKey: 'route.order_list'
+        }
+      }
+    ]
+  },
+  {
     name: 'pms',
     path: '/pms',
     component: 'layout.base',
@@ -254,7 +335,18 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'store_marketing',
           i18nKey: 'route.store_marketing'
-        }
+        },
+        children: [
+          {
+            name: 'store_marketing_distribution',
+            path: '/store/marketing/distribution',
+            component: 'view.store_marketing_distribution',
+            meta: {
+              title: 'store_marketing_distribution',
+              i18nKey: 'route.store_marketing_distribution'
+            }
+          }
+        ]
       },
       {
         name: 'store_product',

@@ -111,17 +111,16 @@ async function initData() {
         const { data } = await fetchGetGlobalProduct(productId.value);
         if (data) {
             // Basic fields
-            // Ensure decimal to number
+            let specDef = typeof data.specDef === 'string' ? JSON.parse(data.specDef) : data.specDef;
+            if (!Array.isArray(specDef)) {
+                specDef = [];
+            }
             Object.assign(formModel, {
                  ...data,
-                 specDef: data.specDef || [], 
+                 specDef, 
                  mainImages: [], // This will be overwritten by albumPics below
                  albumPics: data.albumPics ? data.albumPics.split(',') : [],
             });
-            
-            // Fix field mismatches
-            // This line is now redundant if albumPics is handled in Object.assign above
-            // formModel.albumPics = data.mainImages || []; 
             
             // SKUs
             if (data.globalSkus) {

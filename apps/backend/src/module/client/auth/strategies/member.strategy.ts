@@ -25,6 +25,7 @@ export class MemberStrategy extends PassportStrategy(Strategy, 'member-jwt') {
         if (user.status === MemberStatus.DISABLED) {
             throw new UnauthorizedException('账号已禁用，请联系客服');
         }
-        return user;
+        // 确保 memberId 始终存在 (兼容 Redis 数据可能缺失的情况)
+        return { ...user, memberId: user.memberId || payload.memberId };
     }
 }

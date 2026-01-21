@@ -96,6 +96,34 @@ enum PublishStatus {
 }
 
 // ==========================================
+// 📌 财务系统枚举
+// ==========================================
+
+/// 交易类型
+enum TransType {
+  COMMISSION_IN // 佣金入账
+  WITHDRAW_OUT // 提现扣款
+  REFUND_DEDUCT // 退款倒扣
+  CONSUME_PAY // 余额支付
+  RECHARGE_IN // 充值(预留)
+}
+
+/// 佣金状态
+enum CommissionStatus {
+  FROZEN // 冻结中
+  SETTLED // 已结算
+  CANCELLED // 已取消
+}
+
+/// 提现状态
+enum WithdrawalStatus {
+  PENDING // 待审核
+  APPROVED // 已通过
+  REJECTED // 已驳回
+  FAILED // 打款失败
+}
+
+// ==========================================
 // 📌 商品类别与属性
 // ==========================================
 
@@ -326,6 +354,7 @@ model PmsTenantProduct {
 /// 门店 SKU 表 (真正的价格和库存都在这里)
 model PmsTenantSku {
   id              String       @id @default(uuid())
+  tenantId        String       @map("tenant_id") @db.VarChar(20)
   tenantProductId String       @map("tenant_prod_id")
   globalSkuId     String       @map("global_sku_id") // 对应哪个标准SKU
   globalSku       PmsGlobalSku @relation(fields: [globalSkuId], references: [skuId])
@@ -391,8 +420,14 @@ model UmsMember {
   children UmsMember[] @relation("Referral") // 我的下线
 
   socials         SysSocialUser[]
-  worker          SrvWorker? // 1:1 技师关联
+  workers         SrvWorker[] // 1:N 技师关联 (多租户兼职)
   sysRegionAgents SysRegionAgent[]
+  umsAddresses    UmsAddress[]
+
+  // --- 财务关联 ---
+  wallet      FinWallet?
+  commissions FinCommission[]
+  withdrawals FinWithdrawal[]
 
   @@index([mobile])
   @@index([referrerId])
@@ -421,6 +456,38 @@ model SysSocialUser {
   @@map("sys_social_user")
 }
 
+/// 用户收货地址表
+model UmsAddress {
+  id       String @id @default(uuid())
+  memberId String @map("member_id")
+
+  // 收货人信息
+  name  String @db.VarChar(50) // 收货人姓名
+  phone String @db.VarChar(20) // 联系电话
+
+  // 地址信息 (省市区 + 详细地址)
+  province String @db.VarChar(50) // 省
+  city     String @db.VarChar(50) // 市
+  district String @db.VarChar(50) // 区/县
+  detail   String @db.VarChar(500) // 详细地址
+
+  // LBS 定位信息 (可选，用于服务范围校验)
+  latitude  Float? // 纬度
+  longitude Float? // 经度
+
+  // 标识
+  isDefault Boolean @default(false) @map("is_default") // 是否默认地址
+  tag       String? @db.VarChar(20) // 标签: 家、公司、学校
+
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  member UmsMember @relation(fields: [memberId], references: [memberId])
+
+  @@index([memberId])
+  @@map("ums_address")
+}
+
 // ==========================================
 // 📌 劳动者/技师核心 (Service Worker)
 // ==========================================
@@ -428,7 +495,7 @@ model SysSocialUser {
 /// 劳动者主表 (高频访问核心表)
 model SrvWorker {
   workerId Int    @id @default(autoincrement()) @map("worker_id")
-  memberId String @unique @map("member_id") // 关联C端账号
+  memberId String @map("member_id") // 关联C端账号
   tenantId String @map("tenant_id") // 归属分公司
 
   // --- 核心展示 ---
@@ -469,6 +536,7 @@ model SrvWorker {
   works     SrvWorkerWork[]
   schedules SrvWorkerSchedule[] // 排班记录
 
+  @@unique([memberId, tenantId])
   @@index([tenantId, status]) // 租户筛选+状态筛选
   @@index([phone])
   @@map("srv_worker")
@@ -649,10 +717,11 @@ model SysTenantGeo {
 
 /// [新增] 区域代理商表 (O2O 分销)
 model SysRegionAgent {
-  agentId Int @id @default(autoincrement()) @map("agent_id")
+  agentId  Int    @id @default(autoincrement()) @map("agent_id")
+  tenantId String @map("tenant_id") @db.VarChar(20)
 
   // --- 1. 身份定义 ---
-  regionCode String @unique @map("region_code") // 独家盘口 "430103"
+  regionCode String @map("region_code") // 独家盘口 "430103"
   agentName  String @map("agent_name") // 代理商名称 (如: "长沙聚力有限公司" 或 "王总")
   phone      String @map("phone") // 联系电话 (用于通知)
 
@@ -682,6 +751,7 @@ model SysRegionAgent {
   // 关联 (可选)
   member UmsMember? @relation(fields: [memberId], references: [memberId])
 
+  @@unique([tenantId, regionCode])
   @@map("sys_region_agent")
 }
 
@@ -1321,4 +1391,284 @@ model SysUserRole {
   @@id([userId, roleId])
   @@index([roleId])
   @@map("sys_user_role")
+}
+
+// ==========================================
+// 📌 分销规则配置表 (租户级)
+// ==========================================
+
+model SysDistConfig {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @unique @map("tenant_id") @db.VarChar(20) // 每个租户一套规则
+  level1Rate Decimal  @default(0.60) @map("level1_rate") @db.Decimal(5, 2) // 一级分佣比 (直推)
+  level2Rate Decimal  @default(0.40) @map("level2_rate") @db.Decimal(5, 2) // 二级分佣比 (间推)
+  enableLV0  Boolean  @default(true) @map("enable_lv0") // 是否允许普通用户参与分销
+  createBy   String   @default("") @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+  updateBy   String   @default("") @map("update_by") @db.VarChar(64)
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@map("sys_dist_config")
+}
+
+// 分销规则变更历史 (审计日志)
+model SysDistConfigLog {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @map("tenant_id") @db.VarChar(20)
+  level1Rate Decimal  @map("level1_rate") @db.Decimal(5, 2)
+  level2Rate Decimal  @map("level2_rate") @db.Decimal(5, 2)
+  enableLV0  Boolean  @map("enable_lv0")
+  operator   String   @db.VarChar(64) // 操作人
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@index([tenantId, createTime])
+  @@map("sys_dist_config_log")
+}
+
+// ==========================================
+// 📌 OMS 订单管理模块
+// ==========================================
+
+enum OrderStatus {
+  PENDING_PAY @map("1") // 待支付
+  PAID        @map("2") // 已支付待发货/待服务
+  SHIPPED     @map("3") // 已发货/服务中
+  COMPLETED   @map("4") // 已完成
+  CANCELLED   @map("5") // 已取消
+  REFUNDED    @map("6") // 已退款
+}
+
+enum OrderType {
+  PRODUCT @map("1") // 实物订单
+  SERVICE @map("2") // 服务订单
+  MIXED   @map("3") // 混合订单
+}
+
+enum PayStatus {
+  UNPAID   @map("0") // 未支付
+  PAID     @map("1") // 已支付
+  REFUNDED @map("2") // 已退款
+}
+
+/// 购物车表
+model OmsCartItem {
+  id       String @id @default(uuid())
+  memberId String @map("member_id")
+  tenantId String @map("tenant_id")
+
+  productId String @map("product_id")
+  skuId     String @map("sku_id")
+  quantity  Int    @default(1)
+
+  // 快照信息 (防止商品下架后报错)
+  productName String  @map("product_name")
+  productImg  String  @map("product_img")
+  price       Decimal @db.Decimal(10, 2) // 加购时价格
+  specData    Json?   @map("spec_data") // {"颜色":"红色"}
+
+  // 归因信息
+  shareUserId String? @map("share_user_id")
+
+  // 服务类扩展
+  serviceDate DateTime? @map("service_date")
+
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@unique([memberId, tenantId, skuId])
+  @@index([memberId, tenantId])
+  @@map("oms_cart_item")
+}
+
+/// 订单主表
+model OmsOrder {
+  id      String @id @default(cuid())
+  orderSn String @unique @map("order_sn")
+
+  memberId String @map("member_id")
+  tenantId String @map("tenant_id")
+
+  orderType OrderType @map("order_type")
+
+  // 金额
+  totalAmount    Decimal @map("total_amount") @db.Decimal(10, 2)
+  freightAmount  Decimal @default(0) @map("freight_amount") @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  payAmount      Decimal @map("pay_amount") @db.Decimal(10, 2)
+
+  // 收货信息
+  receiverName    String? @map("receiver_name")
+  receiverPhone   String? @map("receiver_phone")
+  receiverAddress String? @map("receiver_address")
+  receiverLat     Float?  @map("receiver_lat")
+  receiverLng     Float?  @map("receiver_lng")
+
+  // 服务类专属
+  bookingTime   DateTime? @map("booking_time")
+  workerId      Int?      @map("worker_id")
+  serviceRemark String?   @map("service_remark")
+
+  // 分销归因
+  shareUserId String? @map("share_user_id")
+  referrerId  String? @map("referrer_id")
+
+  // 状态
+  status    OrderStatus @default(PENDING_PAY)
+  payStatus PayStatus   @default(UNPAID) @map("pay_status")
+
+  // 支付信息
+  payType       String?   @map("pay_type")
+  transactionId String?   @map("transaction_id")
+  payTime       DateTime? @map("pay_time")
+
+  // 时间戳
+  createTime DateTime  @default(now()) @map("create_time")
+  updateTime DateTime  @updatedAt @map("update_time")
+  deleteTime DateTime? @map("delete_time")
+
+  remark String? @db.VarChar(500)
+
+  items       OmsOrderItem[]
+  commissions FinCommission[]
+
+  @@index([memberId, status])
+  @@index([tenantId, createTime])
+  @@map("oms_order")
+}
+
+/// 订单明细表
+model OmsOrderItem {
+  id       Int     @id @default(autoincrement())
+  orderId  String  @map("order_id")
+  tenantId String? @map("tenant_id") @db.VarChar(20)
+
+  productId   String @map("product_id")
+  productName String @map("product_name")
+  productImg  String @map("product_img")
+
+  skuId    String @map("sku_id")
+  specData Json?  @map("spec_data")
+
+  price       Decimal @db.Decimal(10, 2)
+  quantity    Int
+  totalAmount Decimal @map("total_amount") @db.Decimal(10, 2)
+
+  order OmsOrder @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("oms_order_item")
+}
+
+// ==========================================
+// 📌 财务中心表
+// ==========================================
+
+/// 用户钱包表
+model FinWallet {
+  id       String @id @default(uuid())
+  memberId String @unique @map("member_id")
+  tenantId String @map("tenant_id")
+
+  // 三资产
+  balance     Decimal @default(0) @db.Decimal(12, 2) // 可用余额
+  frozen      Decimal @default(0) @db.Decimal(12, 2) // 冻结余额
+  totalIncome Decimal @default(0) @db.Decimal(12, 2) // 累计收益
+
+  // 安全
+  payPassword String? @map("pay_password")
+  version     Int     @default(0) // 乐观锁
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  member       UmsMember        @relation(fields: [memberId], references: [memberId])
+  transactions FinTransaction[]
+
+  @@index([tenantId, memberId])
+  @@map("fin_wallet")
+}
+
+/// 钱包流水表 (不可篡改的账本)
+model FinTransaction {
+  id       BigInt @id @default(autoincrement())
+  walletId String @map("wallet_id")
+  tenantId String @map("tenant_id")
+
+  type         TransType
+  amount       Decimal   @db.Decimal(12, 2) // 可正可负
+  balanceAfter Decimal   @db.Decimal(12, 2) // 交易后余额快照
+
+  relatedId String  @map("related_id") // 关联业务ID
+  remark    String? @db.VarChar(200)
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  wallet FinWallet @relation(fields: [walletId], references: [id])
+
+  @@index([walletId, createTime])
+  @@index([tenantId, type])
+  @@map("fin_transaction")
+}
+
+/// 佣金记录表 (在途资金)
+/// 说明: 佣金分配比例从 SysDistConfig 表按 tenantId 获取
+/// 计算流程: order.tenantId → SysDistConfig.tenantId → level1Rate/level2Rate
+model FinCommission {
+  id       BigInt @id @default(autoincrement())
+  orderId  String @map("order_id")
+  tenantId String @map("tenant_id")
+
+  beneficiaryId String  @map("beneficiary_id") // 受益人
+  level         Int // 1=一级(直推), 2=二级(间推)
+  amount        Decimal @db.Decimal(10, 2)
+
+  // 分佣比例快照 (记录当时的比例，防止配置修改后对账不准)
+  rateSnapshot Decimal @default(0) @map("rate_snapshot") @db.Decimal(5, 2)
+
+  status CommissionStatus @default(FROZEN)
+
+  createTime     DateTime  @default(now()) @map("create_time")
+  planSettleTime DateTime  @map("plan_settle_time") // 计划解冻时间
+  settleTime     DateTime? @map("settle_time") // 实际解冻时间
+
+  beneficiary UmsMember @relation(fields: [beneficiaryId], references: [memberId])
+  order       OmsOrder  @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, beneficiaryId, level]) // 防重复
+  @@index([orderId])
+  @@index([beneficiaryId, status])
+  @@index([tenantId, status, planSettleTime]) // 定时任务索引
+  @@map("fin_commission")
+}
+
+/// 提现记录表
+model FinWithdrawal {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  memberId String @map("member_id")
+
+  amount Decimal @db.Decimal(10, 2)
+  method String // WECHAT_WALLET, BANK_CARD
+
+  // 账号快照
+  accountNo String?
+  realName  String?
+
+  status WithdrawalStatus @default(PENDING)
+
+  auditTime   DateTime? @map("audit_time")
+  auditBy     String?   @map("audit_by")
+  auditRemark String?   @map("audit_remark")
+
+  // 打款凭证
+  paymentNo  String? @map("payment_no") // 微信流水号
+  failReason String? @map("fail_reason")
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  member UmsMember @relation(fields: [memberId], references: [memberId])
+
+  @@index([tenantId, status])
+  @@index([memberId, createTime])
+  @@map("fin_withdrawal")
 }

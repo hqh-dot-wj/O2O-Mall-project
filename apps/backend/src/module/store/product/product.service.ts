@@ -4,7 +4,7 @@ import { Prisma, DistributionMode, PublishStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { Result } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
-import { ImportProductDto, ListMarketProductDto, ListStoreProductDto, UpdateProductPriceDto } from './dto';
+import { ImportProductDto, ListMarketProductDto, ListStoreProductDto, UpdateProductBaseDto, UpdateProductPriceDto } from './dto';
 
 /**
  * 店铺商品管理服务
@@ -59,6 +59,48 @@ export class StoreProductService {
         });
 
         return Result.page(formatted, total);
+    }
+
+    /**
+     * 选品中心 - 获取商品详情 (含SKU)
+     */
+    async getMarketDetail(tenantId: string, productId: string) {
+        const product = await this.prisma.pmsProduct.findUnique({
+            where: { productId },
+            include: {
+                globalSkus: true,
+                tenantProducts: {
+                    where: { tenantId }
+                }
+            }
+        });
+        BusinessException.throwIfNull(product, '商品不存在');
+
+        // Check if already imported to set 'isImported' flag if needed, 
+        // though usually the dialog handles 'isImported' logic by list view status.
+        // We focus on returning details here.
+
+        const { tenantProducts, ...rest } = product;
+        return Result.ok({
+            productId: rest.productId,
+            name: rest.name,
+            albumPics: rest.mainImages ? rest.mainImages.join(',') : '',
+            type: rest.type,
+            hasSku: rest.globalSkus.length > 0,
+            price: rest.globalSkus?.[0]?.guidePrice || 0,
+            isImported: tenantProducts.length > 0,
+            serviceRadius: rest.serviceRadius ? Number(rest.serviceRadius) : 0,
+            globalSkus: rest.globalSkus.map(sku => ({
+                skuId: sku.skuId,
+                productId: sku.productId,
+                specValues: sku.specValues,
+                skuImage: sku.skuImage,
+                guidePrice: Number(sku.guidePrice),
+                guideRate: Number(sku.guideRate),
+                distMode: sku.distMode,
+                costPrice: Number(sku.costPrice)
+            }))
+        });
     }
 
     /**
@@ -119,9 +161,24 @@ export class StoreProductService {
      * 查询当前店铺已引入的商品
      */
     async findAll(tenantId: string, query: ListStoreProductDto) {
+        const { name, type, status } = query;
+
+        const where: Prisma.PmsTenantProductWhereInput = {
+            tenantId,
+        };
+
+        if (name) {
+            where.OR = [
+                { customTitle: { contains: name } },
+                { product: { name: { contains: name } } }
+            ];
+        }
+        if (type) where.product = { type };
+        if (status) where.status = status;
+
         const [list, total] = await Promise.all([
             this.prisma.pmsTenantProduct.findMany({
-                where: { tenantId },
+                where,
                 include: {
                     product: true,
                     skus: {
@@ -132,67 +189,105 @@ export class StoreProductService {
                 take: query.take,
                 orderBy: { createTime: 'desc' }
             }),
-            this.prisma.pmsTenantProduct.count({ where: { tenantId } })
+            this.prisma.pmsTenantProduct.count({ where })
         ]);
 
         const formatted = list.map(item => ({
             id: item.id,
+            productId: item.productId,
             name: item.product.name,
             albumPics: item.product.mainImages ? item.product.mainImages.join(',') : '',
+            type: item.product.type,
             status: item.status,
             isHot: item.isHot,
-            price: item.skus?.[0]?.price || 0
+            price: Number(item.skus?.[0]?.price || 0),
+            customTitle: item.customTitle,
+            overrideRadius: item.overrideRadius,
+            skus: item.skus.map(sku => ({
+                id: sku.id,
+                price: Number(sku.price),
+                stock: sku.stock,
+                distMode: sku.distMode,
+                distRate: Number(sku.distRate),
+                isActive: sku.isActive,
+                specValues: sku.globalSku.specValues,
+                costPrice: Number(sku.globalSku.costPrice),
+                guidePrice: Number(sku.globalSku.guidePrice)
+            }))
         }));
 
         return Result.page(formatted, total);
     }
 
     /**
-     * 更新店铺商品价格/分销配置
+     * 更新店铺商品价格/分销配置/库存
      * 需校验利润风控 (售价 - 成本 - 分销佣金 > 0)
      */
     async updateProductPrice(tenantId: string, dto: UpdateProductPriceDto) {
-        const { tenantSkuId, price, distRate } = dto;
+        const { tenantSkuId, price, stock, distRate, distMode } = dto;
 
         // 1. 获取店铺 SKU
         const tenantSku = await this.prisma.pmsTenantSku.findUnique({
             where: { id: tenantSkuId },
-            include: { tenantProd: true },
+            include: {
+                tenantProd: true,
+                globalSku: true
+            },
         });
         BusinessException.throwIfNull(tenantSku, 'SKU不存在');
         BusinessException.throwIf(tenantSku.tenantProd.tenantId !== tenantId, '无权操作此商品');
 
-        // 2. 获取全局 SKU (用于成本校验)
-        const globalSku = await this.prisma.pmsGlobalSku.findUnique({
-            where: { skuId: tenantSku.globalSkuId },
-        });
-        BusinessException.throwIfNull(globalSku, '关联全局SKU异常');
-
-        // 3. 利润风控计算
-        // 佣金计算
+        // 2. 利润风控计算
+        const currentDistMode = distMode || tenantSku.distMode;
         let commission = new Decimal(0);
-        if (tenantSku.distMode === DistributionMode.RATIO) {
+        if (currentDistMode === DistributionMode.RATIO) {
             // distRate 认为是小数 (如 0.15)
             commission = new Decimal(price).mul(new Decimal(distRate));
-        } else if (tenantSku.distMode === DistributionMode.FIXED) {
+        } else if (currentDistMode === DistributionMode.FIXED) {
             commission = new Decimal(distRate);
         }
 
-        const cost = globalSku.costPrice;
+        const cost = tenantSku.globalSku.costPrice;
         // 利润 = 售价 - 成本 - 佣金
         const profit = new Decimal(price).sub(cost).sub(commission);
 
         BusinessException.throwIf(
             profit.lessThan(0),
-            `价格设置异常导致亏损! 售价:${price}, 成本:${cost}, 佣金:${commission}`
+            `价格设置异常导致亏损! 售价:${price}, 成本:${cost}, 佣金:${commission.toFixed(2)}`
         );
 
-        // 4. 更新数据库
+        // 3. 更新数据库
         const res = await this.prisma.pmsTenantSku.update({
             where: { id: tenantSkuId },
             data: {
                 price: new Decimal(price),
+                stock: stock,
                 distRate: new Decimal(distRate),
+                distMode: distMode,
+            },
+        });
+
+        return Result.ok(res);
+    }
+
+    /**
+     * 更新店铺商品基础信息 (状态、自定义标题、半径)
+     */
+    async updateProductBase(tenantId: string, dto: UpdateProductBaseDto) {
+        const { id, status, customTitle, overrideRadius } = dto;
+
+        const tenantProduct = await this.prisma.pmsTenantProduct.findUnique({
+            where: { id },
+        });
+        BusinessException.throwIfNull(tenantProduct, '商品不存在');
+        BusinessException.throwIf(tenantProduct.tenantId !== tenantId, '无权操作此商品');
+
+        const res = await this.prisma.pmsTenantProduct.update({
+            where: { id },
+            data: {
+                status,
+                customTitle,
+                overrideRadius,
             },
         });
 

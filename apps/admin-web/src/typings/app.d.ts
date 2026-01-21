@@ -1068,6 +1068,7 @@ declare namespace App {
           userInfo: string;
           tenant: string;
           referrer: string;
+          indirectReferrer: string;
           status: string;
           registerTime: string;
           editReferrer: string;
@@ -1180,6 +1181,17 @@ declare namespace App {
         };
         store_marketing: {
           title: string;
+        };
+        store_distribution: {
+          title: string;
+          level1Rate: string;
+          level2Rate: string;
+          enableLV0: string;
+          lv0Policy: string;
+          lv0PolicyDesc: string;
+          lv1PolicyDesc: string;
+          historyTitle: string;
+          graphTitle: string;
         };
       };
       form: {

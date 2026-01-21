@@ -90,6 +90,18 @@ const {
       )
     },
     {
+      key: 'indirectReferrerName',
+      title: $t('page.member.indirectReferrer'),
+      align: 'center',
+      width: 150,
+      render: (row: Api.Member.Member) => (
+         <div class="flex flex-col items-center">
+            <span>{row.indirectReferrerName || '-'}</span>
+            {row.indirectReferrerMobile && <span class="text-xs text-gray-500">{row.indirectReferrerMobile}</span>}
+         </div>
+      )
+    },
+    {
       key: 'status',
       title: $t('page.member.status'),
       align: 'center',

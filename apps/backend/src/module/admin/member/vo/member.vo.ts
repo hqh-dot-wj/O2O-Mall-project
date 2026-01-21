@@ -44,6 +44,15 @@ export class MemberVo {
     @ApiProperty({ description: 'Referrer Mobile' })
     referrerMobile?: string;
 
+    @ApiProperty({ description: 'Indirect Referrer ID' })
+    indirectReferrerId?: string;
+
+    @ApiProperty({ description: 'Indirect Referrer Name' })
+    indirectReferrerName?: string;
+
+    @ApiProperty({ description: 'Indirect Referrer Mobile' })
+    indirectReferrerMobile?: string;
+
     // --- Reserved Fields for Wallet (Future Use) ---
 
     @ApiProperty({ description: 'Wallet Balance (Reserved)', default: 0 })

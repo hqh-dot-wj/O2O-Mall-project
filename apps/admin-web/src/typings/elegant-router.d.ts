@@ -24,6 +24,11 @@ declare module "@elegant-router/types" {
     "403": "/403";
     "404": "/404";
     "500": "/500";
+    "finance": "/finance";
+    "finance_commission": "/finance/commission";
+    "finance_dashboard": "/finance/dashboard";
+    "finance_ledger": "/finance/ledger";
+    "finance_withdrawal": "/finance/withdrawal";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
@@ -37,6 +42,9 @@ declare module "@elegant-router/types" {
     "monitor_online": "/monitor/online";
     "monitor_operlog": "/monitor/operlog";
     "monitor_server": "/monitor/server";
+    "order": "/order";
+    "order_detail": "/order/detail";
+    "order_list": "/order/list";
     "pms": "/pms";
     "pms_attribute": "/pms/attribute";
     "pms_brand": "/pms/brand";
@@ -46,6 +54,7 @@ declare module "@elegant-router/types" {
     "social-callback": "/social-callback";
     "store": "/store";
     "store_marketing": "/store/marketing";
+    "store_marketing_distribution": "/store/marketing/distribution";
     "store_product": "/store/product";
     "store_product_list": "/store/product/list";
     "store_product_market": "/store/product/market";
@@ -108,11 +117,13 @@ declare module "@elegant-router/types" {
     | "403"
     | "404"
     | "500"
+    | "finance"
     | "home"
     | "iframe-page"
     | "login"
     | "member"
     | "monitor"
+    | "order"
     | "pms"
     | "social-callback"
     | "store"
@@ -143,6 +154,10 @@ declare module "@elegant-router/types" {
     | "login"
     | "social-callback"
     | "user-center"
+    | "finance_commission"
+    | "finance_dashboard"
+    | "finance_ledger"
+    | "finance_withdrawal"
     | "home"
     | "member"
     | "monitor_cache"
@@ -153,11 +168,14 @@ declare module "@elegant-router/types" {
     | "monitor_online"
     | "monitor_operlog"
     | "monitor_server"
+    | "order_detail"
+    | "order_list"
     | "pms_attribute"
     | "pms_brand"
     | "pms_category"
     | "pms_global-product_create"
     | "pms_global-product"
+    | "store_marketing_distribution"
     | "store_marketing"
     | "store_product_list"
     | "store_product_market"

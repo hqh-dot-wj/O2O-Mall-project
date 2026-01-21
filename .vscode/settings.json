@@ -1,3 +1,16 @@
 {
-    "prisma.pinToPrisma6": true
+    "prisma.pinToPrisma6": true,
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "nest-admin-postgres",
+            "database": "nest-admin-soybean",
+            "username": "postgres"
+        }
+    ]
 }

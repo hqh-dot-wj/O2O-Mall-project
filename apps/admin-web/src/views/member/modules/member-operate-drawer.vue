@@ -31,8 +31,8 @@ const { formRef, validate, restoreValidation } = useNaiveForm();
 const { defaultRequiredRule } = useFormRules();
 
 const title = computed(() => {
-  if (props.operateType === 'editReferrer') return $t('member.editReferrer');
-  return $t('member.editTenant');
+  if (props.operateType === 'editReferrer') return $t('page.member.editReferrer');
+  return $t('page.member.editTenant');
 });
 
 type Model = {
@@ -73,14 +73,14 @@ async function handleSubmit() {
   if (props.operateType === 'editReferrer') {
     if (props.rowData?.memberId) {
       await fetchUpdateMemberReferrer({ memberId: props.rowData.memberId, referrerId: model.referrerId });
-      window.$message?.success($t('member.confirm.updateSuccess'));
+      window.$message?.success($t('page.member.confirm.updateSuccess'));
       closeDrawer();
       emit('submitted');
     }
   } else if (props.operateType === 'editTenant') {
     if (props.rowData?.memberId) {
       await fetchUpdateMemberTenant({ memberId: props.rowData.memberId, tenantId: model.tenantId });
-      window.$message?.success($t('member.confirm.updateSuccess'));
+      window.$message?.success($t('page.member.confirm.updateSuccess'));
       closeDrawer();
       emit('submitted');
     }
@@ -96,11 +96,11 @@ function closeDrawer() {
   <NDrawer v-model:show="visible" display-directive="show" :width="360">
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
-        <NFormItem v-if="operateType === 'editReferrer'" :label="$t('member.form.referrerId')" path="referrerId">
-          <NInput v-model:value="model.referrerId" :placeholder="$t('member.form.referrerId')" />
+        <NFormItem v-if="operateType === 'editReferrer'" :label="$t('page.member.form.referrerId')" path="referrerId">
+          <NInput v-model:value="model.referrerId" :placeholder="$t('page.member.form.referrerId')" />
         </NFormItem>
-        <NFormItem v-if="operateType === 'editTenant'" :label="$t('member.form.tenantId')" path="tenantId">
-          <NInput v-model:value="model.tenantId" :placeholder="$t('member.form.tenantId')" />
+        <NFormItem v-if="operateType === 'editTenant'" :label="$t('page.member.form.tenantId')" path="tenantId">
+          <NInput v-model:value="model.tenantId" :placeholder="$t('page.member.form.tenantId')" />
         </NFormItem>
       </NForm>
       <template #footer>

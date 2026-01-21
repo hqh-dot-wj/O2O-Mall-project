@@ -6,7 +6,8 @@
     "dev:backend": "pnpm --filter @apps/backend run start:dev",
     "build:backend": "pnpm --filter @apps/backend run build:dev",
     "dev:admin": "pnpm --filter @apps/admin-web run dev",
-    "build:admin": "pnpm --filter @apps/admin-web run build"
+    "build:admin": "pnpm --filter @apps/admin-web run build",
+    "dev:mp": "pnpm --filter @apps/miniapp-client run dev:mp"
   },
   "devDependencies": {},
   "pnpm": {

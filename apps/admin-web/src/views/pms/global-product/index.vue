@@ -163,10 +163,6 @@ const {
 const router = useRouter();
 
 const {
-  drawerVisible,
-  operateType,
-  editingData,
-  handleEdit,
   checkedRowKeys,
   onBatchDeleted,
   onDeleted
@@ -174,11 +170,11 @@ const {
 
 // Override handleAdd to navigate to create page
 function handleAdd() {
-  router.push({path:'/pms/pms_global-product_create'});
+  router.push({path:'pms_global-product_create'});
 }
 
 function editProduct(id: string) {
-  router.push({ path: '/pms/pms_global-product_create', query: { id } });
+  router.push({ path: 'pms_global-product_create', query: { id } });
 }
 
 
@@ -303,12 +299,6 @@ onMounted(() => {
             :row-key="(row) => row.productId"
             :pagination="mobilePagination"
             class="sm:h-full"
-          />
-          <GlobalProductOperateDrawer
-            v-model:visible="drawerVisible"
-            :operate-type="operateType"
-            :row-data="editingData"
-            @submitted="getData"
           />
         </NCard>
       </div>

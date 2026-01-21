@@ -13,6 +13,9 @@ declare namespace Api {
             referrerId?: string;
             referrerName?: string;
             referrerMobile?: string;
+            indirectReferrerId?: string;
+            indirectReferrerName?: string;
+            indirectReferrerMobile?: string;
         }
 
         /** Search Params */

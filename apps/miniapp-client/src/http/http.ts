@@ -100,16 +100,17 @@ export function http<T>(options: CustomRequestOptions) {
               icon: 'none',
               title: responseData.msg || responseData.message || '请求错误',
             })
+            return reject(responseData)
           }
           return resolve(responseData.data)
         }
 
         // 处理其他错误
         !options.hideErrorToast
-        && uni.showToast({
-          icon: 'none',
-          title: (res.data as any).msg || '请求错误',
-        })
+          && uni.showToast({
+            icon: 'none',
+            title: (res.data as any).msg || '请求错误',
+          })
         reject(res)
       },
       // 响应失败

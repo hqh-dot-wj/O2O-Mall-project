@@ -6,7 +6,7 @@ export const ClientInfo = createParamDecorator((data: unknown, ctx: ExecutionCon
   const userAgentStr = request.headers['user-agent'] || '';
   const agent = Useragent.parse(userAgentStr);
   const os = agent.os.toJSON().family;
-  const browser = agent.toAgent();
+  let browser = agent.toAgent();
 
   // 判断设备类型
   let deviceType = '0'; // 默认为 PC
@@ -16,6 +16,12 @@ export const ClientInfo = createParamDecorator((data: unknown, ctx: ExecutionCon
     deviceType = '1'; // Mobile
   } else if (os.toLowerCase().includes('android') || os.toLowerCase().includes('ios')) {
     deviceType = '1'; // Mobile
+  }
+
+  // 特殊处理微信小程序/微信浏览器
+  if (userAgentStr.includes('MicroMessenger')) {
+    browser = 'WeChat';
+    deviceType = '1';
   }
 
   const clientInfo = {

@@ -110,7 +110,8 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     route.path = parent ? parent.path + route.path : route.path;
 
     const routeName = route
-      .component!.replace(/\/index$/, '')
+      .component!.replace(/^\//, '') // Remove leading slash
+      .replace(/\/index$/, '')
       .replace(/\//g, '_')
       .replace(/([A-Z])/g, '-$1')
       .toLowerCase();

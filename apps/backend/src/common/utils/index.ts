@@ -12,6 +12,7 @@ dayjs.extend(isLeapYear); // 使用插件
 dayjs.locale('zh-cn'); // 使用本地化语言
 dayjs.tz.setDefault('Asia/Beijing');
 
+import { Decimal } from '@prisma/client/runtime/library';
 import { DataScopeEnum } from '../enum/index';
 
 /**
@@ -87,7 +88,7 @@ export function FormatDate(date: Date, format = 'YYYY-MM-DD HH:mm:ss') {
  */
 export function FormatDateFields<T>(
   obj: T,
-  dateFields: string[] = ['createTime', 'updateTime', 'loginDate', 'loginTime', 'operTime', 'expireTime'],
+  dateFields: string[] = ['createTime', 'updateTime', 'loginDate', 'loginTime', 'operTime', 'expireTime', 'auditTime', 'payTime', 'serviceDate', 'planSettleTime', 'settleTime'],
 ): T {
   if (!obj) return obj;
 
@@ -97,19 +98,56 @@ export function FormatDateFields<T>(
 
   if (typeof obj === 'object') {
     const formatted: Record<string, any> = { ...obj };
-    for (const field of dateFields) {
-      if (field in formatted && formatted[field]) {
-        // 处理 Date 对象
-        if (formatted[field] instanceof Date) {
-          formatted[field] = FormatDate(formatted[field]);
+
+    for (const key in formatted) {
+      const value = formatted[key];
+
+      // 1. 处理 BigInt
+      if (typeof value === 'bigint') {
+        formatted[key] = value.toString();
+        continue;
+      }
+
+      // 2. 处理 Decimal
+      if (value && typeof value === 'object') {
+        // Case A: Prisma Decimal Instance
+        if (value instanceof Decimal || typeof value.toNumber === 'function') {
+          formatted[key] = value.toNumber();
+          continue;
         }
-        // 处理字符串格式的日期（从 Redis 或其他来源）
-        else if (typeof formatted[field] === 'string') {
-          const dateValue = new Date(formatted[field]);
-          if (!isNaN(dateValue.getTime())) {
-            formatted[field] = FormatDate(dateValue);
+
+        // Case B: Serialized Decimal POJO { s, e, d }
+        // 这种结构通常是 Decimal 已经被 JSON.parse 过的产物，或者被错误地深拷贝了
+        if (value.s !== undefined && value.e !== undefined && Array.isArray(value.d)) {
+          try {
+            // 尝试重新构建 Decimal 并转换
+            // 注意：这里假设 prisma 的 Decimal 构造器接受这种 raw object，或者我们可以转 string 再转 number
+            // 为了安全，我们检查是否真的是 Duck Type
+            formatted[key] = new Decimal(value).toNumber();
+            continue;
+          } catch (e) {
+            // ignore
           }
         }
+      }
+
+      // 3. 处理 Date 字段
+      if (dateFields.includes(key) && value) {
+        if (value instanceof Date) {
+          formatted[key] = FormatDate(value);
+        } else if (typeof value === 'string') {
+          const dateValue = new Date(value);
+          if (!isNaN(dateValue.getTime())) {
+            formatted[key] = FormatDate(dateValue);
+          }
+        }
+        continue;
+      }
+
+      // 4. 递归处理嵌套对象 (如果是普通对象且不是 Date/Decimal/Array)
+      // 注意: Array已经在最上面处理了
+      if (value && typeof value === 'object' && !(value instanceof Date) && !(value instanceof Decimal)) {
+        formatted[key] = FormatDateFields(value, dateFields);
       }
     }
     return formatted as T;

@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { computed, ref, reactive, watch, h } from 'vue';
 import { NModal, NButton, NImage, NAlert, NForm, NFormItem, NInputNumber, NTag, NDataTable, NInput, useMessage } from 'naive-ui';
-import { fetchImportProduct } from '@/service/api/store/product';
+import { fetchImportProduct, fetchGetMarketProductDetail } from '@/service/api/store/product';
 
 interface Props {
   show: boolean;
@@ -83,23 +83,32 @@ const formModel = reactive<Omit<Api.Store.ProductImportParams, 'productId'>>({
 });
 
 // Watch product changes to initialize form
-watch(() => props.product, (newVal) => {
+// Watch product changes to initialize form
+watch(() => props.product, async (newVal) => {
     if (newVal) {
         formModel.overrideRadius = newVal.serviceRadius || null; // Default to existing or null
+        formModel.skus = []; // reset
         
-        if (newVal.globalSkus) {
-            formModel.skus = newVal.globalSkus.map(sku => ({
-                globalSkuId: sku.skuId,
-                // Parse specs for display if needed, but here we just store ID
-                // For display we need to reference the original SKU, maybe store it in a map or extended object
-                _originalSku: sku, 
-                price: Number(sku.guidePrice),
-                stock: 0,
-                distRate: Number(sku.guideRate),
-                distMode: sku.distMode
-            }));
-        } else {
-            formModel.skus = [];
+        // Fetch Details to get SKUs
+        try {
+            loading.value = true;
+            const { data, error } = await fetchGetMarketProductDetail(newVal.productId);
+            if (!error && data && data.globalSkus) {
+                 formModel.skus = data.globalSkus.map((sku: any) => ({
+                    globalSkuId: sku.skuId,
+                    _originalSku: sku, 
+                    price: Number(sku.guidePrice),
+                    stock: 0,
+                    distRate: Number(sku.guideRate),
+                    distMode: sku.distMode
+                }));
+                // update service radius if available in detail
+                if (data.serviceRadius) {
+                     formModel.overrideRadius = data.serviceRadius;
+                }
+            }
+        } finally {
+            loading.value = false;
         }
     }
 }, { immediate: true });
@@ -109,11 +118,8 @@ const columns = [
         title: '规格',
         key: 'spec',
         render(row: any) {
-            // Visualize spec values (JSON)
-            // Assuming val.specValues like { "Color": "Red" }
             const specs = row._originalSku?.specValues;
             if (!specs) return '默认规格';
-            // If specs is object
             if (typeof specs === 'object') {
                 return Object.values(specs).join(' / ');
             }
@@ -121,9 +127,9 @@ const columns = [
         }
     },
     {
-        title: '指导价',
-        key: 'guidePrice',
-        render: (row: any) => `¥${row._originalSku?.guidePrice}`
+        title: '成本',
+        key: 'costPrice',
+        render: (row: any) => `¥${row._originalSku?.costPrice}`
     },
     {
         title: '本店售价',
@@ -131,7 +137,7 @@ const columns = [
         render(row: any) {
             return h(NInputNumber, {
                 value: row.price,
-                onUpdateValue(v) { row.price = v; },
+                onUpdateValue(v) { row.price = v || 0; },
                 min: 0,
                 precision: 2,
                 size: 'small',
@@ -146,7 +152,7 @@ const columns = [
         render(row: any) {
              return h(NInputNumber, {
                 value: row.stock,
-                onUpdateValue(v) { row.stock = v; },
+                onUpdateValue(v) { row.stock = v || 0; },
                 min: 0,
                 precision: 0,
                 size: 'small',
@@ -155,26 +161,59 @@ const columns = [
         }
     },
     {
-        title: '分销比例',
+        title: '分销模式',
+        key: 'distMode',
+        render: (row: any) => h(NTag, { size: 'small' }, { default: () => row.distMode })
+    },
+    {
+        title: '分销比例/金额',
         key: 'distRate',
         render(row: any) {
              return h(NInputNumber, {
                 value: row.distRate,
-                onUpdateValue(v) { row.distRate = v; },
+                onUpdateValue(v) { row.distRate = v || 0; },
                 min: 0,
-                max: row.distMode === 'RATIO' ? 1 : undefined, // Assuming ratio is 0-1
                 step: 0.01,
                 precision: 2,
                 size: 'small',
                 style: { width: '100px' }
             });
         }
+    },
+    {
+        title: '预估利润',
+        key: 'profit',
+        render(row: any) {
+            const profit = calculateProfit(row);
+            const isLoss = profit < 0;
+            return h('span', { class: isLoss ? 'text-red font-bold' : 'text-green font-bold' }, profit.toFixed(2));
+        }
     }
 ];
+
+function calculateProfit(row: any) {
+    const cost = Number(row._originalSku?.costPrice || 0);
+    const price = Number(row.price || 0);
+    const distRate = Number(row.distRate || 0);
+    let commission = 0;
+    if (row.distMode === 'RATIO') {
+        commission = price * distRate;
+    } else {
+        commission = distRate;
+    }
+    return price - cost - commission;
+}
 
 async function handleConfirm() {
     if (!props.product) return;
     
+    // Validate profit risk
+    const lossSkus = formModel.skus.filter(sku => calculateProfit(sku) < 0);
+    if (lossSkus.length > 0) {
+        message.error('存在亏本设置的规格，请调整价格或分佣！');
+        return;
+    }
+
     loading.value = true;
     try {
         const payload: Api.Store.ProductImportParams = {

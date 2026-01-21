@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { computed } from 'vue';
-import { NButton, NDivider } from 'naive-ui';
+import { NButton, NDivider, NTag } from 'naive-ui';
 import {
   fetchBatchDeleteTenant,
   fetchGetTenantList,
@@ -110,10 +110,10 @@ const {
       },
     },
     {
-      key: 'regionCode',
+      key: 'regionName',
       title: '行政归属',
       align: 'center',
-      minWidth: 100,
+      minWidth: 120,
     },
     {
       key: 'isDirect',

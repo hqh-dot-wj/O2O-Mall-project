@@ -1,101 +1,151 @@
 <script setup lang="tsx">
-import { ref, h } from 'vue';
-import { NButton, NAvatar, NEllipsis, NDataTable } from 'naive-ui';
-import { useBoolean } from '@sa/hooks';
-import { useTable, useTableProps } from '@/hooks/common/table';
+import { NButton, NCard, NSpace, NTag, NDataTable } from 'naive-ui';
 import { fetchGetStoreProductList } from '@/service/api/store/product';
+import { useTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
-import ProductEditModal from './modules/product-edit-modal.vue';
-import { useAuth } from '@/hooks/business/auth';
-
-defineOptions({
-  name: 'StoreProductList',
-});
-
-const { hasAuth } = useAuth();
-const tableProps = useTableProps();
-const { bool: editVisible, setTrue: openEditModal } = useBoolean();
-const editingData = ref<Api.Store.TenantProduct | null>(null);
+import ProductSearch from './modules/product-search.vue';
+import ProductOperateDrawer from './modules/product-operate-drawer.vue';
 
 const {
   columns,
+  columnChecks,
   data,
   getData,
+  getDataByPage,
   loading,
   mobilePagination,
+  searchParams,
+  resetSearchParams,
 } = useTable({
   apiFn: fetchGetStoreProductList,
   apiParams: {
-      pageNum: 1,
-      pageSize: 10
+    pageNum: 1,
+    pageSize: 10,
+    name: null,
+    type: null,
+    status: null,
   },
   columns: () => [
     {
-      key: 'index',
-      title: $t('common.index'),
+      type: 'selection',
       align: 'center',
       width: 48,
     },
     {
-      key: 'productId',
-      title: 'Product Name',
-      align: 'left',
-      width: 200,
-      render: (row) => {
-        const prod = row.product;
-        return h('div', { class: 'flex items-center gap-2' }, [
-            h(NAvatar, {
-                src: prod?.albumPics ? prod.albumPics.split(',')[0] : '',
-                class: 'bg-primary',
-                fallbackSrc: ''
-            }),
-            h('div', { class: 'flex flex-col' }, [
-                h(NEllipsis, null, { default: () => row.customTitle || prod?.name })
-            ])
-        ]);
-      },
+      key: 'index',
+      title: $t('common.index'),
+      align: 'center',
+      width: 64,
     },
-
+    {
+      key: 'name',
+      title: '商品信息',
+      align: 'left',
+      minWidth: 200,
+      render: (row) => (
+        <div class="flex items-center gap-2">
+            <img src={row.albumPics?.split(',')[0]} class="w-12 h-12 rounded object-cover border" />
+            <div class="flex flex-col">
+                <span class="font-bold">{row.customTitle || row.name}</span>
+                {row.customTitle && <span class="text-gray-400 text-xs italic">原: {row.name}</span>}
+            </div>
+        </div>
+      )
+    },
+    {
+        key: 'type',
+        title: '类型',
+        align: 'center',
+        width: 80,
+        render: (row) => {
+            const tagMap: Record<Api.Pms.ProductType, NaiveUI.ThemeColor> = {
+                REAL: 'info',
+                SERVICE: 'success'
+            };
+            const labelMap: Record<Api.Pms.ProductType, string> = {
+                REAL: '实物',
+                SERVICE: '服务'
+            };
+            return <NTag type={tagMap[row.type]} size="small">{labelMap[row.type]}</NTag>;
+        }
+    },
+    {
+      key: 'price',
+      title: '售价(起)',
+      align: 'center',
+      width: 100,
+      render: (row) => `¥${row.price}`
+    },
+    {
+      key: 'status',
+      title: '状态',
+      align: 'center',
+      width: 100,
+      render: (row) => {
+          const statusMap: Record<Api.Pms.PublishStatus, NaiveUI.ThemeColor> = {
+              ON_SHELF: 'success',
+              OFF_SHELF: 'default'
+          };
+          const labelMap: Record<Api.Pms.PublishStatus, string> = {
+              ON_SHELF: '经营中',
+              OFF_SHELF: '已下架'
+          };
+          return <NTag type={statusMap[row.status]} size="small">{labelMap[row.status]}</NTag>;
+      }
+    },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 150,
-      render: (row) => h(NButton, {
-          size: 'small',
-          type: 'primary',
-          onClick: () => handleEdit(row)
-      }, { default: () => 'Adjust Price' }),
+      width: 130,
+      render: (row) => (
+        <NSpace justify="center">
+          <NButton type="primary" ghost size="small" onClick={() => edit(row)}>
+            经营配置
+          </NButton>
+        </NSpace>
+      ),
     },
   ],
 });
 
-function handleEdit(row: Api.Store.TenantProduct) {
-  editingData.value = row;
-  openEditModal();
-}
-
-function handleSubmitted() {
-    getData();
-}
+const {
+  drawerVisible,
+  operateType,
+  editingData,
+  edit,
+} = useTableOperate<Api.Store.TenantProduct>(data, getData);
 </script>
 
 <template>
-  <div class="h-full overflow-hidden">
-    <NCard title="My Products" :bordered="false" class="h-full rounded-8px shadow-sm">
-      <div class="h-full flex-col-stretch gap-12px">
-        <NDataTable
-          :columns="columns"
-          :data="data"
-          v-bind="tableProps"
+  <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
+    <ProductSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getDataByPage" />
+    <NCard :title="'我的商品'" :bordered="false" size="small" class="sm:flex-1-hidden card-wrapper">
+      <template #header-extra>
+        <TableHeaderOperation
+          v-model:columns="columnChecks"
           :loading="loading"
-          remote
-          :row-key="(row) => row.id"
-          :pagination="mobilePagination"
-          class="flex-1-hidden"
+          @refresh="getData"
         />
-        <ProductEditModal v-model:visible="editVisible" :row-data="editingData" @submitted="handleSubmitted" />
-      </div>
+      </template>
+      <NDataTable
+        remote
+        striped
+        size="small"
+        class="sm:flex-1-hidden"
+        :data="data"
+        :columns="columns"
+        :flex-height="!mobilePagination"
+        :loading="loading"
+        :pagination="mobilePagination"
+        :row-key="(row) => row.id"
+      />
+      <ProductOperateDrawer
+        v-model:visible="drawerVisible"
+        :operate-type="operateType"
+        :row-data="editingData"
+        @submitted="getData"
+      />
     </NCard>
   </div>
 </template>

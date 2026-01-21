@@ -1,8 +1,9 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { DelFlagEnum, StatusEnum, CacheEnum } from 'src/common/enum/index';
-import { Cacheable, CacheEvict } from 'src/common/decorators/redis.decorator';
+import { Cacheable } from 'src/common/decorators/redis.decorator';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import { CreateMenuDto, UpdateMenuDto, ListMenuDto } from './dto/index';
 import { ListToTree, Uniq } from 'src/common/utils/index';
 import { UserService } from '../user/user.service';
@@ -12,14 +13,15 @@ import { MenuRepository } from './menu.repository';
 
 @Injectable()
 export class MenuService {
+  private logger = new Logger(MenuService.name);
   constructor(
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
     private readonly menuRepo: MenuRepository,
+    private readonly redis: RedisService,
   ) { }
 
-  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async create(createMenuDto: CreateMenuDto) {
     const { queryParam, status, ...data } = createMenuDto;
     const res = await this.menuRepo.create({
@@ -30,6 +32,8 @@ export class MenuService {
       icon: createMenuDto.icon ?? '',
       delFlag: DelFlagEnum.NORMAL,
     });
+
+    await this.clearCache();
     return Result.ok(res);
   }
 
@@ -112,7 +116,6 @@ export class MenuService {
     return Result.ok(res);
   }
 
-  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async update(updateMenuDto: UpdateMenuDto) {
     const { queryParam, status, ...data } = updateMenuDto;
     const updateData: any = {
@@ -125,19 +128,19 @@ export class MenuService {
     }
 
     const res = await this.menuRepo.update(updateMenuDto.menuId, updateData);
+    await this.clearCache();
     return Result.ok(res);
   }
 
-  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async remove(menuId: number) {
     const data = await this.menuRepo.softDelete(menuId);
+    await this.clearCache();
     return Result.ok(data);
   }
 
   /**
    * 级联删除菜单
    */
-  @CacheEvict(CacheEnum.SYS_MENU_KEY, '*')
   async cascadeRemove(menuIds: number[]) {
     const data = await this.prisma.sysMenu.updateMany({
       where: {
@@ -149,7 +152,21 @@ export class MenuService {
         delFlag: DelFlagEnum.DELETE,
       },
     });
+    await this.clearCache();
     return Result.ok(data.count);
+  }
+
+  /**
+   * 清除菜单缓存
+   */
+  private async clearCache() {
+    const keys = await this.redis.keys(`${CacheEnum.SYS_MENU_KEY}*`);
+    if (keys && keys.length > 0) {
+      this.logger.log(`Clearing menu cache keys: ${keys.join(',')}`);
+      await this.redis.del(keys);
+    } else {
+      this.logger.log('No menu cache keys found to clear.');
+    }
   }
 
   async findMany(args: Prisma.SysMenuFindManyArgs) {

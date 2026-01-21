@@ -206,13 +206,49 @@ export class TenantService {
 
     const packageMap = new Map(packages.map((pkg) => [pkg.packageId, pkg.packageName]));
 
-    const listWithPackage = list.map((item) => ({
+    // 优化：获取所有区域名称（最多显示到市或区）
+    const regionCodes = list.map((item) => item.regionCode).filter(Boolean) as string[];
+    const regions =
+      regionCodes.length > 0
+        ? await this.prisma.sysRegion.findMany({
+          where: { code: { in: regionCodes } },
+          select: { code: true, name: true, parentId: true, level: true },
+        })
+        : [];
+
+    // 获取父级区域名称（用于拼接 "市-区" 格式）
+    const parentIds = regions.map((r) => r.parentId).filter(Boolean) as string[];
+    const parentRegions =
+      parentIds.length > 0
+        ? await this.prisma.sysRegion.findMany({
+          where: { code: { in: parentIds } },
+          select: { code: true, name: true },
+        })
+        : [];
+    const parentMap = new Map(parentRegions.map((r) => [r.code, r.name]));
+
+    // 构建区域显示名称 Map
+    const regionMap = new Map(
+      regions.map((r) => {
+        // level 3 是区县，显示 "市-区" 格式；level 2 是市，直接显示市名
+        if (r.level === 3 && r.parentId) {
+          const parentName = parentMap.get(r.parentId) || '';
+          return [r.code, parentName ? `${parentName}-${r.name}` : r.name];
+        }
+        return [r.code, r.name];
+      }),
+    );
+
+    const listWithExtra = list.map((item) => ({
       ...item,
+      // Convert Prisma Status enum (NORMAL/STOP) to frontend code ("0"/"1")
+      status: item.status === 'NORMAL' ? '0' : '1',
       packageName: item.packageId ? packageMap.get(item.packageId) || '' : '',
+      regionName: item.regionCode ? regionMap.get(item.regionCode) || item.regionCode : '',
     }));
 
     return Result.ok({
-      rows: FormatDateFields(listWithPackage),
+      rows: FormatDateFields(listWithExtra),
       total,
     });
   }
