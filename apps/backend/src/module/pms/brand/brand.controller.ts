@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 @ApiTags('品牌管理')
 @Controller('pms/brand')
 export class BrandController {
-  constructor(private readonly brandService: BrandService) { }
+  constructor(private readonly brandService: BrandService) {}
 
   @Api({ summary: '获取品牌列表' })
   @Get('list')

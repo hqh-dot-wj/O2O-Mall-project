@@ -5,16 +5,10 @@ import { UploadModule } from './upload/upload.module';
 import { ResourceModule } from './resource/resource.module';
 import { AuthModule } from './auth/auth.module';
 import { MemberModule } from './member/member.module';
+import { AdminUpgradeModule } from './upgrade/admin-upgrade.module';
 // import { ToolModule } from './tool/tool.module'; // Tool module missing/skipped
 
 @Module({
-    imports: [
-        AuthModule,
-        SystemModule,
-        MonitorModule,
-        UploadModule,
-        ResourceModule,
-        MemberModule,
-    ],
+  imports: [AuthModule, SystemModule, MonitorModule, UploadModule, ResourceModule, MemberModule, AdminUpgradeModule],
 })
-export class AdminModule { }
+export class AdminModule {}

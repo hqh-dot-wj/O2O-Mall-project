@@ -7,7 +7,7 @@ import { FormatDateFields, Paginate } from 'src/common/utils/index';
 
 @Injectable()
 export class OnlineService {
-  constructor(private readonly redisService: RedisService) { }
+  constructor(private readonly redisService: RedisService) {}
   /**
    * 日志列表-分页
    * @param query

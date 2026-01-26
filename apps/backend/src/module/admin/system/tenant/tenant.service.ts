@@ -30,7 +30,7 @@ export class TenantService {
     private readonly stationService: StationService,
     @Inject(forwardRef(() => UserAuthService))
     private readonly userAuthService: UserAuthService,
-  ) { }
+  ) {}
 
   /**
    * 创建租户
@@ -117,7 +117,7 @@ export class TenantService {
             longitude: createTenantDto.longitude,
             serviceRadius: createTenantDto.serviceRadius,
             geoFence: createTenantDto.fence as any,
-          }
+          },
         });
       }
 
@@ -129,7 +129,7 @@ export class TenantService {
           latitude: createTenantDto.latitude,
           longitude: createTenantDto.longitude,
           fence: createTenantDto.fence,
-          regionCode: createTenantDto.regionCode
+          regionCode: createTenantDto.regionCode,
         });
       }
 
@@ -199,9 +199,9 @@ export class TenantService {
     const packages =
       packageIds.length > 0
         ? await this.prisma.sysTenantPackage.findMany({
-          where: { packageId: { in: packageIds } },
-          select: { packageId: true, packageName: true },
-        })
+            where: { packageId: { in: packageIds } },
+            select: { packageId: true, packageName: true },
+          })
         : [];
 
     const packageMap = new Map(packages.map((pkg) => [pkg.packageId, pkg.packageName]));
@@ -211,9 +211,9 @@ export class TenantService {
     const regions =
       regionCodes.length > 0
         ? await this.prisma.sysRegion.findMany({
-          where: { code: { in: regionCodes } },
-          select: { code: true, name: true, parentId: true, level: true },
-        })
+            where: { code: { in: regionCodes } },
+            select: { code: true, name: true, parentId: true, level: true },
+          })
         : [];
 
     // 获取父级区域名称（用于拼接 "市-区" 格式）
@@ -221,9 +221,9 @@ export class TenantService {
     const parentRegions =
       parentIds.length > 0
         ? await this.prisma.sysRegion.findMany({
-          where: { code: { in: parentIds } },
-          select: { code: true, name: true },
-        })
+            where: { code: { in: parentIds } },
+            select: { code: true, name: true },
+          })
         : [];
     const parentMap = new Map(parentRegions.map((r) => [r.code, r.name]));
 
@@ -311,7 +311,7 @@ export class TenantService {
 
     // [新增] 同步更新 O2O 地理配置
     const o2oFields = ['address', 'latitude', 'longitude', 'serviceRadius', 'fence', 'regionCode'];
-    const hasO2OUpdate = o2oFields.some(field => Object.prototype.hasOwnProperty.call(updateData, field));
+    const hasO2OUpdate = o2oFields.some((field) => Object.prototype.hasOwnProperty.call(updateData, field));
 
     if (hasO2OUpdate) {
       const tenantId = existTenant.tenantId;
@@ -322,7 +322,7 @@ export class TenantService {
         latitude: updateData.latitude,
         longitude: updateData.longitude,
         serviceRadius: updateData.serviceRadius,
-        geoFence: updateData.fence as any
+        geoFence: updateData.fence as any,
       };
 
       // Remove undefined fields
@@ -335,14 +335,14 @@ export class TenantService {
       if (existGeo) {
         await this.prisma.sysTenantGeo.update({
           where: { tenantId },
-          data: geoData
+          data: geoData,
         });
       } else {
         await this.prisma.sysTenantGeo.create({
           data: {
             tenantId,
-            ...geoData
-          }
+            ...geoData,
+          },
         });
       }
 
@@ -352,7 +352,7 @@ export class TenantService {
         latitude: updateData.latitude,
         longitude: updateData.longitude,
         fence: updateData.fence,
-        regionCode: updateData.regionCode
+        regionCode: updateData.regionCode,
       });
     }
 
@@ -566,7 +566,7 @@ export class TenantService {
       this.logger.log(`找到 ${configs.length} 个配置项需要同步`);
 
       let syncedCount = 0;
-      let skippedCount = 0;
+      const skippedCount = 0;
 
       // 为每个租户同步配置（使用批量操作）
       for (const tenant of tenants) {
@@ -680,7 +680,7 @@ export class TenantService {
       deptId: null,
       dept: null,
       roles: [],
-      posts: []
+      posts: [],
     } as unknown as UserType['user'];
 
     const redisUser: Partial<UserType> = {

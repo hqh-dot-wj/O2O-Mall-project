@@ -1,11 +1,11 @@
 <script setup lang="tsx">
 import { computed, reactive, watch } from 'vue';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { fetchAddBrand, fetchUpdateBrand } from '@/service/api/pms/brand';
+import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'BrandOperateDrawer',
+  name: 'BrandOperateDrawer'
 });
 
 interface Props {
@@ -24,7 +24,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -33,7 +33,7 @@ const { defaultRequiredRule } = useFormRules();
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
     add: $t('page.pms.brand.addBrand'),
-    edit: $t('page.pms.brand.editBrand'),
+    edit: $t('page.pms.brand.editBrand')
   };
   return titles[props.operateType];
 });
@@ -45,14 +45,14 @@ const model: Model = reactive(createDefaultModel());
 function createDefaultModel(): Model {
   return {
     name: '',
-    logo: '',
+    logo: ''
   };
 }
 
 type RuleKey = Extract<keyof Model, 'name'>;
 
 const rules: Record<RuleKey, App.Global.FormRule[]> = {
-  name: [defaultRequiredRule],
+  name: [defaultRequiredRule]
 };
 
 async function handleSubmit() {

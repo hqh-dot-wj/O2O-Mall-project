@@ -38,7 +38,7 @@ export class AuthController {
     private readonly config: AppConfigService,
     private readonly prisma: PrismaService,
     private readonly cryptoService: CryptoService,
-  ) { }
+  ) {}
 
   /**
    * 获取加密公钥 - GET /auth/publicKey
@@ -282,8 +282,6 @@ export class AuthController {
     // TODO: 实现社交登录逻辑
     return Result.fail(ResponseCode.NOT_IMPLEMENTED, '社交登录功能暂未实现');
   }
-
-
 
   /**
    * 解析过期时间字符串为秒数

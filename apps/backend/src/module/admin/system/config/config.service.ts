@@ -23,7 +23,7 @@ export class ConfigService {
     private readonly redisService: RedisService,
     private readonly configRepo: ConfigRepository,
     private readonly systemConfigService: SystemConfigService,
-  ) { }
+  ) {}
   async create(createConfigDto: CreateConfigDto) {
     await this.configRepo.create(createConfigDto);
     return Result.ok();
@@ -218,7 +218,7 @@ export class ConfigService {
    * @returns
    */
   @CacheEvict(CacheEnum.SYS_CONFIG_KEY, '*')
-  async clearConfigCache() { }
+  async clearConfigCache() {}
 
   /**
    * 加载系统配置缓存

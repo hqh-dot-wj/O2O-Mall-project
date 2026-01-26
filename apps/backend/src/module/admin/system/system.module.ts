@@ -11,7 +11,9 @@ import { ToolModule } from './tool/tool.module';
 import { UserModule } from './user/user.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TenantPackageModule } from './tenant-package/tenant-package.module';
+
 import { FileManagerModule } from './file-manager/file-manager.module';
+import { MessageModule } from './message/message.module';
 
 @Global()
 @Module({
@@ -21,6 +23,7 @@ import { FileManagerModule } from './file-manager/file-manager.module';
     DeptModule,
     DictModule,
     MenuModule,
+    MessageModule, // 消息通知
     NoticeModule,
     PostModule,
     RoleModule,

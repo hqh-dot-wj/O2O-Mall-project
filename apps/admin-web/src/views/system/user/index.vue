@@ -19,7 +19,7 @@ import UserPasswordDrawer from './modules/user-password-drawer.vue';
 import UserSearch from './modules/user-search.vue';
 
 defineOptions({
-  name: 'UserList',
+  name: 'UserList'
 });
 
 useDict('sys_user_sex');
@@ -43,7 +43,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetUserList,
   apiParams: {
@@ -56,19 +56,19 @@ const {
     nickName: null,
     phonenumber: null,
     status: null,
-    params: {},
+    params: {}
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'userName',
@@ -76,7 +76,7 @@ const {
       align: 'left',
       width: 200,
       ellipsis: true,
-      render: (row) => {
+      render: row => {
         return (
           <div class="flex items-center justify-center gap-2">
             <NAvatar src={row.avatar} class="bg-primary">
@@ -88,7 +88,7 @@ const {
             </div>
           </div>
         );
-      },
+      }
     },
     {
       key: 'sex',
@@ -98,28 +98,28 @@ const {
       ellipsis: true,
       render(row) {
         return <DictTag value={row.sex} dictCode="sys_user_sex" />;
-      },
+      }
     },
     {
       key: 'deptName',
       title: $t('page.system.user.deptName'),
       align: 'center',
       width: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'email',
       title: $t('page.system.user.email'),
       align: 'center',
       width: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'phonenumber',
       title: $t('page.system.user.phonenumber'),
       align: 'center',
       width: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'status',
@@ -135,20 +135,20 @@ const {
             onSubmitted={(value, callback) => handleStatusChange(row, value, callback)}
           />
         );
-      },
+      }
     },
     {
       key: 'createTime',
       title: $t('page.system.user.createTime'),
       align: 'center',
-      width: 120,
+      width: 120
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 150,
-      render: (row) => {
+      render: row => {
         if (row.userId === 1) return null;
 
         const editBtn = () => {
@@ -203,9 +203,9 @@ const {
             ))}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
@@ -236,7 +236,7 @@ async function edit(userId: CommonType.IdType) {
 }
 
 async function handleResetPwd(userId: CommonType.IdType) {
-  const findItem = data.value.find((item) => item.userId === userId) || null;
+  const findItem = data.value.find(item => item.userId === userId) || null;
   editingData.value = jsonClone(findItem);
   openPasswordDrawer();
 }
@@ -279,12 +279,12 @@ function handleImport() {
 async function handleStatusChange(
   row: Api.System.User,
   value: Api.Common.EnableStatus,
-  callback: (flag: boolean) => void,
+  callback: (flag: boolean) => void
 ) {
   try {
     await fetchUpdateUserStatus({
       userId: row.userId,
-      status: value,
+      status: value
     });
     callback(true);
     window.$message?.success($t('page.system.user.statusChangeSuccess'));
@@ -380,7 +380,7 @@ function handleResetSearch() {
           :scroll-x="1200"
           :loading="loading"
           remote
-          :row-key="(row) => row.userId"
+          :row-key="row => row.userId"
           :pagination="mobilePagination"
           class="h-full"
         />

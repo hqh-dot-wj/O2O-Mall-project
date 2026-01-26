@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { mockPaySuccess, prepay } from '@/api/payment'
 import { httpGet, httpPost } from '@/http/http'
-import { prepay, mockPaySuccess } from '@/api/payment'
 
 definePage({
   style: {
@@ -43,7 +43,7 @@ interface OrderDetail {
 }
 
 // 状态映射
-const statusMap: Record<string, { text: string; color: string }> = {
+const statusMap: Record<string, { text: string, color: string }> = {
   PENDING_PAY: { text: '待支付', color: '#ff9800' },
   PAID: { text: '已支付', color: '#1890ff' },
   SHIPPED: { text: '已发货', color: '#52c41a' },
@@ -97,7 +97,8 @@ function formatTime(timeStr: string): string {
 
 // 格式化规格
 function formatSpec(specData: Record<string, string> | null): string {
-  if (!specData) return ''
+  if (!specData)
+    return ''
   return Object.values(specData).join(' / ')
 }
 
@@ -130,18 +131,18 @@ async function cancelOrder() {
   })
 }
 
-
 // 去支付
 async function goPay() {
-  if (!orderId.value) return
+  if (!orderId.value)
+    return
 
   try {
     uni.showLoading({ title: '正在发起支付...' })
-    
+
     // 1. 预下单
     // ⚠️ 开发模式：直接模拟成功
-    const IS_DEV = true 
-    
+    const IS_DEV = true
+
     if (IS_DEV) {
       await mockPaySuccess(orderId.value)
       uni.hideLoading()
@@ -151,7 +152,7 @@ async function goPay() {
 
     // 2. 真实支付与微信交互
     const params = await prepay(orderId.value)
-    
+
     // 3. 唤起微信支付
     uni.requestPayment({
       provider: 'wxpay',
@@ -164,9 +165,10 @@ async function goPay() {
         uni.hideLoading()
         console.error('支付失败:', err)
         uni.showToast({ title: '支付失败', icon: 'none' })
-      }
+      },
     })
-  } catch (err: any) {
+  }
+  catch (err: any) {
     uni.hideLoading()
     console.error('支付发起失败', err)
     uni.showToast({ title: '支付发起失败', icon: 'none' })
@@ -424,10 +426,12 @@ function goOrderList() {
   }
 }
 
-.amount-section, .info-section {
+.amount-section,
+.info-section {
   padding: 24rpx;
 
-  .amount-row, .info-row {
+  .amount-row,
+  .info-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 16rpx;

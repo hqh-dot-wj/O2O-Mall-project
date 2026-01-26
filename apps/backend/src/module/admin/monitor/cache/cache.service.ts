@@ -5,7 +5,7 @@ import { Result } from 'src/common/response';
 
 @Injectable()
 export class CacheService {
-  constructor(private readonly redisService: RedisService) { }
+  constructor(private readonly redisService: RedisService) {}
 
   private readonly caches = [
     {

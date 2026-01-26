@@ -117,7 +117,6 @@ export function getWxCode() {
   })
 }
 
-
 /**
  * 微信登录 (静默登录检查)
  * @param data 包含code

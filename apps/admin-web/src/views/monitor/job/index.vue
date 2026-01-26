@@ -19,7 +19,7 @@ import JobOperateDrawer from './modules/job-operate-drawer.vue';
 import JobDetailDrawer from './modules/job-detail-drawer.vue';
 
 defineOptions({
-  name: 'JobList',
+  name: 'JobList'
 });
 
 useDict('sys_job_group');
@@ -45,7 +45,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetJobList,
   apiParams: {
@@ -53,26 +53,26 @@ const {
     pageSize: 10,
     jobName: null,
     jobGroup: null,
-    status: null,
+    status: null
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'jobName',
       title: '任务名称',
       align: 'center',
       minWidth: 120,
-      ellipsis: { tooltip: true },
+      ellipsis: { tooltip: true }
     },
     {
       key: 'jobGroup',
@@ -81,21 +81,21 @@ const {
       width: 100,
       render(row) {
         return <DictTag value={row.jobGroup} dictCode="sys_job_group" />;
-      },
+      }
     },
     {
       key: 'invokeTarget',
       title: '调用目标字符串',
       align: 'center',
       minWidth: 200,
-      ellipsis: { tooltip: true },
+      ellipsis: { tooltip: true }
     },
     {
       key: 'cronExpression',
       title: 'cron执行表达式',
       align: 'center',
       width: 150,
-      ellipsis: { tooltip: true },
+      ellipsis: { tooltip: true }
     },
     {
       key: 'status',
@@ -110,14 +110,14 @@ const {
             onSubmitted={(value, callback) => handleStatusChange(row, value, callback)}
           />
         );
-      },
+      }
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 220,
-      render: (row) => {
+      render: row => {
         const editBtn = () => (
           <ButtonIcon
             text
@@ -187,9 +187,9 @@ const {
             ))}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
@@ -220,7 +220,7 @@ async function edit(jobId: CommonType.IdType) {
 async function handleStatusChange(
   row: Api.Monitor.Job,
   value: Api.Common.EnableStatus,
-  callback: (flag: boolean) => void,
+  callback: (flag: boolean) => void
 ) {
   try {
     await fetchChangeJobStatus(row.jobId, value);
@@ -303,7 +303,7 @@ function handleCronConfirm(cron: string) {
         :scroll-x="1000"
         :loading="loading"
         remote
-        :row-key="(row) => row.jobId"
+        :row-key="row => row.jobId"
         :pagination="mobilePagination"
         class="h-full"
       />

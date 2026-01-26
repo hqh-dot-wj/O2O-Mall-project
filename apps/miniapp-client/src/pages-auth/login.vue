@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useTokenStore } from '@/store/token'
 import { REGISTER_PAGE } from '@/router/config'
+import { useTokenStore } from '@/store/token'
 
 definePage({
   style: {
@@ -18,7 +18,7 @@ async function doLogin() {
     uni.showToast({ title: '请输入用户名和密码', icon: 'none' })
     return
   }
-  
+
   try {
     // 调用登录接口
     await tokenStore.login({
@@ -40,33 +40,37 @@ function toRegister() {
 
 <template>
   <view class="login-container p-6">
-    <view class="text-center text-2xl font-bold mt-10 mb-8">
+    <view class="mb-8 mt-10 text-center text-2xl font-bold">
       欢迎登录
     </view>
-    
+
     <view class="form-item mb-4">
-      <view class="text-gray-500 mb-2">用户名</view>
-      <input 
-        v-model="username" 
-        class="input-box w-full h-12 px-4 rounded-lg bg-gray-100" 
-        placeholder="请输入用户名" 
-      />
+      <view class="mb-2 text-gray-500">
+        用户名
+      </view>
+      <input
+        v-model="username"
+        class="input-box h-12 w-full rounded-lg bg-gray-100 px-4"
+        placeholder="请输入用户名"
+      >
     </view>
-    
+
     <view class="form-item mb-8">
-      <view class="text-gray-500 mb-2">密码</view>
-      <input 
-        v-model="password" 
-        class="input-box w-full h-12 px-4 rounded-lg bg-gray-100" 
-        password 
-        placeholder="请输入密码" 
-      />
+      <view class="mb-2 text-gray-500">
+        密码
+      </view>
+      <input
+        v-model="password"
+        class="input-box h-12 w-full rounded-lg bg-gray-100 px-4"
+        password
+        placeholder="请输入密码"
+      >
     </view>
-    
-    <button class="w-full bg-blue-500 text-white rounded-full py-3 text-lg" @click="doLogin">
+
+    <button class="w-full rounded-full bg-blue-500 py-3 text-lg text-white" @click="doLogin">
       登录
     </button>
-    
+
     <view class="mt-6 text-center text-blue-500" @click="toRegister">
       没有账号？去注册
     </view>

@@ -25,7 +25,7 @@ export class MainController {
     private readonly authService: AuthService,
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Api({
     summary: '用户登录',

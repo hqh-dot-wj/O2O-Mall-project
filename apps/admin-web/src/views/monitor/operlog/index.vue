@@ -13,7 +13,7 @@ import OperLogViewDrawer from './modules/oper-log-view-drawer.vue';
 import OperLogSearch from './modules/oper-log-search.vue';
 
 defineOptions({
-  name: 'OperLogList',
+  name: 'OperLogList'
 });
 
 useDict('sys_common_status');
@@ -34,7 +34,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetOperLogList,
   apiParams: {
@@ -47,25 +47,25 @@ const {
     operName: null,
     operIp: null,
     status: null,
-    params: {},
+    params: {}
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'title',
       title: '系统模块',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'businessType',
@@ -74,25 +74,25 @@ const {
       minWidth: 120,
       render(row) {
         return <DictTag size="small" value={row.businessType} dictCode="sys_oper_type" />;
-      },
+      }
     },
     {
       key: 'operName',
       title: '操作人员',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'operIp',
       title: '操作IP',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'operLocation',
       title: '操作地点',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'status',
@@ -101,13 +101,13 @@ const {
       minWidth: 120,
       render(row) {
         return <DictTag size="small" value={row.status} dictCode="sys_common_status" />;
-      },
+      }
     },
     {
       key: 'operTime',
       title: '操作时间',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'costTime',
@@ -116,14 +116,14 @@ const {
       minWidth: 120,
       render(row) {
         return `${row.costTime} ms`;
-      },
+      }
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 130,
-      render: (row) => {
+      render: row => {
         const viewBtn = () => {
           return (
             <ButtonIcon
@@ -136,9 +136,9 @@ const {
           );
         };
         return <div class="flex-center gap-8px">{viewBtn()}</div>;
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, editingData, handleEdit, checkedRowKeys, onBatchDeleted } = useTableOperate(data, getData);
@@ -174,7 +174,7 @@ async function handleCleanOperLog() {
       } catch {
         // error handled by request interceptor
       }
-    },
+    }
   });
 }
 </script>
@@ -220,7 +220,7 @@ async function handleCleanOperLog() {
         :scroll-x="962"
         :loading="loading"
         remote
-        :row-key="(row) => row.operId"
+        :row-key="row => row.operId"
         :pagination="mobilePagination"
         class="sm:h-full"
       />
@@ -230,5 +230,3 @@ async function handleCleanOperLog() {
 </template>
 
 <style scoped></style>
-
-

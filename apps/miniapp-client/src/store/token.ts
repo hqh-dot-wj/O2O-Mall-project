@@ -1,21 +1,21 @@
 import type {
   ILoginForm,
+  IRegisterForm,
 } from '@/api/login'
-import type { IAuthLoginRes } from '@/api/types/login'
+import type { IAuthLoginRes, IRegisterMobileParams, ISingleTokenRes, IWxRegisterParams } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
 import {
   login as _login,
   logout as _logout,
+  mobileLogin as _mobileLogin,
   refreshToken as _refreshToken,
   register as _register,
   wxLogin as _wxLogin,
-  mobileLogin as _mobileLogin,
   wxRegister as _wxRegister,
   getWxCode,
 } from '@/api/login'
-import type { IRegisterForm } from '@/api/login'
-import type { IRegisterMobileParams, ISingleTokenRes, IWxRegisterParams } from '@/api/types/login'
+
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
@@ -23,15 +23,15 @@ import { useUserStore } from './user'
 // 初始化状态
 const tokenInfoState = isDoubleTokenMode
   ? {
-    accessToken: '',
-    accessExpiresIn: 0,
-    refreshToken: '',
-    refreshExpiresIn: 0,
-  }
+      accessToken: '',
+      accessExpiresIn: 0,
+      refreshToken: '',
+      refreshExpiresIn: 0,
+    }
   : {
-    token: '',
-    expiresIn: 0,
-  }
+      token: '',
+      expiresIn: 0,
+    }
 
 export const useTokenStore = defineStore(
   'token',
@@ -204,7 +204,7 @@ export const useTokenStore = defineStore(
           // 所以我们需要手动构造一个符合 ISingleTokenRes 的对象
           const authRes: ISingleTokenRes = {
             token: res.token,
-            expiresIn: 60 * 60 * 24 * 7 // 默认7天，或者从配置读取
+            expiresIn: 60 * 60 * 24 * 7, // 默认7天，或者从配置读取
           }
           await _postLogin(authRes)
           uni.showToast({ title: '登录成功', icon: 'success' })
@@ -232,14 +232,16 @@ export const useTokenStore = defineStore(
         // 后端可能未返回 expiresIn，手动补全以确保持久化逻辑正常
         const authRes: IAuthLoginRes = {
           ...res,
-          expiresIn: 60 * 60 * 24 * 7
+          expiresIn: 60 * 60 * 24 * 7,
         }
         await _postLogin(authRes)
         return authRes
-      } catch (error) {
+      }
+      catch (error) {
         console.error('手机号登录失败:', error)
         throw error
-      } finally {
+      }
+      finally {
         updateNowTime()
       }
     }
@@ -253,18 +255,19 @@ export const useTokenStore = defineStore(
         console.log('微信注册-res:', res)
         const authRes: IAuthLoginRes = {
           ...res,
-          expiresIn: 60 * 60 * 24 * 7
+          expiresIn: 60 * 60 * 24 * 7,
         }
         await _postLogin(authRes)
         return authRes
-      } catch (error) {
+      }
+      catch (error) {
         console.error('微信注册失败:', error)
         throw error
-      } finally {
+      }
+      finally {
         updateNowTime()
       }
     }
-
 
     /**
      * 退出登录 并 删除用户信息

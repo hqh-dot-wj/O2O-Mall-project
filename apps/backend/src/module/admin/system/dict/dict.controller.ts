@@ -21,7 +21,7 @@ import { UserTool, UserToolType } from '../user/user.decorator';
 @Controller('system/dict')
 @ApiBearerAuth('Authorization')
 export class DictController {
-  constructor(private readonly dictService: DictService) { }
+  constructor(private readonly dictService: DictService) {}
 
   //字典类型
   @Api({

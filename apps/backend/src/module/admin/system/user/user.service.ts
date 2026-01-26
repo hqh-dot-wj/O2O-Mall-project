@@ -64,10 +64,9 @@ export class UserService {
     @Inject(forwardRef(() => UserRoleService))
     private readonly userRoleService: UserRoleService,
     private readonly userExportService: UserExportService,
-  ) { }
+  ) {}
 
   // ==================== 私有辅助方法 ====================
-
 
   private async buildDataScopeConditions(currentUser?: UserType['user']): Promise<Prisma.SysUserWhereInput[]> {
     if (!currentUser) {

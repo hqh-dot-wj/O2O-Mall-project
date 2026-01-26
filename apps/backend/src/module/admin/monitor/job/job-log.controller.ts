@@ -12,7 +12,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @Controller('monitor/jobLog')
 @ApiBearerAuth('Authorization')
 export class JobLogController {
-  constructor(private readonly jobLogService: JobLogService) { }
+  constructor(private readonly jobLogService: JobLogService) {}
 
   @Api({
     summary: '获取定时任务日志列表',

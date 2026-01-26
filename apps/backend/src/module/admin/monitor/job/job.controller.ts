@@ -13,7 +13,7 @@ import { User } from 'src/module/admin/system/user/user.decorator';
 @Controller('monitor/job')
 @ApiBearerAuth('Authorization')
 export class JobController {
-  constructor(private readonly jobService: JobService) { }
+  constructor(private readonly jobService: JobService) {}
 
   @Api({
     summary: '获取定时任务列表',

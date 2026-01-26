@@ -1,15 +1,27 @@
 <script setup lang="tsx">
 import { ref, watch } from 'vue';
-import { NTag, NTabs, NTabPane, NButton, NSpace, NPopconfirm, NModal, NInput, NForm, NFormItem } from 'naive-ui';
+import {
+  NAvatar,
+  NButton,
+  NForm,
+  NFormItem,
+  NInput,
+  NModal,
+  NPopconfirm,
+  NSpace,
+  NTabPane,
+  NTabs,
+  NTag
+} from 'naive-ui';
+import { useBoolean } from '@sa/hooks';
+import { fetchAuditWithdrawal, fetchGetWithdrawalList } from '@/service/api/finance';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableProps } from '@/hooks/common/table';
-import { useBoolean } from '@sa/hooks';
 import { $t } from '@/locales';
-import { fetchGetWithdrawalList, fetchAuditWithdrawal } from '@/service/api/finance';
 import WithdrawalSearch from './modules/withdrawal-search.vue';
 
 defineOptions({
-  name: 'FinanceWithdrawal',
+  name: 'FinanceWithdrawal'
 });
 
 const appStore = useAppStore();
@@ -29,7 +41,7 @@ const statusRecord: Record<string, { label: string; type: NaiveUI.ThemeColor }> 
   PENDING: { label: '待审核', type: 'warning' },
   APPROVED: { label: '已通过', type: 'success' },
   REJECTED: { label: '已驳回', type: 'error' },
-  FAILED: { label: '打款失败', type: 'error' },
+  FAILED: { label: '打款失败', type: 'error' }
 };
 
 const {
@@ -41,78 +53,77 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetWithdrawalList,
   apiParams: {
     pageNum: 1,
     pageSize: 10,
-    status: 'PENDING',
+    status: 'PENDING'
   },
   columns: () => [
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
-      key: 'member',
+      key: 'memberId',
       title: '申请人',
       align: 'center',
-      minWidth: 120,
-      render: (row) => (
-        <div class="flex items-center gap-4px justify-center">
-          {row.member?.avatar && (
-            <img src={row.member.avatar} class="w-24px h-24px rounded-full" />
-          )}
-          <span>{row.member?.nickname || row.memberId}</span>
+      minWidth: 160,
+      render: row => (
+        <div class="flex items-center justify-center gap-2">
+          <NAvatar
+            round
+            size="small"
+            src={row.memberAvatar}
+            fallbackSrc={`https://api.dicebear.com/7.x/avataaars/svg?seed=${row.memberName || 'user'}`}
+          />
+          <div class="flex flex-col items-start">
+            <span>{row.memberName || '未知用户'}</span>
+            <span class="text-xs text-gray-500">{row.memberMobile}</span>
+          </div>
         </div>
-      ),
-    },
-    {
-      key: 'member',
-      title: '手机号',
-      align: 'center',
-      minWidth: 120,
-      render: (row) => row.member?.mobile || '-',
+      )
     },
     {
       key: 'amount',
       title: '提现金额',
       align: 'center',
       minWidth: 100,
-      render: (row) => <span class="text-error font-bold">¥{row.amount}</span>,
+      render: row => <span class="text-error font-bold">¥{row.amount}</span>
     },
     {
       key: 'method',
       title: '提现方式',
       align: 'center',
       minWidth: 100,
-      render: (row) => (row.method === 'WECHAT_WALLET' ? '微信钱包' : '银行卡'),
+      render: row => (row.method === 'WECHAT_WALLET' ? '微信钱包' : '银行卡')
     },
     {
       key: 'status',
       title: '状态',
       align: 'center',
       minWidth: 100,
-      render: (row) => {
+      render: row => {
         const status = statusRecord[row.status];
         return status ? <NTag type={status.type}>{status.label}</NTag> : row.status;
-      },
+      }
     },
     {
       key: 'createTime',
       title: '申请时间',
       align: 'center',
-      minWidth: 160,
+      minWidth: 160
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 180,
-      render: (row) => {
+      render: row => {
         if (row.status !== 'PENDING') {
           return <span class="text-gray-400">已处理</span>;
         }
@@ -126,9 +137,9 @@ const {
             </NButton>
           </NSpace>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 // Tab 切换时更新查询参数
@@ -153,7 +164,7 @@ async function submitAudit() {
     await fetchAuditWithdrawal({
       withdrawalId: currentWithdrawal.value.id,
       action: auditAction.value,
-      remark: auditRemark.value,
+      remark: auditRemark.value
     });
     window.$message?.success(auditAction.value === 'APPROVE' ? '已通过' : '已驳回');
     closeAuditModal();
@@ -199,7 +210,7 @@ async function submitAudit() {
         :scroll-x="1200"
         :loading="loading"
         remote
-        :row-key="(row) => row.id"
+        :row-key="row => row.id"
         :pagination="mobilePagination"
         class="sm:h-full"
       />
@@ -216,10 +227,12 @@ async function submitAudit() {
     >
       <div class="py-16px">
         <p class="mb-8px">
-          申请人: <strong>{{ currentWithdrawal?.member?.nickname }}</strong>
+          申请人:
+          <strong>{{ currentWithdrawal?.member?.nickname }}</strong>
         </p>
         <p class="mb-16px">
-          提现金额: <strong class="text-error">¥{{ currentWithdrawal?.amount }}</strong>
+          提现金额:
+          <strong class="text-error">¥{{ currentWithdrawal?.amount }}</strong>
         </p>
         <NForm>
           <NFormItem label="审核备注" path="remark">

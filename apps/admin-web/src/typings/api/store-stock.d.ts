@@ -6,15 +6,15 @@ declare namespace Api {
       price: number;
       isActive: boolean;
       tenantProd: {
-          id: string;
-          product: {
-              name: string;
-              mainImages: string[];
-          }
+        id: string;
+        product: {
+          name: string;
+          mainImages: string[];
+        };
       };
       globalSku: {
-          specValues: any;
-      }
+        specValues: any;
+      };
     }
 
     type StockList = Common.PaginatingQueryRecord<StockSku>;

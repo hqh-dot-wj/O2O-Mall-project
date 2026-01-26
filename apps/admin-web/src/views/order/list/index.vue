@@ -1,16 +1,16 @@
 <script setup lang="tsx">
 import { useRouter } from 'vue-router';
-import { NTag, NDivider } from 'naive-ui';
+import { NDivider, NTag } from 'naive-ui';
+import { fetchGetOrderList } from '@/service/api/order';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
 import { $t } from '@/locales';
-import { fetchGetOrderList } from '@/service/api/order';
 import ButtonIcon from '@/components/custom/button-icon.vue';
 import OrderSearch from './modules/order-search.vue';
 
 defineOptions({
-  name: 'OrderList',
+  name: 'OrderList'
 });
 
 const router = useRouter();
@@ -25,13 +25,13 @@ const orderStatusRecord: Record<string, { label: string; type: NaiveUI.ThemeColo
   SHIPPED: { label: '已发货', type: 'primary' },
   COMPLETED: { label: '已完成', type: 'success' },
   CANCELLED: { label: '已取消', type: 'default' },
-  REFUNDED: { label: '已退款', type: 'error' },
+  REFUNDED: { label: '已退款', type: 'error' }
 };
 
 // 订单类型映射
 const orderTypeRecord: Record<string, string> = {
   PRODUCT: '实物商品',
-  SERVICE: '服务类',
+  SERVICE: '服务类'
 };
 
 const {
@@ -43,7 +43,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetOrderList,
   apiParams: {
@@ -52,63 +52,102 @@ const {
     orderSn: null,
     receiverPhone: null,
     status: null,
-    orderType: null,
+    orderType: null
   },
   columns: () => [
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'orderSn',
       title: '订单号',
       align: 'center',
-      minWidth: 180,
+      minWidth: 180
     },
     {
       key: 'orderType',
       title: '订单类型',
       align: 'center',
       minWidth: 100,
-      render: (row) => orderTypeRecord[row.orderType] || row.orderType,
+      render: row => orderTypeRecord[row.orderType] || row.orderType
     },
     {
       key: 'receiverName',
       title: '收货人',
       align: 'center',
-      minWidth: 100,
+      minWidth: 100
     },
     {
       key: 'payAmount',
       title: '支付金额',
       align: 'center',
       minWidth: 100,
-      render: (row) => `¥${row.payAmount}`,
+      render: row => `¥${row.payAmount}`
     },
     {
       key: 'status',
       title: '订单状态',
       align: 'center',
       minWidth: 100,
-      render: (row) => {
+      render: row => {
         const status = orderStatusRecord[row.status];
         return status ? <NTag type={status.type}>{status.label}</NTag> : row.status;
-      },
+      }
+    },
+    {
+      key: 'productImg',
+      title: '商品图片',
+      align: 'center',
+      width: 80,
+      render: row => (
+        <div class="h-40px w-40px flex-center overflow-hidden rounded-4px bg-gray-100">
+          {row.productImg ? <img src={row.productImg} class="h-full w-full object-cover" /> : <span>无</span>}
+        </div>
+      )
+    },
+    {
+      key: 'receiverPhone',
+      title: '联系电话',
+      align: 'center',
+      minWidth: 120
+    },
+    {
+      key: 'commissionAmount',
+      title: '分佣金额',
+      align: 'center',
+      minWidth: 100,
+      render: row => `¥${row.commissionAmount}`
+    },
+    {
+      key: 'receiverAddress',
+      title: '收货地址',
+      align: 'center',
+      minWidth: 200,
+      ellipsis: {
+        tooltip: true
+      }
+    },
+    {
+      key: 'tenantName',
+      title: '所属租户',
+      align: 'center',
+      minWidth: 120
     },
     {
       key: 'createTime',
       title: '下单时间',
       align: 'center',
-      minWidth: 160,
+      minWidth: 160
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 120,
-      render: (row) => {
+      render: row => {
         return (
           <div class="flex-center gap-8px">
             {hasAuth('store:order:query') && (
@@ -122,9 +161,9 @@ const {
             )}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { checkedRowKeys } = useTableOperate(data, getData);
@@ -157,7 +196,7 @@ function handleViewDetail(orderId: string) {
         :scroll-x="1200"
         :loading="loading"
         remote
-        :row-key="(row) => row.id"
+        :row-key="row => row.id"
         :pagination="mobilePagination"
         class="sm:h-full"
       />

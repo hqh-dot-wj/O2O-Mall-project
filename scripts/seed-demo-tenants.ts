@@ -68,6 +68,21 @@ async function main() {
 
     // 1. Create Packages
     console.log('Seeding Packages...');
+    const pkgBasic = await prisma.sysTenantPackage.upsert({
+        where: { packageId: 1 },
+        update: {},
+        create: {
+            packageId: 1,
+            packageName: '基础版套餐',
+            menuIds: FULL_MENU_IDS,
+            menuCheckStrictly: true,
+            status: Status.NORMAL,
+            delFlag: DelFlag.NORMAL,
+            createBy: 'admin',
+            remark: '适合小微企业，基础功能'
+        }
+    });
+
     const pkgProfessional = await prisma.sysTenantPackage.upsert({
         where: { packageId: 2 },
         update: {},
@@ -153,6 +168,78 @@ async function main() {
             latitude: 28.19,
             longitude: 112.98,
             serviceRadius: 5000
+        },
+        {
+            id: '100010',
+            name: '深圳南山科技园店',
+            pkgId: 4,
+            contact: '郑总监',
+            phone: '13800755101',
+            region: '440305',
+            address: '深圳市南山区科兴科学园',
+            latitude: 22.54,
+            longitude: 113.95,
+            serviceRadius: 15000
+        },
+        {
+            id: '100011',
+            name: '杭州西湖体验中心',
+            pkgId: 4,
+            contact: '吴经理',
+            phone: '13800571102',
+            region: '330106',
+            address: '杭州市西湖区文三路',
+            latitude: 30.27,
+            longitude: 120.15,
+            serviceRadius: 10000
+        },
+        {
+            id: '100012',
+            name: '武汉光谷服务站',
+            pkgId: 1,
+            contact: '冯站长',
+            phone: '13800271103',
+            region: '420111',
+            address: '武汉市洪山区光谷广场',
+            latitude: 30.50,
+            longitude: 114.41,
+            serviceRadius: 3000
+        },
+        {
+            id: '100013',
+            name: '成都锦江区便民店',
+            pkgId: 1,
+            contact: '褚店长',
+            phone: '13800281104',
+            region: '510104',
+            address: '成都市锦江区春熙路',
+            latitude: 30.65,
+            longitude: 104.07,
+            serviceRadius: 4000
+        },
+        {
+            id: '100014',
+            name: '西安雁塔区服务点',
+            pkgId: 2,
+            contact: '卫主管',
+            phone: '13800291105',
+            region: '610113',
+            address: '西安市雁塔区小寨',
+            latitude: 34.22,
+            longitude: 108.94,
+            serviceRadius: 6000
+        },
+        {
+            id: '100015',
+            name: '南京鼓楼区运营中心',
+            pkgId: 3,
+            contact: '蒋经理',
+            phone: '13800251106',
+            region: '320106',
+            address: '南京市鼓楼区新街口',
+            latitude: 32.05,
+            longitude: 118.79,
+            serviceRadius: 8000
         }
     ];
 
@@ -696,6 +783,7 @@ async function main() {
             update: {},
             create: {
                 id: `tenant-sku-${t.id}-001-1`,
+                tenantId: t.id,
                 tenantProductId: tenantProd1.id,
                 globalSkuId: sku1_1.skuId,
                 price: 158.00, // 租户自定价
@@ -711,6 +799,7 @@ async function main() {
             update: {},
             create: {
                 id: `tenant-sku-${t.id}-001-2`,
+                tenantId: t.id,
                 tenantProductId: tenantProd1.id,
                 globalSkuId: sku1_2.skuId,
                 price: 398.00,
@@ -726,6 +815,7 @@ async function main() {
             update: {},
             create: {
                 id: `tenant-sku-${t.id}-003-1`,
+                tenantId: t.id,
                 tenantProductId: tenantProd3.id,
                 globalSkuId: sku3_1.skuId,
                 price: 29.90,
@@ -741,6 +831,7 @@ async function main() {
             update: {},
             create: {
                 id: `tenant-sku-${t.id}-003-2`,
+                tenantId: t.id,
                 tenantProductId: tenantProd3.id,
                 globalSkuId: sku3_2.skuId,
                 price: 49.90,
@@ -755,7 +846,7 @@ async function main() {
     // 8. Seed Members for all tenants
     console.log('Seeding Members for all tenants...');
     const tenantIds = tenants.map(t => t.id);
-    const members = await seedMembersInternal(prisma, tenantIds, 5); // 5 members per tenant
+    const members = await seedMembersInternal(prisma, tenantIds, 20); // 20 members per tenant
 
     // 9. Seed Orders for all tenants
     console.log('Seeding Orders for all tenants...');

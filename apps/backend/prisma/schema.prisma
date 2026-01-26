@@ -271,6 +271,9 @@ model PmsProduct {
   // --- [新增] 上架状态 (Selection Center可见性) ---
   publishStatus PublishStatus @default(ON_SHELF) @map("publish_status")
 
+  // --- [新增] 软删除标记 ---
+  delFlag DelFlag @default(NORMAL) @map("del_flag")
+
   createTime DateTime @default(now()) @map("create_time")
 
   // 关联
@@ -401,23 +404,32 @@ model UmsMember {
 
   // --- 状态与等级 ---
   status  MemberStatus @default(NORMAL)
-  levelId Int?         @map("level_id") // 会员等级(关联 MemberLevel)
+  levelId Int          @default(0) @map("level_id") // 0=C普通, 1=C1团长, 2=C2股东
 
   // --- 钱包资产 (分销核心) ---
   balance       Decimal @default(0.00) @db.Decimal(10, 2) // 可提现余额
   frozenBalance Decimal @default(0.00) @db.Decimal(10, 2) // 冻结余额
   points        Int     @default(0) // 积分
 
-  // --- 分销关系链 ---
-  referrerId String? @map("referrer_id") // 谁推荐我进来的
+  // --- 三级分销关系链 ---
+  parentId         String? @map("parent_id") // 直接上级 (C1或C2)
+  indirectParentId String? @map("indirect_parent_id") // 间接上级 (C2)
+  referralCode     String? @unique @map("referral_code") // 推荐码 (仅C2, 格式: T001-XXXX)
+
+  // --- 升级信息 ---
+  upgradedAt     DateTime? @map("upgraded_at") // 升级时间
+  upgradeOrderId String?   @map("upgrade_order_id") // 通过购买升级时的订单ID
 
   // --- 时间 ---
   createTime DateTime @default(now()) @map("create_time")
   updateTime DateTime @updatedAt @map("update_time")
 
-  // --- 关联 ---
-  referrer UmsMember?  @relation("Referral", fields: [referrerId], references: [memberId])
-  children UmsMember[] @relation("Referral") // 我的下线
+  // --- 分销关联 ---
+  parent         UmsMember?  @relation("ParentChild", fields: [parentId], references: [memberId])
+  directChildren UmsMember[] @relation("ParentChild") // 我的直接下级
+
+  indirectParent   UmsMember?  @relation("IndirectParentChild", fields: [indirectParentId], references: [memberId])
+  indirectChildren UmsMember[] @relation("IndirectParentChild") // 我的间接下级
 
   socials         SysSocialUser[]
   workers         SrvWorker[] // 1:N 技师关联 (多租户兼职)
@@ -430,8 +442,55 @@ model UmsMember {
   withdrawals FinWithdrawal[]
 
   @@index([mobile])
-  @@index([referrerId])
+  @@index([parentId])
+  @@index([indirectParentId])
+  @@index([tenantId, levelId])
   @@map("ums_member")
+}
+
+/// 会员升级申请表
+model UmsUpgradeApply {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+  memberId String @map("member_id")
+
+  fromLevel Int @map("from_level") // 原等级 (0/1)
+  toLevel   Int @map("to_level") // 目标等级 (1/2)
+
+  applyType    String  @map("apply_type") // PRODUCT_PURCHASE / REFERRAL_CODE
+  referralCode String? @map("referral_code") // 扫码申请时的推荐码
+  orderId      String? @map("order_id") // 购买升级商品时的订单ID
+  referrerId   String? @map("referrer_id") // 推荐人ID (从推荐码解析)
+
+  status       String    @default("PENDING") // PENDING / APPROVED / REJECTED
+  reviewBy     String?   @map("review_by")
+  reviewTime   DateTime? @map("review_time")
+  reviewRemark String?   @map("review_remark") @db.VarChar(500)
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@index([tenantId, memberId])
+  @@index([status])
+  @@map("ums_upgrade_apply")
+}
+
+/// C2推荐码表 (带租户前缀: T001-XXXX)
+model UmsReferralCode {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+  memberId String @map("member_id") // 归属人 (仅C2可有)
+
+  code      String  @unique // 格式: T001-XXXX
+  qrCodeUrl String? @map("qr_code_url") @db.VarChar(500) // 小程序码URL
+
+  usageCount Int     @default(0) @map("usage_count") // 使用次数
+  isActive   Boolean @default(true) @map("is_active")
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@unique([tenantId, memberId])
+  @@index([code])
+  @@map("ums_referral_code")
 }
 
 /// 社交账号绑定表
@@ -1398,26 +1457,39 @@ model SysUserRole {
 // ==========================================
 
 model SysDistConfig {
-  id         Int      @id @default(autoincrement())
-  tenantId   String   @unique @map("tenant_id") @db.VarChar(20) // 每个租户一套规则
-  level1Rate Decimal  @default(0.60) @map("level1_rate") @db.Decimal(5, 2) // 一级分佣比 (直推)
-  level2Rate Decimal  @default(0.40) @map("level2_rate") @db.Decimal(5, 2) // 二级分佣比 (间推)
-  enableLV0  Boolean  @default(true) @map("enable_lv0") // 是否允许普通用户参与分销
-  createBy   String   @default("") @map("create_by") @db.VarChar(64)
-  createTime DateTime @default(now()) @map("create_time")
-  updateBy   String   @default("") @map("update_by") @db.VarChar(64)
-  updateTime DateTime @updatedAt @map("update_time")
+  id         Int     @id @default(autoincrement())
+  tenantId   String  @unique @map("tenant_id") @db.VarChar(20) // 每个租户一套规则
+  level1Rate Decimal @default(0.60) @map("level1_rate") @db.Decimal(5, 2) // 一级分佣比 (直推)
+  level2Rate Decimal @default(0.40) @map("level2_rate") @db.Decimal(5, 2) // 二级分佣比 (间推)
+  enableLV0  Boolean @default(true) @map("enable_lv0") // 是否允许普通用户参与分销
+
+  // === 跨店分销配置 ===
+  enableCrossTenant Boolean @default(false) @map("enable_cross_tenant") // 是否允许外店推荐人获取佣金
+  crossTenantRate   Decimal @default(1.00) @map("cross_tenant_rate") @db.Decimal(5, 2) // 跨店分佣折扣 (1.00=100%, 0.80=80%)
+  crossMaxDaily     Decimal @default(500.00) @map("cross_max_daily") @db.Decimal(10, 2) // 跨店佣金日限额
+
+  createBy      String         @default("") @map("create_by") @db.VarChar(64)
+  createTime    DateTime       @default(now()) @map("create_time")
+  updateBy      String         @default("") @map("update_by") @db.VarChar(64)
+  updateTime    DateTime       @updatedAt @map("update_time")
+  playInstances PlayInstance[]
 
   @@map("sys_dist_config")
 }
 
 // 分销规则变更历史 (审计日志)
 model SysDistConfigLog {
-  id         Int      @id @default(autoincrement())
-  tenantId   String   @map("tenant_id") @db.VarChar(20)
-  level1Rate Decimal  @map("level1_rate") @db.Decimal(5, 2)
-  level2Rate Decimal  @map("level2_rate") @db.Decimal(5, 2)
-  enableLV0  Boolean  @map("enable_lv0")
+  id         Int     @id @default(autoincrement())
+  tenantId   String  @map("tenant_id") @db.VarChar(20)
+  level1Rate Decimal @map("level1_rate") @db.Decimal(5, 2)
+  level2Rate Decimal @map("level2_rate") @db.Decimal(5, 2)
+  enableLV0  Boolean @map("enable_lv0")
+
+  // === 跨店分销配置 ===
+  enableCrossTenant Boolean? @map("enable_cross_tenant")
+  crossTenantRate   Decimal? @map("cross_tenant_rate") @db.Decimal(5, 2)
+  crossMaxDaily     Decimal? @map("cross_max_daily") @db.Decimal(10, 2)
+
   operator   String   @db.VarChar(64) // 操作人
   createTime DateTime @default(now()) @map("create_time")
 
@@ -1426,6 +1498,20 @@ model SysDistConfigLog {
 }
 
 // ==========================================
+
+// 分销黑名单 (禁止特定用户获取佣金)
+model SysDistBlacklist {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @map("tenant_id") @db.VarChar(20)
+  userId     String   @map("user_id") @db.VarChar(20)
+  reason     String?  @db.VarChar(255)
+  createBy   String   @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@unique([tenantId, userId])
+  @@map("sys_dist_blacklist")
+}
+
 // 📌 OMS 订单管理模块
 // ==========================================
 
@@ -1631,8 +1717,11 @@ model FinCommission {
   planSettleTime DateTime  @map("plan_settle_time") // 计划解冻时间
   settleTime     DateTime? @map("settle_time") // 实际解冻时间
 
+  isCrossTenant Boolean @default(false) @map("is_cross_tenant") // 是否跨店佣金
+
   beneficiary UmsMember @relation(fields: [beneficiaryId], references: [memberId])
-  order       OmsOrder  @relation(fields: [orderId], references: [id])
+
+  order OmsOrder @relation(fields: [orderId], references: [id])
 
   @@unique([orderId, beneficiaryId, level]) // 防重复
   @@index([orderId])
@@ -1671,4 +1760,158 @@ model FinWithdrawal {
   @@index([tenantId, status])
   @@index([memberId, createTime])
   @@map("fin_withdrawal")
+}
+
+// ==================== 消息通知模块 ====================
+
+/// 系统消息表 (站内信)
+model SysMessage {
+  id      Int     @id @default(autoincrement())
+  title   String  @db.VarChar(100) // 标题
+  content String? @db.Text // 内容
+  type    String  @db.VarChar(50) // 类型: ORDER, SYSTEM, NOTICE
+
+  receiverId String  @map("receiver_id") // 接收人ID (通常是MemberID或TenantID)
+  isRead     Boolean @default(false) @map("is_read") // 是否已读
+
+  tenantId String @map("tenant_id") @db.VarChar(20) // 归属租户
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@index([receiverId])
+  @@index([tenantId])
+  @@map("sys_message")
+}
+
+// ==========================================
+// 📌 营销玩法商品化平台 (MaaS) 模型
+// ==========================================
+
+enum MarketingStockMode {
+  STRONG_LOCK // 强互斥 (实物)
+  LAZY_CHECK // 弱互斥 (服务)
+}
+
+/// 玩法模板 (总部定义)
+model PlayTemplate {
+  id         String @id @default(cuid())
+  code       String @unique // GROUP_BUY, BARGAIN
+  name       String
+  ruleSchema Json   @map("rule_schema") // 动态表单配置 { fields: [...] }
+  unitName   String @map("unit_name") // 单位: 节/小时/袋
+
+  uiComponentId String? @map("ui_component_id") // 前端组件映射
+
+  status     Status   @default(NORMAL)
+  delFlag    DelFlag  @default(NORMAL) @map("del_flag")
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@map("mkt_play_template")
+}
+
+/// 门店营销商品 (门店生产)
+model StorePlayConfig {
+  id       String @id @default(cuid())
+  tenantId String @default("000000") @map("tenant_id")
+  storeId  String @map("store_id")
+
+  // 关联物理服务/商品
+  serviceId   String      @map("service_id")
+  serviceType ProductType @map("service_type")
+
+  // 关联模板
+  templateCode String @map("template_code")
+
+  // 营销规则配置
+  rules Json // { targetCount: 3, discountPrice: 99 }
+
+  // 库存策略
+  stockMode MarketingStockMode @map("stock_mode")
+
+  status  PublishStatus @default(OFF_SHELF) // ONLINE, OFFLINE
+  delFlag DelFlag       @default(NORMAL) @map("del_flag")
+
+  createTime    DateTime       @default(now()) @map("create_time")
+  updateTime    DateTime       @updatedAt @map("update_time")
+  playInstances PlayInstance[]
+
+  @@map("mkt_store_config")
+}
+
+enum PlayInstanceStatus {
+  PENDING_PAY // 待支付
+  PAID // 已支付 (锁定名额)
+  ACTIVE // 生效中 (比如拼团正在进行)
+  SUCCESS // 成功 (达成条件/已核销)
+  TIMEOUT // 超时关闭
+  FAILED // 失败 (如拼团人数不足)
+  REFUNDED // 已退款
+}
+
+/// 营销玩法实例 (交易记录)
+model PlayInstance {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+  memberId String @map("member_id")
+
+  // 关联配置
+  configId     String @map("config_id")
+  templateCode String @map("template_code")
+
+  config StorePlayConfig @relation(fields: [configId], references: [id])
+
+  // 关联系统订单
+  orderSn String? @unique @map("order_sn")
+
+  // 实例特定的动态数据 (比如当前拼团进度)
+  instanceData Json @map("instance_data")
+
+  status PlayInstanceStatus @default(PENDING_PAY)
+
+  // 时间线
+  createTime      DateTime       @default(now()) @map("create_time")
+  payTime         DateTime?      @map("pay_time")
+  endTime         DateTime?      @map("end_time") // 成功或失败的最终时间
+  updateTime      DateTime       @updatedAt @map("update_time")
+  sysDistConfig   SysDistConfig? @relation(fields: [sysDistConfigId], references: [id])
+  sysDistConfigId Int?
+
+  @@index([configId])
+  @@index([memberId])
+  @@map("mkt_play_instance")
+}
+
+enum AssetStatus {
+  UNUSED
+  USED
+  EXPIRED
+  FROZEN
+}
+
+/// 用户营销资产 (核销券/权益)
+model MktUserAsset {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+  memberId String @map("member_id")
+
+  // 来源推导
+  instanceId String @map("instance_id")
+  configId   String @map("config_id")
+
+  assetName String @map("asset_name")
+  assetType String @map("asset_type") // VOUCHER, TIMES_CARD
+
+  balance        Decimal @default(0) @db.Decimal(12, 2)
+  initialBalance Decimal @map("initial_balance") @db.Decimal(12, 2)
+
+  status AssetStatus @default(UNUSED)
+
+  expireTime DateTime? @map("expire_time")
+  createTime DateTime  @default(now()) @map("create_time")
+  updateTime DateTime  @updatedAt @map("update_time")
+
+  @@index([memberId, status])
+  @@index([instanceId])
+  @@map("mkt_user_asset")
 }

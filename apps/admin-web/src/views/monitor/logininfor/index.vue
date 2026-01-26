@@ -4,7 +4,7 @@ import {
   fetchBatchDeleteLoginInfor,
   fetchCleanLoginInfor,
   fetchGetLoginInforList,
-  fetchUnlockLoginInfor,
+  fetchUnlockLoginInfor
 } from '@/service/api/monitor/login-infor';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
@@ -20,7 +20,7 @@ import LoginInforSearch from './modules/login-infor-search.vue';
 import LoginInforViewDrawer from './modules/login-infor-view-drawer.vue';
 
 defineOptions({
-  name: 'LoginInforList',
+  name: 'LoginInforList'
 });
 
 const appStore = useAppStore();
@@ -41,7 +41,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetLoginInforList,
   apiParams: {
@@ -52,70 +52,70 @@ const {
     userName: null,
     ipaddr: null,
     status: null,
-    params: {},
+    params: {}
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'userName',
       title: '用户账号',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'deviceType',
       title: '设备类型',
       align: 'center',
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         return <DictTag size="small" value={row.deviceType} dict-code="sys_device_type" />;
-      },
+      }
     },
     {
       key: 'ipaddr',
       title: '登录IP地址',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'loginLocation',
       title: '登录地点',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'browser',
       title: '浏览器类型',
       align: 'center',
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         return (
           <div class="flex items-center justify-center gap-2">
             <SvgIcon icon={getBrowserIcon(row.browser)} />
             {row.browser}
           </div>
         );
-      },
+      }
     },
     {
       key: 'os',
       title: '操作系统',
       align: 'center',
       ellipsis: {
-        tooltip: true,
+        tooltip: true
       },
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         const osName = row.os?.split(' or ')[0] ?? '';
         return (
           <div class="flex items-center justify-center gap-2">
@@ -123,32 +123,32 @@ const {
             {osName}
           </div>
         );
-      },
+      }
     },
     {
       key: 'status',
       title: '登录状态',
       align: 'center',
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         return <DictTag size="small" value={row.status} dict-code="sys_common_status" />;
-      },
+      }
     },
     {
       key: 'loginTime',
       title: '访问时间',
       align: 'center',
       ellipsis: {
-        tooltip: true,
+        tooltip: true
       },
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 130,
-      render: (row) => {
+      render: row => {
         const viewBtn = () => {
           return (
             <ButtonIcon
@@ -182,9 +182,9 @@ const {
             {unlockBtn()}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, editingData, handleEdit, checkedRowKeys, onBatchDeleted } = useTableOperate(data, getData);
@@ -221,7 +221,7 @@ async function handleCleanLoginInfor() {
       } catch {
         // error handled by request interceptor
       }
-    },
+    }
   });
 }
 
@@ -277,7 +277,7 @@ async function handleUnlockLoginInfor(username: string) {
         :scroll-x="962"
         :loading="loading"
         remote
-        :row-key="(row) => row.infoId"
+        :row-key="row => row.infoId"
         :pagination="mobilePagination"
         class="sm:h-full"
       />
@@ -287,4 +287,3 @@ async function handleUnlockLoginInfor(username: string) {
 </template>
 
 <style scoped></style>
-

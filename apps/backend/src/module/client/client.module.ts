@@ -9,33 +9,33 @@ import { AddressModule } from './address/address.module';
 import { ServiceSlotModule } from './service/service-slot.module';
 import { PaymentModule } from './payment/payment.module';
 import { ClientFinanceModule } from './finance/client-finance.module';
+import { UpgradeModule } from './upgrade/upgrade.module';
 
 @Module({
-    imports: [
-        ClientAuthModule,
-        UserModule,
-        ClientProductModule,
-        ClientLocationModule,
-        ClientCartModule,
-        ClientOrderModule,
-        AddressModule,
-        ServiceSlotModule,
-        PaymentModule,
-        ClientFinanceModule,
-    ],
-    controllers: [],
-    providers: [],
-    exports: [
-        ClientAuthModule,
-        ClientProductModule,
-        ClientLocationModule,
-        ClientCartModule,
-        ClientOrderModule,
-        AddressModule,
-        ServiceSlotModule,
-        PaymentModule,
-    ]
+  imports: [
+    ClientAuthModule,
+    UserModule,
+    ClientProductModule,
+    ClientLocationModule,
+    ClientCartModule,
+    ClientOrderModule,
+    AddressModule,
+    ServiceSlotModule,
+    PaymentModule,
+    ClientFinanceModule,
+    UpgradeModule,
+  ],
+  controllers: [],
+  providers: [],
+  exports: [
+    ClientAuthModule,
+    ClientProductModule,
+    ClientLocationModule,
+    ClientCartModule,
+    ClientOrderModule,
+    AddressModule,
+    ServiceSlotModule,
+    PaymentModule,
+  ],
 })
-export class ClientModule { }
-
-
+export class ClientModule {}

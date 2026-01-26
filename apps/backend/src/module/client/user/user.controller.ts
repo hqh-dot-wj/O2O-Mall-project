@@ -12,7 +12,7 @@ import { ClientUserVo } from './vo';
 @UseGuards(AuthGuard('member-jwt'))
 @Controller('client/user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Api({ summary: '获取用户信息', type: ClientUserVo })
   @Get('info')

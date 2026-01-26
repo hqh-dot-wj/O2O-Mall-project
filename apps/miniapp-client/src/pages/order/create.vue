@@ -1,14 +1,16 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import type { AddressVo } from '@/api/address'
+import type { CheckoutPreviewVo, OrderItemDto } from '@/api/order'
 import { onLoad, onShow } from '@dcloudio/uni-app'
+import { computed, ref } from 'vue'
+import { getDefaultAddress } from '@/api/address'
+import { createOrder, getCheckoutPreview } from '@/api/order'
+import { mockPaySuccess, prepay } from '@/api/payment'
+import AddressSelector from '@/components/address-selector/address-selector.vue'
+import ServiceTimePicker from '@/components/service-time-picker/service-time-picker.vue'
+
 import { useCartStore } from '@/store/cart'
 import { useLocationStore } from '@/store/location'
-import { getCheckoutPreview, createOrder, type CheckoutPreviewVo, type OrderItemDto } from '@/api/order'
-import { getDefaultAddress, type AddressVo } from '@/api/address'
-import AddressSelector from '@/components/address-selector/address-selector.vue'
-
-import ServiceTimePicker from '@/components/service-time-picker/service-time-picker.vue'
-import { prepay, mockPaySuccess } from '@/api/payment'
 
 definePage({
   style: {
@@ -19,12 +21,13 @@ definePage({
 const cartStore = useCartStore()
 const locationStore = useLocationStore()
 
-// 结算模式: 'cart' 从购物车 | 'direct' 直接购买
-const checkoutMode = ref<'cart' | 'direct'>('cart')
+// 结算模式: 'cart' 从购物车 | 'direct' 直接购买 | 'group_buy' 拼团
+const checkoutMode = ref<'cart' | 'direct' | 'group_buy'>('cart')
 
 // 直接购买的商品数据
 const directBuyItems = ref<OrderItemDto[]>([])
 const directTenantId = ref('')
+const marketingConfigId = ref('')
 
 // 页面状态
 const loading = ref(true)
@@ -45,10 +48,11 @@ const remark = ref('')
 
 // 获取当前结算数据
 const checkoutData = computed(() => {
-  if (checkoutMode.value === 'direct') {
+  if (checkoutMode.value === 'direct' || checkoutMode.value === 'group_buy') {
     return {
       items: directBuyItems.value,
       tenantId: directTenantId.value,
+      marketingConfigId: marketingConfigId.value || undefined,
     }
   }
   return cartStore.getCheckoutData()
@@ -57,16 +61,20 @@ const checkoutData = computed(() => {
 // 页面加载
 onLoad(async (options) => {
   // 判断结算模式
-  if (options?.mode === 'direct' && options?.skuId && options?.tenantId) {
-    // 直接购买模式
-    checkoutMode.value = 'direct'
+  if ((options?.mode === 'direct' || options?.mode === 'group_buy') && options?.skuId && options?.tenantId) {
+    // 直接购买/拼团模式
+    checkoutMode.value = options.mode as any
     directTenantId.value = options.tenantId
+    if (options.marketingConfigId) {
+      marketingConfigId.value = options.marketingConfigId
+    }
     directBuyItems.value = [{
       skuId: options.skuId,
-      quantity: parseInt(options.quantity || '1'),
+      quantity: Number.parseInt(options.quantity || '1'),
       shareUserId: options.shareUserId || undefined,
     }]
-  } else {
+  }
+  else {
     // 购物车结算模式
     checkoutMode.value = 'cart'
   }
@@ -139,7 +147,7 @@ function openServiceTimePicker() {
 }
 
 // 选择服务时间
-function onServiceTimeConfirm(res: { date: string; time: string; fullTime: string }) {
+function onServiceTimeConfirm(res: { date: string, time: string, fullTime: string }) {
   selectedTimeText.value = res.fullTime
   // 为了兼容性，替换 - 为 /
   const dateStr = res.fullTime.replace(/-/g, '/')
@@ -153,13 +161,15 @@ function formatPrice(price: number): string {
 
 // 格式化规格
 function formatSpec(specData: Record<string, string> | null): string {
-  if (!specData) return ''
+  if (!specData)
+    return ''
   return Object.values(specData).join(' / ')
 }
 
 // 提交订单
 async function submitOrder() {
-  if (!preview.value) return
+  if (!preview.value)
+    return
 
   // 校验地址
   if (!selectedAddress.value) {
@@ -188,6 +198,7 @@ async function submitOrder() {
       receiverLng: addr.longitude,
       bookingTime: bookingTime.value, // 传递预约时间
       remark: remark.value || undefined,
+      marketingConfigId: data.marketingConfigId, // 传递营销ID
     })
 
     if (result) {
@@ -216,11 +227,11 @@ async function submitOrder() {
 async function payOrder(orderId: string) {
   try {
     uni.showLoading({ title: '正在发起支付...' })
-    
+
     // 1. 预下单
     // ⚠️ 开发模式：直接模拟成功
-    const IS_DEV = true 
-    
+    const IS_DEV = true
+
     if (IS_DEV) {
       await mockPaySuccess(orderId)
       uni.hideLoading()
@@ -230,7 +241,7 @@ async function payOrder(orderId: string) {
 
     // 2. 真实支付与微信交互
     const params = await prepay(orderId)
-    
+
     // 3. 唤起微信支付
     uni.requestPayment({
       provider: 'wxpay',
@@ -244,16 +255,17 @@ async function payOrder(orderId: string) {
         console.error('支付失败:', err)
         // 支付失败跳到详情页
         uni.redirectTo({ url: `/pages/order/detail?id=${orderId}` })
-      }
+      },
     })
-  } catch (err: any) {
+  }
+  catch (err: any) {
     uni.hideLoading()
     console.error('支付发起失败', err)
     uni.showToast({ title: '支付发起失败', icon: 'none' })
     // 失败也跳详情
-     setTimeout(() => {
-        uni.redirectTo({ url: `/pages/order/detail?id=${orderId}` })
-     }, 1500)
+    setTimeout(() => {
+      uni.redirectTo({ url: `/pages/order/detail?id=${orderId}` })
+    }, 1500)
   }
 }
 </script>
@@ -418,9 +430,10 @@ async function payOrder(orderId: string) {
   font-weight: 500;
   color: #333;
 
-  view, text {
-      display: flex;
-      align-items: center;
+  view,
+  text {
+    display: flex;
+    align-items: center;
   }
 
   text:last-child {
@@ -485,13 +498,13 @@ async function payOrder(orderId: string) {
     align-items: center;
     justify-content: space-between;
     padding: 30rpx;
-    
+
     .time-text {
       font-size: 30rpx;
       color: #333;
       font-weight: 500;
     }
-    
+
     .placeholder {
       font-size: 28rpx;
       color: #999;

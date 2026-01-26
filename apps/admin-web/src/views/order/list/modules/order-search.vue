@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NInput, NSelect, NButton } from 'naive-ui';
+import { NButton, NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NInput, NSelect } from 'naive-ui';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'OrderSearch',
+  name: 'OrderSearch'
 });
 
 interface Emits {
@@ -21,13 +21,13 @@ const statusOptions = [
   { label: '已发货', value: 'SHIPPED' },
   { label: '已完成', value: 'COMPLETED' },
   { label: '已取消', value: 'CANCELLED' },
-  { label: '已退款', value: 'REFUNDED' },
+  { label: '已退款', value: 'REFUNDED' }
 ];
 
 // 订单类型选项
 const orderTypeOptions = [
   { label: '实物商品', value: 'PRODUCT' },
-  { label: '服务类', value: 'SERVICE' },
+  { label: '服务类', value: 'SERVICE' }
 ];
 
 function handleReset() {
@@ -67,7 +67,7 @@ function handleSearch() {
             </NGridItem>
             <NGridItem span="24 s:24 m:24">
               <NFormItem>
-                <div class="flex gap-12px w-full justify-end">
+                <div class="w-full flex justify-end gap-12px">
                   <NButton @click="handleReset">{{ $t('common.reset') }}</NButton>
                   <NButton type="primary" ghost @click="handleSearch">{{ $t('common.search') }}</NButton>
                 </div>

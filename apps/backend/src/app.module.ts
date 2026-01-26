@@ -16,6 +16,7 @@ import { CryptoModule, DecryptInterceptor } from './common/crypto';
 import { LoggerModule } from './common/logger';
 import { ClsModule } from './common/cls';
 import { TransactionalInterceptor } from './common/interceptors/transactional.interceptor';
+import { IdempotentGuard } from './common/guards/idempotent.guard';
 
 import { MainModule } from './module/main/main.module';
 import { AdminModule } from './module/admin/admin.module';
@@ -30,6 +31,7 @@ import { StoreOrderModule } from './module/store/order/store-order.module';
 import { StoreFinanceModule } from './module/store/finance/store-finance.module';
 import { ClientFinanceModule } from './module/client/finance/client-finance.module';
 import { RiskModule } from './module/risk/risk.module';
+import { MarketingModule } from './module/marketing/marketing.module';
 
 @Global()
 @Module({
@@ -90,6 +92,7 @@ import { RiskModule } from './module/risk/risk.module';
     RiskModule,
     PmsModule,
     FinanceModule,
+    MarketingModule,
   ],
   providers: [
     // 解密拦截器 (解密前端加密请求)
@@ -126,6 +129,10 @@ import { RiskModule } from './module/risk/risk.module';
     {
       provide: APP_GUARD,
       useClass: PermissionGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: IdempotentGuard,
     },
   ],
   controllers: [],

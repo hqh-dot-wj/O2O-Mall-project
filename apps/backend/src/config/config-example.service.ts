@@ -9,7 +9,7 @@ import { AppConfigService } from 'src/config/app-config.service';
 @Injectable()
 export class ConfigExampleService {
   private readonly logger = new Logger(ConfigExampleService.name);
-  constructor(private readonly config: AppConfigService) { }
+  constructor(private readonly config: AppConfigService) {}
 
   /**
    * 示例 1: 获取应用配置

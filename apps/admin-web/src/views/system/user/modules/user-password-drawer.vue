@@ -5,7 +5,7 @@ import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'UserPasswordDrawer',
+  name: 'UserPasswordDrawer'
 });
 
 interface Props {
@@ -22,7 +22,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -38,14 +38,14 @@ function createDefaultModel(): Model {
     userName: '',
     nickName: '',
     deptName: '',
-    password: '',
+    password: ''
   };
 }
 
 type RuleKey = Extract<keyof Model, 'password'>;
 
 const rules: Record<RuleKey, App.Global.FormRule[]> = {
-  password: [{ ...patternRules.pwd }],
+  password: [{ ...patternRules.pwd }]
 };
 
 function handleUpdateModelWhenEdit() {

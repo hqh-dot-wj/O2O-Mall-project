@@ -5,7 +5,7 @@ import {
   fetchGetRoleUserList,
   fetchGetUserList,
   fetchUpdateRoleAuthUser,
-  fetchUpdateRoleAuthUserCancel,
+  fetchUpdateRoleAuthUserCancel
 } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { useDict } from '@/hooks/business/dict';
@@ -15,7 +15,7 @@ import { $t } from '@/locales';
 import DictTag from '@/components/custom/dict-tag.vue';
 
 defineOptions({
-  name: 'RoleAuthUserDrawer',
+  name: 'RoleAuthUserDrawer'
 });
 
 interface Props {
@@ -32,7 +32,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const appStore = useAppStore();
@@ -56,47 +56,47 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
     nickName: null,
     phonenumber: null,
     status: null,
-    params: {},
+    params: {}
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'userName',
       title: '用户名称',
       align: 'center',
       minWidth: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'nickName',
       title: '用户昵称',
       align: 'center',
       minWidth: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'deptName',
       title: '部门',
       align: 'center',
       minWidth: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'phonenumber',
       title: '手机号码',
       align: 'center',
       minWidth: 120,
-      ellipsis: true,
+      ellipsis: true
     },
     {
       key: 'status',
@@ -105,15 +105,15 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
       minWidth: 80,
       render(row) {
         return <DictTag size="small" value={row.status} dictCode="sys_normal_disable" />;
-      },
+      }
     },
     {
       key: 'createTime',
       title: '创建时间',
       align: 'center',
-      minWidth: 120,
-    },
-  ],
+      minWidth: 120
+    }
+  ]
 });
 
 const { checkedRowKeys } = useTableOperate(data, getData);
@@ -124,9 +124,9 @@ async function handleUpdateModelWhenEdit() {
   checkedRowKeys.value = [];
   getDataByPage();
   const { data: roleUserList } = await fetchGetRoleUserList({
-    roleId: props.rowData?.roleId,
+    roleId: props.rowData?.roleId
   });
-  checkedUserIds.value = roleUserList?.rows.map((item) => item.userId) || [];
+  checkedUserIds.value = roleUserList?.rows.map(item => item.userId) || [];
   checkedRowKeys.value = checkedUserIds.value;
 }
 
@@ -141,7 +141,7 @@ async function handleSubmit() {
   }
 
   // 批量取消用户授权
-  const cancelUserIds = checkedUserIds.value.filter((item) => !checkedRowKeys.value.includes(item));
+  const cancelUserIds = checkedUserIds.value.filter(item => !checkedRowKeys.value.includes(item));
   if (cancelUserIds.length > 0) {
     try {
       await fetchUpdateRoleAuthUserCancel(props.rowData!.roleId, cancelUserIds);
@@ -151,7 +151,7 @@ async function handleSubmit() {
   }
 
   // 批量选择用户授权
-  const addUserIds = checkedRowKeys.value.filter((item) => !checkedUserIds.value.includes(item));
+  const addUserIds = checkedRowKeys.value.filter(item => !checkedUserIds.value.includes(item));
   if (addUserIds.length > 0) {
     try {
       await fetchUpdateRoleAuthUser(props.rowData!.roleId, addUserIds);
@@ -256,7 +256,7 @@ function reset() {
             :scroll-x="962"
             :loading="loading"
             remote
-            :row-key="(row) => row.userId"
+            :row-key="row => row.userId"
             :pagination="mobilePagination"
             class="h-full"
           />

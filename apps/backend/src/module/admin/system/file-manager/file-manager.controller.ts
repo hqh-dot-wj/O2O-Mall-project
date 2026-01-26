@@ -22,7 +22,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @ApiBearerAuth('Authorization')
 @Controller('system/file-manager')
 export class FileManagerController {
-  constructor(private readonly fileManagerService: FileManagerService) { }
+  constructor(private readonly fileManagerService: FileManagerService) {}
 
   // ==================== 文件夹管理 ====================
 

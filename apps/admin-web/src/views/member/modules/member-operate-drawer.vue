@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { fetchUpdateMemberReferrer, fetchUpdateMemberTenant } from '@/service/api/member';
+import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'MemberOperateDrawer',
+  name: 'MemberOperateDrawer'
 });
 
 interface Props {
@@ -24,7 +24,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -45,7 +45,7 @@ const model = reactive<Model>(createDefaultModel());
 function createDefaultModel(): Model {
   return {
     referrerId: '',
-    tenantId: '',
+    tenantId: ''
   };
 }
 
@@ -60,7 +60,7 @@ function handleInitModel() {
   }
 }
 
-watch(visible, (val) => {
+watch(visible, val => {
   if (val) {
     handleInitModel();
     restoreValidation();

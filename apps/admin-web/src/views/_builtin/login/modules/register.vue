@@ -8,7 +8,7 @@ import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'Register',
+  name: 'Register'
 });
 
 const { toggleLoginModule } = useRouterPush();
@@ -27,7 +27,7 @@ const model: Api.Auth.RegisterForm = reactive({
   code: '',
   password: '',
   confirmPassword: '',
-  userType: 'sys_user',
+  userType: 'sys_user'
 });
 
 type RuleKey = Extract<keyof Api.Auth.RegisterForm, 'username' | 'password' | 'confirmPassword' | 'code' | 'tenantId'>;
@@ -40,7 +40,7 @@ const rules = computed<Record<RuleKey, App.Global.FormRule[]>>(() => {
     username: [...formRules.userName, { required: true }],
     password: [...formRules.pwd, { required: true }],
     confirmPassword: createConfirmPwdRule(model.password!),
-    code: captchaEnabled.value ? [createRequiredRule($t('form.code.required'))] : [],
+    code: captchaEnabled.value ? [createRequiredRule($t('form.code.required'))] : []
   };
 });
 
@@ -56,7 +56,7 @@ async function handleSubmit() {
       uuid: model.uuid,
       grantType: 'password',
       userType: model.userType,
-      clientId: import.meta.env.VITE_APP_CLIENT_ID,
+      clientId: import.meta.env.VITE_APP_CLIENT_ID
     });
     window.$message?.success('注册成功');
     // 注册成功后跳转到登录页
@@ -75,10 +75,10 @@ async function handleFetchTenantList() {
       return;
     }
     tenantEnabled.value = data.tenantEnabled;
-    tenantOption.value = data.voList.map((tenant) => {
+    tenantOption.value = data.voList.map(tenant => {
       return {
         label: tenant.companyName,
-        value: tenant.tenantId,
+        value: tenant.tenantId
       };
     });
   } catch (error) {

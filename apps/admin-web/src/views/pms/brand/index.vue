@@ -1,37 +1,28 @@
 <script setup lang="tsx">
 import { h } from 'vue';
-import { NButton, NPopconfirm, NSpace, NAvatar, NDataTable, NCard } from 'naive-ui';
+import { NAvatar, NButton, NCard, NDataTable, NPopconfirm, NSpace } from 'naive-ui';
+import { fetchDeleteBrand, fetchGetBrandList } from '@/service/api/pms/brand';
 import { useTable, useTableOperate } from '@/hooks/common/table';
-import { fetchGetBrandList, fetchDeleteBrand } from '@/service/api/pms/brand';
 import { $t } from '@/locales';
 import BrandOperateDrawer from './modules/brand-operate-drawer.vue';
 import BrandSearch from './modules/brand-search.vue';
 
 defineOptions({
-  name: 'PmsBrand',
+  name: 'PmsBrand'
 });
 
-const {
-  columns,
-  data,
-  getData,
-  loading,
-  mobilePagination,
-  searchParams,
-  resetSearchParams,
-  columnChecks
-} = useTable({
+const { columns, data, getData, loading, mobilePagination, searchParams, resetSearchParams, columnChecks } = useTable({
   apiFn: fetchGetBrandList,
   apiParams: {
     pageNum: 1,
     pageSize: 10,
-    name: null,
+    name: null
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'brandId',
@@ -44,7 +35,7 @@ const {
       title: 'Logo',
       align: 'center',
       width: 100,
-      render: (row) => {
+      render: row => {
         if (row.logo) {
           return h(NAvatar, { src: row.logo, size: 40 });
         }
@@ -55,14 +46,14 @@ const {
       key: 'name',
       title: $t('page.pms.brand.brandName'),
       align: 'left',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 150,
-      render: (row) => (
+      render: row => (
         <NSpace justify="center">
           <NButton size="tiny" type="primary" ghost onClick={() => edit(row)}>
             {$t('common.edit')}
@@ -70,13 +61,17 @@ const {
           <NPopconfirm onPositiveClick={() => handleDelete(row.brandId)}>
             {{
               default: () => $t('common.confirmDelete'),
-              trigger: () => <NButton size="tiny" type="error" ghost>{$t('common.delete')}</NButton>,
+              trigger: () => (
+                <NButton size="tiny" type="error" ghost>
+                  {$t('common.delete')}
+                </NButton>
+              )
             }}
           </NPopconfirm>
         </NSpace>
-      ),
-    },
-  ],
+      )
+    }
+  ]
 });
 
 const {
@@ -112,9 +107,9 @@ function edit(row: Api.Pms.Brand) {
 </script>
 
 <template>
-  <div class="h-full overflow-hidden flex-col-stretch gap-16px">
+  <div class="h-full flex-col-stretch gap-16px overflow-hidden">
     <BrandSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getData" />
-    <NCard :title="$t('page.pms.brand.title')" :bordered="false" class="h-full rounded-8px shadow-sm flex-1-hidden">
+    <NCard :title="$t('page.pms.brand.title')" :bordered="false" class="h-full flex-1-hidden rounded-8px shadow-sm">
       <template #header-extra>
         <TableHeaderOperation
           v-model:columns="columnChecks"
@@ -132,7 +127,7 @@ function edit(row: Api.Pms.Brand) {
           :data="data"
           :loading="loading"
           remote
-          :row-key="(row) => row.brandId"
+          :row-key="row => row.brandId"
           :pagination="mobilePagination"
           class="flex-1-hidden"
         />

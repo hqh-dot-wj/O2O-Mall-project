@@ -6,6 +6,7 @@ const DEFAULT_TENANT = '000000';
 
 async function clearDatabase() {
     console.log('--- Cleaning up database ---');
+    await prisma.finCommission.deleteMany();
     await prisma.omsOrderItem.deleteMany();
     await prisma.omsOrder.deleteMany();
     await prisma.omsCartItem.deleteMany();
@@ -148,6 +149,7 @@ async function main() {
 
                 const tSku = await prisma.pmsTenantSku.create({
                     data: {
+                        tenantId: DEFAULT_TENANT,
                         tenantProductId: tp!.id,
                         globalSkuId: globalSku.skuId,
                         price: new Decimal(guidePrice * 1.1),

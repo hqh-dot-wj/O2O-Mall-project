@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { $t } from '@/locales';
 import { useNaiveForm } from '@/hooks/common/form';
 import { useDict } from '@/hooks/business/dict';
+import { $t } from '@/locales';
 
 defineOptions({
-  name: 'GlobalProductSearch',
+  name: 'GlobalProductSearch'
 });
 
 interface Emits {

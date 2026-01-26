@@ -3,10 +3,12 @@ import { ClientProductController } from './product.controller';
 import { ClientProductService } from './product.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
+import { MarketingPlayModule } from 'src/module/marketing/play/play.module';
+
 @Module({
-    imports: [PrismaModule],
-    controllers: [ClientProductController],
-    providers: [ClientProductService],
-    exports: [ClientProductService]
+  imports: [PrismaModule, MarketingPlayModule],
+  controllers: [ClientProductController],
+  providers: [ClientProductService],
+  exports: [ClientProductService],
 })
-export class ClientProductModule { }
+export class ClientProductModule {}

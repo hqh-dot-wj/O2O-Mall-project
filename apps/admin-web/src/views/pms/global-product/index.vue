@@ -1,19 +1,19 @@
 <script setup lang="tsx">
-import { h, ref, onMounted } from 'vue';
+import { h, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { NAvatar, NEllipsis, NTag, NDataTable, NTree, NInput, NSpin, NEmpty, NButton, NCard } from 'naive-ui';
+import { NAvatar, NButton, NCard, NDataTable, NEllipsis, NEmpty, NInput, NSpin, NTag, NTree } from 'naive-ui';
 import type { TreeOption } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
-import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
-import { fetchGetGlobalProductList, fetchBatchDeleteGlobalProduct } from '@/service/api/pms/product';
+import { fetchBatchDeleteGlobalProduct, fetchGetGlobalProductList } from '@/service/api/pms/product';
 import { fetchGetCategoryTree } from '@/service/api/pms/category';
-import { $t } from '@/locales';
 import { useAppStore } from '@/store/modules/app';
+import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
+import { $t } from '@/locales';
 import GlobalProductSearch from './modules/global-product-search.vue';
 
 defineOptions({
-  name: 'GlobalProductList',
+  name: 'GlobalProductList'
 });
 
 const appStore = useAppStore();
@@ -31,7 +31,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetGlobalProductList,
   apiParams: {
@@ -39,55 +39,55 @@ const {
     pageSize: 10,
     name: null,
     categoryId: null,
-    publishStatus: null,
+    publishStatus: null
   } as Api.Pms.ProductSearchParams,
   columns: () => [
     {
       type: 'expand',
       key: 'expand',
-      renderExpand: (row) => {
+      renderExpand: row => {
         return h('div', { class: 'p-4 bg-gray-50 dark:bg-gray-800' }, [
-            h('h4', { class: 'mb-2 font-bold' }, 'SKU 列表'),
-            h(NDataTable, {
-                data: row.globalSkus || [],
-                columns: [
-                    { title: 'SKU 规格', key: 'specValues', render: (sku: any) => JSON.stringify(sku.specValues) },
-                    { title: '指导价', key: 'guidePrice' },
-                    { title: '成本价', key: 'costPrice' },
-                    { 
-                        title: '分佣范围 (Min - 建议 - Max)', 
-                        key: 'guideRate', 
-                        render: (sku: any) => {
-                             if (sku.distMode === 'NONE') return '不分销';
-                             const unit = sku.distMode === 'RATIO' ? '%' : '元';
-                             return `${sku.minDistRate}${unit} - ${sku.guideRate}${unit} - ${sku.maxDistRate}${unit}`;
-                        }
-                    },
-                ],
-                pagination: false,
-                bordered: false,
-                size: 'small'
-            } as any)
+          h('h4', { class: 'mb-2 font-bold' }, 'SKU 列表'),
+          h(NDataTable, {
+            data: row.globalSkus || [],
+            columns: [
+              { title: 'SKU 规格', key: 'specValues', render: (sku: any) => JSON.stringify(sku.specValues) },
+              { title: '指导价', key: 'guidePrice' },
+              { title: '成本价', key: 'costPrice' },
+              {
+                title: '分佣范围 (Min - 建议 - Max)',
+                key: 'guideRate',
+                render: (sku: any) => {
+                  if (sku.distMode === 'NONE') return '不分销';
+                  const unit = sku.distMode === 'RATIO' ? '%' : '元';
+                  return `${sku.minDistRate}${unit} - ${sku.guideRate}${unit} - ${sku.maxDistRate}${unit}`;
+                }
+              }
+            ],
+            pagination: false,
+            bordered: false,
+            size: 'small'
+          } as any)
         ]);
       }
     },
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'name',
       title: '商品名称',
       align: 'left',
       minWidth: 200,
-      render: (row) => {
+      render: row => {
         return (
           <div class="flex items-center gap-2">
             <NAvatar
@@ -100,83 +100,70 @@ const {
             </div>
           </div>
         );
-      },
+      }
     },
     {
       key: 'categoryId',
       title: '分类ID',
       align: 'center',
-      width: 100,
+      width: 100
     },
     {
       key: 'publishStatus',
       title: '发布状态',
       align: 'center',
       width: 100,
-      render: (row) => {
+      render: row => {
         const typeMap: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
           '0': 'default',
-          '1': 'success',
+          '1': 'success'
         };
         const labelMap: Record<string, string> = {
           '0': '下架',
-          '1': '上架',
+          '1': '上架'
         };
-        return <NTag type={typeMap[row.publishStatus] || 'default'}>{labelMap[row.publishStatus] || row.publishStatus}</NTag>;
+        return (
+          <NTag type={typeMap[row.publishStatus] || 'default'}>{labelMap[row.publishStatus] || row.publishStatus}</NTag>
+        );
       }
     },
     {
       key: 'createTime',
       title: $t('page.common.createTime'),
       align: 'center',
-      width: 160,
+      width: 160
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 150,
-      render: (row) => (
+      render: row => (
         <div class="flex-center gap-8px">
-          <NButton
-            size="small"
-            type="primary"
-            ghost
-            onClick={() => editProduct(row.productId)}
-          >
+          <NButton size="small" type="primary" ghost onClick={() => editProduct(row.productId)}>
             {$t('common.edit')}
           </NButton>
-          <NButton
-            size="small"
-            type="error"
-            ghost
-            onClick={() => handleDelete(row.productId)}
-          >
+          <NButton size="small" type="error" ghost onClick={() => handleDelete(row.productId)}>
             {$t('common.delete')}
           </NButton>
         </div>
-      ),
-    },
-  ],
+      )
+    }
+  ]
 });
 
 const router = useRouter();
 
-const {
-  checkedRowKeys,
-  onBatchDeleted,
-  onDeleted
-} = useTableOperate(data, getData);
+const { checkedRowKeys, onBatchDeleted, onDeleted } = useTableOperate(data, getData);
 
 // Override handleAdd to navigate to create page
 function handleAdd() {
-  router.push({path:'pms_global-product_create'});
+  router.push({ path: 'pms_global-product-create' });
 }
 
 function editProduct(id: string) {
-  router.push({ path: 'pms_global-product_create', query: { id } });
+  router.push({ path: 'pms_global-product-create', query: { id } });
 }
-
 
 async function handleBatchDelete() {
   try {
@@ -214,7 +201,7 @@ async function getCategoryTree() {
       }
     ] as any;
     // Expands all keys? Or just root. Let's just expand root/0
-     if (expandedKeys.value.length === 0) {
+    if (expandedKeys.value.length === 0) {
       expandedKeys.value = [0];
     }
     // Select root by default
@@ -232,8 +219,8 @@ function handleSelectCategory(keys: number[], option: Array<TreeOption | null>) 
   const selectedNode = option[0];
   if (selectedNode) {
     selectedKeys.value = keys;
-    // If root (0) is selected, filter by null/undefined to show all? 
-    // Or if backend supports 0 as 'all'. 
+    // If root (0) is selected, filter by null/undefined to show all?
+    // Or if backend supports 0 as 'all'.
     // Usually clear param if 0.
     const catId = selectedNode.catId as number;
     searchParams.categoryId = catId === 0 ? null : catId;
@@ -253,13 +240,13 @@ onMounted(() => {
         <NInput v-model:value="categoryName" placeholder="搜索分类" clearable />
         <NSpin :show="siderLoading" class="tree-spin">
           <NTree
+            v-model:expanded-keys="expandedKeys"
+            v-model:selected-keys="selectedKeys"
             block-node
             :data="treeData as any"
             key-field="catId"
             label-field="name"
             :pattern="categoryName"
-            v-model:expanded-keys="expandedKeys"
-            v-model:selected-keys="selectedKeys"
             :show-irrelevant-nodes="false"
             class="h-full"
             selectable
@@ -272,7 +259,7 @@ onMounted(() => {
         </NSpin>
       </template>
 
-      <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto h-full">
+      <div class="h-full min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
         <GlobalProductSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getDataByPage" />
         <NCard title="标准商品库" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
           <template #header-extra>
@@ -296,7 +283,7 @@ onMounted(() => {
             :scroll-x="1000"
             :loading="loading"
             remote
-            :row-key="(row) => row.productId"
+            :row-key="row => row.productId"
             :pagination="mobilePagination"
             class="sm:h-full"
           />

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { NCard, NStatistic, NGrid, NGridItem, NProgress, NSkeleton } from 'naive-ui';
+import { computed, onMounted, ref } from 'vue';
+import { NCard, NGrid, NGridItem, NProgress, NSkeleton, NStatistic } from 'naive-ui';
 import { fetchGetDashboard } from '@/service/api/finance';
 
 defineOptions({
-  name: 'FinanceDashboard',
+  name: 'FinanceDashboard'
 });
 
 // 数据状态
@@ -15,7 +15,7 @@ const dashboardData = ref({
   monthGMV: 0,
   pendingCommission: 0,
   settledCommission: 0,
-  pendingWithdrawals: 0,
+  pendingWithdrawals: 0
 });
 
 // 加载看板数据
@@ -61,9 +61,7 @@ onMounted(() => {
               <template #prefix>¥</template>
               {{ dashboardData.todayGMV }}
             </NStatistic>
-            <div class="mt-8px text-gray-500 text-xs">
-              订单数: {{ dashboardData.todayOrderCount }} 单
-            </div>
+            <div class="mt-8px text-xs text-gray-500">订单数: {{ dashboardData.todayOrderCount }} 单</div>
           </template>
         </NCard>
       </NGridItem>
@@ -88,9 +86,7 @@ onMounted(() => {
               <template #prefix>¥</template>
               {{ dashboardData.pendingCommission }}
             </NStatistic>
-            <div class="mt-8px text-warning text-xs">
-              冻结中，等待解冻
-            </div>
+            <div class="mt-8px text-xs text-warning">冻结中，等待解冻</div>
           </template>
         </NCard>
       </NGridItem>
@@ -103,9 +99,7 @@ onMounted(() => {
               {{ dashboardData.pendingWithdrawals }}
               <template #suffix>笔</template>
             </NStatistic>
-            <div v-if="dashboardData.pendingWithdrawals > 0" class="mt-8px text-error text-xs">
-              需要及时处理
-            </div>
+            <div v-if="dashboardData.pendingWithdrawals > 0" class="mt-8px text-xs text-error">需要及时处理</div>
           </template>
         </NCard>
       </NGridItem>
@@ -115,7 +109,7 @@ onMounted(() => {
     <NCard title="资金池状态" :bordered="false">
       <div class="flex flex-col gap-16px">
         <div>
-          <div class="flex justify-between mb-8px">
+          <div class="mb-8px flex justify-between">
             <span>佣金结算进度</span>
             <span>{{ settleProgress }}%</span>
           </div>
@@ -124,15 +118,15 @@ onMounted(() => {
 
         <NGrid :cols="2" :x-gap="16">
           <NGridItem>
-            <div class="p-16px bg-gray-50 rounded-lg">
-              <div class="text-gray-500 text-sm mb-4px">已结算</div>
-              <div class="text-success text-xl font-bold">¥{{ dashboardData.settledCommission }}</div>
+            <div class="rounded-lg bg-gray-50 p-16px">
+              <div class="mb-4px text-sm text-gray-500">已结算</div>
+              <div class="text-xl text-success font-bold">¥{{ dashboardData.settledCommission }}</div>
             </div>
           </NGridItem>
           <NGridItem>
-            <div class="p-16px bg-gray-50 rounded-lg">
-              <div class="text-gray-500 text-sm mb-4px">冻结中</div>
-              <div class="text-warning text-xl font-bold">¥{{ dashboardData.pendingCommission }}</div>
+            <div class="rounded-lg bg-gray-50 p-16px">
+              <div class="mb-4px text-sm text-gray-500">冻结中</div>
+              <div class="text-xl text-warning font-bold">¥{{ dashboardData.pendingCommission }}</div>
             </div>
           </NGridItem>
         </NGrid>
@@ -144,32 +138,38 @@ onMounted(() => {
       <NGrid :cols="4" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
         <NGridItem span="24 s:12 m:6">
           <RouterLink to="/finance/commission">
-            <div class="p-16px bg-primary-50 rounded-lg text-center cursor-pointer hover:bg-primary-100 transition-colors">
-              <div class="text-primary text-xl mb-4px">📊</div>
+            <div
+              class="cursor-pointer rounded-lg bg-primary-50 p-16px text-center transition-colors hover:bg-primary-100"
+            >
+              <div class="mb-4px text-xl text-primary">📊</div>
               <div>佣金明细</div>
             </div>
           </RouterLink>
         </NGridItem>
         <NGridItem span="24 s:12 m:6">
           <RouterLink to="/finance/withdrawal">
-            <div class="p-16px bg-warning-50 rounded-lg text-center cursor-pointer hover:bg-warning-100 transition-colors">
-              <div class="text-warning text-xl mb-4px">💳</div>
+            <div
+              class="cursor-pointer rounded-lg bg-warning-50 p-16px text-center transition-colors hover:bg-warning-100"
+            >
+              <div class="mb-4px text-xl text-warning">💳</div>
               <div>提现审核</div>
             </div>
           </RouterLink>
         </NGridItem>
         <NGridItem span="24 s:12 m:6">
           <RouterLink to="/finance/ledger">
-            <div class="p-16px bg-success-50 rounded-lg text-center cursor-pointer hover:bg-success-100 transition-colors">
-              <div class="text-success text-xl mb-4px">📒</div>
+            <div
+              class="cursor-pointer rounded-lg bg-success-50 p-16px text-center transition-colors hover:bg-success-100"
+            >
+              <div class="mb-4px text-xl text-success">📒</div>
               <div>门店流水</div>
             </div>
           </RouterLink>
         </NGridItem>
         <NGridItem span="24 s:12 m:6">
           <RouterLink to="/order/list">
-            <div class="p-16px bg-info-50 rounded-lg text-center cursor-pointer hover:bg-info-100 transition-colors">
-              <div class="text-info text-xl mb-4px">📦</div>
+            <div class="cursor-pointer rounded-lg bg-info-50 p-16px text-center transition-colors hover:bg-info-100">
+              <div class="mb-4px text-xl text-info">📦</div>
               <div>订单管理</div>
             </div>
           </RouterLink>

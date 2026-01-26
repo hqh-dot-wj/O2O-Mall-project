@@ -32,7 +32,11 @@ declare module "@elegant-router/types" {
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
+    "marketing": "/marketing";
+    "marketing_asset": "/marketing/asset";
+    "marketing_template": "/marketing/template";
     "member": "/member";
+    "member_upgrade": "/member/upgrade";
     "monitor": "/monitor";
     "monitor_cache": "/monitor/cache";
     "monitor_cache_list": "/monitor/cache/list";
@@ -50,10 +54,11 @@ declare module "@elegant-router/types" {
     "pms_brand": "/pms/brand";
     "pms_category": "/pms/category";
     "pms_global-product": "/pms/global-product";
-    "pms_global-product_create": "/pms/global-product/create";
+    "pms_global-product-create": "/pms/global-product-create";
     "social-callback": "/social-callback";
     "store": "/store";
     "store_marketing": "/store/marketing";
+    "store_marketing_activity": "/store/marketing/activity";
     "store_marketing_distribution": "/store/marketing/distribution";
     "store_product": "/store/product";
     "store_product_list": "/store/product/list";
@@ -66,6 +71,7 @@ declare module "@elegant-router/types" {
     "system_dict": "/system/dict";
     "system_file-manager": "/system/file-manager";
     "system_menu": "/system/menu";
+    "system_message": "/system/message";
     "system_notice": "/system/notice";
     "system_oss": "/system/oss";
     "system_oss-config": "/system/oss-config";
@@ -121,6 +127,7 @@ declare module "@elegant-router/types" {
     | "home"
     | "iframe-page"
     | "login"
+    | "marketing"
     | "member"
     | "monitor"
     | "order"
@@ -159,7 +166,10 @@ declare module "@elegant-router/types" {
     | "finance_ledger"
     | "finance_withdrawal"
     | "home"
+    | "marketing_asset"
+    | "marketing_template"
     | "member"
+    | "member_upgrade"
     | "monitor_cache"
     | "monitor_cache_list"
     | "monitor_job-log"
@@ -173,8 +183,9 @@ declare module "@elegant-router/types" {
     | "pms_attribute"
     | "pms_brand"
     | "pms_category"
-    | "pms_global-product_create"
+    | "pms_global-product-create"
     | "pms_global-product"
+    | "store_marketing_activity"
     | "store_marketing_distribution"
     | "store_marketing"
     | "store_product_list"
@@ -186,6 +197,7 @@ declare module "@elegant-router/types" {
     | "system_dict"
     | "system_file-manager"
     | "system_menu"
+    | "system_message"
     | "system_notice"
     | "system_oss-config"
     | "system_oss"

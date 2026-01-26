@@ -7,11 +7,11 @@ import { $t } from '@/locales';
 import GenTableDbSearch from './gen-table-db-search.vue';
 
 defineOptions({
-  name: 'GenTableImportDrawer',
+  name: 'GenTableImportDrawer'
 });
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 interface Emits {
@@ -35,33 +35,33 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
     // the value can not be undefined, otherwise the property in Form will not be reactive
     dataName: null,
     tableName: null,
-    tableComment: null,
+    tableComment: null
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 52,
+      width: 52
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'tableName',
       title: '表名称',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'tableComment',
       title: '表描述',
       align: 'center',
-      minWidth: 120,
-    },
-  ],
+      minWidth: 120
+    }
+  ]
 });
 
 const { checkedRowKeys } = useTableOperate(data, getData);
@@ -98,7 +98,7 @@ async function handleResetSearchParams() {
 async function getDataNames() {
   try {
     const { data: dataNames } = await fetchGetGenDataNames();
-    dataNameOptions.value = dataNames.map((item) => ({ label: item, value: item }));
+    dataNameOptions.value = dataNames.map(item => ({ label: item, value: item }));
   } catch {
     // error handled by request interceptor
   }
@@ -132,7 +132,7 @@ watch(visible, async () => {
           :scroll-x="750"
           :loading="loading"
           remote
-          :row-key="(row) => row.tableName"
+          :row-key="row => row.tableName"
           :pagination="mobilePagination"
           class="flex-1"
         />

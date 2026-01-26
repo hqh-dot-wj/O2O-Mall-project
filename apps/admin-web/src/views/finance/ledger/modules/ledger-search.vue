@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NSelect, NButton } from 'naive-ui';
+import { NButton, NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NSelect } from 'naive-ui';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'LedgerSearch',
+  name: 'LedgerSearch'
 });
 
 interface Emits {
@@ -19,7 +19,7 @@ const typeOptions = [
   { label: '佣金入账', value: 'COMMISSION_IN' },
   { label: '提现支出', value: 'WITHDRAW_OUT' },
   { label: '退款倒扣', value: 'REFUND_DEDUCT' },
-  { label: '余额支付', value: 'CONSUME_PAY' },
+  { label: '余额支付', value: 'CONSUME_PAY' }
 ];
 
 function handleReset() {
@@ -44,7 +44,7 @@ function handleSearch() {
             </NGridItem>
             <NGridItem span="24 s:12 m:6">
               <NFormItem>
-                <div class="flex gap-12px w-full justify-end">
+                <div class="w-full flex justify-end gap-12px">
                   <NButton @click="handleReset">{{ $t('common.reset') }}</NButton>
                   <NButton type="primary" ghost @click="handleSearch">{{ $t('common.search') }}</NButton>
                 </div>

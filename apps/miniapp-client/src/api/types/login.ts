@@ -28,6 +28,7 @@ export interface IUserInfoRes {
   username: string
   nickname: string
   avatar?: string
+  levelId?: number | null
   [key: string]: any // 允许其他扩展字段
 }
 
@@ -131,4 +132,3 @@ export interface IWxRegisterParams {
     avatarUrl: string
   }
 }
-

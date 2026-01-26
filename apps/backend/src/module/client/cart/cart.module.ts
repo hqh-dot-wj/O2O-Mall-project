@@ -6,8 +6,8 @@ import { CartService } from './cart.service';
  * C端购物车模块
  */
 @Module({
-    controllers: [CartController],
-    providers: [CartService],
-    exports: [CartService],
+  controllers: [CartController],
+  providers: [CartService],
+  exports: [CartService],
 })
-export class ClientCartModule { }
+export class ClientCartModule {}

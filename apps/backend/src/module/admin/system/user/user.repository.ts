@@ -8,7 +8,6 @@ import { SysDept } from '@prisma/client';
 
 export type UserWithDept = SysUser & { dept?: Partial<SysDept> | null };
 
-
 /**
  * 用户仓储层
  *
@@ -24,8 +23,6 @@ export class UserRepository extends SoftDeleteRepository<
   constructor(prisma: PrismaService, cls: ClsService) {
     super(prisma, cls, 'sysUser', 'userId');
   }
-
-
 
   /**
    * 根据用户名查询用户

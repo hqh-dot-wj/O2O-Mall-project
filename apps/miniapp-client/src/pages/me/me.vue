@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useUserStore } from '@/store'
-import { useTokenStore } from '@/store/token'
-import { useAuthStore } from '@/store/auth'
+import { computed } from 'vue'
 import { getWxCode } from '@/api/login'
+import { useUserStore } from '@/store'
+import { useAuthStore } from '@/store/auth'
+import { useTokenStore } from '@/store/token'
 
 definePage({
   style: {
@@ -53,13 +53,16 @@ async function onBindPhone(e: any) {
         },
       })
       uni.showToast({ title: '绑定成功', icon: 'success' })
-    } catch (err) {
+    }
+    catch (err) {
       console.error(err)
       uni.showToast({ title: '绑定失败', icon: 'none' })
-    } finally {
+    }
+    finally {
       uni.hideLoading()
     }
-  } else {
+  }
+  else {
     uni.showToast({ title: '您取消了授权', icon: 'none' })
   }
 }
@@ -78,6 +81,14 @@ function handleLogout() {
       }
     },
   })
+}
+
+function goTeam() {
+  uni.navigateTo({ url: '/pages/upgrade/team' })
+}
+
+function goReferralCode() {
+  uni.navigateTo({ url: '/pages/upgrade/referral-code' })
 }
 </script>
 
@@ -102,7 +113,7 @@ function handleLogout() {
         />
         <view class="user-info">
           <text class="nickname">{{ userInfo.nickname || '微信用户' }}</text>
-          <text class="phone" v-if="userInfo.phone">
+          <text v-if="userInfo.phone" class="phone">
             {{ userInfo.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') }}
           </text>
         </view>
@@ -113,6 +124,30 @@ function handleLogout() {
           <text class="login-tip" @click="handleLogin">点击登录</text>
         </view>
       </template>
+    </view>
+
+    <!-- 分销中心 -->
+    <view class="service-section" v-if="tokenStore.hasLogin && (userInfo.levelId > 0)">
+      <view class="section-header">
+        <text class="section-title">分销中心</text>
+        <text class="section-tag" v-if="userInfo.levelId > 0">
+          {{ userInfo.levelId === 1 ? '高级团长' : '共享股东' }}
+        </text>
+      </view>
+      <view class="grid-container">
+        <view class="grid-item" @click="goTeam">
+          <view class="icon-wrapper glass-orange">
+            <wd-icon name="team" size="48rpx" color="#fff" />
+          </view>
+          <text class="grid-label">我的团队</text>
+        </view>
+        <view class="grid-item" v-if="userInfo.levelId === 2" @click="goReferralCode">
+          <view class="icon-wrapper glass-blue">
+            <wd-icon name="qrcode" size="48rpx" color="#fff" />
+          </view>
+          <text class="grid-label">我的邀请码</text>
+        </view>
+      </view>
     </view>
 
     <!-- 操作按钮 -->
@@ -201,12 +236,79 @@ function handleLogout() {
   }
 }
 
+.service-section {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.03);
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32rpx;
+    
+    .section-title {
+      font-size: 30rpx;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    
+    .section-tag {
+      font-size: 20rpx;
+      padding: 4rpx 16rpx;
+      background: #fff7ed;
+      color: #ea580c;
+      border-radius: 20rpx;
+      font-weight: 600;
+    }
+  }
+  
+  .grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    
+    .grid-item {
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 10rpx;
+      
+      .icon-wrapper {
+        width: 96rpx;
+        height: 96rpx;
+        border-radius: 32rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16rpx;
+        box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.05);
+        
+        &.glass-orange {
+          background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+        }
+        &.glass-blue {
+          background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+        }
+      }
+      
+      .grid-label {
+        font-size: 24rpx;
+        color: #64748b;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
 .action-section {
   padding: 40rpx 30rpx;
 
-  .logout-btn, .login-btn {
+  .logout-btn,
+  .login-btn {
     border-radius: 12rpx;
   }
 }
 </style>
-

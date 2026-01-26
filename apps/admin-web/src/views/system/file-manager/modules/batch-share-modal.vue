@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import {
-  NModal,
+  NButton,
   NCard,
   NForm,
   NFormItem,
   NInput,
   NInputNumber,
-  NSwitch,
-  NButton,
-  NSpace,
   NList,
   NListItem,
-  useMessage,
+  NModal,
+  NSpace,
+  NSwitch,
+  useMessage
 } from 'naive-ui';
-import { useThemeStore } from '@/store/modules/theme';
 import { fetchCreateShare } from '@/service/api';
+import { useThemeStore } from '@/store/modules/theme';
 import { $t } from '@/locales';
 
 const message = useMessage();
@@ -34,7 +34,7 @@ const formModel = reactive({
   expireHours: 24,
   maxDownload: -1,
   needPassword: false,
-  password: '',
+  password: ''
 });
 
 async function openModal(fileIds: string[]) {
@@ -46,7 +46,7 @@ async function openModal(fileIds: string[]) {
     expireHours: 24,
     maxDownload: -1,
     needPassword: false,
-    password: '',
+    password: ''
   });
 }
 
@@ -70,7 +70,7 @@ async function handleCreateShares() {
     }
 
     // 批量创建分享
-    const promises = uploadIds.value.map((uploadId) => fetchCreateShare({ ...params, uploadId }));
+    const promises = uploadIds.value.map(uploadId => fetchCreateShare({ ...params, uploadId }));
 
     const results = await Promise.allSettled(promises);
 
@@ -79,18 +79,17 @@ async function handleCreateShares() {
         return {
           success: true,
           uploadId: uploadIds.value[index],
-          data: result.value.data,
-        };
-      } else {
-        return {
-          success: false,
-          uploadId: uploadIds.value[index],
-          error: result.reason,
+          data: result.value.data
         };
       }
+      return {
+        success: false,
+        uploadId: uploadIds.value[index],
+        error: result.reason
+      };
     });
 
-    const successCount = shareResults.value.filter((r) => r.success).length;
+    const successCount = shareResults.value.filter(r => r.success).length;
     message.success($t('page.fileManager.batchShareSuccess', { count: successCount }));
 
     if (successCount < uploadIds.value.length) {
@@ -121,7 +120,7 @@ function handleClose() {
 }
 
 defineExpose({
-  openModal,
+  openModal
 });
 </script>
 
@@ -146,11 +145,11 @@ defineExpose({
         </NFormItem>
       </NForm>
 
-      <div class="text-14px text-gray mb-4">将为 {{ uploadIds.length }} 个文件创建分享链接</div>
+      <div class="mb-4 text-14px text-gray">将为 {{ uploadIds.length }} 个文件创建分享链接</div>
 
       <NSpace justify="end" class="mt-4">
         <NButton @click="handleClose">取消</NButton>
-        <NButton type="primary" :loading="loading" @click="handleCreateShares"> 批量创建分享 </NButton>
+        <NButton type="primary" :loading="loading" @click="handleCreateShares">批量创建分享</NButton>
       </NSpace>
     </div>
 
@@ -159,8 +158,8 @@ defineExpose({
         <NListItem v-for="(result, index) in shareResults" :key="index">
           <template v-if="result.success">
             <div class="w-full">
-              <div class="font-bold mb-2">文件 {{ index + 1 }}</div>
-              <div class="flex items-center gap-2 mb-2">
+              <div class="mb-2 font-bold">文件 {{ index + 1 }}</div>
+              <div class="mb-2 flex items-center gap-2">
                 <span class="text-14px text-gray">链接：</span>
                 <NInput
                   :value="`${window.location.origin}/share/${result.data.shareId}`"
@@ -177,9 +176,7 @@ defineExpose({
               <div v-if="result.data.shareCode" class="flex items-center gap-2">
                 <span class="text-14px text-gray">提取码：</span>
                 <NInput :value="result.data.shareCode" readonly :size="themeStore.componentSize" class="w-100px" />
-                <NButton :size="themeStore.componentSize" @click="copyToClipboard(result.data.shareCode)">
-                  复制
-                </NButton>
+                <NButton :size="themeStore.componentSize" @click="copyToClipboard(result.data.shareCode)">复制</NButton>
               </div>
             </div>
           </template>
@@ -189,7 +186,7 @@ defineExpose({
         </NListItem>
       </NList>
 
-      <NButton type="primary" block @click="handleClose" class="mt-4"> 完成 </NButton>
+      <NButton type="primary" block class="mt-4" @click="handleClose">完成</NButton>
     </div>
   </NModal>
 </template>

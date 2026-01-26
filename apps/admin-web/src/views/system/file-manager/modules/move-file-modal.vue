@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { NModal, NCard, NForm, NFormItem, NTree, NButton, NSpace, useMessage } from 'naive-ui';
+import { reactive, ref } from 'vue';
+import { NButton, NCard, NForm, NFormItem, NModal, NSpace, NTree, useMessage } from 'naive-ui';
 import type { TreeOption } from 'naive-ui';
 import { fetchGetFolderTree, fetchMoveFiles } from '@/service/api';
 import { $t } from '@/locales';
@@ -19,14 +19,14 @@ const treeData = ref<TreeOption[]>([]);
 const formRef = ref();
 
 function buildTreeData(folders: any[]): TreeOption[] {
-  const rootFolders = folders.filter((f) => f.parentId === 0);
+  const rootFolders = folders.filter(f => f.parentId === 0);
 
   function buildChildren(parentId: number): TreeOption[] {
-    const children = folders.filter((f) => f.parentId === parentId);
-    return children.map((folder) => ({
+    const children = folders.filter(f => f.parentId === parentId);
+    return children.map(folder => ({
       key: folder.folderId,
       label: folder.folderName,
-      children: buildChildren(folder.folderId),
+      children: buildChildren(folder.folderId)
     }));
   }
 
@@ -34,12 +34,12 @@ function buildTreeData(folders: any[]): TreeOption[] {
     {
       key: 0,
       label: '全部文件',
-      children: rootFolders.map((folder) => ({
+      children: rootFolders.map(folder => ({
         key: folder.folderId,
         label: folder.folderName,
-        children: buildChildren(folder.folderId),
-      })),
-    },
+        children: buildChildren(folder.folderId)
+      }))
+    }
   ];
 }
 
@@ -67,7 +67,7 @@ async function handleMove() {
   try {
     await fetchMoveFiles({
       uploadIds: uploadIds.value,
-      targetFolderId: selectedFolderId.value,
+      targetFolderId: selectedFolderId.value
     });
 
     message.success($t('page.fileManager.moveSuccess'));
@@ -93,7 +93,7 @@ function handleUpdateSelectedKeys(keys: Array<string | number>) {
 }
 
 defineExpose({
-  openModal,
+  openModal
 });
 </script>
 
@@ -106,17 +106,17 @@ defineExpose({
           block-line
           selectable
           :selected-keys="selectedFolderId !== null ? [selectedFolderId] : []"
-          @update:selected-keys="handleUpdateSelectedKeys"
           class="file-tree"
+          @update:selected-keys="handleUpdateSelectedKeys"
         />
       </NFormItem>
 
-      <div class="text-14px text-gray mb-4">将移动 {{ uploadIds.length }} 个文件</div>
+      <div class="mb-4 text-14px text-gray">将移动 {{ uploadIds.length }} 个文件</div>
     </NForm>
 
     <NSpace justify="end" class="mt-4">
       <NButton @click="handleClose">取消</NButton>
-      <NButton type="primary" :loading="loading" @click="handleMove"> 确定移动 </NButton>
+      <NButton type="primary" :loading="loading" @click="handleMove">确定移动</NButton>
     </NSpace>
   </NModal>
 </template>

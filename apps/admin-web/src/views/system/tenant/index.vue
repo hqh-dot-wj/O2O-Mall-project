@@ -6,7 +6,7 @@ import {
   fetchGetTenantList,
   fetchSyncTenantConfig,
   fetchSyncTenantDict,
-  fetchSyncTenantPackage,
+  fetchSyncTenantPackage
 } from '@/service/api/system/tenant';
 import { useAppStore } from '@/store/modules/app';
 import { useAuthStore } from '@/store/modules/auth';
@@ -21,7 +21,7 @@ import TenantOperateDrawer from './modules/tenant-operate-drawer.vue';
 import TenantSearch from './modules/tenant-search.vue';
 
 defineOptions({
-  name: 'TenantList',
+  name: 'TenantList'
 });
 
 useDict('sys_normal_disable');
@@ -45,7 +45,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetTenantList,
   apiParams: {
@@ -56,49 +56,49 @@ const {
     tenantId: null,
     contactUserName: null,
     contactPhone: null,
-    companyName: null,
+    companyName: null
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'index',
       title: $t('common.index'),
       align: 'center',
-      width: 64,
+      width: 64
     },
     {
       key: 'tenantId',
       title: '租户编号',
       align: 'center',
-      minWidth: 80,
+      minWidth: 80
     },
     {
       key: 'contactUserName',
       title: '联系人',
       align: 'center',
-      minWidth: 80,
+      minWidth: 80
     },
     {
       key: 'contactPhone',
       title: '联系电话',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'companyName',
       title: '企业名称',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'expireTime',
       title: '过期时间',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'status',
@@ -107,13 +107,13 @@ const {
       minWidth: 120,
       render(row) {
         return <DictTag size="small" value={row.status} dictCode="sys_normal_disable" />;
-      },
+      }
     },
     {
       key: 'regionName',
       title: '行政归属',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'isDirect',
@@ -121,14 +121,18 @@ const {
       align: 'center',
       minWidth: 100,
       render(row) {
-         // row type is Tenant, need to make sure isDirect is in the type definition of Api.System.Tenant
-         // If "isDirect" is missing from Api.System.Tenant, TS will complain.
-         // I should check Api.System.Tenant definition first.
-         // Assuming I updated the Operate params, but maybe not the Tenant record itself.
-         // Let's assume I need to update the Api.System.Tenant type first in step 526's context, but I missed it.
-         // I will check if I updated Tenant type. I only updated TenantOperateParams.
-         // Wait, I need to update Api.System.Tenant too.
-         return <NTag type={row.isDirect ? 'success' : 'warning'} size="small">{row.isDirect ? '直营' : '加盟'}</NTag>;
+        // row type is Tenant, need to make sure isDirect is in the type definition of Api.System.Tenant
+        // If "isDirect" is missing from Api.System.Tenant, TS will complain.
+        // I should check Api.System.Tenant definition first.
+        // Assuming I updated the Operate params, but maybe not the Tenant record itself.
+        // Let's assume I need to update the Api.System.Tenant type first in step 526's context, but I missed it.
+        // I will check if I updated Tenant type. I only updated TenantOperateParams.
+        // Wait, I need to update Api.System.Tenant too.
+        return (
+          <NTag type={row.isDirect ? 'success' : 'warning'} size="small">
+            {row.isDirect ? '直营' : '加盟'}
+          </NTag>
+        );
       }
     },
     {
@@ -136,7 +140,7 @@ const {
       title: $t('common.operate'),
       align: 'center',
       width: 180,
-      render: (row) => {
+      render: row => {
         if (row.tenantId === '000000') return null;
 
         const editBtn = () => {
@@ -193,9 +197,9 @@ const {
             ))}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
@@ -239,7 +243,7 @@ async function handleSyncTenantDict() {
       } catch {
         // error handled by request interceptor
       }
-    },
+    }
   });
 }
 
@@ -257,14 +261,14 @@ async function handleSyncTenantConfig() {
       } catch {
         // error handled by request interceptor
       }
-    },
+    }
   });
 }
 
 async function handleSyncTenantPackage(row: Api.System.Tenant) {
   const params: Api.System.TenantPackageSyncParams = {
     tenantId: row.tenantId,
-    packageId: row.packageId,
+    packageId: row.packageId
   };
   try {
     await fetchSyncTenantPackage(params);
@@ -322,7 +326,7 @@ async function handleExport() {
         :scroll-x="962"
         :loading="loading"
         remote
-        :row-key="(row) => row.id"
+        :row-key="row => row.id"
         :pagination="mobilePagination"
         class="sm:h-full"
       />

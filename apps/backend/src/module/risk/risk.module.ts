@@ -3,7 +3,7 @@ import { RiskService } from './risk.service';
 
 @Global()
 @Module({
-    providers: [RiskService],
-    exports: [RiskService],
+  providers: [RiskService],
+  exports: [RiskService],
 })
-export class RiskModule { }
+export class RiskModule {}

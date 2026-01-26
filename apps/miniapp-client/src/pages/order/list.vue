@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
+import { getWxCode } from '@/api/login'
+import { mockPaySuccess, prepay } from '@/api/payment'
+import { httpGet } from '@/http/http'
+import { useAuthStore } from '@/store/auth'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
-import { useAuthStore } from '@/store/auth'
-import { httpGet } from '@/http/http'
-import { getWxCode } from '@/api/login'
-import { storeToRefs } from 'pinia'
-import { prepay, mockPaySuccess } from '@/api/payment'
 
 definePage({
   style: {
@@ -64,21 +64,24 @@ onLoad(() => {
     authStore.openAuthModal(() => {
       loadOrders()
     })
-  } else {
+  }
+  else {
     loadOrders()
   }
 })
 
 // 加载订单列表
 async function loadOrders(refresh = true) {
-  if (loading.value) return
+  if (loading.value)
+    return
 
   if (refresh) {
     currentPage.value = 1
     hasMore.value = true
   }
 
-  if (!hasMore.value) return
+  if (!hasMore.value)
+    return
 
   loading.value = true
   try {
@@ -91,19 +94,22 @@ async function loadOrders(refresh = true) {
       params.status = status
     }
 
-    const result = await httpGet<{ items: OrderItem[]; total: number }>('/client/order/list', params)
+    const result = await httpGet<{ items: OrderItem[], total: number }>('/client/order/list', params)
     if (result) {
       if (refresh) {
         orders.value = result.items || []
-      } else {
+      }
+      else {
         orders.value.push(...(result.items || []))
       }
       hasMore.value = orders.value.length < result.total
       currentPage.value++
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('加载订单失败:', err)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -130,9 +136,11 @@ async function onBindPhone(e: any) {
         },
       })
       uni.showToast({ title: '绑定成功', icon: 'success' })
-    } catch (err) {
+    }
+    catch (err) {
       console.error(err)
-    } finally {
+    }
+    finally {
       uni.hideLoading()
     }
   }
@@ -154,11 +162,10 @@ function formatTime(timeStr: string): string {
   return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
-
 async function onPay(orderId: string) {
   try {
     uni.showLoading({ title: '发起支付...' })
-    
+
     // ⚠️ 开发模式
     const IS_DEV = true
     if (IS_DEV) {
@@ -180,9 +187,10 @@ async function onPay(orderId: string) {
         uni.hideLoading()
         console.error('支付失败:', err)
         uni.showToast({ title: '支付失败', icon: 'none' })
-      }
+      },
     })
-  } catch (err: any) {
+  }
+  catch (err: any) {
     uni.hideLoading()
     console.error('支付发起失败', err)
     uni.showToast({ title: '支付发起失败', icon: 'none' })
@@ -246,25 +254,25 @@ async function onPay(orderId: string) {
               </view>
             </view>
           </view>
-          
+
           <!-- 底部按钮 -->
           <view class="order-actions" @click.stop>
-             <wd-button 
-               v-if="order.status === 'PENDING_PAY'" 
-               size="small" 
-               type="primary"
-               @click="onPay(order.id)"
-             >
-               去支付
-             </wd-button>
-             <wd-button 
-               v-else 
-               size="small" 
-               plain
-               @click="goDetail(order.id)"
-             >
-               查看详情
-             </wd-button>
+            <wd-button
+              v-if="order.status === 'PENDING_PAY'"
+              size="small"
+              type="primary"
+              @click="onPay(order.id)"
+            >
+              去支付
+            </wd-button>
+            <wd-button
+              v-else
+              size="small"
+              plain
+              @click="goDetail(order.id)"
+            >
+              查看详情
+            </wd-button>
           </view>
         </view>
 
@@ -272,7 +280,9 @@ async function onPay(orderId: string) {
           <wd-loading size="24rpx" />
           <text>加载中...</text>
         </view>
-        <view v-else-if="!hasMore" class="no-more">没有更多了</view>
+        <view v-else-if="!hasMore" class="no-more">
+          没有更多了
+        </view>
       </view>
     </view>
   </view>
@@ -348,7 +358,8 @@ async function onPay(orderId: string) {
   padding: 20rpx;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -435,8 +446,8 @@ async function onPay(orderId: string) {
   }
 }
 
-
-.loading-more, .no-more {
+.loading-more,
+.no-more {
   display: flex;
   align-items: center;
   justify-content: center;

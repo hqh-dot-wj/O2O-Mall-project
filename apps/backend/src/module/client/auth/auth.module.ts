@@ -32,4 +32,4 @@ import { ClientCommonModule } from 'src/module/client/common/client-common.modul
   providers: [AuthService, MemberStrategy],
   exports: [AuthService],
 })
-export class ClientAuthModule { }
+export class ClientAuthModule {}

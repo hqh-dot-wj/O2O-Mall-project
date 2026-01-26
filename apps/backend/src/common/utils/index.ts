@@ -88,7 +88,19 @@ export function FormatDate(date: Date, format = 'YYYY-MM-DD HH:mm:ss') {
  */
 export function FormatDateFields<T>(
   obj: T,
-  dateFields: string[] = ['createTime', 'updateTime', 'loginDate', 'loginTime', 'operTime', 'expireTime', 'auditTime', 'payTime', 'serviceDate', 'planSettleTime', 'settleTime'],
+  dateFields: string[] = [
+    'createTime',
+    'updateTime',
+    'loginDate',
+    'loginTime',
+    'operTime',
+    'expireTime',
+    'auditTime',
+    'payTime',
+    'serviceDate',
+    'planSettleTime',
+    'settleTime',
+  ],
 ): T {
   if (!obj) return obj;
 

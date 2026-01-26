@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue'
 import { onLoad, onShow, onUnload } from '@dcloudio/uni-app'
-import { useLocationStore } from '@/store/location'
+import { computed, onMounted, ref } from 'vue'
 import { getCategoryTree, getProductList } from '@/api/product'
 import TenantSelector from '@/components/tenant-selector/tenant-selector.vue'
+import { useLocationStore } from '@/store/location'
 
 definePage({
   style: {
@@ -88,8 +88,10 @@ async function loadProducts(catId: number | null = null) {
       pageNum: 1,
       pageSize: 20,
     }
-    if (catId) params.categoryId = catId
-    if (keyword.value) params.name = keyword.value
+    if (catId)
+      params.categoryId = catId
+    if (keyword.value)
+      params.name = keyword.value
 
     const result = await getProductList(params)
     products.value = result?.rows || []
@@ -115,7 +117,8 @@ function onClear() {
 
 // 切换一级分类
 function onCategoryChange(catId: number) {
-  if (activeCategory.value === catId) return
+  if (activeCategory.value === catId)
+    return
   activeCategory.value = catId
   activeSubId.value = null // 切换大类时重置子类
   loadProducts(catId)
@@ -126,7 +129,6 @@ function onSubCategoryChange(catId: number | null) {
   activeSubId.value = catId
   loadProducts(catId || activeCategory.value)
 }
-
 
 // 打开租户切换弹窗
 async function openTenantPopup() {
@@ -142,7 +144,8 @@ function goToDetail(productId: string) {
 
 // 格式化距离
 function formatDistance(distance?: number): string {
-  if (!distance) return ''
+  if (!distance)
+    return ''
   if (distance < 1) {
     return `${Math.round(distance * 1000)}m`
   }
@@ -153,7 +156,7 @@ function formatDistance(distance?: number): string {
 <template>
   <!-- page-meta 必须是页面的第一个节点，用于彻底解决滚动穿透问题 -->
   <page-meta :page-style="`overflow: ${locationStore.showTenantSelector ? 'hidden' : 'visible'};`" />
-  
+
   <view class="category-page">
     <!-- 顶部租户显示栏 -->
     <view class="tenant-bar" @click="openTenantPopup">
@@ -193,18 +196,22 @@ function formatDistance(distance?: number): string {
         <!-- 二级分类标签栏 (仅在有子类时显示) -->
         <scroll-view v-if="subCategories.length > 0" class="sub-nav" scroll-x>
           <view class="sub-list">
-            <view 
-              class="sub-tab" 
+            <view
+              class="sub-tab"
               :class="{ active: activeSubId === null }"
               @click="onSubCategoryChange(null)"
-            >全部</view>
-            <view 
-              v-for="sub in subCategories" 
+            >
+              全部
+            </view>
+            <view
+              v-for="sub in subCategories"
               :key="sub.catId"
               class="sub-tab"
               :class="{ active: activeSubId === sub.catId }"
               @click="onSubCategoryChange(sub.catId)"
-            >{{ sub.name }}</view>
+            >
+              {{ sub.name }}
+            </view>
           </view>
         </scroll-view>
 

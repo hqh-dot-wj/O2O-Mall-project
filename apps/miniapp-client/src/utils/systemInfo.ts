@@ -2,7 +2,7 @@
 // 获取屏幕边界到安全区域距离
 let systemInfo: any = {}
 let safeAreaInsets: any = {}
-let phone: any = {}
+const phone: any = {}
 
 // #ifdef MP-WEIXIN
 // 微信小程序使用新的API
@@ -44,11 +44,14 @@ phone.SDKVersion = systemInfo.SDKVersion
 // Platform standardization as requested
 if (systemInfo.platform === 'devtools') {
   phone.platform = 'android'
-} else if (systemInfo.platform === 'ios') {
+}
+else if (systemInfo.platform === 'ios') {
   phone.platform = 'IOS'
-} else if (systemInfo.platform === 'android') {
+}
+else if (systemInfo.platform === 'android') {
   phone.platform = 'android'
-} else {
+}
+else {
   phone.platform = systemInfo.platform // Fallback
 }
 
@@ -57,7 +60,8 @@ if (systemInfo.platform === 'devtools') {
 if (uni.getMenuButtonBoundingClientRect) {
   const custom = uni.getMenuButtonBoundingClientRect()
   phone.CustomBar = custom.bottom + custom.top - systemInfo.statusBarHeight
-} else {
+}
+else {
   phone.CustomBar = 44 // Default fallback if method missing (though unlikely on modern libs)
 }
 // #endif
@@ -73,4 +77,4 @@ phone.CustomBar = systemInfo.statusBarHeight + 44
 console.log('systemInfo', systemInfo)
 console.log('phone', phone)
 
-export { safeAreaInsets, systemInfo, phone }
+export { phone, safeAreaInsets, systemInfo }

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import type { AddressVo } from '@/api/address'
 import { onShow } from '@dcloudio/uni-app'
-import { getAddressList, deleteAddress, setDefaultAddress, type AddressVo } from '@/api/address'
+import { ref } from 'vue'
+import { deleteAddress, getAddressList, setDefaultAddress } from '@/api/address'
 
 definePage({
   style: {
@@ -50,7 +51,8 @@ function goEditAddress(id: string) {
 
 // 设为默认
 async function onSetDefault(addr: AddressVo) {
-  if (addr.isDefault) return
+  if (addr.isDefault)
+    return
 
   try {
     await setDefaultAddress(addr.id)
@@ -109,7 +111,7 @@ function onDelete(addr: AddressVo) {
 
         <view class="addr-actions">
           <view class="action-item" @click="onSetDefault(addr)">
-            <view :class="['radio', { active: addr.isDefault }]" />
+            <view class="radio" :class="[{ active: addr.isDefault }]" />
             <text>默认地址</text>
           </view>
           <view class="action-item" @click="goEditAddress(addr.id)">

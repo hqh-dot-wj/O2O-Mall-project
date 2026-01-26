@@ -10,70 +10,70 @@ import { StatusEnum } from 'src/common/enum/index';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private readonly userService: UserService,
-        private readonly loginlogService: LoginlogService,
-        private readonly axiosService: AxiosService,
-    ) { }
+  constructor(
+    private readonly userService: UserService,
+    private readonly loginlogService: LoginlogService,
+    private readonly axiosService: AxiosService,
+  ) {}
 
-    /**
-     * 登陆
-     * @param user
-     * @returns
-     */
-    async login(user: LoginDto, clientInfo: ClientInfoDto) {
-        const loginLog = {
-            ...clientInfo,
-            status: StatusEnum.NORMAL as StatusEnum,
-            msg: '',
-        };
+  /**
+   * 登陆
+   * @param user
+   * @returns
+   */
+  async login(user: LoginDto, clientInfo: ClientInfoDto) {
+    const loginLog = {
+      ...clientInfo,
+      status: StatusEnum.NORMAL as StatusEnum,
+      msg: '',
+    };
 
-        // 异步获取登录位置，不阻塞登录流程
-        this.axiosService
-            .getIpAddress(clientInfo.ipaddr)
-            .then((loginLocation) => {
-                loginLog.loginLocation = loginLocation;
-            })
-            .catch(() => {
-                loginLog.loginLocation = '未知';
-            });
+    // 异步获取登录位置，不阻塞登录流程
+    this.axiosService
+      .getIpAddress(clientInfo.ipaddr)
+      .then((loginLocation) => {
+        loginLog.loginLocation = loginLocation;
+      })
+      .catch(() => {
+        loginLog.loginLocation = '未知';
+      });
 
-        const loginRes = await this.userService.login(user, loginLog);
-        loginLog.status = loginRes.code === SUCCESS_CODE ? StatusEnum.NORMAL : StatusEnum.STOP;
-        loginLog.msg = loginRes.msg;
-        this.loginlogService.create(loginLog);
-        return loginRes;
-    }
-    /**
-     * 退出登陆
-     * @param clientInfo
-     */
-    async logout(clientInfo: ClientInfoDto) {
-        const loginLog = {
-            ...clientInfo,
-            status: StatusEnum.NORMAL,
-            msg: '退出成功',
-        };
+    const loginRes = await this.userService.login(user, loginLog);
+    loginLog.status = loginRes.code === SUCCESS_CODE ? StatusEnum.NORMAL : StatusEnum.STOP;
+    loginLog.msg = loginRes.msg;
+    this.loginlogService.create(loginLog);
+    return loginRes;
+  }
+  /**
+   * 退出登陆
+   * @param clientInfo
+   */
+  async logout(clientInfo: ClientInfoDto) {
+    const loginLog = {
+      ...clientInfo,
+      status: StatusEnum.NORMAL,
+      msg: '退出成功',
+    };
 
-        // 异步获取登录位置，不阻塞退出流程
-        this.axiosService
-            .getIpAddress(clientInfo.ipaddr)
-            .then((loginLocation) => {
-                loginLog.loginLocation = loginLocation;
-            })
-            .catch(() => {
-                loginLog.loginLocation = '未知';
-            });
+    // 异步获取登录位置，不阻塞退出流程
+    this.axiosService
+      .getIpAddress(clientInfo.ipaddr)
+      .then((loginLocation) => {
+        loginLog.loginLocation = loginLocation;
+      })
+      .catch(() => {
+        loginLog.loginLocation = '未知';
+      });
 
-        this.loginlogService.create(loginLog);
-        return Result.ok();
-    }
-    /**
-     * 注册
-     * @param user
-     * @returns
-     */
-    async register(user: RegisterDto) {
-        return await this.userService.register(user);
-    }
+    this.loginlogService.create(loginLog);
+    return Result.ok();
+  }
+  /**
+   * 注册
+   * @param user
+   * @returns
+   */
+  async register(user: RegisterDto) {
+    return await this.userService.register(user);
+  }
 }

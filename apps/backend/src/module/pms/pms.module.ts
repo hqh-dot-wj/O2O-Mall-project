@@ -10,5 +10,6 @@ import { AttributeService } from './attribute/attribute.service';
   imports: [CategoryModule, BrandModule],
   controllers: [PmsProductController, AttributeController],
   providers: [PmsProductService, AttributeService],
+  exports: [PmsProductService],
 })
-export class PmsModule { }
+export class PmsModule {}

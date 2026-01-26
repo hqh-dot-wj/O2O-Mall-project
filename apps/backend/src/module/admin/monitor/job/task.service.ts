@@ -24,7 +24,7 @@ export class TaskService implements OnModuleInit {
     private prisma: PrismaService,
     private noticeService: NoticeService,
     private versionService: VersionService,
-  ) { }
+  ) {}
 
   onModuleInit() {
     this.initializeTasks();

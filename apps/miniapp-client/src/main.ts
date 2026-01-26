@@ -17,7 +17,7 @@ export function createApp() {
   app.mixin({
     onShow() {
       uni.$emit('page-show')
-    }
+    },
   })
 
   return {

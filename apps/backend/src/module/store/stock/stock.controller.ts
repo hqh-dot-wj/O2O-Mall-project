@@ -9,7 +9,7 @@ import { StockVo } from './vo';
 @ApiTags('库存管理')
 @Controller('store/stock')
 export class StockController {
-  constructor(private readonly stockService: StockService) { }
+  constructor(private readonly stockService: StockService) {}
 
   @Api({ summary: '获取库存列表', type: StockVo, isPager: true })
   @Post('list')

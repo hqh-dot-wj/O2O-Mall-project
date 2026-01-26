@@ -190,6 +190,9 @@ const generateFormData = (columns: any[]) => {
 const generateRulesData = (columns: any[]) => {
   return columns
     .filter((item: any) => item.isRequired === '1')
-    .map((item: any) => `${item.javaField}: [{ required: true, message: "${item.columnComment}不能为空", trigger: "blur" }]`)
+    .map(
+      (item: any) =>
+        `${item.javaField}: [{ required: true, message: "${item.columnComment}不能为空", trigger: "blur" }]`,
+    )
     .join(',\n');
 };

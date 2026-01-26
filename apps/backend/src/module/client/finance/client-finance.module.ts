@@ -4,9 +4,9 @@ import { ClientFinanceController } from './client-finance.controller';
 import { FinanceModule } from 'src/module/finance/finance.module';
 
 @Module({
-    imports: [FinanceModule],
-    controllers: [ClientFinanceController],
-    providers: [ClientFinanceService],
-    exports: [ClientFinanceService],
+  imports: [FinanceModule],
+  controllers: [ClientFinanceController],
+  providers: [ClientFinanceService],
+  exports: [ClientFinanceService],
 })
-export class ClientFinanceModule { }
+export class ClientFinanceModule {}

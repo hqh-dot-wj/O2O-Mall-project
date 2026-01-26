@@ -125,13 +125,53 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'marketing',
+    path: '/marketing',
+    component: 'layout.base',
+    meta: {
+      title: 'marketing',
+      i18nKey: 'route.marketing'
+    },
+    children: [
+      {
+        name: 'marketing_asset',
+        path: '/marketing/asset',
+        component: 'view.marketing_asset',
+        meta: {
+          title: 'marketing_asset',
+          i18nKey: 'route.marketing_asset'
+        }
+      },
+      {
+        name: 'marketing_template',
+        path: '/marketing/template',
+        component: 'view.marketing_template',
+        meta: {
+          title: 'marketing_template',
+          i18nKey: 'route.marketing_template'
+        }
+      }
+    ]
+  },
+  {
     name: 'member',
     path: '/member',
-    component: 'layout.base$view.member',
+    component: 'layout.base',
     meta: {
       title: 'member',
       i18nKey: 'route.member'
-    }
+    },
+    children: [
+      {
+        name: 'member_upgrade',
+        path: '/member/upgrade',
+        component: 'view.member_upgrade',
+        meta: {
+          title: 'member_upgrade',
+          i18nKey: 'route.member_upgrade'
+        }
+      }
+    ]
   },
   {
     name: 'monitor',
@@ -293,18 +333,17 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'pms_global-product',
           i18nKey: 'route.pms_global-product'
-        },
-        children: [
-          {
-            name: 'pms_global-product_create',
-            path: '/pms/global-product/create',
-            component: 'view.pms_global-product_create',
-            meta: {
-              title: 'pms_global-product_create',
-              i18nKey: 'route.pms_global-product_create'
-            }
-          }
-        ]
+        }
+      },
+      {
+        name: 'pms_global-product-create',
+        path: '/pms/global-product-create',
+        component: 'view.pms_global-product-create',
+        meta: {
+          title: 'pms_global-product_create',
+          i18nKey: 'route.pms_global-product_create',
+          activeMenu: 'pms_global-product'
+        }
       }
     ]
   },
@@ -337,6 +376,15 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.store_marketing'
         },
         children: [
+          {
+            name: 'store_marketing_activity',
+            path: '/store/marketing/activity',
+            component: 'view.store_marketing_activity',
+            meta: {
+              title: 'store_marketing_activity',
+              i18nKey: 'route.store_marketing_activity'
+            }
+          },
           {
             name: 'store_marketing_distribution',
             path: '/store/marketing/distribution',
@@ -451,7 +499,16 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'system_menu',
           i18nKey: 'route.system_menu',
           localIcon: 'menu-tree-table',
-          order: 3
+          order: 4
+        }
+      },
+      {
+        name: 'system_message',
+        path: '/system/message',
+        component: 'view.system_message',
+        meta: {
+          title: 'system_message',
+          i18nKey: 'route.system_message'
         }
       },
       {

@@ -1,11 +1,24 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { NCard, NDescriptions, NDescriptionsItem, NTag, NTable, NButton, NTimeline, NTimelineItem, NSpace, NAvatar, NText, NSpin } from 'naive-ui';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import {
+  NAvatar,
+  NButton,
+  NCard,
+  NDescriptions,
+  NDescriptionsItem,
+  NSpace,
+  NSpin,
+  NTable,
+  NTag,
+  NText,
+  NTimeline,
+  NTimelineItem
+} from 'naive-ui';
 import { fetchGetOrderDetail } from '@/service/api/order';
 
 defineOptions({
-  name: 'OrderDetail',
+  name: 'OrderDetail'
 });
 
 const route = useRoute();
@@ -21,14 +34,14 @@ const orderStatusRecord: Record<string, { label: string; type: NaiveUI.ThemeColo
   SHIPPED: { label: '已发货', type: 'primary' },
   COMPLETED: { label: '已完成', type: 'success' },
   CANCELLED: { label: '已取消', type: 'default' },
-  REFUNDED: { label: '已退款', type: 'error' },
+  REFUNDED: { label: '已退款', type: 'error' }
 };
 
 // 佣金状态映射
 const commissionStatusRecord: Record<string, { label: string; type: NaiveUI.ThemeColor }> = {
   FROZEN: { label: '🕒冻结中', type: 'warning' },
   SETTLED: { label: '✅已结算', type: 'success' },
-  CANCELLED: { label: '❌已取消', type: 'error' },
+  CANCELLED: { label: '❌已取消', type: 'error' }
 };
 
 // 数据状态
@@ -50,7 +63,7 @@ async function loadOrderDetail() {
 
 // 返回列表
 function handleBack() {
-  router.push({path: 'order_list'});
+  router.push({ path: 'order_list' });
 }
 
 onMounted(() => {
@@ -92,7 +105,7 @@ onMounted(() => {
               </NDescriptionsItem>
               <NDescriptionsItem label="客户手机">{{ orderData.customer?.mobile || '-' }}</NDescriptionsItem>
               <NDescriptionsItem label="归因信息">
-                <div class="flex gap-8px flex-wrap">
+                <div class="flex flex-wrap gap-8px">
                   <NTag v-if="orderData.attribution?.shareUser" type="info" size="small">
                     分享人: {{ orderData.attribution.shareUser.nickname }}
                   </NTag>
@@ -126,7 +139,7 @@ onMounted(() => {
                 <tr v-for="item in orderData.order?.items" :key="item.id">
                   <td>
                     <div class="flex items-center gap-8px">
-                      <img :src="item.productImg" class="w-48px h-48px rounded object-cover" />
+                      <img :src="item.productImg" class="h-48px w-48px rounded object-cover" />
                       <span>{{ item.productName }}</span>
                     </div>
                   </td>
@@ -137,7 +150,7 @@ onMounted(() => {
                 </tr>
               </tbody>
             </NTable>
-            <div class="flex justify-end mt-16px gap-16px">
+            <div class="mt-16px flex justify-end gap-16px">
               <NText>商品总价: ¥{{ orderData.order?.totalAmount }}</NText>
               <NText>运费: ¥{{ orderData.order?.freightAmount }}</NText>
               <NText>优惠: -¥{{ orderData.order?.discountAmount }}</NText>
@@ -196,7 +209,12 @@ onMounted(() => {
           </NCard>
 
           <!-- 卡片4: 履约与派单信息 (服务类订单) -->
-          <NCard v-if="orderData.order?.orderType === 'SERVICE' && orderData.worker" title="履约信息" :bordered="false" size="small">
+          <NCard
+            v-if="orderData.order?.orderType === 'SERVICE' && orderData.worker"
+            title="履约信息"
+            :bordered="false"
+            size="small"
+          >
             <NDescriptions :column="2" label-placement="left">
               <NDescriptionsItem label="技师">
                 <div class="flex items-center gap-8px">

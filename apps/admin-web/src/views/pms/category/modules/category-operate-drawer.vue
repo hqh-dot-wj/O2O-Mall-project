@@ -1,13 +1,13 @@
 <script setup lang="tsx">
-import { computed, reactive, watch, ref } from 'vue';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { fetchAddCategory, fetchUpdateCategory, fetchGetCategoryTree } from '@/service/api/pms/category';
+import { computed, reactive, ref, watch } from 'vue';
+import { NForm, NFormItem, NInput, NInputNumber, NSelect, NTreeSelect } from 'naive-ui';
+import { fetchAddCategory, fetchGetCategoryTree, fetchUpdateCategory } from '@/service/api/pms/category';
 import { fetchGetAttributeList } from '@/service/api/pms/attribute';
+import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { NForm, NFormItem, NInput, NInputNumber, NTreeSelect, NSelect } from 'naive-ui';
 
 defineOptions({
-  name: 'CategoryOperateDrawer',
+  name: 'CategoryOperateDrawer'
 });
 
 interface Props {
@@ -26,7 +26,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -35,7 +35,7 @@ const { defaultRequiredRule } = useFormRules();
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
     add: $t('page.pms.category.addCategory'),
-    edit: $t('page.pms.category.editCategory'),
+    edit: $t('page.pms.category.editCategory')
   };
   return titles[props.operateType];
 });
@@ -79,7 +79,7 @@ async function getTree() {
 type RuleKey = Extract<keyof Model, 'name'>;
 
 const rules: Record<RuleKey, App.Global.FormRule> = {
-  name: defaultRequiredRule,
+  name: defaultRequiredRule
 };
 
 function handleUpdateStoreSelection(val: number | null, option: any) {
@@ -161,11 +161,11 @@ function handleInit() {
             clearable
           />
         </NFormItem>
-        <NFormItem :label="$t('page.pms.category.attributeTemplate' )" path="attrTemplateId">
+        <NFormItem :label="$t('page.pms.category.attributeTemplate')" path="attrTemplateId">
           <NSelect
             v-model:value="model.attrTemplateId"
             :options="attrTemplateOptions"
-            :placeholder="$t('page.pms.category.selectAttributeTemplate' )"
+            :placeholder="$t('page.pms.category.selectAttributeTemplate')"
             clearable
             filterable
           />

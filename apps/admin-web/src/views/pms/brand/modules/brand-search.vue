@@ -3,7 +3,7 @@ import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'BrandSearch',
+  name: 'BrandSearch'
 });
 
 interface Emits {
@@ -35,7 +35,12 @@ async function search() {
         <NForm ref="formRef" :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.pms.brand.brandName')" path="name" class="pr-24px">
-              <NInput v-model:value="model.name" :placeholder="$t('page.pms.brand.searchBrandName')" clearable @keydown.enter="search" />
+              <NInput
+                v-model:value="model.name"
+                :placeholder="$t('page.pms.brand.searchBrandName')"
+                clearable
+                @keydown.enter="search"
+              />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6">
               <NSpace class="w-full" justify="end">

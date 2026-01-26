@@ -26,7 +26,7 @@ export class SystemConfigService {
   constructor(
     private readonly systemPrisma: SystemPrismaService,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   /**
    * 获取系统配置值

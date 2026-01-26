@@ -13,7 +13,7 @@ import { $t } from '@/locales';
 import OnlineSearch from './modules/online-search.vue';
 
 defineOptions({
-  name: 'OnlineList',
+  name: 'OnlineList'
 });
 
 const appStore = useAppStore();
@@ -32,59 +32,59 @@ const { columns, columnChecks, data, getData, loading, mobilePagination, searchP
     // if you want to use the searchParams in Form, you need to define the following properties, and the value is null
     // the value can not be undefined, otherwise the property in Form will not be reactive
     userName: null,
-    ipaddr: null,
+    ipaddr: null
   },
   columns: () => [
     {
       key: 'userName',
       title: '用户账号',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'deviceType',
       title: '设备类型',
       align: 'center',
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         return <DictTag size="small" value={row.deviceType} dict-code="sys_device_type" />;
-      },
+      }
     },
     {
       key: 'ipaddr',
       title: '登录IP地址',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'loginLocation',
       title: '登录地点',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'browser',
       title: '浏览器类型',
       align: 'center',
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         return (
           <div class="flex items-center justify-center gap-2">
             <SvgIcon icon={getBrowserIcon(row.browser)} />
             {row.browser}
           </div>
         );
-      },
+      }
     },
     {
       key: 'os',
       title: '操作系统',
       align: 'center',
       ellipsis: {
-        tooltip: true,
+        tooltip: true
       },
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         const osName = row.os?.split(' or ')[0] ?? '';
         return (
           <div class="flex items-center justify-center gap-2">
@@ -92,26 +92,26 @@ const { columns, columnChecks, data, getData, loading, mobilePagination, searchP
             {osName}
           </div>
         );
-      },
+      }
     },
     {
       key: 'loginTime',
       title: '登录时间',
       align: 'center',
       ellipsis: {
-        tooltip: true,
+        tooltip: true
       },
       minWidth: 120,
-      render: (row) => {
+      render: row => {
         return dayjs(row.loginTime).format('YYYY-MM-DD HH:mm:ss');
-      },
+      }
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 130,
-      render: (row) => {
+      render: row => {
         const forceLogoutBtn = () => {
           if (!hasAuth('monitor:online:forceLogout')) {
             return null;
@@ -129,9 +129,9 @@ const { columns, columnChecks, data, getData, loading, mobilePagination, searchP
           );
         };
         return <div>{forceLogoutBtn()}</div>;
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 async function handleForceLogout(tokenId: string) {
@@ -167,7 +167,7 @@ async function handleForceLogout(tokenId: string) {
         :scroll-x="962"
         :loading="loading"
         remote
-        :row-key="(row) => row.tokenId"
+        :row-key="row => row.tokenId"
         :pagination="mobilePagination"
         class="sm:h-full"
       />

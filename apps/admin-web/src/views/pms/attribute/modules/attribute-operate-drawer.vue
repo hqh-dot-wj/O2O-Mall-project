@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import { computed, watch, ref } from 'vue';
-import { useBoolean } from '@sa/hooks';
-import { useNaiveForm } from '@/hooks/common/form';
-import { NDrawer, NDrawerContent, NForm, NFormItem, NInput, NDivider, NButton, NTable, NInputNumber, NSelect, NSpace, NPopconfirm } from 'naive-ui';
+import { computed, ref, watch } from 'vue';
+import {
+  NButton,
+  NDivider,
+  NDrawer,
+  NDrawerContent,
+  NForm,
+  NFormItem,
+  NInput,
+  NInputNumber,
+  NPopconfirm,
+  NSelect,
+  NSpace,
+  NTable
+} from 'naive-ui';
 import type { FormRules } from 'naive-ui';
-import { fetchCreateAttribute, fetchUpdateAttribute, fetchGetAttribute } from '@/service/api/pms/attribute';
+import { useBoolean } from '@sa/hooks';
+import { fetchCreateAttribute, fetchGetAttribute, fetchUpdateAttribute } from '@/service/api/pms/attribute';
+import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -80,12 +93,12 @@ async function handleInitModel() {
       try {
         const { data, error } = await fetchGetAttribute(props.rowData.templateId);
         if (!error && data) {
-           const { templateId, name, attributes } = data;
-           model.value = {
-              templateId,
-              name,
-              attributes: attributes || []
-           };
+          const { templateId, name, attributes } = data;
+          model.value = {
+            templateId,
+            name,
+            attributes: attributes || []
+          };
         }
       } finally {
         endLoading();
@@ -111,7 +124,7 @@ function handleRemoveAttribute(index: number) {
 
 async function handleSubmit() {
   await validate();
-  
+
   // Basic validation for attributes names
   if (model.value.attributes.some(attr => !attr.name)) {
     window.$message?.error($t('page.pms.attribute.validate.attributeNameRequired'));
@@ -146,8 +159,8 @@ watch(visible, val => {
   <NDrawer v-model:show="visible" display-directive="show" :width="1000">
     <NDrawerContent :title="title" :native-scrollbar="false" bordered>
       <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
-        <NFormItem :label="$t('common.name' )" path="name">
-          <NInput v-model:value="model.name" :placeholder="$t('common.name' )" />
+        <NFormItem :label="$t('common.name')" path="name">
+          <NInput v-model:value="model.name" :placeholder="$t('common.name')" />
         </NFormItem>
 
         <NDivider>{{ $t('page.pms.attribute.attributeConfig') }}</NDivider>
@@ -177,7 +190,11 @@ watch(visible, val => {
                 <NInputNumber v-model:value="item.sort" :show-button="false" size="small" />
               </td>
               <td>
-                <NInput v-model:value="item.name" :placeholder="$t('page.pms.attribute.placeholder.attributeName')" size="small" />
+                <NInput
+                  v-model:value="item.name"
+                  :placeholder="$t('page.pms.attribute.placeholder.attributeName')"
+                  size="small"
+                />
               </td>
               <td>
                 <NSelect v-model:value="item.usageType" :options="usageTypeOptions" size="small" />
@@ -186,11 +203,11 @@ watch(visible, val => {
                 <NSelect v-model:value="item.inputType" :options="inputTypeOptions" size="small" />
               </td>
               <td>
-                <NInput 
-                  v-model:value="item.inputList" 
-                  :disabled="item.inputType === 0" 
-                  :placeholder="$t('page.pms.attribute.placeholder.inputList')" 
-                  size="small" 
+                <NInput
+                  v-model:value="item.inputList"
+                  :disabled="item.inputType === 0"
+                  :placeholder="$t('page.pms.attribute.placeholder.inputList')"
+                  size="small"
                 />
               </td>
               <td>
@@ -204,12 +221,11 @@ watch(visible, val => {
             </tr>
           </tbody>
         </NTable>
-        
+
         <!-- Empty state -->
         <div v-if="model.attributes.length === 0" class="py-8 text-center text-gray-400">
           {{ $t('page.pms.attribute.noAttributes') }}
         </div>
-
       </NForm>
       <template #footer>
         <NSpace justify="end" :size="16">

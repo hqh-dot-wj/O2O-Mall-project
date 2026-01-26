@@ -1,6 +1,7 @@
 <script lang="ts" setup>
+import type { AddressVo } from '@/api/address'
 import { ref, watch } from 'vue'
-import { getAddressList, type AddressVo } from '@/api/address'
+import { getAddressList } from '@/api/address'
 
 const props = defineProps<{
   modelValue: boolean
@@ -115,7 +116,7 @@ function close() {
 
       <!-- 新增按钮 -->
       <view class="add-btn-wrap">
-        <wd-button type="primary" block plain @click="goAddAddress">
+        <wd-button type="primary" plain block @click="goAddAddress">
           <view class="i-carbon-add mr-8rpx" />
           新增收货地址
         </wd-button>

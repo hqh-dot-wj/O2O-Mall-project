@@ -6,9 +6,9 @@ import { StationService } from './station/station.service';
 import { StationController } from './station/station.controller';
 
 @Module({
-    imports: [],
-    controllers: [RegionController, StationController],
-    providers: [GeoService, RegionService, StationService],
-    exports: [GeoService, RegionService, StationService], // Export GeoService for use in other modules if needed
+  imports: [],
+  controllers: [RegionController, StationController],
+  providers: [GeoService, RegionService, StationService],
+  exports: [GeoService, RegionService, StationService], // Export GeoService for use in other modules if needed
 })
-export class LbsModule { }
+export class LbsModule {}

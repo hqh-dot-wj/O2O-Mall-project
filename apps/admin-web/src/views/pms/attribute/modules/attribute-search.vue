@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { $t } from '@/locales';
+import { NButton, NCard, NForm, NFormItemGi, NGi, NGrid, NInput } from 'naive-ui';
 import { useNaiveForm } from '@/hooks/common/form';
-import { NCard, NForm, NGrid, NFormItemGi, NInput, NGi, NButton } from 'naive-ui';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'AttributeSearch'

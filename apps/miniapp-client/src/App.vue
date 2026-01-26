@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { navigateToInterceptor } from '@/router/interceptor'
-import { useTokenStore } from '@/store/token'
 import { useAuthStore } from '@/store/auth'
+import { useTokenStore } from '@/store/token'
 
 onLaunch((options) => {
   console.log('App.vue onLaunch', options)
@@ -53,7 +53,8 @@ function captureShareAttribution(options: any) {
       if (match) {
         shareUserId = match[1]
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.warn('解析 scene 参数失败:', e)
     }
   }
@@ -81,10 +82,12 @@ async function silentLogin() {
     const res = await tokenStore.wxLogin()
     if (res.isRegistered) {
       console.log('静默登录成功')
-    } else {
+    }
+    else {
       console.log('用户未注册，等待触发授权弹窗')
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.warn('静默登录失败:', e)
   }
 }
@@ -93,4 +96,3 @@ async function silentLogin() {
 <style lang="scss">
 
 </style>
-

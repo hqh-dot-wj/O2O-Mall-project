@@ -19,7 +19,7 @@ export class RoleService {
     private readonly prisma: PrismaService,
     private readonly roleRepo: RoleRepository,
     private readonly menuService: MenuService,
-  ) { }
+  ) {}
   @Transactional()
   async create(createRoleDto: CreateRoleDto) {
     const { menuIds = [], ...rolePayload } = createRoleDto as CreateRoleDto & { menuIds?: number[] };

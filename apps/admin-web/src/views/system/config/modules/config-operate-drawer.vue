@@ -5,7 +5,7 @@ import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'ConfigOperateDrawer',
+  name: 'ConfigOperateDrawer'
 });
 
 interface Props {
@@ -24,7 +24,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -33,7 +33,7 @@ const { createRequiredRule } = useFormRules();
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
     add: $t('page.system.config.addConfig'),
-    edit: $t('page.system.config.editConfig'),
+    edit: $t('page.system.config.editConfig')
   };
   return titles[props.operateType];
 });
@@ -48,7 +48,7 @@ function createDefaultModel(): Model {
     configKey: '',
     configValue: '',
     configType: 'Y',
-    remark: '',
+    remark: ''
   };
 }
 
@@ -59,7 +59,7 @@ const rules: Record<RuleKey, App.Global.FormRule> = {
   configName: createRequiredRule($t('page.system.config.form.configName.required')),
   configKey: createRequiredRule($t('page.system.config.form.configKey.required')),
   configValue: createRequiredRule($t('page.system.config.form.configValue.required')),
-  configType: createRequiredRule($t('page.system.config.form.configType.required')),
+  configType: createRequiredRule($t('page.system.config.form.configType.required'))
 };
 
 function handleUpdateModelWhenEdit() {

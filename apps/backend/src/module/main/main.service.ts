@@ -10,16 +10,12 @@ import { ClientInfoDto } from 'src/common/decorators/common.decorator';
 import { StatusEnum } from 'src/common/enum/index';
 @Injectable()
 export class MainService {
-  constructor(
-    private readonly menuService: MenuService,
-  ) { }
-
-
+  constructor(private readonly menuService: MenuService) {}
 
   /**
    * 登陆记录
    */
-  loginRecord() { }
+  loginRecord() {}
 
   /**
    * 获取路由菜单

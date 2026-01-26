@@ -1,6 +1,6 @@
+import { LOGIN_PAGE } from '@/router/config'
 import { getLastPage } from '@/utils'
 import { debounce } from '@/utils/debounce'
-import { LOGIN_PAGE } from '@/router/config'
 
 interface ToLoginPageOptions {
   /**
@@ -14,8 +14,6 @@ interface ToLoginPageOptions {
    */
   queryString?: string
 }
-
-
 
 /**
  * 跳转到登录页, 带防抖处理

@@ -4,8 +4,8 @@ import { BusinessType } from 'src/common/constant/business.constant';
 
 export type OperlogConfig =
   | Partial<{
-    businessType?: (typeof BusinessType)[keyof Omit<typeof BusinessType, 'prototype'>];
-  }>
+      businessType?: (typeof BusinessType)[keyof Omit<typeof BusinessType, 'prototype'>];
+    }>
   | undefined;
 
 export const Operlog = (logConfig?: OperlogConfig) => {

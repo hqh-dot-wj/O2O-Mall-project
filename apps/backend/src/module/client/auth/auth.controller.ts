@@ -8,7 +8,7 @@ import { LoginResultVo } from './vo';
 @ApiTags('C端-认证模块')
 @Controller('client/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Api({ summary: '静默登录检查', type: LoginResultVo })
   @Post('check-login')

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { $t } from '@/locales';
 import { useNaiveForm } from '@/hooks/common/form';
+import { $t } from '@/locales';
 
 defineOptions({
-  name: 'ProductSearch',
+  name: 'ProductSearch'
 });
 
 interface Emits {
@@ -30,13 +30,13 @@ async function search() {
 const typeOptions = [
   { label: '全部', value: null },
   { label: '实物', value: 'REAL' },
-  { label: '服务', value: 'SERVICE' },
+  { label: '服务', value: 'SERVICE' }
 ] as any[];
 
 const statusOptions = [
   { label: '全部', value: null },
   { label: '已上架', value: 'ON_SHELF' },
-  { label: '已下架', value: 'OFF_SHELF' },
+  { label: '已下架', value: 'OFF_SHELF' }
 ] as any[];
 </script>
 

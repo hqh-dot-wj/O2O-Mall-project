@@ -21,7 +21,7 @@ export class OperlogService {
     private readonly axiosService: AxiosService,
     @Inject(DictService)
     private readonly dictService: DictService,
-  ) { }
+  ) {}
 
   async findAll(query: QueryOperLogDto) {
     const where: Prisma.SysOperLogWhereInput = {};
@@ -81,8 +81,8 @@ export class OperlogService {
     const orderBy =
       query.orderByColumn && query.isAsc
         ? ({
-          [query.orderByColumn]: query.isAsc === 'asc' ? 'asc' : 'desc',
-        } as Prisma.SysOperLogOrderByWithRelationInput)
+            [query.orderByColumn]: query.isAsc === 'asc' ? 'asc' : 'desc',
+          } as Prisma.SysOperLogOrderByWithRelationInput)
         : undefined;
 
     const findManyArgs: Prisma.SysOperLogFindManyArgs = {

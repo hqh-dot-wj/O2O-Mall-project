@@ -9,7 +9,7 @@ import {
   genJavaTypeOptions,
   genQueryTypeOptions,
   genTplCategoryOptions,
-  genTypeOptions,
+  genTypeOptions
 } from '@/constants/business';
 import { fetchGetDictTypeOption } from '@/service/api/system';
 import { fetchGetGenTableInfo, fetchUpdateGenTable } from '@/service/api/tool';
@@ -19,7 +19,7 @@ import { useTableProps } from '@/hooks/common/table';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'GenTableOperateDrawer',
+  name: 'GenTableOperateDrawer'
 });
 
 interface Props {
@@ -32,7 +32,7 @@ const props = defineProps<Props>();
 const tableProps = useTableProps();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 interface Emits {
@@ -54,7 +54,7 @@ const basicRules: Record<BasicRuleKey, App.Global.FormRule> = {
   tableName: defaultRequiredRule,
   tableComment: defaultRequiredRule,
   className: defaultRequiredRule,
-  functionAuthor: defaultRequiredRule,
+  functionAuthor: defaultRequiredRule
 };
 
 const infoFormRef = ref<FormInst | null>(null);
@@ -84,7 +84,7 @@ const infoRules: Record<InfoRuleKey, App.Global.FormRule> = {
   genPath: defaultRequiredRule,
   treeCode: defaultRequiredRule,
   treeParentCode: defaultRequiredRule,
-  treeName: defaultRequiredRule,
+  treeName: defaultRequiredRule
 };
 
 async function getGenTableInfo() {
@@ -127,7 +127,7 @@ async function handleSubmit() {
     treeCode: info?.treeCode,
     treeName: info?.treeName,
     treeParentCode: info?.treeParentCode,
-    parentMenuId: info?.parentMenuId,
+    parentMenuId: info?.parentMenuId
   };
   genTable.columns = genTableInfo.value?.rows;
 
@@ -161,10 +161,10 @@ async function getDictOptions() {
     if (!data) {
       return;
     }
-    dictOptions.value = data.map((dict) => ({
+    dictOptions.value = data.map(dict => ({
       value: dict.dictType!,
       class: 'gen-dict-select',
-      label: dict.dictName,
+      label: dict.dictName
     }));
   } catch {
     // error handled by request interceptor
@@ -178,100 +178,96 @@ const columns: NaiveUI.TableColumn<Api.Tool.GenTableColumn>[] = [
     key: 'sort',
     title: $t('common.index'),
     align: 'center',
-    width: 80,
+    width: 80
   },
   {
     key: 'columnName',
     title: '字段列名',
     align: 'left',
-    minWidth: 120,
+    minWidth: 120
   },
   {
     key: 'columnComment',
     title: '字段描述',
     align: 'left',
     minWidth: 120,
-    render: (row) => <NInput v-model:value={row.columnComment} placeholder="请输入字段描述" />,
+    render: row => <NInput v-model:value={row.columnComment} placeholder="请输入字段描述" />
   },
   {
     key: 'columnType',
     title: '物理类型',
     align: 'left',
-    width: 120,
+    width: 120
   },
   {
     key: 'javaType',
     title: 'Java 类型',
     align: 'left',
     width: 136,
-    render: (row) => (
-      <NSelect v-model:value={row.javaType} placeholder="请选择 Java 类型" options={genJavaTypeOptions} />
-    ),
+    render: row => <NSelect v-model:value={row.javaType} placeholder="请选择 Java 类型" options={genJavaTypeOptions} />
   },
   {
     key: 'javaField',
     title: 'Java 属性',
     align: 'left',
     minWidth: 120,
-    render: (row) => <NInput v-model:value={row.javaField} placeholder="请输入 Java 属性" />,
+    render: row => <NInput v-model:value={row.javaField} placeholder="请输入 Java 属性" />
   },
   {
     key: 'isInsert',
     title: '插入',
     align: 'center',
     width: 64,
-    render: (row) => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isInsert} />,
+    render: row => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isInsert} />
   },
   {
     key: 'isEdit',
     title: '编辑',
     align: 'center',
     width: 64,
-    render: (row) => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isEdit} />,
+    render: row => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isEdit} />
   },
   {
     key: 'isList',
     title: '列表',
     align: 'center',
     width: 64,
-    render: (row) => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isList} />,
+    render: row => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isList} />
   },
   {
     key: 'isQuery',
     title: '查询',
     align: 'center',
     width: 64,
-    render: (row) => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isQuery} />,
+    render: row => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isQuery} />
   },
   {
     key: 'queryType',
     title: '查询方式',
     align: 'left',
     width: 130,
-    render: (row) => (
-      <NSelect v-model:value={row.queryType} placeholder="请选择查询方式" options={genQueryTypeOptions} />
-    ),
+    render: row => <NSelect v-model:value={row.queryType} placeholder="请选择查询方式" options={genQueryTypeOptions} />
   },
   {
     key: 'isRequired',
     title: '必填',
     align: 'center',
     width: 64,
-    render: (row) => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isRequired} />,
+    render: row => <NCheckbox checked-value="1" unchecked-value="0" v-model:checked={row.isRequired} />
   },
   {
     key: 'htmlType',
     title: '显示类型',
     align: 'left',
     width: 130,
-    render: (row) => <NSelect v-model:value={row.htmlType} placeholder="请选择显示类型" options={genHtmlTypeOptions} />,
+    render: row => <NSelect v-model:value={row.htmlType} placeholder="请选择显示类型" options={genHtmlTypeOptions} />
   },
   {
     key: 'dictType',
     title: '字典类型',
     align: 'left',
     width: 150,
-    render: (row) => {
+    render: row => {
       if (row.dictType === '') {
         row.dictType = undefined;
       }
@@ -297,8 +293,8 @@ const columns: NaiveUI.TableColumn<Api.Tool.GenTableColumn>[] = [
           clearable
         />
       );
-    },
-  },
+    }
+  }
 ];
 </script>
 
@@ -446,9 +442,9 @@ const columns: NaiveUI.TableColumn<Api.Tool.GenTableColumn>[] = [
                       v-model:value="genTableInfo.info.treeCode"
                       placeholder="请选择树编码字段"
                       :options="
-                        genTableInfo.rows.map((column) => ({
+                        genTableInfo.rows.map(column => ({
                           value: column.columnName,
-                          label: column.columnName + '：' + column.columnComment,
+                          label: column.columnName + '：' + column.columnComment
                         }))
                       "
                     />
@@ -464,9 +460,9 @@ const columns: NaiveUI.TableColumn<Api.Tool.GenTableColumn>[] = [
                       v-model:value="genTableInfo.info.treeParentCode"
                       placeholder="请选择树父编码字段"
                       :options="
-                        genTableInfo.rows.map((column) => ({
+                        genTableInfo.rows.map(column => ({
                           value: column.columnName,
-                          label: column.columnName + '：' + column.columnComment,
+                          label: column.columnName + '：' + column.columnComment
                         }))
                       "
                     />
@@ -482,9 +478,9 @@ const columns: NaiveUI.TableColumn<Api.Tool.GenTableColumn>[] = [
                       v-model:value="genTableInfo.info.treeName"
                       placeholder="请选择树名称字段"
                       :options="
-                        genTableInfo.rows.map((column) => ({
+                        genTableInfo.rows.map(column => ({
                           value: column.columnName,
-                          label: column.columnName + '：' + column.columnComment,
+                          label: column.columnName + '：' + column.columnComment
                         }))
                       "
                     />

@@ -16,9 +16,7 @@
     "naive-ui-admin",
     "UnoCSS"
   ],
-  "contributors": [
-    "linlingqin77"
-  ],
+  "contributors": ["linlingqin77"],
   "engines": {
     "node": ">=20.19.0",
     "pnpm": ">=10.5.0"
@@ -31,8 +29,8 @@
     "commit": "sa git-commit",
     "commit:zh": "sa git-commit -l=zh-cn",
     "deploy:dev": "node scripts/deploy.cjs dev",
-    "deploy:test": "node scripts/deploy.cjs test",
     "deploy:prod": "node scripts/deploy.cjs prod",
+    "deploy:test": "node scripts/deploy.cjs test",
     "dev": "vite --mode dev",
     "dev:prod": "vite --mode prod",
     "dev:test": "vite --mode test",

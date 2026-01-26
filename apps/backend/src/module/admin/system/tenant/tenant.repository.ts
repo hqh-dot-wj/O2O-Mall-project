@@ -14,7 +14,7 @@ export class TenantRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cls: ClsService,
-  ) { }
+  ) {}
 
   /**
    * 获取 Prisma 原始客户端（用于复杂查询）

@@ -17,7 +17,7 @@ export class DeptService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly deptRepo: DeptRepository,
-  ) { }
+  ) {}
 
   @CacheEvict(CacheEnum.SYS_DEPT_KEY, '*')
   @Transactional()

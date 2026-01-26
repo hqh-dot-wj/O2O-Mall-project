@@ -1,8 +1,10 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import type { AddressDto } from '@/api/address'
+import type { RegionVo } from '@/api/region'
 import { onLoad } from '@dcloudio/uni-app'
-import { getAddressDetail, createAddress, updateAddress, type AddressDto } from '@/api/address'
-import { getRegionList, type RegionVo } from '@/api/region'
+import { computed, ref } from 'vue'
+import { createAddress, getAddressDetail, updateAddress } from '@/api/address'
+import { getRegionList } from '@/api/region'
 
 definePage({
   style: {
@@ -48,11 +50,12 @@ async function initRegionData() {
       regionColumns.value = [
         list.map(item => ({
           label: item.name,
-          value: item.code
-        }))
+          value: item.code,
+        })),
       ]
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Fetch regions failed:', error)
   }
 }
@@ -64,20 +67,22 @@ async function onColumnChange({ selectedItem, resolve, finish, index }: any) {
     finish()
     return
   }
-  
+
   try {
     const children = await getRegionList(selectedItem.value)
     if (children && children.length > 0) {
       resolve(
         children.map(item => ({
           label: item.name,
-          value: item.code
-        }))
+          value: item.code,
+        })),
       )
-    } else {
+    }
+    else {
       finish()
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Fetch children regions failed:', error)
     finish()
   }
@@ -139,7 +144,7 @@ function openRegionPicker() {
 function onRegionConfirm(e: { value: string[], selectedItems: { label: string }[] }) {
   const [provinceCode, cityCode, districtCode] = e.value
   const [provinceItem, cityItem, districtItem] = e.selectedItems
-  
+
   // 这里保存的是名称还是Code？
   // 根据 AddressDto 定义，province/city/district 是 string 类型
   // 后端 Address entity通常存名称或者Code。
@@ -153,65 +158,65 @@ function onRegionConfirm(e: { value: string[], selectedItems: { label: string }[
   // In loadAddressDetail: regionValue.value = [result.province, result.city, result.district]
   // If regionValue expects Codes (because picker columns use codes as value), then result.province MUST be a Code.
   // IF result.province is a Name, then the picker won't match default values with columns options (which use Code).
-  
+
   // WAIT. The previous implementation had `const [province, city, district] = e.value`.
   // If `getAddressDetail` returns Names, and picker columns uses Codes as values, `regionValue` binding won't work for initial display unless we convert Name -> Code.
   // OR we use Name as value in the picker columns too.
-  
+
   // Let's look at `region.service.ts`: `getRegionName(code)` exists. This implies the DB likely stores Codes or at least we deal with Codes.
   // However, often specific address tables store Names for easier display without lookup, OR store Codes.
   // Let's assume for now we should store NAMES to match existing `form.value.province = province`.
-  
+
   // BUT the picker needs to emit what we want to store.
   // If we want to store names:
   form.value.province = provinceItem.label
   form.value.city = cityItem.label
   form.value.district = districtItem.label
-  
+
   // We also probably want to save the Codes if possible, but the form interface might not have them.
   // Let's check `form` definition again. It has `province`, `city`, `district` strings.
   // If `loadAddressDetail` returns Names, then regionValue assignment `[result.province...]` will break picker initial value if picker expects Codes.
-  
-  // STRATEGY: 
+
+  // STRATEGY:
   // 1. If backend stores Strings (Names), we should use Names as `value` in columns too? NO, duplication risk.
   // 2. Ideally backend stores Codes.
-  // Let's assume backend stores NAMES for now (common in simple designs). 
+  // Let's assume backend stores NAMES for now (common in simple designs).
   // BUT if `regionValue` expects an array of values that match the column values...
   // The column values I set up are CODES.
   // So `regionValue` MUST be CODES.
-  // So `loadAddressDetail` MUST return CODES? 
+  // So `loadAddressDetail` MUST return CODES?
   // Or we need to map Name -> Code for `regionValue`.
-  
+
   // Let's check `loadAddressDetail` again.
   // `result.province` etc are assigned to `form.value`.
   // Then `regionValue.value = [result.province, result.city...]`
-  
+
   // If `result.province` is "广东省", and picker column value is "440000". Picker won't show default.
   // If `result.province` is "440000", then picker works. But `form.value.province` becomes "440000".
   // Then the address list display will show "440000 440100 ..." which is bad.
-  
+
   // Conclusion: WE NEED BOTH.
   // The `AddressDto` likely expects NAMES for display.
   // But we need CODES for the picker to work correctly (especially for recursive loading).
-  
+
   // Wait, `wd-col-picker` might support default labels or something?
   // Usually pickers work with Keys/Codes.
-  
-  // Modification: 
+
+  // Modification:
   // I'll make the picker use CODES as values.
   // I will assume for now `loadAddressDetail` returns NAMES (since it is used for `regionText` display).
   // AND `regionValue` is initialized from something else? Or we just can't set default value easily without Code?
   //
   // Actually, if we use `uni-data-picker` or similar, it handles this. `wd-col-picker` handles multi-column.
   // If we only have Names from backend, we can't initialize the picker to the correct "Code" path easily without reverse lookup.
-  
+
   // Let's look at `region.service.ts` again. The seed data has Codes.
   // If the stored address has only Names, we have a problem for editing: we can't easily open the picker at the right place.
   // UNLESS we store codes in the address too.
-  
+
   // Let's look at `address.ts` interfaces again.
   // It only has `province`, `city`, `district`.
-  
+
   // If I change the picker to use NAMES as values:
   // `value: item.name`
   // Then `getRegionList(parentId)` needs parentId.
@@ -219,7 +224,7 @@ function onRegionConfirm(e: { value: string[], selectedItems: { label: string }[
   // Backend `getChildren(parentId)` expects optional string. DB `where: { parentId }`.
   // DB `parentId` is likely a Code (foreign key style).
   // So we MUST use Codes for the API traversal.
-  
+
   // So:
   // 1. Picker MUST use Codes for values to support efficient API traversal.
   // 2. Form MUST store Names for display (based on `address.ts` usage).
@@ -228,21 +233,21 @@ function onRegionConfirm(e: { value: string[], selectedItems: { label: string }[
   // Does `AddressVo` have codes? No.
   // Does the backend return codes? Maybe `provinceCode`, `cityCode` are hidden?
   // I should check `prisma.schema` or backend entity if possible.
-  
+
   // If I cannot get codes from `getAddressDetail`, I cannot set `regionValue` correctly for the picker.
   // The picker will default to empty selection. This is acceptable for now given I can't change the Address Model schema easily right now.
   // I will just save the names to the form.
   // And for editing, the picker will start fresh (or I can try to find codes but that's complex).
   //
   // Wait, I can try to map selected items labels to the form.
-  
+
   form.value.province = provinceItem.label
   form.value.city = cityItem.label
   form.value.district = districtItem.label
-  
+
   // Optional: save codes if we had fields for them.
   // For now, I'll update the logic to save NAMES.
-  
+
   regionVisible.value = false
 }
 
@@ -278,7 +283,8 @@ function validateForm(): boolean {
 
 // 保存地址
 async function saveAddress() {
-  if (!validateForm()) return
+  if (!validateForm())
+    return
 
   submitting.value = true
   try {
@@ -352,7 +358,7 @@ async function saveAddress() {
             <view
               v-for="tag in tagList"
               :key="tag"
-              :class="['tag-item', { active: form.tag === tag }]"
+              class="tag-item" :class="[{ active: form.tag === tag }]"
               @click="selectTag(tag)"
             >
               {{ tag }}

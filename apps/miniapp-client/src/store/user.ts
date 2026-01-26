@@ -1,6 +1,6 @@
 import type { IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   getUserInfo,
 } from '@/api/login'
@@ -47,12 +47,20 @@ export const useUserStore = defineStore(
       return res
     }
 
+    // 是否分销员
+    const isDistributor = computed(() => {
+      const level = userInfo.value.levelId || 0
+      // 简单判定：等级 > 0 即为分销员 (如有其他逻辑可在此调整)
+      return level > 0
+    })
+
     return {
       userInfo,
       clearUserInfo,
       fetchUserInfo,
       setUserInfo,
       setUserAvatar,
+      isDistributor,
     }
   },
   {

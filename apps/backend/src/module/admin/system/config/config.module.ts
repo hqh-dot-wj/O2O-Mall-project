@@ -11,4 +11,4 @@ import { SystemPrismaService } from 'src/common/prisma/system-prisma.service';
   providers: [ConfigService, ConfigRepository, SystemConfigService, SystemPrismaService],
   exports: [ConfigService, SystemConfigService],
 })
-export class SysConfigModule { }
+export class SysConfigModule {}

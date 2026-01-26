@@ -11,11 +11,11 @@ import { ListStockDto, UpdateStockDto } from './dto';
  */
 @Injectable()
 export class StockService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 分页查询库存列表
-   * 
+   *
    * @param tenantId - 当前租户ID
    * @param query - 查询参数 DTO
    * @returns 分页结果
@@ -28,25 +28,25 @@ export class StockService {
       tenantProd: {
         tenantId,
         product: {
-          name: productName ? { contains: productName } : undefined
-        }
-      }
+          name: productName ? { contains: productName } : undefined,
+        },
+      },
     };
 
     // 并行执行查询和计数
     const [records, total] = await Promise.all([
       this.prisma.pmsTenantSku.findMany({
         where,
-        skip: query.skip,          // 使用 DTO 的 skip 计算属性
-        take: query.take,          // 使用 DTO 的 take 计算属性
+        skip: query.skip, // 使用 DTO 的 skip 计算属性
+        take: query.take, // 使用 DTO 的 take 计算属性
         include: {
           tenantProd: {
             include: {
-              product: true
-            }
+              product: true,
+            },
           },
-          globalSku: true
-        }
+          globalSku: true,
+        },
       }),
       this.prisma.pmsTenantSku.count({ where }),
     ]);
@@ -57,7 +57,7 @@ export class StockService {
 
   /**
    * 更新库存数量
-   * 
+   *
    * @param tenantId - 当前租户ID
    * @param dto - 更新参数 DTO
    * @returns 更新后的 SKU 信息
@@ -67,7 +67,7 @@ export class StockService {
 
     // 查询当前 SKU 信息，确保属于当前租户
     const sku = await this.prisma.pmsTenantSku.findFirst({
-      where: { id: skuId, tenantProd: { tenantId } }
+      where: { id: skuId, tenantProd: { tenantId } },
     });
 
     // 如果 SKU 不存在，抛出业务异常
@@ -82,7 +82,7 @@ export class StockService {
     // 更新数据库
     const res = await this.prisma.pmsTenantSku.update({
       where: { id: skuId },
-      data: { stock: newStock }
+      data: { stock: newStock },
     });
 
     // 返回成功结果

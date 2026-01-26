@@ -5,7 +5,7 @@ export function fetchGetBrandList(params?: Api.Pms.BrandSearchParams) {
   return request<Api.Pms.BrandList>({
     url: '/pms/brand/list',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -14,7 +14,7 @@ export function fetchAddBrand(data: Api.Pms.BrandOperateParams) {
   return request<Api.Pms.Brand>({
     url: '/pms/brand',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -23,7 +23,7 @@ export function fetchUpdateBrand(data: Api.Pms.BrandOperateParams) {
   return request<Api.Pms.Brand>({
     url: `/pms/brand/${data.brandId}`,
     method: 'put',
-    data,
+    data
   });
 }
 
@@ -31,6 +31,6 @@ export function fetchUpdateBrand(data: Api.Pms.BrandOperateParams) {
 export function fetchDeleteBrand(id: number) {
   return request<boolean>({
     url: `/pms/brand/${id}`,
-    method: 'delete',
+    method: 'delete'
   });
 }

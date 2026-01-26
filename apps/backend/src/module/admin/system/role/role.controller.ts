@@ -28,7 +28,7 @@ export class RoleController {
   constructor(
     private readonly roleService: RoleService,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   @Api({
     summary: '角色管理-创建',

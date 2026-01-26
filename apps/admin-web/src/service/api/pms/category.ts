@@ -4,7 +4,7 @@ import { request } from '@/service/request';
 export function fetchGetCategoryTree() {
   return request<Api.Pms.CategoryTree>({
     url: '/pms/category/tree',
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -13,7 +13,7 @@ export function fetchGetCategoryList(params?: Api.Pms.CategorySearchParams) {
   return request<Api.Pms.CategoryList>({
     url: '/pms/category/list',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -22,7 +22,7 @@ export function fetchAddCategory(data: Api.Pms.CategoryOperateParams) {
   return request<Api.Pms.Category>({
     url: '/pms/category',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -31,7 +31,7 @@ export function fetchUpdateCategory(data: Api.Pms.CategoryOperateParams) {
   return request<Api.Pms.Category>({
     url: `/pms/category/${data.catId}`,
     method: 'put',
-    data,
+    data
   });
 }
 
@@ -39,6 +39,6 @@ export function fetchUpdateCategory(data: Api.Pms.CategoryOperateParams) {
 export function fetchDeleteCategory(id: number) {
   return request<boolean>({
     url: `/pms/category/${id}`,
-    method: 'delete',
+    method: 'delete'
   });
 }

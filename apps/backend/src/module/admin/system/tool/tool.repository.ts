@@ -6,7 +6,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 export type GenTableWithColumns = GenTable & { columns: GenTableColumn[] };
 
-
 /**
  * 代码生成表仓储层
  *

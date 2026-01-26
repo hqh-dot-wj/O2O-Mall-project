@@ -116,8 +116,10 @@ function onClose() {
 </script>
 
 <template>
-  <wd-popup :model-value="modelValue" position="bottom" :safe-area-inset-bottom="true" :close-on-click-modal="false"
-    custom-style="border-radius: 24rpx 24rpx 0 0; overflow: hidden;" @close="onClose">
+  <wd-popup
+    :model-value="modelValue" position="bottom" :safe-area-inset-bottom="true" :close-on-click-modal="false"
+    custom-style="border-radius: 24rpx 24rpx 0 0; overflow: hidden;" @close="onClose"
+  >
     <view class="picker-container">
       <view class="header">
         <text class="title">选择服务时间</text>
@@ -129,8 +131,10 @@ function onClose() {
       <!-- 日期 Tabs -->
       <scroll-view scroll-x class="date-scroll" :show-scrollbar="false">
         <view class="date-tabs">
-          <view v-for="(date, index) in dates" :key="date.value" class="date-item"
-            :class="[{ active: currentDateIndex === index }]" @click="currentDateIndex = index">
+          <view
+            v-for="(date, index) in dates" :key="date.value" class="date-item"
+            :class="[{ active: currentDateIndex === index }]" @click="currentDateIndex = index"
+          >
             <text class="date-week">{{ date.week }}</text>
             <text class="date-label">{{ date.label }}</text>
           </view>
@@ -143,10 +147,12 @@ function onClose() {
           <wd-loading />
         </view>
         <view v-else class="time-grid">
-          <view v-for="slot in timeSlots" :key="slot.time" class="time-item" :class="[{
-            disabled: !slot.available,
-            active: selectedSlot?.time === slot.time,
-          }]" @click="onSelectSlot(slot)">
+          <view
+            v-for="slot in timeSlots" :key="slot.time" class="time-item" :class="[{
+              disabled: !slot.available,
+              active: selectedSlot?.time === slot.time,
+            }]" @click="onSelectSlot(slot)"
+          >
             <text class="time-text">{{ slot.time }}</text>
             <text class="status-text">{{ slot.available ? '可预约' : slot.reason || '不可约' }}</text>
           </view>
@@ -304,4 +310,4 @@ function onClose() {
   border-top: 1rpx solid #eee;
   background-color: #fff;
 }
-  </style>
+</style>

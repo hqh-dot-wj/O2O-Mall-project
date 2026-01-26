@@ -4,10 +4,10 @@
 import { httpGet } from '@/http/http'
 
 export interface RegionVo {
-    code: string
-    name: string
-    parentId?: string
-    level: number
+  code: string
+  name: string
+  parentId?: string
+  level: number
 }
 
 /**
@@ -15,7 +15,7 @@ export interface RegionVo {
  * @param parentId 父级Code，不传则返回一级行政区（省份）
  */
 export function getRegionList(parentId?: string) {
-    return httpGet<RegionVo[]>('/lbs/region/list', { parentId })
+  return httpGet<RegionVo[]>('/lbs/region/list', { parentId })
 }
 
 /**
@@ -23,5 +23,5 @@ export function getRegionList(parentId?: string) {
  * @param code 行政区划Code
  */
 export function getRegionName(code: string) {
-    return httpGet<string>(`/lbs/region/name/${code}`)
+  return httpGet<string>(`/lbs/region/name/${code}`)
 }

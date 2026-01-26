@@ -15,7 +15,7 @@ import { Transactional } from 'src/common/decorators/transactional.decorator';
 export class TenantPackageService {
   private readonly logger = new Logger(TenantPackageService.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 创建租户套餐

@@ -5,9 +5,11 @@ import { fetchCreateTenant, fetchUpdateTenant } from '@/service/api/system/tenan
 import { fetchGetTenantPackageSelectList } from '@/service/api/system/tenant-package';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
+import RegionCascader from '@/components/custom/RegionCascader.vue';
+import LbsMapPicker from '@/components/custom/LbsMapPicker.vue';
 
 defineOptions({
-  name: 'TenantOperateDrawer',
+  name: 'TenantOperateDrawer'
 });
 
 interface Props {
@@ -26,7 +28,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false,
+  default: false
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -35,7 +37,7 @@ const { loading: packageLoading, startLoading: startPackageLoading, endLoading: 
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
     add: '新增租户',
-    edit: '编辑租户',
+    edit: '编辑租户'
   };
   return titles[props.operateType];
 });
@@ -68,7 +70,7 @@ function createDefaultModel(): Model {
     fence: undefined,
     regionCode: '',
     isDirect: true,
-    serviceRadius: 3000,
+    serviceRadius: 3000
   };
 }
 
@@ -90,8 +92,8 @@ const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
       min: 2,
       max: 20,
       message: '账号长度必须介于2-20之间',
-      trigger: ['blur', 'change'],
-    },
+      trigger: ['blur', 'change']
+    }
   ],
   password: [
     createRequiredRule('管理员密码不能为空'),
@@ -99,9 +101,9 @@ const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
       min: 5,
       max: 20,
       message: '密码长度必须介于5-20之间',
-      trigger: ['blur', 'change'],
-    },
-  ],
+      trigger: ['blur', 'change']
+    }
+  ]
 };
 /** the enabled package options */
 const packageOptions = ref<CommonType.Option<CommonType.IdType>[]>([]);
@@ -112,9 +114,9 @@ async function getPackageOptions() {
     if (!data) {
       return;
     }
-    packageOptions.value = data.map((item) => ({
+    packageOptions.value = data.map(item => ({
       label: item.packageName,
-      value: item.packageId,
+      value: item.packageId
     }));
   } catch {
     // error handled by request interceptor
@@ -242,9 +244,6 @@ async function handleSubmit() {
   }
 }
 
-import RegionCascader from '@/components/custom/RegionCascader.vue';
-import LbsMapPicker from '@/components/custom/LbsMapPicker.vue';
-
 // ... (existing imports)
 
 const mapVisible = ref(false);
@@ -269,7 +268,7 @@ function handleRadiusUpdate(radius: number) {
   model.serviceRadius = radius;
 }
 
-watch(currentPoint, (val) => {
+watch(currentPoint, val => {
   if (val) {
     model.latitude = val.lat;
     model.longitude = val.lng;
@@ -362,16 +361,16 @@ watch(visible, () => {
         </NFormItem>
         <NDivider>企业信息 (LBS)</NDivider>
         <NFormItem label="行政区域" path="regionCode">
-             <RegionCascader v-model:value="model.regionCode" />
+          <RegionCascader v-model:value="model.regionCode" />
         </NFormItem>
         <NFormItem label="经营模式" path="isDirect">
-             <NSwitch v-model:value="model.isDirect">
-                <template #checked>直营</template>
-                <template #unchecked>加盟</template>
-             </NSwitch>
+          <NSwitch v-model:value="model.isDirect">
+            <template #checked>直营</template>
+            <template #unchecked>加盟</template>
+          </NSwitch>
         </NFormItem>
-         <NFormItem label="服务半径(米)" path="serviceRadius">
-            <NInputNumber v-model:value="model.serviceRadius" :min="0" :step="100" />
+        <NFormItem label="服务半径(米)" path="serviceRadius">
+          <NInputNumber v-model:value="model.serviceRadius" :min="0" :step="100" />
         </NFormItem>
         <NFormItem label="经营地址" path="address">
           <NInputGroup>

@@ -13,7 +13,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @Controller('system/tenant/package')
 @ApiBearerAuth('Authorization')
 export class TenantPackageController {
-  constructor(private readonly tenantPackageService: TenantPackageService) { }
+  constructor(private readonly tenantPackageService: TenantPackageService) {}
 
   @Api({
     summary: '租户套餐管理-创建',

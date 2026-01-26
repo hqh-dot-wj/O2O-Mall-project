@@ -20,7 +20,7 @@ export class MenuService {
     private readonly prisma: PrismaService,
     private readonly menuRepo: MenuRepository,
     private readonly redis: RedisService,
-  ) { }
+  ) {}
 
   async create(createMenuDto: CreateMenuDto) {
     const { queryParam, status, ...data } = createMenuDto;

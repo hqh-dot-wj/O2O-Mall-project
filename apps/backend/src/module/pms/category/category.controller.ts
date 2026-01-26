@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 @ApiTags('分类管理')
 @Controller('pms/category')
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) { }
+  constructor(private readonly categoryService: CategoryService) {}
 
   @Api({ summary: '获取分类树' })
   @Get('tree')

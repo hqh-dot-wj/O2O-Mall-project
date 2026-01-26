@@ -9,7 +9,7 @@ import OnlineTable from './modules/online-table.vue';
 import SocialCard from './modules/social-card.vue';
 import UserAvatar from './modules/user-avatar.vue';
 defineOptions({
-  name: 'UserCenter',
+  name: 'UserCenter'
 });
 
 const authStore = useAuthStore();
@@ -20,12 +20,12 @@ const { loading: btnLoading, startLoading: startBtnLoading, endLoading: endBtnLo
 const {
   formRef: profileFormRef,
   validate: profileValidate,
-  restoreValidation: profileRestoreValidation,
+  restoreValidation: profileRestoreValidation
 } = useNaiveForm();
 const {
   formRef: passwordFormRef,
   validate: passwordValidate,
-  restoreValidation: passwordRestoreValidation,
+  restoreValidation: passwordRestoreValidation
 } = useNaiveForm();
 const { createRequiredRule, patternRules } = useFormRules();
 
@@ -40,7 +40,7 @@ function createDefaultProfileModel(): ProfileModel {
     nickName: userInfo.user?.nickName || '',
     email: userInfo.user?.email || '',
     phonenumber: userInfo.user?.phonenumber || '',
-    sex: userInfo.user?.sex || '0',
+    sex: userInfo.user?.sex || '0'
   };
 }
 
@@ -48,7 +48,7 @@ function createDefaultPasswordModel(): PasswordModel {
   return {
     oldPassword: '',
     confirmPassword: '',
-    newPassword: '',
+    newPassword: ''
   };
 }
 
@@ -59,13 +59,13 @@ const profileRules: Record<ProfileRuleKey, App.Global.FormRule> = {
   nickName: createRequiredRule('昵称不能为空'),
   email: { ...patternRules.email, required: true },
   phonenumber: { ...patternRules.phone, required: true },
-  sex: createRequiredRule('性别不能为空'),
+  sex: createRequiredRule('性别不能为空')
 };
 
 const passwordRules: Record<PasswordRuleKey, App.Global.FormRule> = {
   oldPassword: createRequiredRule('旧密码不能为空'),
   confirmPassword: createRequiredRule('确认密码不能为空'),
-  newPassword: createRequiredRule('新密码不能为空'),
+  newPassword: createRequiredRule('新密码不能为空')
 };
 
 async function updateProfile() {

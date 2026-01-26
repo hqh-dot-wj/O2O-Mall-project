@@ -13,7 +13,7 @@ import { OperLogListVo, OperLogVo } from 'src/module/admin/monitor/vo/monitor.vo
 @Controller('monitor/operlog')
 @ApiBearerAuth('Authorization')
 export class OperlogController {
-  constructor(private readonly operlogService: OperlogService) { }
+  constructor(private readonly operlogService: OperlogService) {}
 
   @Api({
     summary: '操作日志-清除全部日志',

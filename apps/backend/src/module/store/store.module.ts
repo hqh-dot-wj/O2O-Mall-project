@@ -18,4 +18,4 @@ import { PRODUCT_SYNC_QUEUE, ProductSyncProducer, ProductSyncConsumer } from './
   providers: [ProductSyncProducer, ProductSyncConsumer],
   exports: [],
 })
-export class StoreModule { }
+export class StoreModule {}

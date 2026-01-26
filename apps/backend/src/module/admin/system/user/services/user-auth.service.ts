@@ -36,7 +36,7 @@ export class UserAuthService {
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
     private readonly roleService: RoleService,
-  ) { }
+  ) {}
 
   /**
    * 用户登录
@@ -256,13 +256,13 @@ export class UserAuthService {
 
     const posts = postRelations.length
       ? await this.prisma.sysPost.findMany({
-        where: {
-          delFlag: DelFlagEnum.NORMAL,
-          postId: {
-            in: postRelations.map((item) => item.postId),
+          where: {
+            delFlag: DelFlagEnum.NORMAL,
+            postId: {
+              in: postRelations.map((item) => item.postId),
+            },
           },
-        },
-      })
+        })
       : [];
 
     const roles = roleIds.length

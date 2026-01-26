@@ -9,7 +9,7 @@ import {
   fetchBatchDeleteDictType,
   fetchGetDictDataList,
   fetchGetDictTypeOption,
-  fetchRefreshCache,
+  fetchRefreshCache
 } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
@@ -25,7 +25,7 @@ import DictDataOperateDrawer from './modules/dict-data-operate-drawer.vue';
 import DictTypeOperateDrawer from './modules/dict-type-operate-drawer.vue';
 
 defineOptions({
-  name: 'DictList',
+  name: 'DictList'
 });
 
 useDict('sys_user_sex');
@@ -50,13 +50,13 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
     // if you want to use the searchParams in Form, you need to define the following properties, and the value is null
     // the value can not be undefined, otherwise the property in Form will not be reactive
     dictLabel: null,
-    dictType: null,
+    dictType: null
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'dictLabel',
@@ -65,11 +65,11 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 80,
       resizable: true,
       ellipsis: {
-        tooltip: true,
+        tooltip: true
       },
       render(row) {
         return <DictTag size="small" dictData={row} />;
-      },
+      }
     },
     {
       key: 'dictValue',
@@ -78,8 +78,8 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 80,
       resizable: true,
       ellipsis: {
-        tooltip: true,
-      },
+        tooltip: true
+      }
     },
     {
       key: 'dictSort',
@@ -88,8 +88,8 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 80,
       resizable: true,
       ellipsis: {
-        tooltip: true,
-      },
+        tooltip: true
+      }
     },
     {
       key: 'remark',
@@ -98,8 +98,8 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 80,
       resizable: true,
       ellipsis: {
-        tooltip: true,
-      },
+        tooltip: true
+      }
     },
     {
       key: 'createTime',
@@ -108,15 +108,15 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 80,
       resizable: true,
       ellipsis: {
-        tooltip: true,
-      },
+        tooltip: true
+      }
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 160,
-      render: (row) => {
+      render: row => {
         const divider = () => {
           if (!hasAuth('system:dict:edit') || !hasAuth('system:dict:remove')) {
             return null;
@@ -162,9 +162,9 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
             {deleteBtn()}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
@@ -270,7 +270,7 @@ function renderLabel({ option }: { option: TreeOption }) {
             {option.remark ? <span>( {option.remark} )</span> : null}
             <span>{option.createTime}</span>
           </div>
-        ),
+        )
       }}
     </NTooltip>
   );
@@ -333,7 +333,7 @@ const selectable = computed(() => {
 });
 
 const tableTitle = computed(() => {
-  const dictType = dictData.value.find((item) => item.dictType === searchParams.dictType);
+  const dictType = dictData.value.find(item => item.dictType === searchParams.dictType);
   return dictType ? (
     <NEllipsis lineClamp={2} class="flex">
       <span>{dictType.dictName}</span>
@@ -437,7 +437,7 @@ const tableTitle = computed(() => {
           :scroll-x="962"
           :loading="loading"
           remote
-          :row-key="(row) => row.dictCode"
+          :row-key="row => row.dictCode"
           :pagination="mobilePagination"
           class="h-full"
         />

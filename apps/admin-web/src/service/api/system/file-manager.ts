@@ -12,8 +12,8 @@ export function fetchUploadFile(file: File, folderId?: number) {
     method: 'post',
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+      'Content-Type': 'multipart/form-data'
+    }
   });
 }
 
@@ -22,7 +22,7 @@ export function fetchGetFolderList(params?: Api.System.FileManager.FolderSearchP
   return request<Api.System.FileManager.FolderList>({
     url: '/system/file-manager/folder/list',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -30,7 +30,7 @@ export function fetchGetFolderList(params?: Api.System.FileManager.FolderSearchP
 export function fetchGetFolderTree() {
   return request<Api.System.FileManager.FolderTreeNode[]>({
     url: '/system/file-manager/folder/tree',
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -39,7 +39,7 @@ export function fetchCreateFolder(data: Api.System.FileManager.FolderOperatePara
   return request<boolean>({
     url: '/system/file-manager/folder',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -48,7 +48,7 @@ export function fetchUpdateFolder(data: Api.System.FileManager.FolderOperatePara
   return request<boolean>({
     url: '/system/file-manager/folder',
     method: 'put',
-    data,
+    data
   });
 }
 
@@ -56,7 +56,7 @@ export function fetchUpdateFolder(data: Api.System.FileManager.FolderOperatePara
 export function fetchDeleteFolder(folderId: number) {
   return request<boolean>({
     url: `/system/file-manager/folder/${folderId}`,
-    method: 'delete',
+    method: 'delete'
   });
 }
 
@@ -65,7 +65,7 @@ export function fetchGetFileList(params?: Api.System.FileManager.FileSearchParam
   return request<Api.System.FileManager.FileList>({
     url: '/system/file-manager/file/list',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -74,7 +74,7 @@ export function fetchMoveFiles(data: Api.System.FileManager.MoveFilesParams) {
   return request<boolean>({
     url: '/system/file-manager/file/move',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -83,7 +83,7 @@ export function fetchRenameFile(data: Api.System.FileManager.RenameFileParams) {
   return request<boolean>({
     url: '/system/file-manager/file/rename',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -92,7 +92,7 @@ export function fetchBatchDeleteFiles(uploadIds: string[]) {
   return request<boolean>({
     url: '/system/file-manager/file',
     method: 'delete',
-    data: { uploadIds },
+    data: { uploadIds }
   });
 }
 
@@ -100,7 +100,7 @@ export function fetchBatchDeleteFiles(uploadIds: string[]) {
 export function fetchGetFileDetail(uploadId: string) {
   return request<Api.System.FileManager.FileDetail>({
     url: `/system/file-manager/file/${uploadId}`,
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -109,7 +109,7 @@ export function fetchCreateShare(data: Api.System.FileManager.CreateShareParams)
   return request<Api.System.FileManager.ShareInfo>({
     url: '/system/file-manager/share',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -118,7 +118,7 @@ export function fetchGetShare(data: Api.System.FileManager.GetShareParams) {
   return request<Api.System.FileManager.ShareDetail>({
     url: `/system/file-manager/share/${data.shareId}`,
     method: 'get',
-    params: { shareCode: data.shareCode, password: data.password },
+    params: { shareCode: data.shareCode, password: data.password }
   });
 }
 
@@ -126,7 +126,7 @@ export function fetchGetShare(data: Api.System.FileManager.GetShareParams) {
 export function fetchCancelShare(shareId: number) {
   return request<boolean>({
     url: `/system/file-manager/share/${shareId}`,
-    method: 'delete',
+    method: 'delete'
   });
 }
 
@@ -135,7 +135,7 @@ export function fetchGetMyShares(params?: Api.System.FileManager.ShareSearchPara
   return request<Api.System.FileManager.ShareList>({
     url: '/system/file-manager/share/my/list',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -144,7 +144,7 @@ export function fetchGetRecycleList(params?: Api.System.FileManager.RecycleSearc
   return request<Api.System.FileManager.RecycleList>({
     url: '/system/file-manager/recycle/list',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -153,7 +153,7 @@ export function fetchRestoreFiles(uploadIds: string[]) {
   return request<boolean>({
     url: '/system/file-manager/recycle/restore',
     method: 'put',
-    data: { uploadIds },
+    data: { uploadIds }
   });
 }
 
@@ -162,7 +162,7 @@ export function fetchClearRecycle(uploadIds: string[]) {
   return request<boolean>({
     url: '/system/file-manager/recycle/clear',
     method: 'delete',
-    data: { uploadIds },
+    data: { uploadIds }
   });
 }
 
@@ -170,7 +170,7 @@ export function fetchClearRecycle(uploadIds: string[]) {
 export function fetchGetFileVersions(uploadId: string) {
   return request<Api.System.FileManager.FileVersions>({
     url: `/system/file-manager/file/${uploadId}/versions`,
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -179,7 +179,7 @@ export function fetchRestoreVersion(data: Api.System.FileManager.RestoreVersionP
   return request<Api.System.FileManager.RestoreVersionResult>({
     url: '/system/file-manager/file/restore-version',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -187,7 +187,7 @@ export function fetchRestoreVersion(data: Api.System.FileManager.RestoreVersionP
 export function fetchGetFileAccessToken(uploadId: string) {
   return request<Api.System.FileManager.FileAccessToken>({
     url: `/system/file-manager/file/${uploadId}/access-token`,
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -203,7 +203,7 @@ export function downloadBatchFiles(uploadIds: string[]) {
     url: '/system/file-manager/file/batch-download',
     method: 'post',
     data: { uploadIds },
-    responseType: 'blob',
+    responseType: 'blob'
   });
 }
 
@@ -211,6 +211,6 @@ export function downloadBatchFiles(uploadIds: string[]) {
 export function fetchGetStorageStats() {
   return request<Api.System.FileManager.StorageStats>({
     url: '/system/file-manager/storage/stats',
-    method: 'get',
+    method: 'get'
   });
 }

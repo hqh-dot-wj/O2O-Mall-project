@@ -35,7 +35,7 @@ export class TransactionalInterceptor implements NestInterceptor {
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
     private readonly cls: ClsService,
-  ) { }
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const options = this.reflector.get<TransactionalOptions>(TRANSACTIONAL_KEY, context.getHandler());

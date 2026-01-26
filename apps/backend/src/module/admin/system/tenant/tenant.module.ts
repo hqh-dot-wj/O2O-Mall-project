@@ -10,4 +10,4 @@ import { LbsModule } from 'src/module/lbs/lbs.module';
   providers: [TenantService],
   exports: [TenantService],
 })
-export class TenantModule { }
+export class TenantModule {}

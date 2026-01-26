@@ -1,0 +1,102 @@
+Simulation Report - 2026-01-22T11:48:59.263Z
+------------------------------------------------
+[✅ PASSED] 1. Stock Insufficient - Global Ratio 库存不足
+[✅ PASSED] 2. LBS Out of Range - 超出服务范围，无法配送/服务
+[✅ PASSED] 3. LBS No Coords - Order created without LBS
+[❌ FAILED] 4. Cross-Tenant Order - Expected 1 records, got 0
+[✅ PASSED] 5. Self-Purchase (Link) - Order created (No Commission)
+{
+  "orderId": "cmkpe2frq0002xbnn8obtk8gx"
+}
+[✅ PASSED] 6. Self-Purchase (Referrer) - Ref=Self Order created (No Commission)
+{
+  "orderId": "cmkpe2fsv0003xbnnesllcvkr"
+}
+[✅ PASSED] 7. No Referrer - Order created (No Commission)
+{
+  "orderId": "cmkpe2ftr0004xbnnd6l0zbb6"
+}
+[✅ PASSED] 8. Only L1 Referrer - Order created
+{
+  "orderId": "cmkpe2fuu0005xbnnq123pj8z",
+  "user": "sim_m_539701_L1Only",
+  "referrer": "sim_m_539313_L2",
+  "commissions": [
+    {
+      "id": "25",
+      "orderId": "cmkpe2fuu0005xbnnq123pj8z",
+      "tenantId": "sim_t_82539263_A",
+      "beneficiaryId": "sim_m_539313_L2",
+      "level": 1,
+      "amount": "6",
+      "rateSnapshot": "60",
+      "status": "FROZEN",
+      "createTime": "2026-01-22T11:48:59.744Z",
+      "planSettleTime": "2026-02-05T11:48:59.741Z",
+      "settleTime": null,
+      "isCrossTenant": false
+    }
+  ]
+}
+[❌ FAILED] 9. Full Chain - Expected 2 records, got 1
+[❌ FAILED] 10. FIXED Mode - Expected 2 records, got 1
+[✅ PASSED] 11. NONE Mode - Order created (No Commission)
+[✅ PASSED] 12. Threshold - Ignored due to threshold
+[✅ PASSED] 13. Refund Frozen - All Cancelled
+{
+  "commissions": [
+    {
+      "id": "28",
+      "orderId": "cmkpe2g0r000axbnng1f5ujax",
+      "tenantId": "sim_t_82539263_A",
+      "beneficiaryId": "sim_m_539329_L1",
+      "level": 1,
+      "amount": "6",
+      "rateSnapshot": "60",
+      "status": "CANCELLED",
+      "createTime": "2026-01-22T11:48:59.958Z",
+      "planSettleTime": "2026-02-05T11:48:59.952Z",
+      "settleTime": null,
+      "isCrossTenant": false
+    }
+  ]
+}
+[✅ PASSED] 14. Refund Settled - Commission Cancelled & Wallet Deducted
+{
+  "walletL1": 94,
+  "commissions": [
+    {
+      "id": "29",
+      "orderId": "cmkpe2g22000bxbnnk8c7q1dn",
+      "tenantId": "sim_t_82539263_A",
+      "beneficiaryId": "sim_m_539329_L1",
+      "level": 1,
+      "amount": "6",
+      "rateSnapshot": "60",
+      "status": "CANCELLED",
+      "createTime": "2026-01-22T11:49:00.008Z",
+      "planSettleTime": "2026-02-05T11:49:00.000Z",
+      "settleTime": null,
+      "isCrossTenant": false
+    }
+  ]
+}
+[✅ PASSED] 15. Abnormal Referrer - Order created (Commission Generated despite Disabled status)
+{
+  "commissions": [
+    {
+      "id": "30",
+      "orderId": "cmkpe2g4q000cxbnnorpvgo8z",
+      "tenantId": "sim_t_82539263_A",
+      "beneficiaryId": "sim_m_539329_L1",
+      "level": 1,
+      "amount": "6",
+      "rateSnapshot": "60",
+      "status": "FROZEN",
+      "createTime": "2026-01-22T11:49:00.103Z",
+      "planSettleTime": "2026-02-05T11:49:00.097Z",
+      "settleTime": null,
+      "isCrossTenant": false
+    }
+  ]
+}

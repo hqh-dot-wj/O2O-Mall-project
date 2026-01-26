@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NInput, NSelect, NButton } from 'naive-ui';
+import { NButton, NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NInput, NSelect } from 'naive-ui';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'CommissionSearch',
+  name: 'CommissionSearch'
 });
 
 interface Emits {
@@ -18,7 +18,7 @@ const model = defineModel<Api.Finance.CommissionSearchParams>('model', { require
 const statusOptions = [
   { label: '冻结中', value: 'FROZEN' },
   { label: '已结算', value: 'SETTLED' },
-  { label: '已取消', value: 'CANCELLED' },
+  { label: '已取消', value: 'CANCELLED' }
 ];
 
 function handleReset() {
@@ -53,7 +53,7 @@ function handleSearch() {
             </NGridItem>
             <NGridItem span="24 s:12 m:6">
               <NFormItem>
-                <div class="flex gap-12px w-full justify-end">
+                <div class="w-full flex justify-end gap-12px">
                   <NButton @click="handleReset">{{ $t('common.reset') }}</NButton>
                   <NButton type="primary" ghost @click="handleSearch">{{ $t('common.search') }}</NButton>
                 </div>

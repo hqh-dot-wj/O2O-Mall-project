@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useTokenStore } from '@/store/token'
 import { LOGIN_PAGE } from '@/router/config'
+import { useTokenStore } from '@/store/token'
 
 definePage({
   style: {
@@ -19,7 +19,7 @@ async function doRegister() {
     uni.showToast({ title: '请输入用户名和密码', icon: 'none' })
     return
   }
-  
+
   if (password.value !== confirmPassword.value) {
     uni.showToast({ title: '两次输入的密码不一致', icon: 'none' })
     return
@@ -32,7 +32,7 @@ async function doRegister() {
       password: password.value,
       confirmPassword: confirmPassword.value,
     })
-    
+
     // 注册成功 (store中已经处理了登录逻辑)，跳转到首页或登录页
     // 这里假设直接登录成功，返回上一页
     uni.navigateBack()
@@ -49,43 +49,49 @@ function toLogin() {
 
 <template>
   <view class="register-container p-6">
-    <view class="text-center text-2xl font-bold mt-10 mb-8">
+    <view class="mb-8 mt-10 text-center text-2xl font-bold">
       欢迎注册
     </view>
-    
+
     <view class="form-item mb-4">
-      <view class="text-gray-500 mb-2">用户名</view>
-      <input 
-        v-model="username" 
-        class="input-box w-full h-12 px-4 rounded-lg bg-gray-100" 
-        placeholder="请输入用户名" 
-      />
+      <view class="mb-2 text-gray-500">
+        用户名
+      </view>
+      <input
+        v-model="username"
+        class="input-box h-12 w-full rounded-lg bg-gray-100 px-4"
+        placeholder="请输入用户名"
+      >
     </view>
-    
+
     <view class="form-item mb-4">
-      <view class="text-gray-500 mb-2">密码</view>
-      <input 
-        v-model="password" 
-        class="input-box w-full h-12 px-4 rounded-lg bg-gray-100" 
-        password 
-        placeholder="请输入密码" 
-      />
+      <view class="mb-2 text-gray-500">
+        密码
+      </view>
+      <input
+        v-model="password"
+        class="input-box h-12 w-full rounded-lg bg-gray-100 px-4"
+        password
+        placeholder="请输入密码"
+      >
     </view>
-    
+
     <view class="form-item mb-8">
-      <view class="text-gray-500 mb-2">确认密码</view>
-      <input 
-        v-model="confirmPassword" 
-        class="input-box w-full h-12 px-4 rounded-lg bg-gray-100" 
-        password 
-        placeholder="请再次输入密码" 
-      />
+      <view class="mb-2 text-gray-500">
+        确认密码
+      </view>
+      <input
+        v-model="confirmPassword"
+        class="input-box h-12 w-full rounded-lg bg-gray-100 px-4"
+        password
+        placeholder="请再次输入密码"
+      >
     </view>
-    
-    <button class="w-full bg-green-500 text-white rounded-full py-3 text-lg" @click="doRegister">
+
+    <button class="w-full rounded-full bg-green-500 py-3 text-lg text-white" @click="doRegister">
       注册
     </button>
-    
+
     <view class="mt-6 text-center text-blue-500" @click="toLogin">
       已有账号？去登录
     </view>

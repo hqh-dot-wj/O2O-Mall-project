@@ -440,17 +440,17 @@ declare namespace App {
             apply: string;
             applySuccess: string;
             [key: string]:
-            | {
-              name: string;
-              desc: string;
-            }
-            | string;
+              | {
+                  name: string;
+                  desc: string;
+                }
+              | string;
           };
         };
         layout: {
           layoutMode: { title: string } & Record<UnionKey.ThemeLayoutMode, string> & {
-            [K in `${UnionKey.ThemeLayoutMode}_detail`]: string;
-          };
+              [K in `${UnionKey.ThemeLayoutMode}_detail`]: string;
+            };
           tab: {
             title: string;
             visible: string;
@@ -1061,7 +1061,6 @@ declare namespace App {
             permanentDeleteConfirm: string;
             selectFilesToDelete: string;
           };
-
         };
         member: {
           title: string;
@@ -1182,6 +1181,7 @@ declare namespace App {
         store_marketing: {
           title: string;
         };
+
         store_distribution: {
           title: string;
           level1Rate: string;
@@ -1192,6 +1192,13 @@ declare namespace App {
           lv1PolicyDesc: string;
           historyTitle: string;
           graphTitle: string;
+          crossTenantSettings: string;
+          enableCrossTenant: string;
+          enableCrossTenantDesc: string;
+          crossTenantRate: string;
+          crossTenantRateTip: string;
+          crossMaxDaily: string;
+          crossMaxDailyTip: string;
         };
       };
       form: {
@@ -1223,8 +1230,8 @@ declare namespace App {
 
     type GetI18nKey<T extends Record<string, unknown>, K extends keyof T = keyof T> = K extends string
       ? T[K] extends Record<string, unknown>
-      ? `${K}.${GetI18nKey<T[K]>}`
-      : K
+        ? `${K}.${GetI18nKey<T[K]>}`
+        : K
       : never;
 
     type I18nKey = GetI18nKey<Schema>;

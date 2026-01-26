@@ -42,7 +42,7 @@ type GenTableWithColumns = GenTable & { columns: GenTableColumn[] };
 
 @Injectable()
 export class ToolService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async fetchTableDetail(where: Prisma.GenTableWhereInput): Promise<GenTableWithColumns | null> {
     const criteria: Prisma.GenTableWhereInput = { delFlag: DelFlagEnum.NORMAL, ...where };
@@ -168,7 +168,7 @@ export class ToolService {
   async synchDb(tableName: string) {
     const table = await this.findOneByTableName(tableName);
     if (!table) throw new BusinessException(ResponseCode.BUSINESS_ERROR, '同步数据失败，原表结构不存在！');
-    const tableColumns = (table as any).columns as GenTableColumn[] ?? [];
+    const tableColumns = ((table as any).columns as GenTableColumn[]) ?? [];
     //更改后的数据库表的列信息
     const columns: DbColumnRow[] = await this.getTableColumnInfo(tableName);
 

@@ -1,9 +1,9 @@
 <template>
   <!-- 防滚动穿透层 -->
-  <view 
-    v-if="show" 
-    class="fixed inset-0 " 
-    style="background: transparent;" 
+  <view
+    v-if="show"
+    class="fixed inset-0"
+    style="background: transparent;"
     @touchmove.stop.prevent="() => {}"
   />
   <wd-popup
@@ -15,12 +15,14 @@
     :lock-scroll="true"
   >
     <view
-      class="p-4 bg-white"
+      class="bg-white p-4"
       style="padding-bottom: calc(env(safe-area-inset-bottom) + 60px);"
       @touchmove.stop.prevent
     >
-      <view class="text-center font-bold text-lg mb-4">用户协议与隐私政策提示</view>
-      <view class="text-sm text-gray-600 mb-6 leading-relaxed">
+      <view class="mb-4 text-center text-lg font-bold">
+        用户协议与隐私政策提示
+      </view>
+      <view class="mb-6 text-sm text-gray-600 leading-relaxed">
         <text>欢迎使用 unibest！在您使用本产品前，请仔细阅读</text>
         <text class="text-blue-500" @click="handleOpenAgreement('user')">《用户协议》</text>
         <text>与</text>
@@ -29,13 +31,13 @@
       </view>
       <view class="flex flex-row gap-3">
         <button
-          class="flex-1 bg-gray-100 text-gray-500 rounded-full py-3 text-base font-medium active:bg-gray-200"
+          class="flex-1 rounded-full bg-gray-100 py-3 text-base text-gray-500 font-medium active:bg-gray-200"
           @click="handleDisagree"
         >
           暂不同意
         </button>
         <button
-          class="flex-1 bg-primary text-white rounded-full py-3 text-base font-medium active:opacity-90"
+          class="flex-1 rounded-full bg-primary py-3 text-base text-white font-medium active:opacity-90"
           :style="{ backgroundColor: '#018d71' }"
           @click="handleAgree"
         >
@@ -47,14 +49,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useTokenStore } from '@/store/token'
 
-const show = ref(false)
 const emit = defineEmits(['agreed'])
-
+const show = ref(false)
 // 检查是否已同意
-const checkAgreement = () => {
+function checkAgreement() {
   const hasAgreed = uni.getStorageSync('hasAgreedPrivacy')
   if (hasAgreed) {
     // 已同意过，直接触发回调（比如自动登录检查）
@@ -82,7 +83,7 @@ const checkAgreement = () => {
   show.value = true
 }
 
-const handleAgree = async () => {
+async function handleAgree() {
   uni.setStorageSync('hasAgreedPrivacy', true)
   show.value = false
   emit('agreed')
@@ -92,27 +93,28 @@ const handleAgree = async () => {
   try {
     console.log('User agreed, attempting silent login...')
     await useTokenStore().wxLogin()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Silent login failed:', e)
   }
   // #endif
 }
 
-const handleDisagree = () => {
+function handleDisagree() {
   show.value = false
 }
 
-const handleOpenAgreement = (type: 'user' | 'privacy') => {
+function handleOpenAgreement(type: 'user' | 'privacy') {
   // TODO: 跳转到具体的协议页面
   uni.showToast({
     title: `查看${type === 'user' ? '用户协议' : '隐私政策'}`,
-    icon: 'none'
+    icon: 'none',
   })
 }
 
 // 暴露给父组件调用
 defineExpose({
-  checkAgreement
+  checkAgreement,
 })
 
 onMounted(() => {

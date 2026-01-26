@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NCard } from 'naive-ui';
+import { NButton, NCard, NForm, NFormItemGi, NGrid, NInput, NSpace } from 'naive-ui';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'WithdrawalSearch',
+  name: 'WithdrawalSearch'
 });
 
 interface Emits {
@@ -19,8 +19,33 @@ const model = defineModel<Api.Finance.WithdrawalSearchParams>('model', { require
 
 <template>
   <NCard :bordered="false" size="small" class="card-wrapper">
-    <div class="text-gray-500">
-      {{ $t('common.tips') }}: 使用上方标签页切换不同状态的提现申请
-    </div>
+    <NForm :model="model" label-placement="left" :label-width="80" inline>
+      <NGrid :cols="24" :x-gap="18">
+        <NFormItemGi :span="6" label="关键词">
+          <NInput
+            v-model:value="model.keyword"
+            placeholder="搜索昵称/手机号"
+            clearable
+            @keypress.enter="emit('search')"
+          />
+        </NFormItemGi>
+        <NFormItemGi :span="6">
+          <NSpace>
+            <NButton type="primary" @click="emit('search')">
+              <template #icon>
+                <icon-ic-round-search />
+              </template>
+              {{ $t('common.search') }}
+            </NButton>
+            <NButton @click="emit('reset')">
+              <template #icon>
+                <icon-ic-round-refresh />
+              </template>
+              {{ $t('common.reset') }}
+            </NButton>
+          </NSpace>
+        </NFormItemGi>
+      </NGrid>
+    </NForm>
   </NCard>
 </template>

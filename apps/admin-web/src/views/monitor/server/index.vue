@@ -2,15 +2,15 @@
 import { h, onMounted, ref } from 'vue';
 import { NCard, NDataTable, NDescriptions, NDescriptionsItem, NGrid, NGridItem, NProgress, NSpin } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
-import { useTableProps } from '@/hooks/common/table';
 import { fetchGetServerInfo } from '@/service/api/monitor/server';
+import { useTableProps } from '@/hooks/common/table';
 
 defineOptions({
-  name: 'ServerMonitor',
+  name: 'ServerMonitor'
 });
 
 const { loading, startLoading, endLoading } = useLoading();
-const serverInfo = ref<Api.Monitor.ServerInfo>();
+const serverInfo = ref<Api.Monitor.ServerInfo | null>(null);
 
 const tableProps = useTableProps();
 
@@ -45,10 +45,10 @@ const diskColumns = [
         percentage: row.usage,
         status,
         indicatorPlacement: 'inside',
-        style: { width: '100px' },
+        style: { width: '100px' }
       });
-    },
-  },
+    }
+  }
 ];
 
 function getProgressStatus(value: number) {

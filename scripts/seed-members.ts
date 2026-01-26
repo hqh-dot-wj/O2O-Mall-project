@@ -88,3 +88,12 @@ async function main() {
     const tenantIds = ['000000', '100001', '100002', '100003', '100004', '100005', '100006', '100007', '100008', '100009'];
     await seedMembers(prisma, tenantIds, 6);
 }
+
+main()
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });

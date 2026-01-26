@@ -545,7 +545,7 @@ declare namespace Api {
     /** tenant search params */
     type TenantSearchParams = CommonType.RecordNullable<
       Pick<Api.System.Tenant, 'tenantId' | 'contactUserName' | 'contactPhone' | 'companyName'> &
-      Api.Common.CommonSearchParams
+        Api.Common.CommonSearchParams
     >;
 
     /** tenant operate params */
@@ -605,7 +605,7 @@ declare namespace Api {
     /** tenant package search params */
     type TenantPackageSearchParams = CommonType.RecordNullable<
       Pick<Api.System.TenantPackage, 'packageName' | 'menuIds' | 'menuCheckStrictly' | 'status'> &
-      Api.Common.CommonSearchParams
+        Api.Common.CommonSearchParams
     >;
 
     /** tenant package operate params */
@@ -1091,5 +1091,40 @@ declare namespace Api {
       /** 分享列表 */
       type ShareList = Api.System.ShareList;
     }
+
+    /** Message Type */
+    type MessageType = 'ORDER' | 'SYSTEM' | 'NOTICE';
+
+    /** Message */
+    type Message = Common.CommonRecord<{
+      id: number;
+      title: string;
+      content?: string;
+      type: MessageType;
+      receiverId: string;
+      isRead: boolean;
+      createTime: string;
+      tenantId: string;
+    }>;
+
+    /** Message Search Params */
+    type MessageSearchParams = CommonType.RecordNullable<
+      Pick<Message, 'type' | 'isRead'> & Api.Common.CommonSearchParams
+    >;
+
+    /** Message Create DTO */
+    type MessageCreateDto = {
+      title: string;
+      content?: string;
+      type: string;
+      receiverId: string;
+      tenantId: string;
+    };
+
+    /** Message VO (Same as Message for now) */
+    type MessageVo = Message;
+
+    /** Message List VO */
+    type MessageListVo = Api.Common.PaginatingQueryRecord<Message>;
   }
 }

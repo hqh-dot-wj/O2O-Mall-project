@@ -43,7 +43,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly uploadService: UploadService,
-  ) { }
+  ) {}
 
   /**
    * 获取当前登录用户信息 - 供 Soybean 前端调用

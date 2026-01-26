@@ -5,7 +5,7 @@ import { Result } from 'src/common/response';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Get category tree
@@ -15,11 +15,11 @@ export class CategoryService {
       orderBy: { sort: 'asc' },
       include: {
         attrTemplate: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     });
-    return Result.ok(this.buildTree(categories),);
+    return Result.ok(this.buildTree(categories));
   }
 
   /**
@@ -47,9 +47,9 @@ export class CategoryService {
         orderBy: { sort: 'asc' },
         include: {
           attrTemplate: {
-            select: { name: true }
-          }
-        }
+            select: { name: true },
+          },
+        },
       }),
       this.prisma.pmsCategory.count({ where }),
     ]);
@@ -99,7 +99,7 @@ export class CategoryService {
     }
     // Check if has products
     const prodCount = await this.prisma.pmsProduct.count({
-      where: { categoryId: id }
+      where: { categoryId: id },
     });
     if (prodCount > 0) {
       throw new BadRequestException('Cannot delete category with products');

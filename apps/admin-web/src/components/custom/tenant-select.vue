@@ -5,10 +5,10 @@ import { useLoading } from '@sa/hooks';
 import { fetchTenantList } from '@/service/api';
 import { fetchChangeTenant, fetchClearTenant } from '@/service/api/system/tenant';
 import { useAppStore } from '@/store/modules/app';
-import { localStg } from '@/utils/storage';
 import { useTabStore } from '@/store/modules/tab';
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
+import { localStg } from '@/utils/storage';
 
 defineOptions({ name: 'TenantSelect' });
 
@@ -17,7 +17,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  clearable: false,
+  clearable: false
 });
 
 const appStore = useAppStore();
@@ -82,10 +82,10 @@ async function handleFetchTenantList() {
     }
     enabled.value = data.tenantEnabled;
     if (data.tenantEnabled) {
-      tenantOption.value = data.voList.map((tenant) => {
+      tenantOption.value = data.voList.map(tenant => {
         return {
           label: tenant.companyName,
-          value: tenant.tenantId,
+          value: tenant.tenantId
         };
       });
     }

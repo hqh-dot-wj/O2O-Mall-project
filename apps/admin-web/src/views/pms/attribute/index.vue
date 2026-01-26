@@ -1,12 +1,12 @@
 <script setup lang="tsx">
-import { NButton, NPopconfirm, NCard, NDataTable } from 'naive-ui';
-import { fetchGetAttributeList, fetchDeleteAttribute } from '@/service/api/pms/attribute';
-import { useTable, useTableOperate } from '@/hooks/common/table';
+import { NButton, NCard, NDataTable, NPopconfirm } from 'naive-ui';
+import { fetchDeleteAttribute, fetchGetAttributeList } from '@/service/api/pms/attribute';
 import { useAppStore } from '@/store/modules/app';
+import { useTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
+import TableHeaderOperation from '@/components/advanced/table-header-operation.vue';
 import AttributeSearch from './modules/attribute-search.vue';
 import AttributeOperateDrawer from './modules/attribute-operate-drawer.vue';
-import TableHeaderOperation from '@/components/advanced/table-header-operation.vue';
 
 defineOptions({
   name: 'AttributeList'
@@ -49,30 +49,30 @@ const {
       title: $t('page.pms.attribute.attributeCount'),
       align: 'center',
       minWidth: 100,
-      render: (row) => row._count?.attributes || 0
+      render: row => row._count?.attributes || 0
     },
     {
       key: 'createTime',
-      title: $t('page.common.createTime' ),
+      title: $t('page.common.createTime'),
       align: 'center',
       minWidth: 100
     },
     {
       key: 'operate',
-      title: $t('common.operate'  ),
+      title: $t('common.operate'),
       align: 'center',
       width: 130,
       render: row => (
         <div class="flex-center gap-8px">
           <NButton type="primary" ghost size="small" onClick={() => handleEdit('templateId', row.templateId)}>
-            {$t('common.edit'  )}
+            {$t('common.edit')}
           </NButton>
           <NPopconfirm onPositiveClick={() => handleDelete(row.templateId)}>
             {{
-              default: () => $t('common.confirmDelete'  ),
+              default: () => $t('common.confirmDelete'),
               trigger: () => (
                 <NButton type="error" ghost size="small">
-                  {$t('common.delete'  )}
+                  {$t('common.delete')}
                 </NButton>
               )
             }}
@@ -106,7 +106,7 @@ async function handleBatchDelete() {
 
   const promises = checkedRowKeys.value.map(id => fetchDeleteAttribute(Number(id)));
   await Promise.all(promises);
-  
+
   onBatchDeleted();
 }
 </script>
@@ -114,7 +114,12 @@ async function handleBatchDelete() {
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <AttributeSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getDataByPage" />
-    <NCard :title="$t('page.pms.attribute.title')" :bordered="false" class="sm:flex-1-hidden card-wrapper" content-class="flex-col-stretch gap-16px">
+    <NCard
+      :title="$t('page.pms.attribute.title')"
+      :bordered="false"
+      class="card-wrapper sm:flex-1-hidden"
+      content-class="flex-col-stretch gap-16px"
+    >
       <template #header-extra>
         <TableHeaderOperation
           v-model:columns="columnChecks"

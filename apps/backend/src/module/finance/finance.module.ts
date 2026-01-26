@@ -5,6 +5,11 @@ import { CommissionService } from './commission/commission.service';
 import { CommissionProcessor } from './commission/commission.processor';
 import { WithdrawalService } from './withdrawal/withdrawal.service';
 import { SettlementScheduler } from './settlement/settlement.scheduler';
+import { WithdrawalController } from './withdrawal/withdrawal.controller';
+import { WithdrawalRepository } from './withdrawal/withdrawal.repository';
+import { CommissionRepository } from './commission/commission.repository';
+import { WalletRepository } from './wallet/wallet.repository';
+import { TransactionRepository } from './wallet/transaction.repository';
 
 @Module({
   imports: [
@@ -12,12 +17,18 @@ import { SettlementScheduler } from './settlement/settlement.scheduler';
       name: 'CALC_COMMISSION',
     }),
   ],
+  controllers: [WithdrawalController],
   providers: [
     WalletService,
     CommissionService,
     CommissionProcessor,
     WithdrawalService,
     SettlementScheduler,
+    // Repositories
+    WithdrawalRepository,
+    CommissionRepository,
+    WalletRepository,
+    TransactionRepository,
   ],
   exports: [WalletService, CommissionService, WithdrawalService],
 })

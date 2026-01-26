@@ -69,7 +69,10 @@ export async function ExportTable(options: ExportOptions, res: Response) {
       const dataValue = Lodash.get(item, dataIndex);
       /**字典映射 */
       if (dictMap && dictMap[dataIndex]) {
-        newItem[dataIndex] = dictMap[dataIndex][dataValue as string | number] !== undefined ? dictMap[dataIndex][dataValue as string | number] : dataValue;
+        newItem[dataIndex] =
+          dictMap[dataIndex][dataValue as string | number] !== undefined
+            ? dictMap[dataIndex][dataValue as string | number]
+            : dataValue;
       } else {
         newItem[dataIndex] = dataValue;
       }

@@ -4,10 +4,10 @@
  * 符合微信2023+新规，使用 open-type="chooseAvatar" 和 type="nickname"
  */
 import { ref } from 'vue'
-import { useAuthStore } from '@/store/auth'
-import { useTokenStore } from '@/store/token'
-import { useLocationStore } from '@/store/location'
 import { getWxCode } from '@/api/login'
+import { useAuthStore } from '@/store/auth'
+import { useLocationStore } from '@/store/location'
+import { useTokenStore } from '@/store/token'
 
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
@@ -67,10 +67,12 @@ async function submitAuth() {
     uni.showToast({ title: '授权成功', icon: 'success' })
     authStore.onAuthSuccess()
     // #endif
-  } catch (err) {
+  }
+  catch (err) {
     console.error('授权失败:', err)
     uni.showToast({ title: '授权失败，请重试', icon: 'none' })
-  } finally {
+  }
+  finally {
     submitting.value = false
   }
 }
@@ -98,14 +100,18 @@ function onClose() {
               :src="avatar || '/static/images/default-avatar.png'"
               mode="aspectFill"
             />
-            <view class="avatar-tip">点击更换头像</view>
+            <view class="avatar-tip">
+              点击更换头像
+            </view>
           </button>
           <text class="random-btn" @click="randomAvatar">🎲 随机</text>
         </view>
 
         <!-- 昵称输入 -->
         <view class="nickname-section">
-          <view class="input-label">昵称</view>
+          <view class="input-label">
+            昵称
+          </view>
           <view class="input-row">
             <input
               v-model="nickname"
@@ -113,7 +119,7 @@ function onClose() {
               class="nickname-input"
               placeholder="点击使用微信昵称"
               @blur="onNicknameBlur"
-            />
+            >
             <text class="random-btn" @click="randomNickname">🎲</text>
           </view>
         </view>
@@ -123,7 +129,9 @@ function onClose() {
         <wd-button type="primary" block :loading="submitting" @click="submitAuth">
           确认授权
         </wd-button>
-        <view class="skip-btn" @click="onClose">暂不授权</view>
+        <view class="skip-btn" @click="onClose">
+          暂不授权
+        </view>
       </view>
     </view>
   </wd-popup>

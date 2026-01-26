@@ -84,18 +84,18 @@ export function getAllPages(key?: string) {
   // 这里处理分包
   const subPages: PageMetaDatum[] = []
     ; (subPackages as SubPackages).forEach((subPageObj) => {
-      // console.log(subPageObj)
-      const { root } = subPageObj
+    // console.log(subPageObj)
+    const { root } = subPageObj
 
-      subPageObj.pages
-        .filter(page => !key || page[key])
-        .forEach((page) => {
-          subPages.push({
-            ...page,
-            path: `/${root}/${page.path}`,
-          })
+    subPageObj.pages
+      .filter(page => !key || page[key])
+      .forEach((page) => {
+        subPages.push({
+          ...page,
+          path: `/${root}/${page.path}`,
         })
-    })
+      })
+  })
   const result = [...mainPages, ...subPages]
   // console.log(`getAllPages by ${key} result: `, result)
   return result

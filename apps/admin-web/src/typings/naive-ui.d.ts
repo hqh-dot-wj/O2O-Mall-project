@@ -16,7 +16,7 @@ declare namespace NaiveUI {
    *
    * if you want to add a custom column, you should add a key to this type
    */
-  type CustomColumnKey = 'operate';
+  type CustomColumnKey = 'operate' | 'config';
 
   type SetTableColumnKey<C, T> = Omit<C, 'key'> & { key: (keyof T & (string | number)) | CustomColumnKey };
 
@@ -26,9 +26,7 @@ declare namespace NaiveUI {
 
   type TableColumn<T> = TableColumnWithKey<T> | DataTableSelectionColumn<T> | DataTableExpandColumn<T>;
 
-  type TableApiFn<T = any, R = any> = (
-    params: R,
-  ) => Promise<FlatResponseData<Api.Common.PaginatingQueryRecord<T>>>;
+  type TableApiFn<T = any, R = any> = (params: R) => Promise<FlatResponseData<Api.Common.PaginatingQueryRecord<T>>>;
 
   type TreeTableApiFn<T = any, R = Record<string, any>> = (params: R) => Promise<FlatResponseData<T[]>>;
 

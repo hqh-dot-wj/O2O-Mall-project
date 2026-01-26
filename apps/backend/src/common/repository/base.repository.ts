@@ -83,7 +83,7 @@ export abstract class BaseRepository<
   /**
    * 根据主键查询单条记录
    */
-  async findById(id: number | string, options?: { include?: any; select?: any }): Promise<T | null> {
+  async findById(id: number | string | bigint, options?: { include?: any; select?: any }): Promise<T | null> {
     return this.delegate.findUnique({
       where: { [this.getPrimaryKeyName()]: id },
       ...options,
@@ -175,11 +175,7 @@ export abstract class BaseRepository<
   /**
    * 更新记录
    */
-  async update(
-    id: number | string,
-    data: UpdateInput,
-    options?: { include?: any; select?: any },
-  ): Promise<T> {
+  async update(id: number | string | bigint, data: UpdateInput, options?: { include?: any; select?: any }): Promise<T> {
     return this.delegate.update({
       where: { [this.getPrimaryKeyName()]: id },
       data,
@@ -203,7 +199,7 @@ export abstract class BaseRepository<
   /**
    * 删除记录
    */
-  async delete(id: number | string): Promise<T> {
+  async delete(id: number | string | bigint): Promise<T> {
     return this.delegate.delete({
       where: { [this.getPrimaryKeyName()]: id },
     });
@@ -222,7 +218,7 @@ export abstract class BaseRepository<
   /**
    * 根据主键批量删除
    */
-  async deleteByIds(ids: (number | string)[]): Promise<{ count: number }> {
+  async deleteByIds(ids: (number | string | bigint)[]): Promise<{ count: number }> {
     return this.deleteMany({
       [this.getPrimaryKeyName()]: { in: ids },
     });
@@ -246,25 +242,24 @@ export abstract class BaseRepository<
   /**
    * 根据主键检查是否存在
    */
-  async existsById(id: number | string): Promise<boolean> {
+  async existsById(id: number | string | bigint): Promise<boolean> {
     return this.exists({ [this.getPrimaryKeyName()]: id });
   }
 
   /**
    * 软删除（设置 delFlag）
    */
-  async softDelete(id: number | string): Promise<T> {
+  async softDelete(id: number | string | bigint): Promise<T> {
     return this.update(id, { delFlag: DelFlagEnum.DELETE } as unknown as UpdateInput);
   }
 
   /**
    * 批量软删除
    */
-  async softDeleteBatch(ids: (number | string)[]): Promise<number> {
-    const result = await this.updateMany(
-      { [this.getPrimaryKeyName()]: { in: ids } },
-      { delFlag: DelFlagEnum.DELETE } as unknown as UpdateInput,
-    );
+  async softDeleteBatch(ids: (number | string | bigint)[]): Promise<number> {
+    const result = await this.updateMany({ [this.getPrimaryKeyName()]: { in: ids } }, {
+      delFlag: DelFlagEnum.DELETE,
+    } as unknown as UpdateInput);
     return result.count;
   }
 

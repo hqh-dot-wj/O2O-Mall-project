@@ -14,7 +14,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @Controller('system/tenant')
 @ApiBearerAuth('Authorization')
 export class TenantController {
-  constructor(private readonly tenantService: TenantService) { }
+  constructor(private readonly tenantService: TenantService) {}
 
   @Api({
     summary: '租户管理-创建',

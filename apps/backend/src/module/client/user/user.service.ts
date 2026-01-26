@@ -4,15 +4,18 @@ import { BusinessException } from 'src/common/exceptions';
 
 @Injectable()
 export class UserService {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    async info(userId: string) {
-        const user = await this.prisma.umsMember.findUnique({
-            where: { memberId: userId },
-        });
+  async info(userId: string) {
+    const user = await this.prisma.umsMember.findUnique({
+      where: { memberId: userId },
+    });
 
-        BusinessException.throwIfNull(user, '用户不存在');
+    BusinessException.throwIfNull(user, '用户不存在');
 
-        return user;
-    }
+    return {
+      ...user,
+      levelId: user.levelId || 0,
+    };
+  }
 }

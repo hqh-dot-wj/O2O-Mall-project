@@ -17,8 +17,8 @@ const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState
   {
     baseURL,
     'axios-retry': {
-      retries: 0,
-    },
+      retries: 0
+    }
   },
   {
     async onRequest(config) {
@@ -69,7 +69,7 @@ const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState
         handleLogout();
         window.removeEventListener('beforeunload', handleLogout);
 
-        flatRequest.state.errMsgStack = flatRequest.state.errMsgStack.filter((msg) => msg !== response.data.msg);
+        flatRequest.state.errMsgStack = flatRequest.state.errMsgStack.filter(msg => msg !== response.data.msg);
       }
 
       const isLogin = Boolean(localStg.get('token'));
@@ -79,7 +79,7 @@ const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState
       const modalLogoutCodes = import.meta.env.VITE_SERVICE_MODAL_LOGOUT_CODES?.split(',') || [];
 
       // 合并处理登出代码：如果在登出代码列表中，直接登出并跳转
-      const allLogoutCodes = [...logoutCodes, ...modalLogoutCodes].filter((code) => code);
+      const allLogoutCodes = [...logoutCodes, ...modalLogoutCodes].filter(code => code);
       if (allLogoutCodes.includes(responseCode)) {
         // 如果已经在登录页，直接清理即可
         if (window.location.pathname?.startsWith('/login')) {
@@ -154,7 +154,7 @@ const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState
       // 处理登出代码
       const logoutCodes = import.meta.env.VITE_SERVICE_LOGOUT_CODES?.split(',') || [];
       const modalLogoutCodes = import.meta.env.VITE_SERVICE_MODAL_LOGOUT_CODES?.split(',') || [];
-      const allLogoutCodes = [...logoutCodes, ...modalLogoutCodes].filter((code) => code);
+      const allLogoutCodes = [...logoutCodes, ...modalLogoutCodes].filter(code => code);
 
       if (allLogoutCodes.includes(backendErrorCode)) {
         // HTTP 401 状态码，需要执行登出
@@ -178,8 +178,8 @@ const flatRequest = createFlatRequest<App.Service.Response, RequestInstanceState
       }
 
       showErrorMsg(flatRequest.state, message);
-    },
-  },
+    }
+  }
 );
 
 function handleRepeatSubmit(config: InternalAxiosRequestConfig) {
@@ -190,7 +190,7 @@ function handleRepeatSubmit(config: InternalAxiosRequestConfig) {
     const requestObj = {
       url: config.url!,
       data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
-      time: new Date().getTime(),
+      time: new Date().getTime()
     };
     const sessionObj = sessionStg.get('sessionObj');
     if (!sessionObj) {
@@ -233,7 +233,7 @@ function handleEncrypt(config: InternalAxiosRequestConfig) {
       // 请求体改为统一格式
       config.data = {
         encryptedKey,
-        encryptedData,
+        encryptedData
       };
     }
   }
@@ -274,6 +274,6 @@ export const request: FlatRequestInstance<App.Service.Response, RequestInstanceS
   {
     cancelRequest: flatRequest.cancelRequest,
     cancelAllRequest: flatRequest.cancelAllRequest,
-    state: flatRequest.state,
-  },
+    state: flatRequest.state
+  }
 );

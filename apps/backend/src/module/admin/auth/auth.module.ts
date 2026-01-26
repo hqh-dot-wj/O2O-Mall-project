@@ -6,13 +6,9 @@ import { MonitorModule } from '../monitor/monitor.module';
 import { CommonModule } from '../../common/common.module';
 
 @Module({
-    imports: [
-        SystemModule,
-        MonitorModule,
-        CommonModule,
-    ],
-    controllers: [AuthController],
-    providers: [AuthService],
-    exports: [AuthService],
+  imports: [SystemModule, MonitorModule, CommonModule],
+  controllers: [AuthController],
+  providers: [AuthService],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

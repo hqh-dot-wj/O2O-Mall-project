@@ -5,7 +5,7 @@ import { Result } from 'src/common/response';
 
 @Injectable()
 export class BrandService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(params: any) {
     const { pageNum = 1, pageSize = 10, name } = params;
@@ -44,7 +44,7 @@ export class BrandService {
   async remove(id: number) {
     // Check if used by products
     const count = await this.prisma.pmsProduct.count({
-      where: { brandId: id }
+      where: { brandId: id },
     });
     if (count > 0) {
       throw new BadRequestException('Cannot delete brand used by products');

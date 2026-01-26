@@ -1,9 +1,23 @@
 <script setup lang="tsx">
 import { computed, ref, watch } from 'vue';
 import type { DataTableColumns, TreeOption } from 'naive-ui';
-import { NButton, NCard, NDataTable, NDescriptions, NDescriptionsItem, NEmpty, NImage, NInput, NPopconfirm, NSpace, NSpin, NTag, NTree } from 'naive-ui';
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NDescriptions,
+  NDescriptionsItem,
+  NEmpty,
+  NImage,
+  NInput,
+  NPopconfirm,
+  NSpace,
+  NSpin,
+  NTag,
+  NTree
+} from 'naive-ui';
 import { useBoolean, useLoading } from '@sa/hooks';
-import { fetchGetCategoryTree, fetchGetCategoryList, fetchDeleteCategory } from '@/service/api/pms/category';
+import { fetchDeleteCategory, fetchGetCategoryList, fetchGetCategoryTree } from '@/service/api/pms/category';
 import { useAppStore } from '@/store/modules/app';
 import { useTableProps } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -12,7 +26,7 @@ import ButtonIcon from '@/components/custom/button-icon.vue';
 import CategoryOperateDrawer from './modules/category-operate-drawer.vue';
 
 defineOptions({
-  name: 'PmsCategory',
+  name: 'PmsCategory'
 });
 
 const appStore = useAppStore();
@@ -105,10 +119,10 @@ function handleEdit(row?: Api.Pms.Category) {
 async function handleDelete(id?: number) {
   const targetId = id || currentCategory.value?.catId;
   if (!targetId) return;
-  
+
   await fetchDeleteCategory(targetId);
   window.$message?.success($t('common.deleteSuccess'));
-  
+
   if (id) {
     getSubCategories();
   } else {
@@ -122,56 +136,56 @@ const columns: DataTableColumns<Api.Pms.Category> = [
   {
     key: 'catId',
     title: 'ID',
-    width: 80,
+    width: 80
   },
   {
     key: 'name',
     title: $t('page.pms.category.categoryName'),
-    minWidth: 150,
+    minWidth: 150
   },
   {
     key: 'icon',
     title: $t('page.pms.category.icon'),
     width: 100,
-    render: (row) => {
+    render: row => {
       if (!row.icon) return null;
       return <NImage src={row.icon} width={40} height={40} class="rounded shadow-sm" />;
-    },
+    }
   },
   {
     key: 'sort',
     title: $t('common.sort'),
-    width: 80,
+    width: 80
   },
   {
     key: 'bindType',
     title: $t('page.pms.category.bindType'),
     width: 100,
-    render: (row) => {
+    render: row => {
       if (!row.bindType) return null;
       const typeMap: Record<string, 'success' | 'info'> = {
         REAL: 'success',
-        SERVICE: 'info',
+        SERVICE: 'info'
       };
       const labelMap: Record<string, string> = {
         REAL: $t('page.pms.category.realProduct'),
-        SERVICE: $t('page.pms.category.serviceProduct'),
+        SERVICE: $t('page.pms.category.serviceProduct')
       };
       return <NTag type={typeMap[row.bindType]}>{labelMap[row.bindType]}</NTag>;
-    },
+    }
   },
   {
     key: 'attrTemplate',
     title: $t('page.pms.category.attributeTemplate'),
     width: 150,
-    render: (row) => row.attrTemplate?.name || '-'
+    render: row => row.attrTemplate?.name || '-'
   },
   {
     key: 'operate',
     title: $t('common.operate'),
     align: 'center',
     width: 150,
-    render: (row) => (
+    render: row => (
       <NSpace justify="center">
         <ButtonIcon
           text
@@ -189,8 +203,8 @@ const columns: DataTableColumns<Api.Pms.Category> = [
           onPositiveClick={() => handleDelete(row.catId)}
         />
       </NSpace>
-    ),
-  },
+    )
+  }
 ];
 
 const categoryTreeRef = ref();
@@ -202,7 +216,7 @@ function handleSubmitted() {
   if (currentCategory.value) {
     if (operateType.value === 'edit') {
       // Find the updated category in the tree if it's the current one
-      // Simplified: we can just re-fetch if we had a getCategoryDetail, 
+      // Simplified: we can just re-fetch if we had a getCategoryDetail,
       // but since we have the data in tree, we'll just update from tree or let user re-click.
       // For now, let's just refresh subcategories if it was an add-sub.
     }
@@ -255,12 +269,7 @@ function handleSubmitted() {
 
     <div class="h-full flex-col-stretch gap-16px overflow-hidden">
       <template v-if="currentCategory">
-        <NCard
-          :title="$t('page.pms.category.categoryDetail')"
-          :bordered="false"
-          size="small"
-          class="card-wrapper"
-        >
+        <NCard :title="$t('page.pms.category.categoryDetail')" :bordered="false" size="small" class="card-wrapper">
           <template #header-extra>
             <NSpace>
               <NButton size="small" ghost type="primary" @click="handleAddSub()">
@@ -290,11 +299,17 @@ function handleSubmitted() {
           </template>
           <NDescriptions bordered label-placement="left" :column="appStore.isMobile ? 1 : 2">
             <NDescriptionsItem label="ID">{{ currentCategory.catId }}</NDescriptionsItem>
-            <NDescriptionsItem :label="$t('page.pms.category.categoryName')">{{ currentCategory.name }}</NDescriptionsItem>
+            <NDescriptionsItem :label="$t('page.pms.category.categoryName')">
+              {{ currentCategory.name }}
+            </NDescriptionsItem>
             <NDescriptionsItem :label="$t('common.sort')">{{ currentCategory.sort }}</NDescriptionsItem>
             <NDescriptionsItem :label="$t('page.pms.category.bindType')">
               <NTag v-if="currentCategory.bindType" :type="currentCategory.bindType === 'REAL' ? 'success' : 'info'">
-                {{ currentCategory.bindType === 'REAL' ? $t('page.pms.category.realProduct') : $t('page.pms.category.serviceProduct') }}
+                {{
+                  currentCategory.bindType === 'REAL'
+                    ? $t('page.pms.category.realProduct')
+                    : $t('page.pms.category.serviceProduct')
+                }}
               </NTag>
               <span v-else>-</span>
             </NDescriptionsItem>
@@ -326,7 +341,7 @@ function handleSubmitted() {
             v-bind="tableProps"
             flex-height
             class="h-full"
-            :row-key="(row) => row.catId"
+            :row-key="row => row.catId"
           />
         </NCard>
       </template>

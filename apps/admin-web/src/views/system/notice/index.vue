@@ -12,13 +12,14 @@ import NoticeOperateDrawer from './modules/notice-operate-drawer.vue';
 import NoticeSearch from './modules/notice-search.vue';
 
 defineOptions({
-  name: 'NoticeList',
+  name: 'NoticeList'
 });
 
 useDict('sys_notice_type');
 useDict('sys_normal_disable');
 const appStore = useAppStore();
 const { hasAuth } = useAuth();
+const tableProps = useTableProps();
 
 const {
   columns,
@@ -29,7 +30,7 @@ const {
   loading,
   mobilePagination,
   searchParams,
-  resetSearchParams,
+  resetSearchParams
 } = useTable({
   apiFn: fetchGetNoticeList,
   apiParams: {
@@ -38,19 +39,19 @@ const {
     // if you want to use the searchParams in Form, you need to define the following properties, and the value is null
     // the value can not be undefined, otherwise the property in Form will not be reactive
     noticeTitle: null,
-    noticeType: null,
+    noticeType: null
   },
   columns: () => [
     {
       type: 'selection',
       align: 'center',
-      width: 48,
+      width: 48
     },
     {
       key: 'noticeTitle',
       title: '公告标题',
       align: 'center',
-      width: 300,
+      width: 300
     },
     {
       key: 'noticeType',
@@ -59,7 +60,7 @@ const {
       minWidth: 120,
       render(row) {
         return <DictTag size="small" value={row.noticeType} dictCode="sys_notice_type" />;
-      },
+      }
     },
     {
       key: 'status',
@@ -68,26 +69,26 @@ const {
       minWidth: 120,
       render(row) {
         return <DictTag size="small" value={row.status} dictCode="sys_normal_disable" />;
-      },
+      }
     },
     {
       key: 'createByName',
       title: '创建者',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'createTime',
       title: '创建时间',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 130,
-      render: (row) => {
+      render: row => {
         const divider = () => {
           if (!hasAuth('system:notice:edit') || !hasAuth('system:notice:remove')) {
             return null;
@@ -133,9 +134,9 @@ const {
             {deleteBtn()}
           </div>
         );
-      },
-    },
-  ],
+      }
+    }
+  ]
 });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
@@ -192,7 +193,7 @@ async function edit(noticeId: CommonType.IdType) {
         :scroll-x="962"
         :loading="loading"
         remote
-        :row-key="(row) => row.noticeId"
+        :row-key="row => row.noticeId"
         :pagination="mobilePagination"
         class="sm:h-full"
       />
