@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AdminUpgradeController } from './admin-upgrade.controller';
 import { AdminUpgradeService } from './admin-upgrade.service';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { UpgradeApplyRepository } from './upgrade-apply.repository';
+import { UpgradeReferralService } from './services/upgrade-referral.service';
 
 @Module({
-  imports: [PrismaModule],
   controllers: [AdminUpgradeController],
-  providers: [AdminUpgradeService],
+  providers: [
+    AdminUpgradeService,
+    UpgradeApplyRepository,
+    UpgradeReferralService,
+  ],
   exports: [AdminUpgradeService],
 })
-export class AdminUpgradeModule {}
+export class AdminUpgradeModule { }

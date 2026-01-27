@@ -26232,9 +26232,9 @@
             "bearer": []
           }
         ],
-        "summary": "升级申请列表",
+        "summary": "查询升级申请列表",
         "tags": [
-          "Admin-Upgrade"
+          "会员升级管理"
         ]
       }
     },
@@ -26252,9 +26252,9 @@
             "bearer": []
           }
         ],
-        "summary": "统计",
+        "summary": "获取申请统计",
         "tags": [
-          "Admin-Upgrade"
+          "会员升级管理"
         ]
       }
     },
@@ -26291,9 +26291,9 @@
             "bearer": []
           }
         ],
-        "summary": "审批/驳回",
+        "summary": "审批/驳回升级申请",
         "tags": [
-          "Admin-Upgrade"
+          "会员升级管理"
         ]
       }
     },
@@ -26330,9 +26330,9 @@
             "bearer": []
           }
         ],
-        "summary": "手动调级",
+        "summary": "手动调整会员等级",
         "tags": [
-          "Admin-Upgrade"
+          "会员升级管理"
         ]
       }
     },
