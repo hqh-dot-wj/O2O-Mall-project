@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Result } from 'src/common/response';
 import { FormatDateFields } from 'src/common/utils';
-import { Prisma, CommissionStatus, TransType } from '@prisma/client';
+import { Prisma, CommissionStatus, TransType, WithdrawalStatus } from '@prisma/client';
 import { WithdrawalService } from 'src/module/finance/withdrawal/withdrawal.service';
 import { ListCommissionDto, ListWithdrawalDto, AuditWithdrawalDto, ListLedgerDto } from './dto/store-finance.dto';
 import { ListWithdrawalDto as FinListWithdrawalDto } from 'src/module/finance/withdrawal/dto/list-withdrawal.dto';
@@ -33,18 +33,22 @@ export class StoreFinanceService {
    */
   async getDashboard() {
     const tenantId = TenantContext.getTenantId();
+    const isSuper = TenantContext.isSuperTenant();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    // 构建基础过滤条件
+    const baseWhere = isSuper ? {} : { tenantId };
 
     // 并行查询各项统计
     const [todayOrders, monthOrders, pendingCommissions, settledCommissions, pendingWithdrawals] = await Promise.all([
       // 今日订单GMV
       this.storeOrderRepo.aggregate({
         where: {
-          tenantId,
-          payStatus: 'PAID',
+          ...baseWhere,
+          payStatus: 'PAID' as any,
           createTime: { gte: today },
         },
         _sum: { payAmount: true },
@@ -53,8 +57,8 @@ export class StoreFinanceService {
       // 本月订单GMV
       this.storeOrderRepo.aggregate({
         where: {
-          tenantId,
-          payStatus: 'PAID',
+          ...baseWhere,
+          payStatus: 'PAID' as any,
           createTime: { gte: monthStart },
         },
         _sum: { payAmount: true },
@@ -62,23 +66,23 @@ export class StoreFinanceService {
       // 待结算佣金
       this.commissionRepo.aggregate({
         where: {
-          tenantId,
-          status: 'FROZEN',
+          ...baseWhere,
+          status: CommissionStatus.FROZEN,
         },
         _sum: { amount: true },
       }),
       // 已结算佣金
       this.commissionRepo.aggregate({
         where: {
-          tenantId,
-          status: 'SETTLED',
+          ...baseWhere,
+          status: CommissionStatus.SETTLED,
         },
         _sum: { amount: true },
       }),
       // 待审核提现
       this.withdrawalRepo.count({
-        tenantId,
-        status: 'PENDING',
+        ...baseWhere,
+        status: WithdrawalStatus.PENDING,
       }),
     ]);
 
@@ -156,16 +160,19 @@ export class StoreFinanceService {
    */
   async getCommissionStats() {
     const tenantId = TenantContext.getTenantId();
+    const isSuper = TenantContext.isSuperTenant();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
+    const baseWhere = isSuper ? {} : { tenantId };
+
     const [todayStats, monthStats, pendingStats] = await Promise.all([
       // 今日佣金
       this.commissionRepo.aggregate({
         where: {
-          tenantId,
+          ...baseWhere,
           createTime: { gte: today },
         },
         _sum: { amount: true },
@@ -173,7 +180,7 @@ export class StoreFinanceService {
       // 本月累计
       this.commissionRepo.aggregate({
         where: {
-          tenantId,
+          ...baseWhere,
           createTime: { gte: monthStart },
         },
         _sum: { amount: true },
@@ -181,8 +188,8 @@ export class StoreFinanceService {
       // 待结算
       this.commissionRepo.aggregate({
         where: {
-          tenantId,
-          status: 'FROZEN',
+          ...baseWhere,
+          status: CommissionStatus.FROZEN,
         },
         _sum: { amount: true },
       }),
@@ -226,6 +233,8 @@ export class StoreFinanceService {
    */
   async getLedger(query: ListLedgerDto) {
     const tenantId = TenantContext.getTenantId();
+    const isSuper = TenantContext.isSuperTenant();
+
     // 构建时间范围条件
     const timeFilter: any = {};
     const dateRange = query.getDateRange('createTime');
@@ -233,22 +242,26 @@ export class StoreFinanceService {
       Object.assign(timeFilter, dateRange.createTime);
     }
 
+    // 构建基础过滤条件：如果是超级管理员，且指定了 memberId，则不按租户过滤，以便查看所有租户下的会员流水
+    // 如果是普通租户管理员，必须按租户过滤
+    const baseWhere = isSuper && query.memberId ? {} : { tenantId };
+
     // 1. 查询订单收入 (OmsOrder)
     // 注意：如果指定了 memberId，我们通常只展示该会员的钱包流水（佣金、提现、消费等），
     // 订单收入是站在租户角度看的，对于会员个人详情页来说，"订单收入"容易产生误解（实际是其消费），且已有订单记录Tab展示这类数据。
     const shouldIncludeOrders = !query.memberId;
     const orderWhere: Prisma.OmsOrderWhereInput = shouldIncludeOrders ? {
-      tenantId,
+      ...baseWhere,
       payStatus: 'PAID',
       createTime: timeFilter,
     } : null;
 
     // 2. 查询钱包流水 (FinTransaction) - 排除 COMMISSION_IN 避免与佣金表重复
     const transWhere: Prisma.FinTransactionWhereInput = {
-      tenantId,
+      ...baseWhere,
       createTime: timeFilter,
       // 排除 COMMISSION_IN，因为佣金会从 FinCommission 表单独查询
-      type: { not: 'COMMISSION_IN' },
+      type: { not: TransType.COMMISSION_IN },
     };
 
     if (query.memberId) {
@@ -265,8 +278,8 @@ export class StoreFinanceService {
 
     // 3. 查询提现支出 (FinWithdrawal) - 仅查询已打款
     const withdrawWhere: Prisma.FinWithdrawalWhereInput = {
-      tenantId,
-      status: { in: ['APPROVED'] },
+      ...baseWhere,
+      status: { in: [WithdrawalStatus.APPROVED] },
       createTime: timeFilter,
     };
 
@@ -276,7 +289,7 @@ export class StoreFinanceService {
 
     // 4. 查询佣金记录 (FinCommission) - 包含待结算和已结算
     const commissionWhere: Prisma.FinCommissionWhereInput = {
-      tenantId,
+      ...baseWhere,
       createTime: timeFilter,
     };
 
@@ -436,12 +449,12 @@ export class StoreFinanceService {
       // 佣金记录（待结算+已结算）
       ...commissions.map((c: any) => ({
         id: `commission-${c.id}`,
-        type: 'COMMISSION_IN',
-        typeName: c.status === 'FROZEN' ? '佣金待结算' : '佣金已入账',
+        type: TransType.COMMISSION_IN,
+        typeName: c.status === CommissionStatus.FROZEN ? '佣金待结算' : '佣金已入账',
         amount: Number(c.amount),
         balanceAfter: 0, // 佣金记录无余额快照
         relatedId: c.order?.orderSn || c.orderId,
-        remark: c.status === 'FROZEN'
+        remark: c.status === CommissionStatus.FROZEN
           ? `订单${c.order?.orderSn || c.orderId}佣金（待结算）`
           : `订单${c.order?.orderSn || c.orderId}佣金已入账`,
         createTime: c.createTime,
@@ -464,11 +477,11 @@ export class StoreFinanceService {
 
   private getTransTypeName(type: string): string {
     const map: Record<string, string> = {
-      COMMISSION_IN: '佣金入账',
-      WITHDRAW_OUT: '提现扣款',
-      REFUND_DEDUCT: '退款扣减',
-      CONSUME_PAY: '余额支付',
-      RECHARGE_IN: '充值入账',
+      [TransType.COMMISSION_IN]: '佣金入账',
+      [TransType.WITHDRAW_OUT]: '提现扣款',
+      [TransType.REFUND_DEDUCT]: '退款扣减',
+      [TransType.CONSUME_PAY]: '余额支付',
+      [TransType.RECHARGE_IN]: '充值入账',
     };
     return map[type] || type;
   }

@@ -4,10 +4,11 @@ import { Result } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { UpdateDistConfigDto } from './dto/update-dist-config.dto';
 import { DistConfigVo, DistConfigLogVo } from './vo/dist-config.vo';
+import { BusinessConstants } from 'src/common/constants/business.constants';
 
 @Injectable()
 export class DistributionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * 获取分销规则配置
@@ -23,12 +24,12 @@ export class DistributionService {
       // 返回默认配置（含跨店配置）
       return Result.ok({
         id: 0,
-        level1Rate: 60,
-        level2Rate: 40,
+        level1Rate: BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE * 100,
+        level2Rate: BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL2_RATE * 100,
         enableLV0: true,
         enableCrossTenant: false,
-        crossTenantRate: 100, // 100% 无折扣
-        crossMaxDaily: 500,
+        crossTenantRate: BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE * 100, // 100% 无折扣
+        crossMaxDaily: BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
         createTime: new Date().toISOString(),
       });
     }
@@ -40,7 +41,7 @@ export class DistributionService {
       enableLV0: config.enableLV0,
       enableCrossTenant: (config as any).enableCrossTenant ?? false,
       crossTenantRate: Number((config as any).crossTenantRate ?? 1) * 100,
-      crossMaxDaily: Number((config as any).crossMaxDaily ?? 500),
+      crossMaxDaily: Number((config as any).crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
       createTime: config.createTime.toISOString(),
     });
   }
@@ -70,7 +71,7 @@ export class DistributionService {
         enableLV0: dto.enableLV0,
         enableCrossTenant: dto.enableCrossTenant ?? false,
         crossTenantRate,
-        crossMaxDaily: dto.crossMaxDaily ?? 500,
+        crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
         updateBy: operator,
       } as any,
       create: {
@@ -80,7 +81,7 @@ export class DistributionService {
         enableLV0: dto.enableLV0,
         enableCrossTenant: dto.enableCrossTenant ?? false,
         crossTenantRate,
-        crossMaxDaily: dto.crossMaxDaily ?? 500,
+        crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
         createBy: operator,
         updateBy: operator,
       } as any,
@@ -95,7 +96,7 @@ export class DistributionService {
         enableLV0: dto.enableLV0,
         enableCrossTenant: dto.enableCrossTenant ?? false,
         crossTenantRate,
-        crossMaxDaily: dto.crossMaxDaily ?? 500,
+        crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
         operator,
       } as any,
     });
@@ -123,7 +124,7 @@ export class DistributionService {
       enableLV0: log.enableLV0,
       enableCrossTenant: log.enableCrossTenant ?? false,
       crossTenantRate: Number(log.crossTenantRate ?? 1) * 100,
-      crossMaxDaily: Number(log.crossMaxDaily ?? 500),
+      crossMaxDaily: Number(log.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
       operator: log.operator,
       createTime: log.createTime.toISOString(),
     }));
@@ -161,10 +162,11 @@ export class DistributionService {
     });
 
     const config = {
-      level1Rate: distConfig?.level1Rate ? Number(distConfig.level1Rate) : 0.6,
+      level1Rate: distConfig?.level1Rate ? Number(distConfig.level1Rate) : BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE,
       enableCrossTenant: (distConfig as any)?.enableCrossTenant ?? false,
-      crossTenantRate: (distConfig as any)?.crossTenantRate ? Number((distConfig as any).crossTenantRate) : 1.0,
+      crossTenantRate: (distConfig as any)?.crossTenantRate ? Number((distConfig as any).crossTenantRate) : BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE,
     };
+
 
     // 判断是否跨店
     let isLocal = true;

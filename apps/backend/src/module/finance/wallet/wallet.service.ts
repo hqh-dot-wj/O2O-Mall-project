@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import { TransType } from '@prisma/client';
 
 /**
  * 钱包服务
@@ -10,7 +11,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 export class WalletService {
   private readonly logger = new Logger(WalletService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * 获取或创建用户钱包
@@ -69,7 +70,7 @@ export class WalletService {
       data: {
         walletId,
         tenantId: wallet.tenantId,
-        type: 'COMMISSION_IN',
+        type: TransType.COMMISSION_IN,
         amount,
         balanceAfter: wallet.balance,
         relatedId,
@@ -88,7 +89,7 @@ export class WalletService {
     amount: Decimal,
     relatedId: string,
     remark: string,
-    type: 'WITHDRAW_OUT' | 'REFUND_DEDUCT' | 'CONSUME_PAY',
+    type: TransType,
     tx: any,
   ) {
     const wallet = await tx.finWallet.update({

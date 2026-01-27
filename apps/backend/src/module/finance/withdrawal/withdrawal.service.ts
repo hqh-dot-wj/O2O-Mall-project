@@ -6,9 +6,11 @@ import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { FormatDateFields } from 'src/common/utils';
 import { ListWithdrawalDto } from './dto/list-withdrawal.dto';
-import { Prisma, FinWithdrawal } from '@prisma/client';
+import { Prisma, FinWithdrawal, WithdrawalStatus, TransType } from '@prisma/client';
 import { WithdrawalRepository } from './withdrawal.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
+
+import { BusinessConstants } from 'src/common/constants/business.constants';
 
 /**
  * 提现服务
@@ -18,8 +20,8 @@ import { Transactional } from 'src/common/decorators/transactional.decorator';
 export class WithdrawalService {
   private readonly logger = new Logger(WithdrawalService.name);
 
-  // 最小提现金额
-  private readonly MIN_WITHDRAWAL_AMOUNT = 1;
+  // 最小提现金额 (已移动至 BusinessConstants)
+  private readonly MIN_WITHDRAWAL_AMOUNT = BusinessConstants.FINANCE.MIN_WITHDRAWAL_AMOUNT;
 
   // 审核策略映射
   private readonly auditStrategies = {
@@ -31,7 +33,7 @@ export class WithdrawalService {
     private readonly prisma: PrismaService,
     private readonly withdrawalRepo: WithdrawalRepository,
     private readonly walletService: WalletService,
-  ) {}
+  ) { }
 
   /**
    * 申请提现
@@ -75,7 +77,7 @@ export class WithdrawalService {
       amount: amountDecimal,
       method,
       realName: member?.nickname || '',
-      status: 'PENDING',
+      status: WithdrawalStatus.PENDING,
     });
 
     this.logger.log(`Withdrawal application created: ${withdrawal.id}`);
@@ -88,7 +90,7 @@ export class WithdrawalService {
   async audit(withdrawalId: string, tenantId: string, action: 'APPROVE' | 'REJECT', auditBy: string, remark?: string) {
     // 1. 基础查询与校验 (Guard Clauses)
     const withdrawal = await this.withdrawalRepo.findOne(
-      { id: withdrawalId, tenantId, status: 'PENDING' },
+      { id: withdrawalId, tenantId, status: WithdrawalStatus.PENDING },
       { include: { member: true } },
     );
 
@@ -109,7 +111,7 @@ export class WithdrawalService {
   private async handleRejectStrategy(withdrawal: FinWithdrawal, auditBy: string, remark?: string) {
     // 更新提现状态
     await this.withdrawalRepo.update(withdrawal.id, {
-      status: 'REJECTED',
+      status: WithdrawalStatus.REJECTED,
       auditTime: new Date(),
       auditBy,
       auditRemark: remark,
@@ -165,7 +167,7 @@ export class WithdrawalService {
 
     // 更新提现状态
     await this.withdrawalRepo.update(withdrawal.id, {
-      status: 'APPROVED',
+      status: WithdrawalStatus.APPROVED,
       auditTime: new Date(),
       auditBy,
       paymentNo,
@@ -191,7 +193,7 @@ export class WithdrawalService {
         data: {
           walletId: wallet.id,
           tenantId: withdrawal.tenantId,
-          type: 'WITHDRAW_OUT',
+          type: TransType.WITHDRAW_OUT,
           amount: new Decimal(0).minus(withdrawal.amount),
           balanceAfter: wallet.balance,
           relatedId: withdrawal.id,
@@ -207,7 +209,7 @@ export class WithdrawalService {
   @Transactional()
   private async handlePaymentFailure(withdrawalId: string, failReason: string) {
     await this.withdrawalRepo.update(withdrawalId, {
-      status: 'FAILED',
+      status: WithdrawalStatus.FAILED,
       failReason,
     });
   }
@@ -229,8 +231,12 @@ export class WithdrawalService {
   /**
    * 获取提现列表 (Store端)
    */
-  async getList(query: ListWithdrawalDto, tenantId: string) {
-    const where: Prisma.FinWithdrawalWhereInput = { tenantId };
+  async getList(query: ListWithdrawalDto, tenantId: string | null) {
+    const where: Prisma.FinWithdrawalWhereInput = {};
+
+    if (tenantId) {
+      where.tenantId = tenantId;
+    }
 
     if (query.status) {
       where.status = query.status;

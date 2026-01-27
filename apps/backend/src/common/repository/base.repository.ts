@@ -3,6 +3,7 @@ import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IPaginatedData } from '../response/response.interface';
+import { TenantContext } from '../tenant/tenant.context';
 
 /**
  * 分页查询选项
@@ -76,6 +77,7 @@ export abstract class BaseRepository<
     protected readonly cls: ClsService,
     protected readonly modelName: keyof PrismaClient,
     protected readonly primaryKeyName: string = 'id',
+    protected readonly tenantFieldName: string = 'tenantId',
   ) {
     this.delegate = (this.client as any)[modelName] as D;
   }
@@ -95,7 +97,7 @@ export abstract class BaseRepository<
    */
   async findOne(where: any, options?: { include?: any; select?: any }): Promise<T | null> {
     return (this.delegate as any).findFirst({
-      where,
+      where: this.applyTenantFilter(where),
       ...options,
     });
   }
@@ -107,7 +109,7 @@ export abstract class BaseRepository<
     const { where, include, select, orderBy, order } = options || {};
 
     return this.delegate.findMany({
-      where,
+      where: this.applyTenantFilter(where),
       include,
       select,
       orderBy: orderBy ? { [orderBy]: order || 'asc' } : undefined,
@@ -127,17 +129,18 @@ export abstract class BaseRepository<
   async findPage(options: QueryOptions): Promise<IPaginatedData<T>> {
     const { pageNum = 1, pageSize = 10, where, include, select, orderBy, order } = options;
     const skip = (pageNum - 1) * pageSize;
+    const tenantRefinedWhere = this.applyTenantFilter(where);
 
     const [rows, total] = await Promise.all([
       this.delegate.findMany({
-        where,
+        where: tenantRefinedWhere,
         include,
         select,
         orderBy: orderBy ? { [orderBy]: order || 'asc' } : undefined,
         skip,
         take: pageSize,
       }),
-      this.delegate.count({ where }),
+      this.delegate.count({ where: tenantRefinedWhere }),
     ]);
 
     return {
@@ -280,6 +283,32 @@ export abstract class BaseRepository<
       return tx;
     }
     return this.prisma;
+  }
+
+  /**
+   * 获取自动租户过滤条件
+   */
+  protected getTenantWhere(): Record<string, any> {
+    const tenantId = TenantContext.getTenantId() || this.cls.get('tenantId');
+    const isSuper = TenantContext.isSuperTenant() || false;
+    const isIgnore = TenantContext.isIgnoreTenant() || false;
+
+    if (isSuper || isIgnore || !tenantId) {
+      return {};
+    }
+
+    return { [this.tenantFieldName]: tenantId };
+  }
+
+  /**
+   * 合并查询条件，增加租户隔离
+   */
+  protected applyTenantFilter(where?: any): any {
+    const tenantWhere = this.getTenantWhere();
+    if (Object.keys(tenantWhere).length === 0) {
+      return where;
+    }
+    return { ...where, ...tenantWhere };
   }
 }
 

@@ -3,12 +3,13 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
-import { CommissionStatus, OrderType, ProductType, Prisma } from '@prisma/client';
+import { CommissionStatus, OrderType, ProductType, Prisma, TransType } from '@prisma/client';
 import { CommissionRepository } from './commission.repository';
 import { WalletRepository } from '../wallet/wallet.repository';
 import { TransactionRepository } from '../wallet/transaction.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { BusinessException } from 'src/common/exceptions';
+import { BusinessConstants } from 'src/common/constants/business.constants';
 
 /**
  * 佣金服务
@@ -58,12 +59,12 @@ export class CommissionService {
     if (!config) {
       // 返回默认配置（含跨店配置）
       return {
-        level1Rate: new Decimal(0.6), // 60%
-        level2Rate: new Decimal(0.4), // 40%
+        level1Rate: new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE),
+        level2Rate: new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL2_RATE),
         enableLV0: true,
         enableCrossTenant: false, // 默认不开启跨店
-        crossTenantRate: new Decimal(1.0), // 100% 无折扣
-        crossMaxDaily: new Decimal(500), // 日限额500
+        crossTenantRate: new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE),
+        crossMaxDaily: new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
       };
     }
 
@@ -71,8 +72,8 @@ export class CommissionService {
       ...config,
       // 确保新字段有默认值（兼容旧数据）
       enableCrossTenant: config.enableCrossTenant ?? false,
-      crossTenantRate: config.crossTenantRate ?? new Decimal(1.0),
-      crossMaxDaily: config.crossMaxDaily ?? new Decimal(500),
+      crossTenantRate: config.crossTenantRate ?? new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE),
+      crossMaxDaily: config.crossMaxDaily ?? new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
     };
   }
 
@@ -418,7 +419,7 @@ export class CommissionService {
   private calculateSettleTime(orderType: OrderType): Date {
     const now = new Date();
 
-    if (orderType === 'PRODUCT') {
+    if (orderType === OrderType.PRODUCT) {
       // 实物: T+14 (发货期7天 + 收货确认后7天)
       return new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
     } else {
@@ -453,10 +454,10 @@ export class CommissionService {
     const commissions = await this.commissionRepo.findMany({ where: { orderId } });
 
     for (const comm of commissions) {
-      if (comm.status === 'FROZEN') {
+      if (comm.status === CommissionStatus.FROZEN) {
         // 冻结中: 直接取消
-        await this.commissionRepo.update(comm.id, { status: 'CANCELLED' });
-      } else if (comm.status === 'SETTLED') {
+        await this.commissionRepo.update(comm.id, { status: CommissionStatus.CANCELLED });
+      } else if (comm.status === CommissionStatus.SETTLED) {
         // 已结算: 需要倒扣
         await this.rollbackCommission(comm);
       }
@@ -488,7 +489,7 @@ export class CommissionService {
     await this.transactionRepo.create({
       wallet: { connect: { id: wallet.id } },
       tenantId: commission.tenantId,
-      type: 'REFUND_DEDUCT',
+      type: TransType.REFUND_DEDUCT,
       amount: new Decimal(0).minus(commission.amount),
       balanceAfter: updatedWallet!.balance,
       relatedId: commission.orderId,
@@ -496,7 +497,7 @@ export class CommissionService {
     });
 
     // 更新佣金状态
-    await this.commissionRepo.update(commission.id, { status: 'CANCELLED' });
+    await this.commissionRepo.update(commission.id, { status: CommissionStatus.CANCELLED });
   }
 
   /**
@@ -527,7 +528,7 @@ export class CommissionService {
     await this.commissionRepo.updateMany(
       {
         orderId,
-        status: 'FROZEN',
+        status: CommissionStatus.FROZEN,
       },
       {
         planSettleTime,
@@ -595,7 +596,7 @@ export class CommissionService {
           gte: startOfDay,
         },
         status: {
-          not: 'CANCELLED',
+          not: CommissionStatus.CANCELLED,
         },
       },
       _sum: {

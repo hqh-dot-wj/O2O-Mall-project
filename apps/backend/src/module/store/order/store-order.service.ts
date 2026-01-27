@@ -22,7 +22,7 @@ export class StoreOrderService {
     private readonly prisma: PrismaService,
     private readonly orderRepo: StoreOrderRepository,
     private readonly commissionService: CommissionService,
-  ) {}
+  ) { }
 
   /**
    * 查询订单列表
@@ -233,8 +233,8 @@ export class StoreOrderService {
     const isSuper = TenantContext.isSuperTenant();
 
     const where: Prisma.OmsOrderWhereInput = {
-      orderType: 'SERVICE',
-      status: 'PAID',
+      orderType: OrderType.SERVICE,
+      status: OrderStatus.PAID,
       workerId: null,
       deleteTime: null,
     };
@@ -270,7 +270,7 @@ export class StoreOrderService {
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
-    BusinessException.throwIf(order!.status !== 'PAID' && order!.status !== 'SHIPPED', '订单状态不允许改派');
+    BusinessException.throwIf(order!.status !== OrderStatus.PAID && order!.status !== OrderStatus.SHIPPED, '订单状态不允许改派');
 
     // 验证技师存在
     const worker = await this.prisma.srvWorker.findFirst({
@@ -304,11 +304,11 @@ export class StoreOrderService {
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
-    BusinessException.throwIf(order!.status !== 'SHIPPED', '订单状态不允许核销');
+    BusinessException.throwIf(order!.status !== OrderStatus.SHIPPED, '订单状态不允许核销');
 
     // 更新订单状态为已完成
     await this.orderRepo.update(dto.orderId, {
-      status: 'COMPLETED',
+      status: OrderStatus.COMPLETED,
       remark: dto.remark ? `强制核销: ${dto.remark}` : '强制核销',
     });
 
@@ -335,13 +335,13 @@ export class StoreOrderService {
 
     // 简单校验
     BusinessException.throwIf(
-      order!.status === 'PENDING_PAY' || order!.status === 'CANCELLED' || order!.status === 'REFUNDED',
+      order!.status === OrderStatus.PENDING_PAY || order!.status === OrderStatus.CANCELLED || order!.status === OrderStatus.REFUNDED,
       '当前订单状态不可退款',
     );
 
     // 更新订单状态
     await this.orderRepo.update(orderId, {
-      status: 'REFUNDED',
+      status: OrderStatus.REFUNDED,
       remark: remark ? `退款: ${remark}` : '订单退款',
     });
 

@@ -26005,6 +26005,24 @@
             "schema": {
               "$ref": "#/components/schemas/DateRangeDto"
             }
+          },
+          {
+            "name": "nickname",
+            "required": false,
+            "in": "query",
+            "description": "会员昵称",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mobile",
+            "required": false,
+            "in": "query",
+            "description": "手机号",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -26012,9 +26030,9 @@
             "description": ""
           }
         },
-        "summary": "List Members",
+        "summary": "查询会员列表",
         "tags": [
-          "Admin-Member Management"
+          "会员管理"
         ]
       }
     },
@@ -26022,14 +26040,24 @@
       "put": {
         "operationId": "MemberController_updateReferrer",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferrerDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "Update Referrer (C1/C2)",
+        "summary": "更新推荐人 (C1/C2)",
         "tags": [
-          "Admin-Member Management"
+          "会员管理"
         ]
       }
     },
@@ -26037,14 +26065,24 @@
       "put": {
         "operationId": "MemberController_updateTenant",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberTenantDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "Update Tenant",
+        "summary": "变更会员归属租户",
         "tags": [
-          "Admin-Member Management"
+          "会员管理"
         ]
       }
     },
@@ -26052,14 +26090,24 @@
       "put": {
         "operationId": "MemberController_updateStatus",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "Update Status",
+        "summary": "更新会员状态",
         "tags": [
-          "Admin-Member Management"
+          "会员管理"
         ]
       }
     },
@@ -26067,14 +26115,24 @@
       "put": {
         "operationId": "MemberController_updateLevel",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberLevelDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "Update Level (Manual Adjustment)",
+        "summary": "手动调整会员等级",
         "tags": [
-          "Admin-Member Management"
+          "会员管理"
         ]
       }
     },
@@ -41803,6 +41861,74 @@
         "required": [
           "uploadId",
           "fileName"
+        ]
+      },
+      "UpdateReferrerDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "会员 ID"
+          },
+          "referrerId": {
+            "type": "string",
+            "description": "推荐人 ID"
+          }
+        },
+        "required": [
+          "memberId",
+          "referrerId"
+        ]
+      },
+      "UpdateMemberTenantDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "会员 ID"
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "租户 ID"
+          }
+        },
+        "required": [
+          "memberId",
+          "tenantId"
+        ]
+      },
+      "UpdateMemberStatusDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "会员 ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "状态 (0: 正常, 1: 禁用)"
+          }
+        },
+        "required": [
+          "memberId",
+          "status"
+        ]
+      },
+      "UpdateMemberLevelDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "会员 ID"
+          },
+          "levelId": {
+            "type": "number",
+            "description": "目标等级 (0: 普通, 1: C1, 2: C2)"
+          }
+        },
+        "required": [
+          "memberId",
+          "levelId"
         ]
       },
       "ApproveUpgradeDto": {

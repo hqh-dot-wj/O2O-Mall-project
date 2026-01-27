@@ -1,9 +1,18 @@
 import { Module } from '@nestjs/common';
-import { MemberService } from './member.service';
 import { MemberController } from './member.controller';
+import { MemberService } from './member.service';
+import { MemberRepository } from './member.repository';
+import { MemberStatsService } from './services/member-stats.service';
+import { MemberReferralService } from './services/member-referral.service';
 
 @Module({
   controllers: [MemberController],
-  providers: [MemberService],
+  providers: [
+    MemberService,
+    MemberRepository,
+    MemberStatsService,
+    MemberReferralService,
+  ],
+  exports: [MemberService, MemberRepository],
 })
-export class MemberModule {}
+export class MemberModule { }

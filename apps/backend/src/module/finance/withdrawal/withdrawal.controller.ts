@@ -11,7 +11,7 @@ import { TenantContext } from 'src/common/tenant';
 @ApiTags('财务管理-提现管理')
 @Controller('finance/withdrawal')
 export class WithdrawalController {
-  constructor(private readonly withdrawalService: WithdrawalService) {}
+  constructor(private readonly withdrawalService: WithdrawalService) { }
 
   @Get('list')
   @Api({ summary: '查询提现列表', type: WithdrawalVo })
@@ -21,7 +21,7 @@ export class WithdrawalController {
     const currentUserTenantId = user.user?.tenantId || TenantContext.SUPER_TENANT_ID;
 
     // 2. 判断是否为超级租户 (HQ)
-    const isSuperTenant = currentUserTenantId === TenantContext.SUPER_TENANT_ID;
+    const isSuperTenant = TenantContext.isSuperTenant();
 
     // 3. 构建最终查询 tenantId
     let targetTenantId = currentUserTenantId;

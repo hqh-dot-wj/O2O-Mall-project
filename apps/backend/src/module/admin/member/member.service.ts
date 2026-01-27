@@ -2,123 +2,87 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberVo } from './vo/member.vo';
 import { Result } from 'src/common/response';
-import { PageQueryDto } from 'src/common/dto/base.dto';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { Prisma } from '@prisma/client';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { BusinessException } from 'src/common/exceptions';
+import { FormatDateFields } from 'src/common/utils';
+import { MemberRepository } from './member.repository';
+import { MemberStatsService } from './services/member-stats.service';
+import { MemberReferralService } from './services/member-referral.service';
+import { ListMemberDto, UpdateMemberStatusDto, UpdateMemberLevelDto, UpdateReferrerDto, UpdateMemberTenantDto } from './dto';
+import { MemberLevel, MemberLevelNameMap, MemberStatus, MemberStatusMap } from './member.constant';
 
+/**
+ * 会员管理服务 (Member Service)
+ * 作为门面层 (Facade) 协调各子服务处理会员基础信息、统计及推荐关系
+ */
 @Injectable()
 export class MemberService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly memberRepo: MemberRepository,
+    private readonly memberStatsService: MemberStatsService,
+    private readonly memberReferralService: MemberReferralService,
+  ) { }
 
   /**
-   * List members with pagination and search
+   * 分页查询会员列表
+   * 聚合上级信息、间接上级信息以及消费/佣金统计数据
+   * @param query 查询参数
    */
-  async list(page: PageQueryDto, query?: { nickname?: string; mobile?: string }) {
-    const where: any = {};
+  async list(query: ListMemberDto) {
+    const where: Prisma.UmsMemberWhereInput = {};
 
-    // Tenant Filter
+    // 租户过滤 (数据隔离)
     const tenantId = TenantContext.getTenantId();
     if (tenantId && tenantId !== TenantContext.SUPER_TENANT_ID) {
       where.tenantId = tenantId;
     }
 
-    if (query?.nickname) {
+    if (query.nickname) {
       where.nickname = { contains: query.nickname };
     }
-    if (query?.mobile) {
+    if (query.mobile) {
       where.mobile = { contains: query.mobile };
     }
 
+    // 1. 查询基础会员列表
     const [total, list] = await Promise.all([
-      this.prisma.umsMember.count({ where }),
-      this.prisma.umsMember.findMany({
+      this.memberRepo.count(where),
+      this.memberRepo.findMany({
         where,
-        skip: (page.pageNum - 1) * page.pageSize,
-        take: page.pageSize,
+        skip: query.skip,
+        take: query.take,
         orderBy: { createTime: 'desc' },
-        include: {
-          // Join Referral (Member)
-          // Self-relation in Prisma can be tricky, assuming 'referrer' relation doesn't exist in schema yet or named differently?
-          // Checking schema: referrerId String?, but NO relation defined to UmsMember in schema provided earlier!
-          // We must fetch manually or rely on raw query if performance needed, but for now loop fetch or limited include if relation exists.
-          // Wait, schema said: referrerId String? @map("referrer_id") // 谁推荐我进来的
-          // But NO @relation field back to UmsMember.
-          // We will have to manual fetch referrers.
-        },
       }),
     ]);
 
-    // Collect TenantIDs and ParentIDs (C1/C2)
-    const tenantIds = [...new Set(list.map((item) => item.tenantId).filter((id) => id !== '000000'))];
-    const parentIds = [...new Set(list.map((item) => item.parentId).filter(Boolean))] as string[];
+    if (list.length === 0) return Result.page([], total);
 
-    // Bulk fetch Tenants
-    const tenants = await this.prisma.sysTenant.findMany({
-      where: { tenantId: { in: tenantIds } },
-      select: { tenantId: true, companyName: true },
-    });
-    const tenantMap = new Map(tenants.map((t) => [t.tenantId, t.companyName]));
-
-    // Bulk fetch Parents (C1/C2)
-    const parents = await this.prisma.umsMember.findMany({
-      where: { memberId: { in: parentIds } },
-      select: { memberId: true, nickname: true, mobile: true, parentId: true },
-    });
-    const parentMap = new Map(parents.map((r) => [r.memberId, r]));
-
-    // Collect Indirect ParentIDs (C2)
-    const indirectParentIds = [...new Set(parents.map((item) => item.parentId).filter(Boolean))] as string[];
-
-    // Bulk fetch Indirect Parents
-    const indirectParents = await this.prisma.umsMember.findMany({
-      where: { memberId: { in: indirectParentIds } },
-      select: { memberId: true, nickname: true, mobile: true },
-    });
-    const indirectParentMap = new Map(indirectParents.map((r) => [r.memberId, r]));
-
-    // Collect MemberIDs for stats
-    const memberIds = list.map((m) => m.memberId);
-
-    // Bulk fetch stats (Consumption & Commission)
-    const [consumptions, commissions] = await Promise.all([
-      // Total Paid Orders Amount
-      this.prisma.omsOrder.groupBy({
-        by: ['memberId'],
-        where: {
-          memberId: { in: memberIds },
-          payStatus: 'PAID',
-        },
-        _sum: { payAmount: true },
-      }),
-      // Total Commission Amount
-      this.prisma.finCommission.groupBy({
-        by: ['beneficiaryId'],
-        where: {
-          beneficiaryId: { in: memberIds },
-          // status: 'SETTLED' // Should we include FROZEN? Usually total earnings include everything. Let's include everything for now.
-        },
-        _sum: { amount: true },
-      }),
+    // 2. 批量获取关联数据 (子服务处理)
+    const memberIds = list.map((m: any) => m.memberId);
+    const [referralInfo, stats, tenantMap] = await Promise.all([
+      this.memberReferralService.getBatchReferralInfo(list),
+      this.memberStatsService.getBatchStats(memberIds),
+      this.getTenantMap(list),
     ]);
 
-    const consumptionMap = new Map(consumptions.map((c) => [c.memberId, c._sum.payAmount || new Prisma.Decimal(0)]));
-    const commissionMap = new Map(commissions.map((c) => [c.beneficiaryId, c._sum.amount || new Prisma.Decimal(0)]));
-
-    // Map to VO
-    const rows: MemberVo[] = list.map((item) => {
-      const parent = item.parentId ? parentMap.get(item.parentId) : null;
+    // 3. 组装 VO (View Object)
+    const rows: MemberVo[] = list.map((item: any) => {
+      const parent = item.parentId ? referralInfo.parentMap.get(item.parentId) : null;
       const indirectParentId = item.indirectParentId || parent?.parentId;
-      const indirectParent = indirectParentId ? indirectParentMap.get(indirectParentId) : null;
+      const indirectParent = indirectParentId ? referralInfo.indirectParentMap.get(indirectParentId) : null;
 
       return {
         memberId: item.memberId,
         nickname: item.nickname,
         avatar: item.avatar,
         mobile: item.mobile,
-        status: item.status === 'NORMAL' ? '0' : '1', // Map Enum: NORMAL->0 (enabled), DISABLED->1 (disabled)
+        status: MemberStatusMap[item.status as MemberStatus] || '0',
         createTime: item.createTime,
         tenantId: item.tenantId,
-        tenantName: tenantMap.get(item.tenantId) || 'Platform',
+        tenantName: tenantMap.get(item.tenantId) || '平台',
         referrerId: item.parentId || undefined,
         referrerName: parent?.nickname,
         referrerMobile: parent?.mobile,
@@ -126,119 +90,96 @@ export class MemberService {
         indirectReferrerName: indirectParent?.nickname,
         indirectReferrerMobile: indirectParent?.mobile,
         balance: Number(item.balance),
-        commission: Number(commissionMap.get(item.memberId) || 0),
-        totalConsumption: Number(consumptionMap.get(item.memberId) || 0),
-        orderCount: 0,
+        commission: Number(stats.commissionMap.get(item.memberId) || 0),
+        totalConsumption: Number(stats.consumptionMap.get(item.memberId) || 0),
+        orderCount: 0, // 预留字段
         levelId: item.levelId,
-        levelName: item.levelId === 0 ? 'Member' : item.levelId === 1 ? 'Captain' : item.levelId === 2 ? 'Shareholder' : 'Unknown', // Simple hardcode map for now
+        levelName: MemberLevelNameMap[item.levelId as MemberLevel] || '未知',
       };
     });
 
-    return Result.ok({
-      rows,
-      total,
-    });
+    return Result.page(FormatDateFields(rows), total);
   }
 
   /**
-   * Update Member Level
-   * 规则：
-   * - 升级到 C2 (levelId=2)：清空 parentId/indirectParentId，因为 C2 是顶级分销员
-   * - 升级到 C1 (levelId=1) 且跨店：清空 parentId/indirectParentId
-   * - 升级到 C1 (levelId=1) 同店：保留原有推荐关系
+   * 获取租户 ID 到名称的映射
    */
-  async updateLevel(memberId: string, levelId: number) {
-    // 获取当前用户信息
-    const member = await this.prisma.umsMember.findUnique({
-      where: { memberId },
-      select: { tenantId: true, parentId: true },
+  private async getTenantMap(list: any[]) {
+    const tenantIds = [...new Set(list.map((item) => item.tenantId).filter((id) => id !== '000000'))];
+    const tenants = await this.prisma.sysTenant.findMany({
+      where: { tenantId: { in: tenantIds } },
+      select: { tenantId: true, companyName: true },
     });
-    if (!member) return Result.fail(500, 'Member not found');
+    return new Map(tenants.map((t) => [t.tenantId, t.companyName]));
+  }
 
-    const data: any = { levelId };
+  /**
+   * 更新会员等级
+   * 包含 C1/C2 级推荐关系重置逻辑
+   */
+  @Transactional()
+  async updateLevel(dto: UpdateMemberLevelDto) {
+    const { memberId, levelId } = dto;
+    const member = await this.memberRepo.findById(memberId);
+    BusinessException.throwIfNull(member, '会员不存在');
 
-    // 升级到 C2 时，必须清空推荐关系（C2 是顶级）
-    if (levelId === 2) {
-      data.parentId = null;
-      data.indirectParentId = null;
+    const updateData: Prisma.UmsMemberUpdateInput = { levelId };
+
+    // 升级规则：
+    // - 升级到 C2 (股东)：重置所有推荐关系 (股东为顶级)
+    if (levelId === MemberLevel.SHAREHOLDER) {
+      Object.assign(updateData, { parentId: null, indirectParentId: null });
     }
-    // 升级到 C1 时，检查是否跨店
-    else if (levelId === 1 && member.parentId) {
-      const parent = await this.prisma.umsMember.findUnique({
-        where: { memberId: member.parentId },
-        select: { tenantId: true },
-      });
-      // 跨店升级：清空推荐关系
+    // - 升级到 C1 (团长)：如果存在跨店推荐，则重置关系
+    else if (levelId === MemberLevel.CAPTAIN && member.parentId) {
+      const parent = await this.memberRepo.findById(member.parentId);
       if (parent && parent.tenantId !== member.tenantId) {
-        data.parentId = null;
-        data.indirectParentId = null;
+        Object.assign(updateData, { parentId: null, indirectParentId: null });
       }
-      // 同店升级：保留推荐关系，不做任何操作
     }
 
-    await this.prisma.umsMember.update({
-      where: { memberId },
-      data,
-    });
-    return Result.ok();
+    await this.memberRepo.update(memberId, updateData);
+    return Result.ok(null, '等级调整成功');
   }
 
   /**
-   * Update Member Parent (C1/C2)
+   * 手动更新会员推荐人 (C1/C2)
    */
-  async updateParent(memberId: string, parentId: string) {
-    if (memberId === parentId) {
-      return Result.fail(500, 'Cannot refer self');
-    }
+  @Transactional()
+  async updateParent(dto: UpdateReferrerDto) {
+    const { memberId, referrerId } = dto;
 
-    let indirectParentId: string | null = null;
+    // 校验并计算间接推荐人 (由子服务处理)
+    const indirectParentId = await this.memberReferralService.validateAndGetIndirectParent(memberId, referrerId);
 
-    // Check if parent exists and determine indirect parent
-    if (parentId) {
-      const parent = await this.prisma.umsMember.findUnique({ where: { memberId: parentId } });
-      if (!parent) return Result.fail(500, 'Parent not found');
-      if (parent.levelId < 1) return Result.fail(500, 'Parent must be C1 or C2');
+    await this.memberRepo.update(memberId, {
+      parentId: referrerId || null,
+      indirectParentId: indirectParentId || null,
+    } as any);
 
-      // If parent is C1 (level 1), then indirect parent is parent's parent (C2)
-      if (parent.levelId === 1) {
-        indirectParentId = parent.parentId;
-      }
-      // If parent is C2 (level 2), indirect parent is null (this member is directly under C2)
-    }
-
-    await this.prisma.umsMember.update({
-      where: { memberId },
-      data: {
-        parentId: parentId || null,
-        indirectParentId: indirectParentId || null,
-      },
-    });
-    return Result.ok();
+    return Result.ok(null, '推荐关系更新成功');
   }
 
   /**
-   * Update Member Tenant
+   * 变更会员所属租户 (归属门店)
    */
-  async updateTenant(memberId: string, tenantId: string) {
-    // Check tenant existence
+  async updateTenant(dto: UpdateMemberTenantDto) {
+    const { memberId, tenantId } = dto;
     const tenant = await this.prisma.sysTenant.findUnique({ where: { tenantId } });
-    if (!tenant) return Result.fail(500, 'Tenant not found');
+    BusinessException.throwIfNull(tenant, '目标租户不存在');
 
-    await this.prisma.umsMember.update({
-      where: { memberId },
-      data: { tenantId },
-    });
-    return Result.ok();
+    await this.memberRepo.update(memberId, { tenantId });
+    return Result.ok(null, '租户变更成功');
   }
 
   /**
-   * Update Member Status
+   * 更新会员账户状态
    */
-  async updateStatus(memberId: string, status: string) {
-    await this.prisma.umsMember.update({
-      where: { memberId },
-      data: { status: status === '0' ? 'NORMAL' : 'DISABLED' },
-    });
-    return Result.ok();
+  async updateStatus(dto: UpdateMemberStatusDto) {
+    const { memberId, status } = dto;
+    const dbStatus = status === '0' ? MemberStatus.NORMAL : MemberStatus.DISABLED;
+
+    await this.memberRepo.update(memberId, { status: dbStatus });
+    return Result.ok(null, '状态更新成功');
   }
 }
