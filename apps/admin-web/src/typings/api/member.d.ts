@@ -20,6 +20,8 @@ declare namespace Api {
       commission: number;
       totalConsumption: number;
       orderCount: number;
+      levelId: number;
+      levelName: string;
     }
 
     /** Search Params */
@@ -30,7 +32,7 @@ declare namespace Api {
     }
 
     /** List Response */
-    interface MemberList extends Common.PaginatingQueryRecord<Member> {}
+    interface MemberList extends Common.PaginatingQueryRecord<Member> { }
 
     /** Update Referrer Params */
     interface UpdateReferrerParams {

@@ -27,7 +27,7 @@ export class CommissionService {
     private readonly walletRepo: WalletRepository,
     private readonly transactionRepo: TransactionRepository,
     @InjectQueue('CALC_COMMISSION') private readonly commissionQueue: Queue,
-  ) {}
+  ) { }
 
   /**
    * 触发佣金计算 (异步任务)
@@ -440,7 +440,6 @@ export class CommissionService {
             nickname: true,
             avatar: true,
             mobile: true,
-            referrerId: true,
           },
         },
       },

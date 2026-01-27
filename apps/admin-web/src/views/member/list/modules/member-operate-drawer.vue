@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
-import { fetchUpdateMemberReferrer, fetchUpdateMemberTenant } from '@/service/api/member';
+import { fetchUpdateMemberLevel, fetchUpdateMemberReferrer, fetchUpdateMemberTenant } from '@/service/api/member';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
@@ -10,7 +10,7 @@ defineOptions({
 
 interface Props {
   /** the type of operation */
-  operateType: 'editReferrer' | 'editTenant';
+  operateType: 'editReferrer' | 'editTenant' | 'editLevel';
   /** the edit row data */
   rowData?: Api.Member.Member | null;
 }
@@ -32,12 +32,14 @@ const { defaultRequiredRule } = useFormRules();
 
 const title = computed(() => {
   if (props.operateType === 'editReferrer') return $t('page.member.editReferrer');
+  if (props.operateType === 'editLevel') return $t('page.member.editLevel') || 'Edit Level'; // fallback if locale missing
   return $t('page.member.editTenant');
 });
 
 type Model = {
   referrerId: string;
   tenantId: string;
+  levelId: number;
 };
 
 const model = reactive<Model>(createDefaultModel());
@@ -45,7 +47,8 @@ const model = reactive<Model>(createDefaultModel());
 function createDefaultModel(): Model {
   return {
     referrerId: '',
-    tenantId: ''
+    tenantId: '',
+    levelId: 0
   };
 }
 
@@ -57,6 +60,7 @@ function handleInitModel() {
   if (props.rowData) {
     model.referrerId = props.rowData.referrerId || '';
     model.tenantId = props.rowData.tenantId || '';
+    model.levelId = props.rowData.levelId ?? 0;
   }
 }
 
@@ -84,6 +88,13 @@ async function handleSubmit() {
       closeDrawer();
       emit('submitted');
     }
+  } else if (props.operateType === 'editLevel') {
+    if (props.rowData?.memberId) {
+      await fetchUpdateMemberLevel({ memberId: props.rowData.memberId, levelId: Number(model.levelId) });
+      window.$message?.success($t('page.member.confirm.updateSuccess'));
+      closeDrawer();
+      emit('submitted');
+    }
   }
 }
 
@@ -101,6 +112,16 @@ function closeDrawer() {
         </NFormItem>
         <NFormItem v-if="operateType === 'editTenant'" :label="$t('page.member.form.tenantId')" path="tenantId">
           <NInput v-model:value="model.tenantId" :placeholder="$t('page.member.form.tenantId')" />
+        </NFormItem>
+        <NFormItem v-if="operateType === 'editLevel'" label="Level" path="levelId">
+          <NSelect
+            v-model:value="model.levelId"
+            :options="[
+              { label: 'Member (C)', value: 0 },
+              { label: 'Captain (C1)', value: 1 },
+              { label: 'Shareholder (C2)', value: 2 }
+            ]"
+          />
         </NFormItem>
       </NForm>
       <template #footer>

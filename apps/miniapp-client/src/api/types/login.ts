@@ -103,6 +103,7 @@ export function isDoubleTokenRes(tokenRes: IAuthLoginRes): tokenRes is IDoubleTo
 export interface ICheckLoginRes {
   isRegistered: boolean
   token?: string
+  expiresIn?: number // 后端返回的过期时间（秒）
   userInfo?: IUserInfoRes
 }
 

@@ -24,6 +24,9 @@ const NICKNAME_POOL = [
   '勤劳的蜜蜂',
 ]
 
+// 分享归因过期时间（1天，毫秒）
+const SHARE_USER_EXPIRE_MS = 24 * 60 * 60 * 1000
+
 export const useAuthStore = defineStore(
   'auth',
   () => {
@@ -80,22 +83,46 @@ export const useAuthStore = defineStore(
       return tempNickname.value
     }
 
-    // 设置分享归因
+    // 设置分享归因（带过期时间）
     function setShareUserId(id: string) {
       shareUserId.value = id
+      const expireTime = Date.now() + SHARE_USER_EXPIRE_MS
       uni.setStorageSync('share_user_id', id)
+      uni.setStorageSync('share_user_expire', expireTime)
     }
 
-    // 获取分享归因 (优先内存，其次 storage)
+    // 获取分享归因 (检查过期)
     function getShareUserId(): string | null {
-      if (shareUserId.value)
-        return shareUserId.value
+      if (shareUserId.value) {
+        // 检查内存中的值是否过期
+        const expireTime = uni.getStorageSync('share_user_expire')
+        if (expireTime && Date.now() < expireTime) {
+          return shareUserId.value
+        }
+        // 已过期，清除
+        clearShareUserId()
+        return null
+      }
+
       const stored = uni.getStorageSync('share_user_id')
-      if (stored) {
+      const expireTime = uni.getStorageSync('share_user_expire')
+
+      // 检查是否过期
+      if (stored && expireTime && Date.now() < expireTime) {
         shareUserId.value = stored
         return stored
       }
+
+      // 过期则清除
+      clearShareUserId()
       return null
+    }
+
+    // 清除分享归因
+    function clearShareUserId() {
+      shareUserId.value = null
+      uni.removeStorageSync('share_user_id')
+      uni.removeStorageSync('share_user_expire')
     }
 
     // 需要登录时的检查 (如未登录弹出授权弹窗)
@@ -121,6 +148,7 @@ export const useAuthStore = defineStore(
       generateRandomNickname,
       setShareUserId,
       getShareUserId,
+      clearShareUserId,
       requireAuth,
     }
   },

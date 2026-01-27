@@ -7,7 +7,7 @@ import { Result } from 'src/common/response';
 @ApiTags('Admin-Member Management')
 @Controller('admin/member')
 export class MemberController {
-  constructor(private readonly memberService: MemberService) {}
+  constructor(private readonly memberService: MemberService) { }
 
   @ApiOperation({ summary: 'List Members' })
   @Get('list')
@@ -15,10 +15,10 @@ export class MemberController {
     return this.memberService.list(page, query);
   }
 
-  @ApiOperation({ summary: 'Update Parent (C1/C2)' })
-  @Put('parent')
-  async updateParent(@Body() body: { memberId: string; parentId: string }) {
-    return this.memberService.updateParent(body.memberId, body.parentId);
+  @ApiOperation({ summary: 'Update Referrer (C1/C2)' })
+  @Put('referrer')
+  async updateReferrer(@Body() body: { memberId: string; referrerId: string }) {
+    return this.memberService.updateParent(body.memberId, body.referrerId);
   }
 
   @ApiOperation({ summary: 'Update Tenant' })
@@ -31,5 +31,11 @@ export class MemberController {
   @Put('status')
   async updateStatus(@Body() body: { memberId: string; status: string }) {
     return this.memberService.updateStatus(body.memberId, body.status);
+  }
+
+  @ApiOperation({ summary: 'Update Level (Manual Adjustment)' })
+  @Put('level')
+  async updateLevel(@Body() body: { memberId: string; levelId: number }) {
+    return this.memberService.updateLevel(body.memberId, body.levelId);
   }
 }

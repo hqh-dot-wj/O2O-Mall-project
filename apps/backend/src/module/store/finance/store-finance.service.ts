@@ -26,7 +26,7 @@ export class StoreFinanceService {
     private readonly commissionRepo: CommissionRepository,
     private readonly withdrawalRepo: WithdrawalRepository,
     private readonly transactionRepo: TransactionRepository,
-  ) {}
+  ) { }
 
   /**
    * 获取资金看板数据
@@ -234,27 +234,33 @@ export class StoreFinanceService {
     }
 
     // 1. 查询订单收入 (OmsOrder)
-    const orderWhere: Prisma.OmsOrderWhereInput = {
+    // 注意：如果指定了 memberId，我们通常只展示该会员的钱包流水（佣金、提现、消费等），
+    // 订单收入是站在租户角度看的，对于会员个人详情页来说，"订单收入"容易产生误解（实际是其消费），且已有订单记录Tab展示这类数据。
+    const shouldIncludeOrders = !query.memberId;
+    const orderWhere: Prisma.OmsOrderWhereInput = shouldIncludeOrders ? {
       tenantId,
       payStatus: 'PAID',
       createTime: timeFilter,
-    };
+    } : null;
 
-    if (query.memberId) {
-      orderWhere.memberId = query.memberId;
-    }
-
-    // 2. 查询钱包流水 (FinTransaction)
+    // 2. 查询钱包流水 (FinTransaction) - 排除 COMMISSION_IN 避免与佣金表重复
     const transWhere: Prisma.FinTransactionWhereInput = {
       tenantId,
       createTime: timeFilter,
+      // 排除 COMMISSION_IN，因为佣金会从 FinCommission 表单独查询
+      type: { not: 'COMMISSION_IN' },
     };
 
     if (query.memberId) {
       transWhere.wallet = { memberId: query.memberId };
     }
     if (query.type) {
-      transWhere.type = query.type as TransType;
+      // 如果筛选类型是 COMMISSION_IN，则不需要查 FinTransaction
+      if (query.type === 'COMMISSION_IN') {
+        transWhere.id = { equals: -1 }; // 不可能条件，使查询结果为空
+      } else {
+        transWhere.type = query.type as TransType;
+      }
     }
 
     // 3. 查询提现支出 (FinWithdrawal) - 仅查询已打款
@@ -268,12 +274,24 @@ export class StoreFinanceService {
       withdrawWhere.memberId = query.memberId;
     }
 
+    // 4. 查询佣金记录 (FinCommission) - 包含待结算和已结算
+    const commissionWhere: Prisma.FinCommissionWhereInput = {
+      tenantId,
+      createTime: timeFilter,
+    };
+
+    if (query.memberId) {
+      commissionWhere.beneficiaryId = query.memberId;
+    }
+    // 如果筛选类型不是 COMMISSION_IN 且有指定类型，则不查询佣金
+    const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
+
     // 获取所需数量 (为了做内存排序分页，需获取 skip + take 的数据量)
     const fetchCount = query.skip + query.take;
 
-    const [orders, transactions, withdrawals, orderCount, transCount, withdrawCount] = await Promise.all([
+    const [orders, transactions, withdrawals, commissions, orderCount, transCount, withdrawCount, commissionCount] = await Promise.all([
       // 订单
-      this.storeOrderRepo.findMany({
+      shouldIncludeOrders ? this.storeOrderRepo.findMany({
         where: orderWhere,
         select: {
           id: true,
@@ -285,8 +303,8 @@ export class StoreFinanceService {
         },
         take: fetchCount,
         orderBy: { createTime: 'desc' },
-      }),
-      // 钱包流水
+      }) : Promise.resolve([]),
+      // 钱包流水 (排除 COMMISSION_IN)
       this.transactionRepo.findMany({
         where: transWhere,
         include: {
@@ -312,10 +330,21 @@ export class StoreFinanceService {
         take: fetchCount,
         orderBy: { createTime: 'desc' },
       }),
+      // 佣金
+      shouldIncludeCommissions ? this.commissionRepo.findMany({
+        where: commissionWhere,
+        include: {
+          beneficiary: { select: { nickname: true, mobile: true } },
+          order: { select: { orderSn: true } },
+        },
+        take: fetchCount,
+        orderBy: { createTime: 'desc' },
+      }) : Promise.resolve([]),
       // 计数
-      this.storeOrderRepo.count(orderWhere),
+      shouldIncludeOrders ? this.storeOrderRepo.count(orderWhere) : Promise.resolve(0),
       this.transactionRepo.count(transWhere),
       this.withdrawalRepo.count(withdrawWhere),
+      shouldIncludeCommissions ? this.commissionRepo.count(commissionWhere) : Promise.resolve(0),
     ]);
 
     // --- 数据增强：查询订单的分佣信息 ---
@@ -323,7 +352,7 @@ export class StoreFinanceService {
     const commissionMap = new Map<string, any>(); // orderId -> { referrer: {...}, indirectReferrer: {...} }
 
     if (orderIds.length > 0) {
-      const commissions = await this.commissionRepo.findMany({
+      const orderCommissions = await this.commissionRepo.findMany({
         where: {
           orderId: { in: orderIds },
           tenantId,
@@ -336,7 +365,7 @@ export class StoreFinanceService {
       });
 
       // 组装分佣信息
-      commissions.forEach((c: any) => {
+      orderCommissions.forEach((c: any) => {
         const orderId = c.orderId;
         if (!commissionMap.has(orderId)) {
           commissionMap.set(orderId, {});
@@ -404,6 +433,24 @@ export class StoreFinanceService {
           mobile: w.member?.mobile || '',
         },
       })),
+      // 佣金记录（待结算+已结算）
+      ...commissions.map((c: any) => ({
+        id: `commission-${c.id}`,
+        type: 'COMMISSION_IN',
+        typeName: c.status === 'FROZEN' ? '佣金待结算' : '佣金已入账',
+        amount: Number(c.amount),
+        balanceAfter: 0, // 佣金记录无余额快照
+        relatedId: c.order?.orderSn || c.orderId,
+        remark: c.status === 'FROZEN'
+          ? `订单${c.order?.orderSn || c.orderId}佣金（待结算）`
+          : `订单${c.order?.orderSn || c.orderId}佣金已入账`,
+        createTime: c.createTime,
+        status: c.status, // 额外字段，便于前端区分
+        user: {
+          nickname: c.beneficiary?.nickname || '未知',
+          mobile: c.beneficiary?.mobile || '',
+        },
+      })),
     ];
 
     // 内存排序
@@ -412,7 +459,7 @@ export class StoreFinanceService {
     // 分页切片
     const pagedList = unifiedList.slice(query.skip, query.skip + query.take);
 
-    return Result.page(FormatDateFields(pagedList), orderCount + transCount + withdrawCount);
+    return Result.page(FormatDateFields(pagedList), orderCount + transCount + withdrawCount + commissionCount);
   }
 
   private getTransTypeName(type: string): string {

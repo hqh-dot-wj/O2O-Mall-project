@@ -7,6 +7,8 @@ import { ApplyUpgradeDto } from './dto/upgrade.dto';
 import { ReferralCodeVo, TeamStatsVo, UpgradeApplyVo } from './vo/upgrade.vo';
 import { Prisma } from '@prisma/client';
 import { nanoid } from 'nanoid';
+import { WechatService } from '../common/service/wechat.service';
+import { UploadService } from 'src/module/admin/upload/upload.service';
 
 /**
  * C端会员升级服务
@@ -16,7 +18,12 @@ import { nanoid } from 'nanoid';
 export class UpgradeService {
   private readonly logger = new Logger(UpgradeService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly wechatService: WechatService,
+    private readonly uploadService: UploadService,
+  ) { }
+
 
   /**
    * 申请升级 (通过扫描推荐码)
@@ -173,7 +180,7 @@ export class UpgradeService {
   }
 
   /**
-   * 生成推荐码 (带租户前缀)
+   * 生成推荐码 (带租户前缀) + 小程序码
    */
   private async generateReferralCode(memberId: string, tenantId: string) {
     // 格式: T001-XXXX (租户前缀 + 随机码)
@@ -181,11 +188,47 @@ export class UpgradeService {
     const randomPart = nanoid(4).toUpperCase();
     const code = `${prefix}-${randomPart}`;
 
+    let qrCodeUrl: string | null = null;
+
+    // 生成小程序码
+    try {
+      const scene = `code=${code}`;
+      const qrBuffer = await this.wechatService.getWxaCodeUnlimited(scene, {
+        page: 'pages/upgrade/referral-code', // 小程序页面路径
+        width: 430,
+        envVersion: 'release',
+      });
+
+      if (qrBuffer) {
+        // 上传小程序码图片
+        const mockFile: Express.Multer.File = {
+          originalname: `referral_${code}.png`,
+          buffer: qrBuffer,
+          size: qrBuffer.length,
+          mimetype: 'image/png',
+          fieldname: 'file',
+          encoding: '7bit',
+          destination: '',
+          filename: '',
+          path: '',
+          stream: null as any,
+        };
+
+        const uploadResult = await this.uploadService.singleFileUpload(mockFile);
+        qrCodeUrl = uploadResult.url;
+        this.logger.log(`为会员 ${memberId} 生成小程序码: ${qrCodeUrl}`);
+      }
+    } catch (error) {
+      this.logger.error(`生成小程序码失败: ${error.message}`);
+      // 小程序码生成失败不影响推荐码创建
+    }
+
     const record = await this.prisma.umsReferralCode.create({
       data: {
         tenantId,
         memberId,
         code,
+        qrCodeUrl,
         isActive: true,
       },
     });
@@ -193,6 +236,7 @@ export class UpgradeService {
     this.logger.log(`为会员 ${memberId} 生成推荐码: ${code}`);
     return record;
   }
+
 
   /**
    * 获取团队统计

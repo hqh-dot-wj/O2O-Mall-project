@@ -20,18 +20,25 @@ import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
 
+// Token 刷新并发锁
+let isRefreshing = false
+let refreshPromise: Promise<string> | null = null
+
+// 默认过期时间（秒）- 仅作为后端未返回时的兜底
+const DEFAULT_EXPIRES_IN = 60 * 60 * 24 // 1 天
+
 // 初始化状态
 const tokenInfoState = isDoubleTokenMode
   ? {
-      accessToken: '',
-      accessExpiresIn: 0,
-      refreshToken: '',
-      refreshExpiresIn: 0,
-    }
+    accessToken: '',
+    accessExpiresIn: 0,
+    refreshToken: '',
+    refreshExpiresIn: 0,
+  }
   : {
-      token: '',
-      expiresIn: 0,
-    }
+    token: '',
+    expiresIn: 0,
+  }
 
 export const useTokenStore = defineStore(
   'token',
@@ -189,22 +196,10 @@ export const useTokenStore = defineStore(
 
         // 2. 如果已注册，直接登录
         if (res.isRegistered && res.token) {
-          // 构造 IAuthLoginRes
-          const loginRes: IAuthLoginRes = {
-            token: res.token,
-            expiresIn: 7200, // 假设默认过期时间，或者后端返回
-            // 注意: 后端 check-login 返回的 format 可能需要适配
-            // 这里假设后端 checkLogin 返回的 token 是 string。
-            // 实际上 checkLogin 返回的是 Result.ok({ isRegistered: true, token, userInfo })
-            // 我们的 http 拦截器已经解包了 Result.data
-          }
-          // 修正：后端 check-login 返回结构是 { isRegistered, token, userInfo }
-          // 但是 setTokenInfo 需要 { token, expiresIn } (单token) 或双token结构
-          // 我们需要确认 genToken 返回的是什么。AuthService.genToken 返回的是 string。
-          // 所以我们需要手动构造一个符合 ISingleTokenRes 的对象
+          // 使用后端返回的 expiresIn，如无则使用默认值
           const authRes: ISingleTokenRes = {
             token: res.token,
-            expiresIn: 60 * 60 * 24 * 7, // 默认7天，或者从配置读取
+            expiresIn: res.expiresIn || DEFAULT_EXPIRES_IN,
           }
           await _postLogin(authRes)
           uni.showToast({ title: '登录成功', icon: 'success' })
@@ -229,10 +224,10 @@ export const useTokenStore = defineStore(
       try {
         const res = await _mobileLogin(params)
         console.log('手机号登录-res:', res)
-        // 后端可能未返回 expiresIn，手动补全以确保持久化逻辑正常
+        // 使用后端返回的 expiresIn，如无则使用默认值
         const authRes: IAuthLoginRes = {
           ...res,
-          expiresIn: 60 * 60 * 24 * 7,
+          expiresIn: (res as any).expiresIn || DEFAULT_EXPIRES_IN,
         }
         await _postLogin(authRes)
         return authRes
@@ -253,9 +248,10 @@ export const useTokenStore = defineStore(
       try {
         const res = await _wxRegister(params)
         console.log('微信注册-res:', res)
+        // 使用后端返回的 expiresIn，如无则使用默认值
         const authRes: IAuthLoginRes = {
           ...res,
-          expiresIn: 60 * 60 * 24 * 7,
+          expiresIn: (res as any).expiresIn || DEFAULT_EXPIRES_IN,
         }
         await _postLogin(authRes)
         return authRes
@@ -376,17 +372,38 @@ export const useTokenStore = defineStore(
      */
     const tryGetValidToken = async (): Promise<string> => {
       updateNowTime()
-      if (!getValidToken.value && isDoubleTokenMode && !isRefreshTokenExpired.value) {
-        try {
-          await refreshToken()
-          return getValidToken.value
-        }
-        catch (error) {
-          console.error('尝试刷新token失败:', error)
-          return ''
-        }
+
+      // 如果 token 有效，直接返回
+      if (getValidToken.value) {
+        return getValidToken.value
       }
-      return getValidToken.value
+
+      // 如果正在刷新，等待刷新完成（并发锁）
+      if (isRefreshing && refreshPromise) {
+        return refreshPromise
+      }
+
+      // 双 token 模式尝试刷新
+      if (isDoubleTokenMode && !isRefreshTokenExpired.value) {
+        isRefreshing = true
+        refreshPromise = (async () => {
+          try {
+            await refreshToken()
+            return getValidToken.value
+          }
+          catch (error) {
+            console.error('尝试刷新token失败:', error)
+            return ''
+          }
+          finally {
+            isRefreshing = false
+            refreshPromise = null
+          }
+        })()
+        return refreshPromise
+      }
+
+      return ''
     }
 
     return {

@@ -159,16 +159,29 @@ export const generatedRoutes: GeneratedRoute[] = [
     component: 'layout.base',
     meta: {
       title: 'member',
-      i18nKey: 'route.member'
+      i18nKey: 'route.member',
+      icon: 'material-symbols:group-outline',
+      order: 3
     },
     children: [
+      {
+        name: 'member_list',
+        path: '/member/list',
+        component: 'view.member_list',
+        meta: {
+          title: 'member_list',
+          i18nKey: 'route.member_list',
+          icon: 'material-symbols:list-alt-outline'
+        }
+      },
       {
         name: 'member_upgrade',
         path: '/member/upgrade',
         component: 'view.member_upgrade',
         meta: {
           title: 'member_upgrade',
-          i18nKey: 'route.member_upgrade'
+          i18nKey: 'route.member_upgrade',
+          icon: 'material-symbols:unarchive-outline'
         }
       }
     ]

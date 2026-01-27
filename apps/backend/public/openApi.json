@@ -26018,16 +26018,16 @@
         ]
       }
     },
-    "/api/admin/member/parent": {
+    "/api/admin/member/referrer": {
       "put": {
-        "operationId": "MemberController_updateParent",
+        "operationId": "MemberController_updateReferrer",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "Update Parent (C1/C2)",
+        "summary": "Update Referrer (C1/C2)",
         "tags": [
           "Admin-Member Management"
         ]
@@ -26058,6 +26058,21 @@
           }
         },
         "summary": "Update Status",
+        "tags": [
+          "Admin-Member Management"
+        ]
+      }
+    },
+    "/api/admin/member/level": {
+      "put": {
+        "operationId": "MemberController_updateLevel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update Level (Manual Adjustment)",
         "tags": [
           "Admin-Member Management"
         ]

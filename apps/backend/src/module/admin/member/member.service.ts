@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MemberService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * List members with pagination and search
@@ -128,7 +128,9 @@ export class MemberService {
         balance: Number(item.balance),
         commission: Number(commissionMap.get(item.memberId) || 0),
         totalConsumption: Number(consumptionMap.get(item.memberId) || 0),
-        orderCount: 0, // We can also aggregate count if needed, but consumption is more important
+        orderCount: 0,
+        levelId: item.levelId,
+        levelName: item.levelId === 0 ? 'Member' : item.levelId === 1 ? 'Captain' : item.levelId === 2 ? 'Shareholder' : 'Unknown', // Simple hardcode map for now
       };
     });
 
@@ -139,22 +141,77 @@ export class MemberService {
   }
 
   /**
+   * Update Member Level
+   * 规则：
+   * - 升级到 C2 (levelId=2)：清空 parentId/indirectParentId，因为 C2 是顶级分销员
+   * - 升级到 C1 (levelId=1) 且跨店：清空 parentId/indirectParentId
+   * - 升级到 C1 (levelId=1) 同店：保留原有推荐关系
+   */
+  async updateLevel(memberId: string, levelId: number) {
+    // 获取当前用户信息
+    const member = await this.prisma.umsMember.findUnique({
+      where: { memberId },
+      select: { tenantId: true, parentId: true },
+    });
+    if (!member) return Result.fail(500, 'Member not found');
+
+    const data: any = { levelId };
+
+    // 升级到 C2 时，必须清空推荐关系（C2 是顶级）
+    if (levelId === 2) {
+      data.parentId = null;
+      data.indirectParentId = null;
+    }
+    // 升级到 C1 时，检查是否跨店
+    else if (levelId === 1 && member.parentId) {
+      const parent = await this.prisma.umsMember.findUnique({
+        where: { memberId: member.parentId },
+        select: { tenantId: true },
+      });
+      // 跨店升级：清空推荐关系
+      if (parent && parent.tenantId !== member.tenantId) {
+        data.parentId = null;
+        data.indirectParentId = null;
+      }
+      // 同店升级：保留推荐关系，不做任何操作
+    }
+
+    await this.prisma.umsMember.update({
+      where: { memberId },
+      data,
+    });
+    return Result.ok();
+  }
+
+  /**
    * Update Member Parent (C1/C2)
    */
   async updateParent(memberId: string, parentId: string) {
     if (memberId === parentId) {
       return Result.fail(500, 'Cannot refer self');
     }
-    // Check if parent exists and is C1/C2
+
+    let indirectParentId: string | null = null;
+
+    // Check if parent exists and determine indirect parent
     if (parentId) {
       const parent = await this.prisma.umsMember.findUnique({ where: { memberId: parentId } });
       if (!parent) return Result.fail(500, 'Parent not found');
       if (parent.levelId < 1) return Result.fail(500, 'Parent must be C1 or C2');
+
+      // If parent is C1 (level 1), then indirect parent is parent's parent (C2)
+      if (parent.levelId === 1) {
+        indirectParentId = parent.parentId;
+      }
+      // If parent is C2 (level 2), indirect parent is null (this member is directly under C2)
     }
 
     await this.prisma.umsMember.update({
       where: { memberId },
-      data: { parentId: parentId || null },
+      data: {
+        parentId: parentId || null,
+        indirectParentId: indirectParentId || null,
+      },
     });
     return Result.ok();
   }

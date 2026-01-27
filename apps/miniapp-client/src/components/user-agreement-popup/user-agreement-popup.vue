@@ -27,7 +27,7 @@
         <text class="text-blue-500" @click="handleOpenAgreement('user')">《用户协议》</text>
         <text>与</text>
         <text class="text-blue-500" @click="handleOpenAgreement('privacy')">《隐私政策》</text>
-        <text>。请您充分理解协议条款，点击“同意并继续”代表您已同意前述协议。</text>
+        <text>。请您充分理解协议条款，点击"同意并继续"代表您已同意前述协议。</text>
       </view>
       <view class="flex flex-row gap-3">
         <button
@@ -54,8 +54,15 @@ import { useTokenStore } from '@/store/token'
 
 const emit = defineEmits(['agreed'])
 const show = ref(false)
+const isChecking = ref(false) // 防止重复触发
+
 // 检查是否已同意
 function checkAgreement() {
+  // 防止重复检查
+  if (isChecking.value || show.value) {
+    return
+  }
+
   const hasAgreed = uni.getStorageSync('hasAgreedPrivacy')
   if (hasAgreed) {
     // 已同意过，直接触发回调（比如自动登录检查）
@@ -80,12 +87,14 @@ function checkAgreement() {
   }
 
   // 其他情况：非首页，或第二次及以后进入首页，都弹窗
+  isChecking.value = true
   show.value = true
 }
 
 async function handleAgree() {
   uni.setStorageSync('hasAgreedPrivacy', true)
   show.value = false
+  isChecking.value = false
   emit('agreed')
 
   // #ifdef MP-WEIXIN
@@ -102,6 +111,7 @@ async function handleAgree() {
 
 function handleDisagree() {
   show.value = false
+  isChecking.value = false
 }
 
 function handleOpenAgreement(type: 'user' | 'privacy') {

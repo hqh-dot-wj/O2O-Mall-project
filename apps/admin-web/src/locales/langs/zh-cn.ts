@@ -317,6 +317,8 @@ const local: App.I18n.Schema = {
     demo_demo: '测试单表',
     demo_tree: '测试树表',
     member: '会员管理',
+    member_list: '会员列表',
+    member_upgrade: '升级申请',
     tool_build: '表单构建',
     tool_swagger: '系统API',
     exception: '异常页',
@@ -1275,13 +1277,15 @@ const local: App.I18n.Schema = {
       }
     },
     member: {
-      title: 'C端用户',
+      title: '会员列表',
       userInfo: '用户信息',
       tenant: '租户',
       referrer: '推荐人',
       indirectReferrer: '间接推荐人',
       status: '状态',
       registerTime: '注册时间',
+      level: '会员等级',
+      editLevel: '修改等级',
       editReferrer: '编辑推荐人',
       editTenant: '编辑租户',
       form: {

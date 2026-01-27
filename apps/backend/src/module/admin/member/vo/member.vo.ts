@@ -66,4 +66,10 @@ export class MemberVo {
 
   @ApiProperty({ description: 'Total Consumption', default: 0 })
   totalConsumption?: number;
+
+  @ApiProperty({ description: 'Level ID (0: Member, 1: Captain, 2: Shareholder)' })
+  levelId: number;
+
+  @ApiProperty({ description: 'Level Name' })
+  levelName?: string;
 }

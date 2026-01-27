@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { ref } from 'vue';
-import { NAvatar, NTag } from 'naive-ui';
+import { NAvatar, NButton, NTag } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { fetchGetMemberList, fetchUpdateMemberStatus } from '@/service/api/member';
 import { useAppStore } from '@/store/modules/app';
@@ -22,7 +22,7 @@ const tableProps = useTableProps();
 
 const { bool: drawerVisible, setTrue: openDrawer, setFalse: closeDrawer } = useBoolean();
 const { bool: detailVisible, setTrue: openDetail, setFalse: closeDetail } = useBoolean();
-const operateType = ref<'editReferrer' | 'editTenant'>('editReferrer');
+const operateType = ref<'editReferrer' | 'editTenant' | 'editLevel'>('editReferrer');
 const editingData = ref<Api.Member.Member | null>(null);
 
 const { columns, data, getData, getDataByPage, loading, mobilePagination, searchParams, resetSearchParams } = useTable({
@@ -106,6 +106,16 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
         )
       },
       {
+        key: 'levelName',
+        title: $t('page.member.level') || 'Level',
+        align: 'center',
+        width: 120,
+        render: (row: Api.Member.Member) => {
+          const type = row.levelId === 2 ? 'error' : row.levelId === 1 ? 'warning' : 'default';
+          return <NTag type={type}>{row.levelName}</NTag>;
+        }
+      },
+      {
         key: 'status',
         title: $t('page.member.status'),
         align: 'center',
@@ -129,7 +139,14 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
         align: 'center',
         width: 100,
         render: (row: Api.Member.Member) => (
-          <div class="flex-center">
+          <div class="flex-center gap-2">
+             <ButtonIcon
+              size="small"
+              type="warning"
+              tooltip-content={$t('page.member.editLevel') || 'Edit Level'}
+              icon="material-symbols:stars-outline"
+              onClick={() => handleEditLevel(row)}
+            />
             <NButton type="primary" size="small" ghost onClick={() => handleViewDetails(row)}>
               详情
             </NButton>
@@ -138,6 +155,12 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
       }
     ] as any
 });
+
+function handleEditLevel(row: Api.Member.Member) {
+  operateType.value = 'editLevel';
+  editingData.value = row;
+  openDrawer();
+}
 
 function handleEditReferrer(row: Api.Member.Member) {
   operateType.value = 'editReferrer';

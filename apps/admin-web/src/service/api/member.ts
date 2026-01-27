@@ -27,10 +27,20 @@ export function fetchUpdateMemberTenant(data: { memberId: string; tenantId: stri
   });
 }
 
+// ... existing code ...
 /** Update member status */
 export function fetchUpdateMemberStatus(data: { memberId: string; status: string }) {
   return request<any>({
     url: '/admin/member/status',
+    method: 'put',
+    data
+  });
+}
+
+/** Update member level */
+export function fetchUpdateMemberLevel(data: { memberId: string; levelId: number }) {
+  return request<any>({
+    url: '/admin/member/level',
     method: 'put',
     data
   });

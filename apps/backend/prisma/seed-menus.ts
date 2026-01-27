@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+    await seedDistribution(prisma);
     console.log('开始同步新增菜单...');
 
     // Base IDs start from 2000 to avoid conflict with existing system menus
@@ -307,6 +308,115 @@ async function main() {
     }
 
     console.log('菜单同步完成！');
+}
+
+
+async function seedDistribution(prisma: PrismaClient) {
+    const tenantId = '100006';
+    console.log(`开始为租户 ${tenantId} 生成分销测试数据...`);
+
+    // 1. 创建或获取 Partner (C2 - level 2)
+    const partnerRoot = await prisma.umsMember.upsert({
+        where: { mobile: '18800000002' },
+        update: { levelId: 2, tenantId, referralCode: 'T100006-ROOT' },
+        create: {
+            memberId: 'mem-partner-root',
+            nickname: '顶级合伙人(C2)',
+            mobile: '18800000002',
+            levelId: 2,
+            tenantId,
+            referralCode: 'T100006-ROOT'
+        }
+    });
+
+    // 2. 情况1: 完整链路 (C -> C1 -> C2)
+    const agentLinked = await prisma.umsMember.upsert({
+        where: { mobile: '18800000011' },
+        update: { levelId: 1, tenantId, parentId: partnerRoot.memberId },
+        create: {
+            memberId: 'mem-agent-linked',
+            nickname: '链路中层(C1)',
+            mobile: '18800000011',
+            levelId: 1,
+            tenantId,
+            parentId: partnerRoot.memberId
+        }
+    });
+
+    await prisma.umsMember.upsert({
+        where: { mobile: '18800000001' },
+        update: {
+            levelId: 0,
+            tenantId,
+            parentId: agentLinked.memberId,
+            indirectParentId: partnerRoot.memberId
+        },
+        create: {
+            memberId: 'mem-full-chain-c',
+            nickname: '完整链路会员(C)',
+            mobile: '18800000001',
+            levelId: 0,
+            tenantId,
+            parentId: agentLinked.memberId,
+            indirectParentId: partnerRoot.memberId
+        }
+    });
+
+    // 3. 情况2: 只有 C1 (C -> C1)
+    const agentSolo = await prisma.umsMember.upsert({
+        where: { mobile: '18800000012' },
+        update: { levelId: 1, tenantId, parentId: null },
+        create: {
+            memberId: 'mem-agent-solo',
+            nickname: '独立队长(C1)',
+            mobile: '18800000012',
+            levelId: 1,
+            tenantId
+        }
+    });
+
+    await prisma.umsMember.upsert({
+        where: { mobile: '18800000121' },
+        update: { levelId: 0, tenantId, parentId: agentSolo.memberId, indirectParentId: null },
+        create: {
+            memberId: 'mem-c1-only-c',
+            nickname: '仅C1会员(C)',
+            mobile: '18800000121',
+            levelId: 0,
+            tenantId,
+            parentId: agentSolo.memberId
+        }
+    });
+
+    // 4. 情况3: 只有 C2 (C -> C2)
+    // 这里的 C2 直接作为 parentId，且没有 indirectParentId
+    await prisma.umsMember.upsert({
+        where: { mobile: '18800000221' },
+        update: { levelId: 0, tenantId, parentId: partnerRoot.memberId, indirectParentId: null },
+        create: {
+            memberId: 'mem-c2-only-c',
+            nickname: '直属C2会员(C)',
+            mobile: '18800000221',
+            levelId: 0,
+            tenantId,
+            parentId: partnerRoot.memberId
+        }
+    });
+
+    // 5. 情况4: 都没有 (C)
+    await prisma.umsMember.upsert({
+        where: { mobile: '18800000331' },
+        update: { levelId: 0, tenantId, parentId: null, indirectParentId: null },
+        create: {
+            memberId: 'mem-none-c',
+            nickname: '普通会员(C)',
+            mobile: '18800000331',
+            levelId: 0,
+            tenantId
+        }
+    });
+
+    console.log('分销测试数据生成完成。');
 }
 
 main()

@@ -16,6 +16,7 @@ const tableProps = useTableProps();
 
 // 交易类型映射
 const transTypeRecord: Record<string, { label: string; type: NaiveUI.ThemeColor }> = {
+  ORDER_INCOME: { label: '订单收入', type: 'primary' },
   COMMISSION_IN: { label: '佣金入账', type: 'success' },
   WITHDRAW_OUT: { label: '提现支出', type: 'error' },
   REFUND_DEDUCT: { label: '退款倒扣', type: 'warning' },

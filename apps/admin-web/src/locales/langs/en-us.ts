@@ -313,6 +313,8 @@ const local: App.I18n.Schema = {
     demo_demo: 'Demo Table',
     demo_tree: 'Demo Tree',
     member: 'Member Management',
+    member_list: 'Member List',
+    member_upgrade: 'Upgrade Apply',
     tool_build: 'Form Build',
     tool_swagger: 'System API',
     exception: 'Exception',
@@ -1264,13 +1266,15 @@ const local: App.I18n.Schema = {
       }
     },
     member: {
-      title: 'Member Management',
+      title: 'Member List',
       userInfo: 'User Info',
       tenant: 'Tenant',
       referrer: 'Referrer',
       indirectReferrer: 'Indirect Referrer',
       status: 'Status',
       registerTime: 'Register Time',
+      level: 'Level',
+      editLevel: 'Edit Level',
       editReferrer: 'Edit Referrer',
       editTenant: 'Edit Tenant',
       form: {
@@ -1403,7 +1407,14 @@ const local: App.I18n.Schema = {
       lv0PolicyDesc: 'LV0 earnings will go to point account, only for deduction or upgrades.',
       lv1PolicyDesc: 'LV1+ earnings will go to cash balance, withdrawable.',
       historyTitle: 'Config History',
-      graphTitle: 'Current Model (Model B)'
+      graphTitle: 'Current Model (Model B)',
+      crossTenantSettings: 'Cross Tenant Settings',
+      enableCrossTenant: 'Enable Cross Tenant Commission',
+      enableCrossTenantDesc: 'Allow external referrer to bind users of this tenant and get commission',
+      crossTenantRate: 'Cross Tenant Commission Discount',
+      crossTenantRateTip: 'Discount rate for cross tenant commission (e.g. 0.8 means 20% off)',
+      crossMaxDaily: 'Cross Tenant Commission Daily Limit',
+      crossMaxDailyTip: 'Max daily cross tenant commission per person (Yuan)'
     }
   },
   form: {

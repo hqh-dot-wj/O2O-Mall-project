@@ -182,6 +182,7 @@ const routeMap: RouteMap = {
   "marketing_asset": "/marketing/asset",
   "marketing_template": "/marketing/template",
   "member": "/member",
+  "member_list": "/member/list",
   "member_upgrade": "/member/upgrade",
   "monitor": "/monitor",
   "monitor_cache": "/monitor/cache",

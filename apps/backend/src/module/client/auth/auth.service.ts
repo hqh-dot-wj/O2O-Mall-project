@@ -19,7 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
     private readonly wechatService: WechatService,
-  ) {}
+  ) { }
 
   /**
    * 阶段二：静默登录检查
@@ -44,10 +44,11 @@ export class AuthService {
     if (socialUser) {
       BusinessException.throwIf(socialUser.member?.status === MemberStatus.DISABLED, '账号已禁用，请联系客服');
 
-      const token = await this.genToken(socialUser.member);
+      const { token, expiresIn } = await this.genToken(socialUser.member);
       return Result.ok({
         isRegistered: true,
         token,
+        expiresIn,
         userInfo: socialUser.member,
       });
     }
@@ -77,9 +78,10 @@ export class AuthService {
     if (existingSocial?.member) {
       // 已注册，检查状态后直接返回 token
       BusinessException.throwIf(existingSocial.member.status === MemberStatus.DISABLED, '账号已禁用，请联系客服');
-      const token = await this.genToken(existingSocial.member);
+      const { token, expiresIn } = await this.genToken(existingSocial.member);
       return Result.ok({
         token,
+        expiresIn,
         userInfo: existingSocial.member,
         isNew: false,
       });
@@ -164,9 +166,10 @@ export class AuthService {
       return newMember;
     });
 
-    const token = await this.genToken(member);
+    const { token, expiresIn } = await this.genToken(member);
     return Result.ok({
       token,
+      expiresIn,
       userInfo: member,
       isNew: true,
     });
@@ -233,9 +236,10 @@ export class AuthService {
         }
       }
 
-      const token = await this.genToken(existingSocial.member);
+      const { token, expiresIn } = await this.genToken(existingSocial.member);
       return Result.ok({
         token,
+        expiresIn,
         userInfo: existingSocial.member,
         isNew: false,
       });
@@ -299,9 +303,10 @@ export class AuthService {
       return newMember;
     });
 
-    const token = await this.genToken(member);
+    const { token, expiresIn } = await this.genToken(member);
     return Result.ok({
       token,
+      expiresIn,
       userInfo: member,
       isNew: true,
     });
@@ -327,12 +332,13 @@ export class AuthService {
 
   // ================= 私有辅助方法 =================
 
-  private async genToken(member: any) {
+  private async genToken(member: any): Promise<{ token: string; expiresIn: number }> {
     const uuid = GenerateUUID();
     const payload = { uuid, memberId: member.memberId };
     const token = this.jwtService.sign(payload);
     const tokenKey = `${CacheEnum.LOGIN_TOKEN_KEY}${uuid}`;
     await this.redisService.set(tokenKey, member, LOGIN_TOKEN_EXPIRESIN);
-    return token;
+    // 返回 token 和过期时间（秒）
+    return { token, expiresIn: Math.floor(LOGIN_TOKEN_EXPIRESIN / 1000) };
   }
 }

@@ -11,7 +11,7 @@ export class WechatService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   /**
    * 获取 WeChat AccessToken (带缓存)
@@ -108,6 +108,62 @@ export class WechatService {
       return null;
     } catch (e) {
       console.error('Failed to get WeChat Phone Number:', e);
+      return null;
+    }
+  }
+
+  /**
+   * 获取小程序码（无限制）
+   * @param scene 场景值，最多32字符
+   * @param options.page 小程序页面路径
+   * @param options.width 二维码宽度 (默认430)
+   * @param options.envVersion 小程序版本 (默认release)
+   * @returns 小程序码图片Buffer，失败返回null
+   */
+  async getWxaCodeUnlimited(
+    scene: string,
+    options?: {
+      page?: string;
+      width?: number;
+      envVersion?: 'develop' | 'trial' | 'release';
+    },
+  ): Promise<Buffer | null> {
+    const accessToken = await this.getAccessToken();
+    if (!accessToken) {
+      console.error('获取 AccessToken 失败');
+      return null;
+    }
+
+    const url = `https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=${accessToken}`;
+    const body = {
+      scene: scene.slice(0, 32), // 场景值最多32字符
+      page: options?.page,
+      width: options?.width || 430,
+      env_version: options?.envVersion || 'release',
+      check_path: false, // 不校验页面是否存在
+    };
+
+    try {
+      const res = await lastValueFrom(
+        this.httpService.post(url, body, {
+          responseType: 'arraybuffer', // 返回二进制数据
+        }),
+      );
+
+      // 检查是否返回错误（JSON格式）
+      const buffer = Buffer.from(res.data);
+      const firstBytes = buffer.slice(0, 10).toString('utf8');
+
+      if (firstBytes.includes('{')) {
+        // 返回的是JSON错误信息
+        const errorData = JSON.parse(buffer.toString('utf8'));
+        console.error('生成小程序码失败:', errorData);
+        return null;
+      }
+
+      return buffer;
+    } catch (e) {
+      console.error('调用 wxacode.getUnlimited 失败:', e?.message || e);
       return null;
     }
   }

@@ -36,6 +36,7 @@ declare module "@elegant-router/types" {
     "marketing_asset": "/marketing/asset";
     "marketing_template": "/marketing/template";
     "member": "/member";
+    "member_list": "/member/list";
     "member_upgrade": "/member/upgrade";
     "monitor": "/monitor";
     "monitor_cache": "/monitor/cache";
@@ -168,7 +169,7 @@ declare module "@elegant-router/types" {
     | "home"
     | "marketing_asset"
     | "marketing_template"
-    | "member"
+    | "member_list"
     | "member_upgrade"
     | "monitor_cache"
     | "monitor_cache_list"
