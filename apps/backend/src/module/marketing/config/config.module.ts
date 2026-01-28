@@ -12,4 +12,4 @@ import { PmsModule } from 'src/module/pms/pms.module';
   providers: [StorePlayConfigService, StorePlayConfigRepository],
   exports: [StorePlayConfigService, StorePlayConfigRepository],
 })
-export class MarketingConfigModule { }
+export class MarketingConfigModule {}

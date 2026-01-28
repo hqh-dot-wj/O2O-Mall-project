@@ -38,4 +38,4 @@ import { UpgradeModule } from './upgrade/upgrade.module';
     PaymentModule,
   ],
 })
-export class ClientModule { }
+export class ClientModule {}

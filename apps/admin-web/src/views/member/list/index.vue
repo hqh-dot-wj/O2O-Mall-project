@@ -140,7 +140,7 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
         width: 100,
         render: (row: Api.Member.Member) => (
           <div class="flex-center gap-2">
-             <ButtonIcon
+            <ButtonIcon
               size="small"
               type="warning"
               tooltip-content={$t('page.member.editLevel') || 'Edit Level'}

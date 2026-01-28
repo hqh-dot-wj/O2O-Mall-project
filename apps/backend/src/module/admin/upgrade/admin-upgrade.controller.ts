@@ -15,7 +15,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @ApiBearerAuth()
 @Controller('admin/upgrade')
 export class AdminUpgradeController {
-  constructor(private readonly upgradeService: AdminUpgradeService) { }
+  constructor(private readonly upgradeService: AdminUpgradeService) {}
 
   /**
    * 分页查询升级申请列表 (含过滤条件)
@@ -44,11 +44,7 @@ export class AdminUpgradeController {
   @RequirePermission('admin:upgrade:approve')
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put(':id/approve')
-  async approve(
-    @Param('id') id: string,
-    @Body() dto: ApproveUpgradeDto,
-    @User('userId') operatorId: string
-  ) {
+  async approve(@Param('id') id: string, @Body() dto: ApproveUpgradeDto, @User('userId') operatorId: string) {
     return this.upgradeService.approve(id, dto, operatorId);
   }
 

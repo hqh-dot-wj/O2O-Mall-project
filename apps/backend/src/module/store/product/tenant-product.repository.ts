@@ -6,16 +6,16 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
  * 租户商品仓储层
- * 
+ *
  * @description
  * 封装租户商品相关的数据访问逻辑,继承 BaseRepository 提供通用 CRUD 操作。
- * 
+ *
  * 核心职责:
  * - 租户商品的增删改查
  * - 带关联查询的复杂查询(全局商品、SKU、分类、品牌)
  * - 商品列表分页查询
  * - 商品详情查询
- * 
+ *
  * @example
  * // 查询租户商品列表(带关联)
  * const products = await tenantProductRepo.findWithRelations(
@@ -23,7 +23,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  *   0,
  *   10
  * );
- * 
+ *
  * // 查询商品详情(带完整关联)
  * const detail = await tenantProductRepo.findOneWithDetails('tp1');
  */
@@ -35,7 +35,7 @@ export class TenantProductRepository extends BaseRepository<
 > {
   /**
    * 构造函数
-   * 
+   *
    * @param prisma - Prisma 服务实例
    * @param cls - CLS 上下文服务,用于事务管理和租户隔离
    */
@@ -46,19 +46,19 @@ export class TenantProductRepository extends BaseRepository<
 
   /**
    * 查询租户商品列表(带关联信息)
-   * 
+   *
    * @description
    * 关联查询:
    * - 全局商品(名称、图片、类型)
    * - 分类名称
    * - 品牌名称
    * - 租户SKU列表(价格、库存、规格)
-   * 
+   *
    * @param where - 查询条件
    * @param skip - 跳过记录数(分页)
    * @param take - 获取记录数(分页)
    * @returns 租户商品列表
-   * 
+   *
    * @example
    * const products = await findWithRelations(
    *   { tenantId: 't1', status: PublishStatus.ON_SHELF },
@@ -100,17 +100,17 @@ export class TenantProductRepository extends BaseRepository<
 
   /**
    * 查询租户商品详情(带完整关联信息)
-   * 
+   *
    * @description
    * 关联查询:
    * - 全局商品(完整信息)
    * - 分类、品牌
    * - 租户SKU列表(完整信息)
    * - 属性值列表
-   * 
+   *
    * @param tenantProdId - 租户商品ID
    * @returns 租户商品详情对象或 null
-   * 
+   *
    * @example
    * const detail = await findOneWithDetails('tp1');
    * // {
@@ -155,14 +155,14 @@ export class TenantProductRepository extends BaseRepository<
 
   /**
    * 根据全局商品ID查询租户商品
-   * 
+   *
    * @description
    * 用于检查租户是否已引入某个全局商品
-   * 
+   *
    * @param tenantId - 租户ID
    * @param productId - 全局商品ID
    * @returns 租户商品或 null
-   * 
+   *
    * @example
    * const exists = await findByGlobalProduct('t1', 'p1');
    * if (exists) {
@@ -177,14 +177,14 @@ export class TenantProductRepository extends BaseRepository<
 
   /**
    * 批量查询租户商品(按全局商品ID)
-   * 
+   *
    * @description
    * 用于批量检查哪些全局商品已被租户引入
-   * 
+   *
    * @param tenantId - 租户ID
    * @param productIds - 全局商品ID列表
    * @returns 租户商品列表
-   * 
+   *
    * @example
    * const imported = await findByGlobalProducts('t1', ['p1', 'p2', 'p3']);
    * // [{ tenantProdId: 'tp1', productId: 'p1', ... }]
@@ -204,10 +204,10 @@ export class TenantProductRepository extends BaseRepository<
 
   /**
    * 统计租户商品数量(带查询条件)
-   * 
+   *
    * @param where - 查询条件
    * @returns 商品数量
-   * 
+   *
    * @example
    * const count = await countWithConditions({
    *   tenantId: 't1',
@@ -220,21 +220,18 @@ export class TenantProductRepository extends BaseRepository<
 
   /**
    * 更新商品状态
-   * 
+   *
    * @description
    * 批量更新商品的发布状态
-   * 
+   *
    * @param tenantProdIds - 租户商品ID列表
    * @param status - 目标状态
    * @returns 更新数量
-   * 
+   *
    * @example
    * await updateStatus(['tp1', 'tp2'], PublishStatus.ON_SHELF);
    */
   async updateStatus(tenantProdIds: string[], status: string) {
-    return this.updateMany(
-      { tenantProdId: { in: tenantProdIds } },
-      { status },
-    );
+    return this.updateMany({ tenantProdId: { in: tenantProdIds } }, { status });
   }
 }

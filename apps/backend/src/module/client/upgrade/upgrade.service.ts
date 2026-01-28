@@ -22,8 +22,7 @@ export class UpgradeService {
     private readonly prisma: PrismaService,
     private readonly wechatService: WechatService,
     private readonly uploadService: UploadService,
-  ) { }
-
+  ) {}
 
   /**
    * 申请升级 (通过扫描推荐码)
@@ -236,7 +235,6 @@ export class UpgradeService {
     this.logger.log(`为会员 ${memberId} 生成推荐码: ${code}`);
     return record;
   }
-
 
   /**
    * 获取团队统计

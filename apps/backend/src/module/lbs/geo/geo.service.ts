@@ -7,7 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  */
 @Injectable()
 export class GeoService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 将 GeoJSON 坐标数组转换为 WKT Polygon 字符串

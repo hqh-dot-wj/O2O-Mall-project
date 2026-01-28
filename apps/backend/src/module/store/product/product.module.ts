@@ -7,16 +7,7 @@ import { TenantSkuRepository } from './tenant-sku.repository';
 
 @Module({
   controllers: [StoreProductController],
-  providers: [
-    StoreProductService,
-    ProfitValidator,
-    TenantProductRepository,
-    TenantSkuRepository,
-  ],
-  exports: [
-    StoreProductService,
-    TenantProductRepository,
-    TenantSkuRepository,
-  ],
+  providers: [StoreProductService, ProfitValidator, TenantProductRepository, TenantSkuRepository],
+  exports: [StoreProductService, TenantProductRepository, TenantSkuRepository],
 })
 export class StoreProductModule {}

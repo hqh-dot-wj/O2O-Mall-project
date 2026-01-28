@@ -10,7 +10,13 @@ import { FormatDateFields } from 'src/common/utils';
 import { MemberRepository } from './member.repository';
 import { MemberStatsService } from './services/member-stats.service';
 import { MemberReferralService } from './services/member-referral.service';
-import { ListMemberDto, UpdateMemberStatusDto, UpdateMemberLevelDto, UpdateReferrerDto, UpdateMemberTenantDto } from './dto';
+import {
+  ListMemberDto,
+  UpdateMemberStatusDto,
+  UpdateMemberLevelDto,
+  UpdateReferrerDto,
+  UpdateMemberTenantDto,
+} from './dto';
 import { MemberLevel, MemberLevelNameMap, MemberStatus, MemberStatusMap } from './member.constant';
 
 /**
@@ -24,7 +30,7 @@ export class MemberService {
     private readonly memberRepo: MemberRepository,
     private readonly memberStatsService: MemberStatsService,
     private readonly memberReferralService: MemberReferralService,
-  ) { }
+  ) {}
 
   /**
    * 分页查询会员列表

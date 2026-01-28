@@ -28,7 +28,7 @@ export class WithdrawalService {
     private readonly withdrawalRepo: WithdrawalRepository,
     private readonly walletService: WalletService,
     private readonly auditService: WithdrawalAuditService,
-  ) { }
+  ) {}
 
   /**
    * 申请提现

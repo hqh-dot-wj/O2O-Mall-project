@@ -8,15 +8,13 @@ import { ListCommissionDto } from './dto/store-finance.dto';
 
 /**
  * 店铺佣金查询服务
- * 
+ *
  * @description
  * 负责店铺佣金记录的查询和列表展示
  */
 @Injectable()
 export class StoreCommissionQueryService {
-  constructor(
-    private readonly commissionRepo: CommissionRepository,
-  ) {}
+  constructor(private readonly commissionRepo: CommissionRepository) {}
 
   /**
    * 查询佣金明细列表

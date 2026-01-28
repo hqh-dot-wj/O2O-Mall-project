@@ -76,12 +76,7 @@ describe('StoreProductService - updateProductPrice', () => {
 
       expect(result.data.price).toBe(120);
       expect(result.data.version).toBe(6);
-      expect(mockProfitValidator.validate).toHaveBeenCalledWith(
-        120,
-        mockSku.costPrice,
-        10,
-        'PERCENTAGE',
-      );
+      expect(mockProfitValidator.validate).toHaveBeenCalledWith(120, mockSku.costPrice, 10, 'PERCENTAGE');
     });
 
     it('应该抛出异常 - SKU不存在', async () => {
@@ -92,9 +87,7 @@ describe('StoreProductService - updateProductPrice', () => {
         price: 120,
       };
 
-      await expect(service.updateProductPrice('t1', dto)).rejects.toThrow(
-        BusinessException,
-      );
+      await expect(service.updateProductPrice('t1', dto)).rejects.toThrow(BusinessException);
     });
 
     it('应该抛出异常 - 版本号不匹配(并发冲突)', async () => {
@@ -108,20 +101,14 @@ describe('StoreProductService - updateProductPrice', () => {
       };
 
       await expect(service.updateProductPrice('t1', dto)).rejects.toThrow(
-        new BusinessException(
-          ResponseCode.CONFLICT,
-          '更新失败,数据已被修改,请重试',
-        ),
+        new BusinessException(ResponseCode.CONFLICT, '更新失败,数据已被修改,请重试'),
       );
     });
 
     it('应该抛出异常 - 利润不足', async () => {
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(mockSku);
       mockProfitValidator.validate.mockImplementation(() => {
-        throw new BusinessException(
-          ResponseCode.PARAM_INVALID,
-          '价格过低,利润不足',
-        );
+        throw new BusinessException(ResponseCode.PARAM_INVALID, '价格过低,利润不足');
       });
 
       const dto = {
@@ -129,9 +116,7 @@ describe('StoreProductService - updateProductPrice', () => {
         price: 55,
       };
 
-      await expect(service.updateProductPrice('t1', dto)).rejects.toThrow(
-        BusinessException,
-      );
+      await expect(service.updateProductPrice('t1', dto)).rejects.toThrow(BusinessException);
     });
   });
 });

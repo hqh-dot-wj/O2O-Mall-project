@@ -73,9 +73,7 @@ describe('TenantSkuRepository', () => {
     });
 
     it('应该返回null - 版本号不匹配', async () => {
-      mockPrismaService.pmsTenantSku.update.mockRejectedValue(
-        new Error('Record not found'),
-      );
+      mockPrismaService.pmsTenantSku.update.mockRejectedValue(new Error('Record not found'));
 
       const result = await repository.updatePriceWithVersion('sku1', 100, 5);
 

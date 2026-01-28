@@ -103,17 +103,12 @@ describe('WithdrawalService', () => {
       const result = await service.apply('member1', 'tenant1', 50, 'WECHAT');
 
       expect(result.data.id).toBe('withdrawal1');
-      expect(mockWalletService.freezeBalance).toHaveBeenCalledWith(
-        'member1',
-        new Decimal(50),
-      );
+      expect(mockWalletService.freezeBalance).toHaveBeenCalledWith('member1', new Decimal(50));
       expect(mockWithdrawalRepo.create).toHaveBeenCalled();
     });
 
     it('应该抛出异常 - 金额低于最小提现金额', async () => {
-      await expect(service.apply('member1', 'tenant1', 0.5, 'WECHAT')).rejects.toThrow(
-        BusinessException,
-      );
+      await expect(service.apply('member1', 'tenant1', 0.5, 'WECHAT')).rejects.toThrow(BusinessException);
 
       expect(mockWalletService.freezeBalance).not.toHaveBeenCalled();
     });
@@ -121,9 +116,7 @@ describe('WithdrawalService', () => {
     it('应该抛出异常 - 钱包不存在', async () => {
       mockWalletService.getOrCreateWallet.mockResolvedValue(null);
 
-      await expect(service.apply('member1', 'tenant1', 50, 'WECHAT')).rejects.toThrow(
-        BusinessException,
-      );
+      await expect(service.apply('member1', 'tenant1', 50, 'WECHAT')).rejects.toThrow(BusinessException);
 
       expect(mockWalletService.freezeBalance).not.toHaveBeenCalled();
     });
@@ -136,9 +129,7 @@ describe('WithdrawalService', () => {
 
       mockWalletService.getOrCreateWallet.mockResolvedValue(insufficientWallet);
 
-      await expect(service.apply('member1', 'tenant1', 50, 'WECHAT')).rejects.toThrow(
-        BusinessException,
-      );
+      await expect(service.apply('member1', 'tenant1', 50, 'WECHAT')).rejects.toThrow(BusinessException);
 
       expect(mockWalletService.freezeBalance).not.toHaveBeenCalled();
     });
@@ -172,20 +163,14 @@ describe('WithdrawalService', () => {
 
       const result = await service.audit('withdrawal1', 'REJECT', 'admin1', '余额异常');
 
-      expect(mockAuditService.reject).toHaveBeenCalledWith(
-        mockWithdrawal,
-        'admin1',
-        '余额异常',
-      );
+      expect(mockAuditService.reject).toHaveBeenCalledWith(mockWithdrawal, 'admin1', '余额异常');
       expect(result.code).toBe(200);
     });
 
     it('应该抛出异常 - 提现申请不存在', async () => {
       mockWithdrawalRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.audit('withdrawal1', 'APPROVE', 'admin1'),
-      ).rejects.toThrow(BusinessException);
+      await expect(service.audit('withdrawal1', 'APPROVE', 'admin1')).rejects.toThrow(BusinessException);
 
       expect(mockAuditService.approve).not.toHaveBeenCalled();
     });
@@ -193,9 +178,7 @@ describe('WithdrawalService', () => {
     it('应该抛出异常 - 不支持的审核操作', async () => {
       mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
 
-      await expect(
-        service.audit('withdrawal1', 'INVALID' as any, 'admin1'),
-      ).rejects.toThrow(BusinessException);
+      await expect(service.audit('withdrawal1', 'INVALID' as any, 'admin1')).rejects.toThrow(BusinessException);
     });
   });
 

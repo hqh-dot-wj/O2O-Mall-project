@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * 属性模板仓储层
  * 封装商品属性模板相关的数据访问逻辑，继承BaseRepository提供通用CRUD操作
  * 属性模板用于管理一组相关的属性定义，可以关联到商品分类
- * 
+ *
  * @class TemplateRepository
  * @extends {BaseRepository<PmsAttrTemplate, Prisma.PmsAttrTemplateCreateInput, Prisma.PmsAttrTemplateUpdateInput>}
  */

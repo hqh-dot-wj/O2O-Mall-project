@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * 属性仓储层
  * 封装商品属性相关的数据访问逻辑，继承BaseRepository提供通用CRUD操作
  * 属性用于描述商品的特征（如颜色、尺寸、材质等）
- * 
+ *
  * @class AttributeRepository
  * @extends {BaseRepository<PmsAttribute, Prisma.PmsAttributeCreateInput, Prisma.PmsAttributeUpdateInput>}
  */

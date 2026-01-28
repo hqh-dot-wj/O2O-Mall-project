@@ -1,7 +1,13 @@
 import { Body, Controller, Get, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
-import { ListMemberDto, UpdateMemberStatusDto, UpdateMemberLevelDto, UpdateReferrerDto, UpdateMemberTenantDto } from './dto';
+import {
+  ListMemberDto,
+  UpdateMemberStatusDto,
+  UpdateMemberLevelDto,
+  UpdateReferrerDto,
+  UpdateMemberTenantDto,
+} from './dto';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
@@ -13,7 +19,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
 @ApiTags('会员管理')
 @Controller('admin/member')
 export class MemberController {
-  constructor(private readonly memberService: MemberService) { }
+  constructor(private readonly memberService: MemberService) {}
 
   /**
    * 查询会员列表

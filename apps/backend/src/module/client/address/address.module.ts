@@ -8,4 +8,4 @@ import { AddressRepository } from './address.repository';
   providers: [AddressService, AddressRepository],
   exports: [AddressService, AddressRepository],
 })
-export class ClientAddressModule { }
+export class ClientAddressModule {}

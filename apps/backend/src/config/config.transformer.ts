@@ -33,11 +33,11 @@ export class ConfigTransformer {
           const constraints = error.constraints ? Object.values(error.constraints).join(', ') : '';
           const children = error.children?.length
             ? error.children
-              .map((child) =>
-                child.constraints ? `  ${child.property}: ${Object.values(child.constraints).join(', ')}` : '',
-              )
-              .filter(Boolean)
-              .join('\n')
+                .map((child) =>
+                  child.constraints ? `  ${child.property}: ${Object.values(child.constraints).join(', ')}` : '',
+                )
+                .filter(Boolean)
+                .join('\n')
             : '';
 
           return `${error.property}: ${constraints}${children ? '\n' + children : ''}`;

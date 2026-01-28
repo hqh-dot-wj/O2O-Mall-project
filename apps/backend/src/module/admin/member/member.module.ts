@@ -8,13 +8,7 @@ import { MemberReferralService } from './services/member-referral.service';
 
 @Module({
   controllers: [MemberController],
-  providers: [
-    MemberService,
-    MemberRepository,
-    ReferralCodeRepository,
-    MemberStatsService,
-    MemberReferralService,
-  ],
+  providers: [MemberService, MemberRepository, ReferralCodeRepository, MemberStatsService, MemberReferralService],
   exports: [MemberService, MemberRepository, ReferralCodeRepository],
 })
-export class MemberModule { }
+export class MemberModule {}

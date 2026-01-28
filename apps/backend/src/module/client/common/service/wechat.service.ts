@@ -11,7 +11,7 @@ export class WechatService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   /**
    * 获取 WeChat AccessToken (带缓存)

@@ -1,4 +1,3 @@
-// Shared Enums will go here
-export enum GlobalExampleEnum {
-    TEST = 'TEST'
-}
+export * from './system.enum';
+export * from './business.enum';
+export * from './order.enum';

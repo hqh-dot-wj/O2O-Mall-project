@@ -13,7 +13,7 @@ export class StationService {
   constructor(
     private readonly repo: StationRepository,
     private readonly geoService: GeoService,
-  ) { }
+  ) {}
 
   /**
    * 创建服务站及其地理围栏
@@ -22,7 +22,7 @@ export class StationService {
    */
   @Transactional()
   async create(data: CreateStationDto) {
-    const { tenantId, name, address, location, fence } = data as any; // DTO has location object, but raw data might be flattened or different. 
+    const { tenantId, name, address, location, fence } = data as any; // DTO has location object, but raw data might be flattened or different.
     // Wait, DTO definition: location: StationPointDto {lng, lat}.
     // Schema: SysStation { latitude, longitude }.
     // Need mapping.

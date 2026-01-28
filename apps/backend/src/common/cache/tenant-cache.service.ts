@@ -5,20 +5,20 @@ import { Status } from '@prisma/client';
 
 /**
  * 租户缓存服务
- * 
+ *
  * @description
  * 负责租户名称的缓存管理,减少数据库查询压力。
- * 
+ *
  * 核心功能:
  * - 批量获取租户名称(带缓存)
  * - 单个租户名称查询(带缓存)
  * - 缓存失效和刷新
- * 
+ *
  * 缓存策略:
  * - TTL: 1小时
  * - 使用 Redis MGET 批量读取
  * - 使用 Pipeline 批量写入
- * 
+ *
  * @example
  * const names = await getTenantNames(['t1', 't2', 't3']);
  * // { t1: '商户A', t2: '商户B', t3: '商户C' }
@@ -36,20 +36,20 @@ export class TenantCacheService {
 
   /**
    * 批量获取租户名称(带缓存)
-   * 
+   *
    * @description
    * 1. 先从 Redis 批量读取
    * 2. 缓存未命中的从数据库查询
    * 3. 将数据库查询结果写入缓存
-   * 
+   *
    * @param tenantIds - 租户ID列表
    * @returns 租户ID -> 名称的映射
-   * 
+   *
    * @performance
    * - 使用 Redis MGET 批量读取,减少网络往返
    * - 使用 Pipeline 批量写入,提升性能
    * - 缓存命中率 > 90% 时,性能提升 10 倍
-   * 
+   *
    * @example
    * const names = await getTenantNames(['t1', 't2', 't3']);
    * // Map { 't1' => '商户A', 't2' => '商户B', 't3' => '商户C' }
@@ -64,7 +64,7 @@ export class TenantCacheService {
 
     try {
       // 1. 批量从缓存读取
-      const cacheKeys = tenantIds.map(id => `${this.CACHE_KEY_PREFIX}${id}`);
+      const cacheKeys = tenantIds.map((id) => `${this.CACHE_KEY_PREFIX}${id}`);
       const cached = await this.redis.mget(cacheKeys);
 
       tenantIds.forEach((id, index) => {
@@ -75,9 +75,7 @@ export class TenantCacheService {
         }
       });
 
-      this.logger.debug(
-        `Tenant cache: ${result.size} hits, ${missingIds.length} misses`,
-      );
+      this.logger.debug(`Tenant cache: ${result.size} hits, ${missingIds.length} misses`);
 
       // 2. 查询缺失的数据
       if (missingIds.length > 0) {
@@ -90,19 +88,13 @@ export class TenantCacheService {
         if (tenants.length > 0) {
           const client = this.redis.getClient();
           const pipeline = client.pipeline();
-          tenants.forEach(t => {
+          tenants.forEach((t) => {
             result.set(t.tenantId, t.companyName);
-            pipeline.setex(
-              `${this.CACHE_KEY_PREFIX}${t.tenantId}`,
-              this.TTL,
-              t.companyName,
-            );
+            pipeline.setex(`${this.CACHE_KEY_PREFIX}${t.tenantId}`, this.TTL, t.companyName);
           });
           await pipeline.exec();
 
-          this.logger.debug(
-            `Cached ${tenants.length} tenant names`,
-          );
+          this.logger.debug(`Cached ${tenants.length} tenant names`);
         }
       }
     } catch (error) {
@@ -112,7 +104,7 @@ export class TenantCacheService {
         where: { tenantId: { in: tenantIds } },
         select: { tenantId: true, companyName: true },
       });
-      tenants.forEach(t => result.set(t.tenantId, t.companyName));
+      tenants.forEach((t) => result.set(t.tenantId, t.companyName));
     }
 
     return result;
@@ -120,10 +112,10 @@ export class TenantCacheService {
 
   /**
    * 获取单个租户名称(带缓存)
-   * 
+   *
    * @param tenantId - 租户ID
    * @returns 租户名称,不存在返回 null
-   * 
+   *
    * @example
    * const name = await getTenantName('t1');
    * // '商户A'
@@ -170,12 +162,12 @@ export class TenantCacheService {
 
   /**
    * 使缓存失效
-   * 
+   *
    * @description
    * 当租户名称更新时,需要手动使缓存失效
-   * 
+   *
    * @param tenantId - 租户ID
-   * 
+   *
    * @example
    * await invalidate('t1');
    */
@@ -191,9 +183,9 @@ export class TenantCacheService {
 
   /**
    * 批量使缓存失效
-   * 
+   *
    * @param tenantIds - 租户ID列表
-   * 
+   *
    * @example
    * await invalidateMany(['t1', 't2', 't3']);
    */
@@ -203,7 +195,7 @@ export class TenantCacheService {
     }
 
     try {
-      const cacheKeys = tenantIds.map(id => `${this.CACHE_KEY_PREFIX}${id}`);
+      const cacheKeys = tenantIds.map((id) => `${this.CACHE_KEY_PREFIX}${id}`);
       const client = this.redis.getClient();
       await client.del(...cacheKeys);
       this.logger.debug(`Invalidated ${tenantIds.length} tenant caches`);
@@ -214,12 +206,12 @@ export class TenantCacheService {
 
   /**
    * 预热缓存
-   * 
+   *
    * @description
    * 在系统启动时或低峰期预热常用租户的缓存
-   * 
+   *
    * @param limit - 预热数量限制,默认100
-   * 
+   *
    * @example
    * await warmup(100);
    */
@@ -238,12 +230,8 @@ export class TenantCacheService {
       if (tenants.length > 0) {
         const client = this.redis.getClient();
         const pipeline = client.pipeline();
-        tenants.forEach(t => {
-          pipeline.setex(
-            `${this.CACHE_KEY_PREFIX}${t.tenantId}`,
-            this.TTL,
-            t.companyName,
-          );
+        tenants.forEach((t) => {
+          pipeline.setex(`${this.CACHE_KEY_PREFIX}${t.tenantId}`, this.TTL, t.companyName);
         });
         await pipeline.exec();
 

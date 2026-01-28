@@ -12,7 +12,7 @@ import { CreateCategoryDto, UpdateCategoryDto, ListCategoryDto } from './dto';
 /**
  * 分类服务层
  * 处理商品分类相关的业务逻辑，包括CRUD操作、树形结构构建和缓存管理
- * 
+ *
  * @class CategoryService
  */
 @Injectable()
@@ -27,7 +27,7 @@ export class CategoryService {
    * 获取分类树（带Redis缓存）
    * 使用@Cacheable装饰器自动缓存查询结果，提升性能
    * 缓存键：pms:category:tree:tree
-   * 
+   *
    * @returns 树形结构的分类列表
    */
   @Cacheable(CacheEnum.PMS_CATEGORY_TREE, 'tree')
@@ -73,7 +73,7 @@ export class CategoryService {
    * 创建分类
    * 创建成功后自动清除分类树缓存
    * 使用事务确保数据一致性
-   * 
+   *
    * @param dto - 创建分类DTO
    * @returns 创建成功的分类对象
    */
@@ -95,7 +95,7 @@ export class CategoryService {
    * 更新分类信息
    * 更新成功后自动清除分类树缓存
    * 使用事务确保数据一致性
-   * 
+   *
    * @param id - 分类ID
    * @param dto - 更新分类DTO
    * @returns 更新后的分类对象
@@ -114,7 +114,7 @@ export class CategoryService {
    * 2. 是否被商品引用（有则不允许删除）
    * 删除成功后自动清除分类树缓存
    * 使用事务确保数据一致性
-   * 
+   *
    * @param id - 分类ID
    * @returns 删除成功的结果
    * @throws {BusinessException} 如果分类有子分类或被商品使用
@@ -136,7 +136,7 @@ export class CategoryService {
 
   /**
    * 查询分类详情
-   * 
+   *
    * @param id - 分类ID
    * @returns 分类详情对象
    * @throws {BusinessException} 如果分类不存在
@@ -150,7 +150,7 @@ export class CategoryService {
   /**
    * 构建树形结构（私有方法）
    * 递归构建父子关系的树形数据结构
-   * 
+   *
    * @param items - 扁平的分类数组
    * @param parentId - 父级ID，null表示查找顶级分类
    * @returns 树形结构的分类数组

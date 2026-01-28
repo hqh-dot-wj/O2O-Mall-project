@@ -102,8 +102,7 @@ describe('CommissionService - Advanced Tests', () => {
 
   describe('跨店佣金测试', () => {
     it('应该正确处理跨店佣金 - 启用跨店', async () => {
-      const { order, beneficiary, config } =
-        TestDataFactory.createCrossTenantScenario();
+      const { order, beneficiary, config } = TestDataFactory.createCrossTenantScenario();
 
       const member = TestDataFactory.createMember({
         memberId: order.memberId,
@@ -113,9 +112,7 @@ describe('CommissionService - Advanced Tests', () => {
       const sku = TestDataFactory.createTenantSku();
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(member)
-        .mockResolvedValueOnce(beneficiary);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
@@ -143,9 +140,7 @@ describe('CommissionService - Advanced Tests', () => {
       const sku = TestDataFactory.createTenantSku();
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(member)
-        .mockResolvedValueOnce(beneficiary);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
@@ -156,8 +151,7 @@ describe('CommissionService - Advanced Tests', () => {
     });
 
     it('应该检查跨店日限额', async () => {
-      const { order, beneficiary, config } =
-        TestDataFactory.createCrossTenantScenario();
+      const { order, beneficiary, config } = TestDataFactory.createCrossTenantScenario();
 
       const member = TestDataFactory.createMember({
         memberId: order.memberId,
@@ -167,9 +161,7 @@ describe('CommissionService - Advanced Tests', () => {
       const sku = TestDataFactory.createTenantSku();
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(member)
-        .mockResolvedValueOnce(beneficiary);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
@@ -205,9 +197,7 @@ describe('CommissionService - Advanced Tests', () => {
       const sku = TestDataFactory.createTenantSku();
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(c0)
-        .mockResolvedValueOnce(c2);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(c0).mockResolvedValueOnce(c2);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
@@ -222,9 +212,7 @@ describe('CommissionService - Advanced Tests', () => {
       expect(call.create.level).toBe(1);
 
       // 金额应该是 L1 + L2
-      const expectedAmount = new Decimal(100)
-        .mul(config.level1Rate)
-        .add(new Decimal(100).mul(config.level2Rate));
+      const expectedAmount = new Decimal(100).mul(config.level1Rate).add(new Decimal(100).mul(config.level2Rate));
       expect(call.create.amount.toNumber()).toBeCloseTo(expectedAmount.toNumber(), 2);
     });
   });
@@ -244,15 +232,9 @@ describe('CommissionService - Advanced Tests', () => {
       });
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(member)
-        .mockResolvedValueOnce(beneficiary);
-      mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(
-        TestDataFactory.createDistConfig(),
-      );
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(
-        TestDataFactory.createTenantSku(),
-      );
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
+      mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(TestDataFactory.createDistConfig());
+      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(TestDataFactory.createTenantSku());
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(blacklist);
 
       await service.calculateCommission(order.id, order.tenantId);

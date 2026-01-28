@@ -10,30 +10,30 @@ import { UmsReferralCode, Prisma } from '@prisma/client';
  */
 @Injectable()
 export class ReferralCodeRepository extends BaseRepository<
-    UmsReferralCode,
-    Prisma.UmsReferralCodeCreateInput,
-    Prisma.UmsReferralCodeUpdateInput,
-    Prisma.UmsReferralCodeDelegate
+  UmsReferralCode,
+  Prisma.UmsReferralCodeCreateInput,
+  Prisma.UmsReferralCodeUpdateInput,
+  Prisma.UmsReferralCodeDelegate
 > {
-    constructor(prisma: PrismaService, cls: ClsService) {
-        super(prisma, cls, 'umsReferralCode', 'id');
-    }
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'umsReferralCode', 'id');
+  }
 
-    /**
-     * 根据会员ID查找推荐码
-     */
-    async findByMemberId(memberId: string) {
-        return this.delegate.findFirst({
-            where: { memberId },
-        });
-    }
+  /**
+   * 根据会员ID查找推荐码
+   */
+  async findByMemberId(memberId: string) {
+    return this.delegate.findFirst({
+      where: { memberId },
+    });
+  }
 
-    /**
-     * 根据推荐码查找
-     */
-    async findByCode(code: string) {
-        return this.delegate.findUnique({
-            where: { code },
-        });
-    }
+  /**
+   * 根据推荐码查找
+   */
+  async findByCode(code: string) {
+    return this.delegate.findUnique({
+      where: { code },
+    });
+  }
 }

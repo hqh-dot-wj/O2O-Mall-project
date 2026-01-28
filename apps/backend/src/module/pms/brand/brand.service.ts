@@ -10,7 +10,7 @@ import { CreateBrandDto, UpdateBrandDto, ListBrandDto } from './dto';
 /**
  * 品牌服务层
  * 处理品牌相关的业务逻辑，包括CRUD操作和业务规则校验
- * 
+ *
  * @class BrandService
  */
 @Injectable()
@@ -69,7 +69,7 @@ export class BrandService {
   /**
    * 更新品牌信息
    * 使用事务确保数据一致性
-   * 
+   *
    * @param id - 品牌ID
    * @param dto - 更新品牌DTO
    * @returns 更新后的品牌对象
@@ -84,7 +84,7 @@ export class BrandService {
    * 删除品牌
    * 删除前会检查品牌是否被商品引用，如果被引用则不允许删除
    * 使用事务确保数据一致性
-   * 
+   *
    * @param id - 品牌ID
    * @returns 删除成功的结果
    * @throws {BusinessException} 如果品牌被商品使用
@@ -101,7 +101,7 @@ export class BrandService {
 
   /**
    * 查询品牌详情
-   * 
+   *
    * @param id - 品牌ID
    * @returns 品牌详情对象
    * @throws {BusinessException} 如果品牌不存在

@@ -39,17 +39,12 @@ export class OrderService {
     private readonly checkoutService: OrderCheckoutService,
     private readonly attributionService: AttributionService,
     private readonly cartService: CartService,
-  ) { }
+  ) {}
 
   /**
    * 结算预览 - 从购物车或直接购买获取结算信息
    */
-  async getCheckoutPreview(
-    memberId: string,
-    tenantId: string,
-    items: any[],
-    marketingConfigId?: string,
-  ) {
+  async getCheckoutPreview(memberId: string, tenantId: string, items: any[], marketingConfigId?: string) {
     return this.checkoutService.getCheckoutPreview(memberId, tenantId, items, marketingConfigId);
   }
 
@@ -67,7 +62,12 @@ export class OrderService {
     }
 
     // 1. 获取结算预览 (校验商品、库存、价格、LBS距离)
-    const preview = await this.checkoutService.getCheckoutPreview(memberId, dto.tenantId, dto.items, dto.marketingConfigId);
+    const preview = await this.checkoutService.getCheckoutPreview(
+      memberId,
+      dto.tenantId,
+      dto.items,
+      dto.marketingConfigId,
+    );
 
     // 1.1 LBS 二次校验 (创建时强制校验，使用前端传入的最新坐标)
     if (dto.receiverLat && dto.receiverLng) {
@@ -148,7 +148,11 @@ export class OrderService {
     }
 
     // 8. 清除购物车中已下单的商品 (Hard Delete)
-    await this.cartRepo.deleteByMemberAndTenant(memberId, dto.tenantId, dto.items.map((i) => i.skuId));
+    await this.cartRepo.deleteByMemberAndTenant(
+      memberId,
+      dto.tenantId,
+      dto.items.map((i) => i.skuId),
+    );
 
     // 9. 同步购物车到 Redis
     await this.cartService.syncCartToRedis(memberId, dto.tenantId);
@@ -297,7 +301,9 @@ export class OrderService {
    */
   async confirmReceipt(memberId: string, orderId: string) {
     const order = await this.orderRepo.findOne({
-      id: orderId, memberId, deleteTime: null,
+      id: orderId,
+      memberId,
+      deleteTime: null,
     });
 
     BusinessException.throwIfNull(order, '订单不存在');

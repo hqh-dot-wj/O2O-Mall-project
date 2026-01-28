@@ -66,13 +66,7 @@ describe('SettlementScheduler', () => {
 
       await scheduler.settleJob();
 
-      expect(mockRedisClient.set).toHaveBeenCalledWith(
-        'lock:settle:commission',
-        '1',
-        'EX',
-        300,
-        'NX',
-      );
+      expect(mockRedisClient.set).toHaveBeenCalledWith('lock:settle:commission', '1', 'EX', 300, 'NX');
       expect(mockRedisClient.del).toHaveBeenCalledWith('lock:settle:commission');
     });
 
@@ -106,9 +100,7 @@ describe('SettlementScheduler', () => {
       ];
 
       mockRedisClient.set.mockResolvedValue('OK');
-      mockPrismaService.finCommission.findMany
-        .mockResolvedValueOnce(mockCommissions)
-        .mockResolvedValueOnce([]);
+      mockPrismaService.finCommission.findMany.mockResolvedValueOnce(mockCommissions).mockResolvedValueOnce([]);
 
       const mockTx = {
         finCommission: {
@@ -155,9 +147,7 @@ describe('SettlementScheduler', () => {
       };
 
       mockRedisClient.set.mockResolvedValue('OK');
-      mockPrismaService.finCommission.findMany
-        .mockResolvedValueOnce([mockCommission])
-        .mockResolvedValueOnce([]);
+      mockPrismaService.finCommission.findMany.mockResolvedValueOnce([mockCommission]).mockResolvedValueOnce([]);
 
       const mockTx = {
         finCommission: {
@@ -223,13 +213,9 @@ describe('SettlementScheduler', () => {
       ];
 
       mockRedisClient.set.mockResolvedValue('OK');
-      mockPrismaService.finCommission.findMany
-        .mockResolvedValueOnce(mockCommissions)
-        .mockResolvedValueOnce([]);
+      mockPrismaService.finCommission.findMany.mockResolvedValueOnce(mockCommissions).mockResolvedValueOnce([]);
 
-      mockPrismaService.$transaction
-        .mockRejectedValueOnce(new Error('Database error'))
-        .mockResolvedValueOnce({});
+      mockPrismaService.$transaction.mockRejectedValueOnce(new Error('Database error')).mockResolvedValueOnce({});
 
       await scheduler.settleJob();
 
@@ -238,9 +224,7 @@ describe('SettlementScheduler', () => {
 
     it('应该在异常时释放锁', async () => {
       mockRedisClient.set.mockResolvedValue('OK');
-      mockPrismaService.finCommission.findMany.mockRejectedValue(
-        new Error('Database error'),
-      );
+      mockPrismaService.finCommission.findMany.mockRejectedValue(new Error('Database error'));
 
       await expect(scheduler.settleJob()).rejects.toThrow('Database error');
 

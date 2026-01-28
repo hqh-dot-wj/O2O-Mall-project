@@ -6,38 +6,38 @@ import { ClsService } from 'nestjs-cls';
 
 @Injectable()
 export class AddressRepository extends BaseRepository<UmsAddress, Prisma.UmsAddressUncheckedCreateInput> {
-    constructor(
-        prisma: PrismaService,
-        private readonly clsService: ClsService,
-    ) {
-        super(prisma, clsService, 'umsAddress');
-    }
+  constructor(
+    prisma: PrismaService,
+    private readonly clsService: ClsService,
+  ) {
+    super(prisma, clsService, 'umsAddress');
+  }
 
-    /**
-     * 获取用户默认地址
-     */
-    async findDefault(memberId: string) {
-        return this.prisma.umsAddress.findFirst({
-            where: { memberId, isDefault: true },
-        });
-    }
+  /**
+   * 获取用户默认地址
+   */
+  async findDefault(memberId: string) {
+    return this.prisma.umsAddress.findFirst({
+      where: { memberId, isDefault: true },
+    });
+  }
 
-    /**
-     * 统计用户地址数量
-     */
-    async countByMember(memberId: string) {
-        return this.prisma.umsAddress.count({
-            where: { memberId },
-        });
-    }
+  /**
+   * 统计用户地址数量
+   */
+  async countByMember(memberId: string) {
+    return this.prisma.umsAddress.count({
+      where: { memberId },
+    });
+  }
 
-    /**
-     * 清除用户默认地址
-     */
-    async clearDefault(memberId: string) {
-        return this.prisma.umsAddress.updateMany({
-            where: { memberId, isDefault: true },
-            data: { isDefault: false },
-        });
-    }
+  /**
+   * 清除用户默认地址
+   */
+  async clearDefault(memberId: string) {
+    return this.prisma.umsAddress.updateMany({
+      where: { memberId, isDefault: true },
+      data: { isDefault: false },
+    });
+  }
 }

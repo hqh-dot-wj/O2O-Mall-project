@@ -23,7 +23,7 @@ export class GroupBuyService implements IMarketingStrategy {
     private readonly instanceService: PlayInstanceService,
     private readonly repo: PlayInstanceRepository,
     private readonly stockService: MarketingStockService,
-  ) { }
+  ) {}
 
   /**
    * 1.1 配置校验

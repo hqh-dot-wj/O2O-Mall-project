@@ -11,4 +11,4 @@ import { CartRepository } from './cart.repository';
   providers: [CartService, CartRepository],
   exports: [CartService, CartRepository],
 })
-export class ClientCartModule { }
+export class ClientCartModule {}

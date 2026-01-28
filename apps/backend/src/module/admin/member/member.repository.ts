@@ -10,28 +10,28 @@ import { UmsMember, Prisma } from '@prisma/client';
  */
 @Injectable()
 export class MemberRepository extends BaseRepository<
-    UmsMember,
-    Prisma.UmsMemberCreateInput,
-    Prisma.UmsMemberUpdateInput,
-    Prisma.UmsMemberDelegate
+  UmsMember,
+  Prisma.UmsMemberCreateInput,
+  Prisma.UmsMemberUpdateInput,
+  Prisma.UmsMemberDelegate
 > {
-    constructor(prisma: PrismaService, cls: ClsService) {
-        super(prisma, cls, 'umsMember', 'memberId');
-    }
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'umsMember', 'memberId');
+  }
 
-    /**
-     * 按手机号查找会员
-     */
-    async findByMobile(mobile: string) {
-        return this.delegate.findFirst({
-            where: { mobile },
-        });
-    }
+  /**
+   * 按手机号查找会员
+   */
+  async findByMobile(mobile: string) {
+    return this.delegate.findFirst({
+      where: { mobile },
+    });
+  }
 
-    /**
-     * 检查手机号是否存在
-     */
-    async existsByMobile(mobile: string) {
-        return this.exists({ mobile });
-    }
+  /**
+   * 检查手机号是否存在
+   */
+  async existsByMobile(mobile: string) {
+    return this.exists({ mobile });
+  }
 }

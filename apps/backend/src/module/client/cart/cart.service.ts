@@ -22,7 +22,7 @@ export class CartService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly cartRepo: CartRepository,
-  ) { }
+  ) {}
 
   /**
    * 添加商品到购物车
@@ -76,16 +76,16 @@ export class CartService {
     // BaseRepository doesn't have upsert clearly defined in the interface viewed (it has create, update, but not upsert).
     // Let's use prisma directly for upsert OR add upsert to CartRepository.
 
-    // I will use prisma for upsert inside Service for now to avoid creating new Repo method if not needed, 
+    // I will use prisma for upsert inside Service for now to avoid creating new Repo method if not needed,
     // BUT the goal IS to remove prisma usage.
     // So I should add upsert to CartRepository? Or just use prisma for now for upsert?
     // Let's stick to replacing "Simple" calls first or be bold and add upsert to repo.
     // I'll add upsert to CartRepository in a bit (or assume I can use prisma for complex upsert).
 
-    // Actually, looking at the code I'm replacing: 
+    // Actually, looking at the code I'm replacing:
     // It's `prisma.omsCartItem.upsert`.
     // Let's keep `prisma.omsCartItem.upsert` for this step or use `cartRepo.delegate.upsert` (accessing delegate is possible but maybe not encouraged).
-    // Better to encapsulate. I will leave upsert as prisma call for now to minimize risk of breaking complex upsert logic, 
+    // Better to encapsulate. I will leave upsert as prisma call for now to minimize risk of breaking complex upsert logic,
     // and focus on `findMany` and `deleteMany` replacement which is safer.
 
     const cartItem = await this.prisma.omsCartItem.upsert({

@@ -24,7 +24,7 @@ export class PlayInstanceService {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => PlayStrategyFactory))
     private readonly strategyFactory: PlayStrategyFactory,
-  ) { }
+  ) {}
 
   /**
    * 分页查询实例

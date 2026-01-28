@@ -24,7 +24,7 @@ export class AdminUpgradeService {
     private readonly prisma: PrismaService,
     private readonly upgradeRepo: UpgradeApplyRepository,
     private readonly referralService: UpgradeReferralService,
-  ) { }
+  ) {}
 
   /**
    * 查询升级申请列表
@@ -113,7 +113,9 @@ export class AdminUpgradeService {
         await this.referralService.generateAndBindCode(client, apply!.memberId, apply!.tenantId);
       }
 
-      this.logger.log(`审批通过: 申请 ${applyId}, 会员 ${apply!.memberId}, 等级 ${apply!.fromLevel}->${apply!.toLevel}, 操作人 ${operatorId}`);
+      this.logger.log(
+        `审批通过: 申请 ${applyId}, 会员 ${apply!.memberId}, 等级 ${apply!.fromLevel}->${apply!.toLevel}, 操作人 ${operatorId}`,
+      );
       return Result.ok(null, '审批通过');
     } else {
       // 驳回逻辑

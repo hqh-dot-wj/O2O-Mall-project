@@ -4,50 +4,25 @@
  * All backend api type
  */
 declare namespace Api {
-  /**
-   * namespace System
-   *
-   * backend api module: "system"
-   */
   namespace System {
+    /** config */
+    type Config = import('@common/api').components['schemas']['ConfigVo'];
+
     /** data scope */
     type DataScope = '1' | '2' | '3' | '4' | '5' | '6';
 
     /** role */
-    type Role = Common.CommonRecord<{
-      /** 数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限） */
-      dataScope: DataScope;
-      /** 部门树选择项是否关联显示 */
-      deptCheckStrictly: boolean;
-      /** 用户是否存在此角色标识 默认不存在 */
-      flag: boolean;
-      /** 菜单树选择项是否关联显示 */
-      menuCheckStrictly: boolean;
-      /** 备注 */
-      remark?: string;
-      /** 角色ID */
-      roleId: CommonType.IdType;
-      /** 角色权限字符串 */
-      roleKey: string;
-      /** 角色名称 */
-      roleName: string;
-      /** 显示顺序 */
-      roleSort: number;
-      /** 角色状态（0正常 1停用） */
-      status: Common.EnableStatus;
-      /** 是否管理员 */
-      superAdmin: boolean;
-    }>;
+    type Role = import('@common/api').components['schemas']['RoleVo'];
 
     /** role search params */
     type RoleSearchParams = CommonType.RecordNullable<
-      Pick<Api.System.Role, 'roleName' | 'roleKey' | 'status'> & Api.Common.CommonSearchParams
+      Pick<Role, 'roleName' | 'roleKey' | 'status'> & Api.Common.CommonSearchParams
     >;
 
     /** role operate params */
     type RoleOperateParams = CommonType.RecordNullable<
       Pick<
-        Api.System.Role,
+        Role,
         | 'roleId'
         | 'roleName'
         | 'roleKey'
@@ -91,38 +66,7 @@ declare namespace Api {
     type UserGender = '1' | '2';
 
     /** user */
-    type User = Common.CommonTenantRecord<{
-      /** 用户ID */
-      userId: CommonType.IdType;
-      /** 部门ID */
-      deptId: CommonType.IdType;
-      /** 部门名称 */
-      deptName: string;
-      /** 用户账号 */
-      userName: string;
-      /** 用户昵称 */
-      nickName: string;
-      /** 用户类型（sys_user系统用户） */
-      userType: string;
-      /** 用户邮箱 */
-      email: string;
-      /** 手机号码 */
-      phonenumber: string;
-      /** 用户性别（0男 1女 2未知） */
-      sex: string;
-      /** 头像地址 */
-      avatar: string;
-      /** 密码 */
-      password: string;
-      /** 帐号状态（0正常 1停用） */
-      status: Common.EnableStatus;
-      /** 最后登录IP */
-      loginIp: string;
-      /** 最后登录时间 */
-      loginDate: Date;
-      /** 备注 */
-      remark?: string;
-    }>;
+    type User = import('@common/api').components['schemas']['SysUserVo'];
 
     /** user search params */
     type UserSearchParams = CommonType.RecordNullable<
@@ -474,32 +418,14 @@ declare namespace Api {
     /** post list */
     type PostList = Api.Common.PaginatingQueryRecord<Post>;
 
-    /** config */
-    type Config = Common.CommonRecord<{
-      /** 参数主键 */
-      configId: CommonType.IdType;
-      /** 租户编号 */
-      tenantId: CommonType.IdType;
-      /** 参数名称 */
-      configName: string;
-      /** 参数键名 */
-      configKey: string;
-      /** 参数键值 */
-      configValue: string;
-      /** 是否内置 */
-      configType: Common.YesOrNoStatus;
-      /** 备注 */
-      remark: string;
-    }>;
-
     /** config search params */
     type ConfigSearchParams = CommonType.RecordNullable<
-      Pick<Api.System.Config, 'configName' | 'configKey' | 'configType' | 'createTime'> & Api.Common.CommonSearchParams
+      Pick<Config, 'configName' | 'configKey' | 'configType'> & Api.Common.CommonSearchParams
     >;
 
     /** config operate params */
     type ConfigOperateParams = CommonType.RecordNullable<
-      Pick<Api.System.Config, 'configId' | 'configName' | 'configKey' | 'configValue' | 'configType' | 'remark'>
+      Pick<Config, 'configId' | 'configName' | 'configKey' | 'configValue' | 'configType' | 'remark'>
     >;
 
     /** config list */

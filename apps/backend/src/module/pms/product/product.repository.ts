@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * 商品仓储层
  * 封装商品相关的数据访问逻辑，继承BaseRepository提供通用CRUD操作
  * 提供带关联查询的复杂查询方法
- * 
+ *
  * @class ProductRepository
  * @extends {BaseRepository<PmsProduct, Prisma.PmsProductCreateInput, Prisma.PmsProductUpdateInput>}
  */

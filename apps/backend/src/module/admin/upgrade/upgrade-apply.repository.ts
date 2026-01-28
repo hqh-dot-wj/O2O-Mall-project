@@ -10,21 +10,21 @@ import { UmsUpgradeApply, Prisma } from '@prisma/client';
  */
 @Injectable()
 export class UpgradeApplyRepository extends BaseRepository<
-    UmsUpgradeApply,
-    Prisma.UmsUpgradeApplyCreateInput,
-    Prisma.UmsUpgradeApplyUpdateInput,
-    Prisma.UmsUpgradeApplyDelegate
+  UmsUpgradeApply,
+  Prisma.UmsUpgradeApplyCreateInput,
+  Prisma.UmsUpgradeApplyUpdateInput,
+  Prisma.UmsUpgradeApplyDelegate
 > {
-    constructor(prisma: PrismaService, cls: ClsService) {
-        super(prisma, cls, 'umsUpgradeApply', 'id');
-    }
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'umsUpgradeApply', 'id');
+  }
 
-    /**
-     * 统计待审批申请数
-     */
-    async countPending(where: Prisma.UmsUpgradeApplyWhereInput) {
-        return this.delegate.count({
-            where: { ...where, status: 'PENDING' },
-        });
-    }
+  /**
+   * 统计待审批申请数
+   */
+  async countPending(where: Prisma.UmsUpgradeApplyWhereInput) {
+    return this.delegate.count({
+      where: { ...where, status: 'PENDING' },
+    });
+  }
 }

@@ -22,11 +22,11 @@ export class ClientProductService {
   private readonly logger = new Logger(ClientProductService.name);
 
   // Decorator injects 'redis' property, but we inject RedisService manually for findAll usage and safety.
-  // We need to ensure property name matches if decorator uses it, but decorator uses 'redis', 
+  // We need to ensure property name matches if decorator uses it, but decorator uses 'redis',
   // and we might inject as 'redisService'.
-  // Use 'redisService' for manual calls. Decorator handles its own injection if needed, 
+  // Use 'redisService' for manual calls. Decorator handles its own injection if needed,
   // OR returns a function that expects 'this.redis' to exist.
-  // Looking at decorator: `injectRedis(target, 'redis')`. 
+  // Looking at decorator: `injectRedis(target, 'redis')`.
   // It effectively sets `this.redis`.
   // If we declare `private redis: RedisService` it might conflict or work?
   // Let's just inject `redisService` for manual use.
@@ -37,7 +37,7 @@ export class ClientProductService {
     // [NEW] Repository
     private readonly productRepo: ClientProductRepository,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   /**
    * 获取商品列表

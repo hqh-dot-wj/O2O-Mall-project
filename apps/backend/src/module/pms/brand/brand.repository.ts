@@ -7,16 +7,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 /**
  * 品牌仓储层
  * 封装品牌相关的数据访问逻辑，继承BaseRepository提供通用CRUD操作
- * 
+ *
  * @class BrandRepository
  * @extends {BaseRepository<PmsBrand, Prisma.PmsBrandCreateInput, Prisma.PmsBrandUpdateInput>}
  */
 @Injectable()
-export class BrandRepository extends BaseRepository<
-  PmsBrand,
-  Prisma.PmsBrandCreateInput,
-  Prisma.PmsBrandUpdateInput
-> {
+export class BrandRepository extends BaseRepository<PmsBrand, Prisma.PmsBrandCreateInput, Prisma.PmsBrandUpdateInput> {
   /**
    * 构造函数
    * @param prisma - Prisma服务实例

@@ -8,15 +8,13 @@ import { ListLedgerDto } from './dto/store-finance.dto';
 
 /**
  * 店铺财务流水服务
- * 
+ *
  * @description
  * 负责店铺财务流水的查询,使用 UNION ALL 合并多表数据
  */
 @Injectable()
 export class StoreLedgerService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 查询财务流水(使用数据库分页)
@@ -164,20 +162,22 @@ export class StoreLedgerService {
       LIMIT ${query.take} OFFSET ${query.skip}
     `;
 
-    const result = await this.prisma.$queryRaw<Array<{
-      id: string;
-      type: string;
-      type_name: string;
-      amount: any;
-      balance_after: any;
-      related_id: string;
-      remark: string;
-      create_time: Date;
-      user_name: string;
-      user_phone: string;
-      user_id: string | null;
-      status: string | null;
-    }>>(finalQuery);
+    const result = await this.prisma.$queryRaw<
+      Array<{
+        id: string;
+        type: string;
+        type_name: string;
+        amount: any;
+        balance_after: any;
+        related_id: string;
+        remark: string;
+        create_time: Date;
+        user_name: string;
+        user_phone: string;
+        user_id: string | null;
+        status: string | null;
+      }>
+    >(finalQuery);
 
     const countQuery = Prisma.sql`
       SELECT COUNT(*) as total FROM (
@@ -187,7 +187,7 @@ export class StoreLedgerService {
     const countResult = await this.prisma.$queryRaw<Array<{ total: bigint }>>(countQuery);
     const total = Number(countResult[0]?.total || 0);
 
-    const list = result.map(r => ({
+    const list = result.map((r) => ({
       id: r.id,
       type: r.type,
       typeName: r.type_name,

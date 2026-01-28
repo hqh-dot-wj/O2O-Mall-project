@@ -9,7 +9,7 @@ import { WithdrawalRepository } from 'src/module/finance/withdrawal/withdrawal.r
 
 /**
  * 店铺财务看板服务
- * 
+ *
  * @description
  * 负责店铺财务看板数据的统计和聚合
  */

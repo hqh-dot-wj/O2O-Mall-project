@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * 分类仓储层
  * 封装商品分类相关的数据访问逻辑，继承BaseRepository提供通用CRUD操作
  * 支持树形结构的分类管理
- * 
+ *
  * @class CategoryRepository
  * @extends {BaseRepository<PmsCategory, Prisma.PmsCategoryCreateInput, Prisma.PmsCategoryUpdateInput>}
  */

@@ -9,7 +9,7 @@ import { StoreLedgerService } from './ledger.service';
 
 /**
  * Store端财务服务 (Facade)
- * 
+ *
  * @description
  * 作为 Facade 模式的入口,协调各个子服务:
  * - StoreDashboardService: 看板统计

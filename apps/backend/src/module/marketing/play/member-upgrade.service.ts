@@ -34,7 +34,7 @@ export class MemberUpgradeService implements IMarketingStrategy {
     private readonly referralRepo: ReferralCodeRepository,
     private readonly configRepo: StorePlayConfigRepository,
     private readonly orderRepo: OrderRepository,
-  ) { }
+  ) {}
 
   /**
    * 准入校验: 只允许低等级用户购买

@@ -19,7 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
     private readonly wechatService: WechatService,
-  ) { }
+  ) {}
 
   /**
    * 阶段二：静默登录检查

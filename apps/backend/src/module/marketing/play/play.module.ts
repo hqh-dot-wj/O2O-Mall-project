@@ -31,4 +31,4 @@ import { MarketingConfigModule } from '../config/config.module';
   providers: [GroupBuyService, CourseGroupBuyService, MemberUpgradeService, PlayStrategyFactory],
   exports: [GroupBuyService, CourseGroupBuyService, MemberUpgradeService, PlayStrategyFactory],
 })
-export class MarketingPlayModule { }
+export class MarketingPlayModule {}

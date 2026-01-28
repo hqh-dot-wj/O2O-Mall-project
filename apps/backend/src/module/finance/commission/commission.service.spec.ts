@@ -281,9 +281,7 @@ describe('CommissionService', () => {
       };
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(mockMember)
-        .mockResolvedValueOnce(beneficiary);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
         distMode: 'RATIO',
@@ -309,9 +307,7 @@ describe('CommissionService', () => {
       };
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(mockMember)
-        .mockResolvedValueOnce(beneficiary);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
         distMode: 'RATIO',
@@ -337,9 +333,7 @@ describe('CommissionService', () => {
       };
 
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(mockMember)
-        .mockResolvedValueOnce(beneficiary);
+      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
       mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
         distMode: 'RATIO',

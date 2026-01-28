@@ -11,7 +11,7 @@ import { MemberAuthGuard } from '../common/guards/member-auth.guard';
 @UseGuards(MemberAuthGuard)
 @Controller('client/upgrade')
 export class UpgradeController {
-  constructor(private readonly upgradeService: UpgradeService) { }
+  constructor(private readonly upgradeService: UpgradeService) {}
 
   @ApiOperation({ summary: '申请升级 (扫码)' })
   @Post('apply')

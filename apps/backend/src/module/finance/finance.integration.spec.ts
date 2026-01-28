@@ -9,13 +9,13 @@ import { CommissionStatus, OrderType, WithdrawalStatus } from '@prisma/client';
 
 /**
  * Finance 模块集成测试
- * 
+ *
  * 注意: 这是集成测试示例,需要真实的数据库连接
  * 运行前请确保:
  * 1. 数据库已启动
  * 2. 测试数据已准备
  * 3. 环境变量已配置
- * 
+ *
  * 当前状态: 跳过执行,需要完整的模块配置
  */
 describe.skip('Finance Module Integration Tests', () => {
@@ -119,11 +119,7 @@ describe.skip('Finance Module Integration Tests', () => {
       expect(walletAfterApply!.frozen.toNumber()).toBe(withdrawalAmount);
 
       // 8. 审核通过
-      const auditResult = await withdrawalService.audit(
-        withdrawalId,
-        'APPROVE',
-        'admin-test',
-      );
+      const auditResult = await withdrawalService.audit(withdrawalId, 'APPROVE', 'admin-test');
 
       expect(auditResult.code).toBe(200);
 
@@ -154,9 +150,7 @@ describe.skip('Finance Module Integration Tests', () => {
       await commissionService.cancelCommissions(testOrderId);
 
       // 4. 验证佣金已取消
-      const cancelledCommissions = await commissionService.getCommissionsByOrder(
-        testOrderId,
-      );
+      const cancelledCommissions = await commissionService.getCommissionsByOrder(testOrderId);
       cancelledCommissions.forEach((comm) => {
         expect(comm.status).toBe(CommissionStatus.CANCELLED);
       });
@@ -164,30 +158,15 @@ describe.skip('Finance Module Integration Tests', () => {
 
     it('异常流程: 提现申请 -> 审核驳回', async () => {
       // 1. 先给钱包充值
-      await walletService.addBalance(
-        testMemberId,
-        new Decimal(100),
-        'test-recharge',
-        '测试充值',
-      );
+      await walletService.addBalance(testMemberId, new Decimal(100), 'test-recharge', '测试充值');
 
       // 2. 申请提现
-      const withdrawalResult = await withdrawalService.apply(
-        testMemberId,
-        testTenantId,
-        50,
-        'WECHAT',
-      );
+      const withdrawalResult = await withdrawalService.apply(testMemberId, testTenantId, 50, 'WECHAT');
 
       const withdrawalId = withdrawalResult.data.id;
 
       // 3. 审核驳回
-      const auditResult = await withdrawalService.audit(
-        withdrawalId,
-        'REJECT',
-        'admin-test',
-        '余额异常',
-      );
+      const auditResult = await withdrawalService.audit(withdrawalId, 'REJECT', 'admin-test', '余额异常');
 
       expect(auditResult.code).toBe(200);
 
@@ -212,12 +191,7 @@ describe.skip('Finance Module Integration Tests', () => {
       const testTenantId = 'test-tenant-' + Date.now();
 
       // 给钱包充值 100 元
-      await walletService.addBalance(
-        testMemberId,
-        new Decimal(100),
-        'test-recharge',
-        '测试充值',
-      );
+      await walletService.addBalance(testMemberId, new Decimal(100), 'test-recharge', '测试充值');
 
       // 并发申请 3 次提现,每次 50 元
       const promises = [

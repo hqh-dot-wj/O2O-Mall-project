@@ -150,12 +150,7 @@ describe('WalletService', () => {
 
       mockWalletRepo.updateByMemberId.mockResolvedValue(mockWallet);
 
-      const result = await service.addBalance(
-        'member1',
-        new Decimal(10),
-        'order1',
-        '佣金结算',
-      );
+      const result = await service.addBalance('member1', new Decimal(10), 'order1', '佣金结算');
 
       expect(result).toEqual(mockWallet);
       expect(mockWalletRepo.updateByMemberId).toHaveBeenCalledWith('member1', {

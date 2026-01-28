@@ -18,4 +18,4 @@ import { forwardRef } from '@nestjs/common';
   providers: [PlayInstanceService, PlayInstanceRepository],
   exports: [PlayInstanceService, PlayInstanceRepository],
 })
-export class PlayInstanceModule { }
+export class PlayInstanceModule {}

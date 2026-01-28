@@ -10,4 +10,4 @@ import { ClientCommonModule } from '../common/client-common.module';
   providers: [UpgradeService],
   exports: [UpgradeService],
 })
-export class UpgradeModule { }
+export class UpgradeModule {}

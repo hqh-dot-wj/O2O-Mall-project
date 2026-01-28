@@ -14,7 +14,7 @@ export class PaymentService {
   constructor(
     private readonly orderRepo: OrderRepository,
     private readonly commissionService: CommissionService,
-  ) { }
+  ) {}
 
   /**
    * 预下单，获取微信支付参数
@@ -23,7 +23,8 @@ export class PaymentService {
     // 1. 校验订单
     // [MODIFIED] Use OrderRepository
     const order = await this.orderRepo.findOne({
-      id: dto.orderId, memberId,
+      id: dto.orderId,
+      memberId,
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
@@ -59,7 +60,8 @@ export class PaymentService {
    */
   async mockSuccess(memberId: string, orderId: string) {
     const order = await this.orderRepo.findOne({
-      id: orderId, memberId,
+      id: orderId,
+      memberId,
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
@@ -99,8 +101,8 @@ export class PaymentService {
       status: nextStatus,
       payStatus: 'PAID',
       payTime: new Date(),
-      // transactionId: transactionId, // Ensure schema has this field or add it? 
-      // For now scheme might not have transactionId in omsOrder? 
+      // transactionId: transactionId, // Ensure schema has this field or add it?
+      // For now scheme might not have transactionId in omsOrder?
       // Let's check schema/vo. OrderDetailVo doesn't show transactionId.
       // Assuming it's not crucial for now or stored in pay info.
     });

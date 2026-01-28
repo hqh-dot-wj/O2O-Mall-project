@@ -4,9 +4,11 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "tsc"
+        "build": "tsc",
+        "generate-types": "openapi-typescript ../../apps/backend/openApi.json -o ./src/api.d.ts"
     },
     "devDependencies": {
+        "openapi-typescript": "^7.10.1",
         "typescript": "^5.0.0"
     }
 }

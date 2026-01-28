@@ -57,27 +57,27 @@ export class StockService {
 
   /**
    * 更新库存数量
-   * 
+   *
    * @description
    * 使用数据库原子操作(increment/decrement)防止并发竞态
-   * 
+   *
    * @param tenantId - 当前租户ID
    * @param dto - 更新参数
    * @param dto.skuId - SKU ID
    * @param dto.stockChange - 库存变化量(正数增加,负数减少)
    * @returns 更新后的 SKU 信息
-   * 
+   *
    * @throws BusinessException
    * - SKU不存在或无权访问
    * - 库存不足(扣减时)
-   * 
+   *
    * @concurrency 使用数据库原子操作,绝对安全,无竞态风险
    * @performance 单条SQL完成,性能最优,支持高并发
-   * 
+   *
    * @example
    * // 增加库存
    * await updateStock('tenant1', { skuId: 'sku1', stockChange: 100 });
-   * 
+   *
    * // 减少库存
    * await updateStock('tenant1', { skuId: 'sku1', stockChange: -10 });
    */
@@ -108,11 +108,14 @@ export class StockService {
       const sku = await this.prisma.pmsTenantSku.findFirst({
         where: { id: skuId, tenantProd: { tenantId } },
       });
-      
+
       if (!sku) {
         throw new BusinessException(ResponseCode.DATA_NOT_FOUND, 'SKU不存在或无权访问');
       } else {
-        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `库存不足,当前库存: ${sku.stock}, 需要: ${Math.abs(change)}`);
+        throw new BusinessException(
+          ResponseCode.BUSINESS_ERROR,
+          `库存不足,当前库存: ${sku.stock}, 需要: ${Math.abs(change)}`,
+        );
       }
     }
 

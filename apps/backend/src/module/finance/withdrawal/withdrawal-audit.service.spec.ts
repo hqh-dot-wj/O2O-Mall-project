@@ -123,19 +123,14 @@ describe('WithdrawalAuditService', () => {
         auditBy: 'admin1',
         paymentNo: 'PAY123456',
       });
-      expect(mockWalletService.deductFrozen).toHaveBeenCalledWith(
-        'member1',
-        new Decimal(50),
-      );
+      expect(mockWalletService.deductFrozen).toHaveBeenCalledWith('member1', new Decimal(50));
     });
 
     it('应该处理打款失败', async () => {
       mockPaymentService.transfer.mockRejectedValue(new Error('打款渠道异常'));
       mockWithdrawalRepo.update.mockResolvedValue({});
 
-      await expect(service.approve(mockWithdrawal, 'admin1')).rejects.toThrow(
-        BusinessException,
-      );
+      await expect(service.approve(mockWithdrawal, 'admin1')).rejects.toThrow(BusinessException);
 
       expect(mockWithdrawalRepo.update).toHaveBeenCalledWith('withdrawal1', {
         status: WithdrawalStatus.FAILED,
@@ -175,10 +170,7 @@ describe('WithdrawalAuditService', () => {
         auditBy: 'admin1',
         auditRemark: '余额异常',
       });
-      expect(mockWalletService.unfreezeBalance).toHaveBeenCalledWith(
-        'member1',
-        new Decimal(50),
-      );
+      expect(mockWalletService.unfreezeBalance).toHaveBeenCalledWith('member1', new Decimal(50));
     });
 
     it('应该支持无备注驳回', async () => {

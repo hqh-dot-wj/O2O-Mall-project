@@ -44,4 +44,4 @@ import { ClientCartModule } from '../cart/cart.module';
 
   exports: [OrderService, OrderRepository],
 })
-export class ClientOrderModule { }
+export class ClientOrderModule {}

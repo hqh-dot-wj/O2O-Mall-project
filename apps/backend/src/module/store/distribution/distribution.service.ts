@@ -8,7 +8,7 @@ import { BusinessConstants } from 'src/common/constants/business.constants';
 
 @Injectable()
 export class DistributionService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 获取分销规则配置
@@ -162,11 +162,14 @@ export class DistributionService {
     });
 
     const config = {
-      level1Rate: distConfig?.level1Rate ? Number(distConfig.level1Rate) : BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE,
+      level1Rate: distConfig?.level1Rate
+        ? Number(distConfig.level1Rate)
+        : BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE,
       enableCrossTenant: (distConfig as any)?.enableCrossTenant ?? false,
-      crossTenantRate: (distConfig as any)?.crossTenantRate ? Number((distConfig as any).crossTenantRate) : BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE,
+      crossTenantRate: (distConfig as any)?.crossTenantRate
+        ? Number((distConfig as any).crossTenantRate)
+        : BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE,
     };
-
 
     // 判断是否跨店
     let isLocal = true;

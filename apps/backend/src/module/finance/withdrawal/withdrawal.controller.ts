@@ -11,7 +11,7 @@ import { TenantContext } from 'src/common/tenant';
 @ApiTags('财务管理-提现管理')
 @Controller('finance/withdrawal')
 export class WithdrawalController {
-  constructor(private readonly withdrawalService: WithdrawalService) { }
+  constructor(private readonly withdrawalService: WithdrawalService) {}
 
   @Get('list')
   @Api({ summary: '查询提现列表', type: WithdrawalVo })

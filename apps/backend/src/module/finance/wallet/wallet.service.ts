@@ -20,7 +20,7 @@ export class WalletService {
     private readonly prisma: PrismaService,
     private readonly walletRepo: WalletRepository,
     private readonly transactionRepo: TransactionRepository,
-  ) { }
+  ) {}
 
   /**
    * 获取或创建用户钱包
@@ -86,13 +86,7 @@ export class WalletService {
    */
   @Transactional()
   @CachePut(CacheEnum.FIN_WALLET_KEY, '{memberId}')
-  async deductBalance(
-    memberId: string,
-    amount: Decimal,
-    relatedId: string,
-    remark: string,
-    type: TransType,
-  ) {
+  async deductBalance(memberId: string, amount: Decimal, relatedId: string, remark: string, type: TransType) {
     const wallet = await this.walletRepo.updateByMemberId(memberId, {
       balance: { decrement: amount },
       version: { increment: 1 },

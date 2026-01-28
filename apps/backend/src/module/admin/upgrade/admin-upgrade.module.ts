@@ -6,11 +6,7 @@ import { UpgradeReferralService } from './services/upgrade-referral.service';
 
 @Module({
   controllers: [AdminUpgradeController],
-  providers: [
-    AdminUpgradeService,
-    UpgradeApplyRepository,
-    UpgradeReferralService,
-  ],
+  providers: [AdminUpgradeService, UpgradeApplyRepository, UpgradeReferralService],
   exports: [AdminUpgradeService, UpgradeApplyRepository],
 })
-export class AdminUpgradeModule { }
+export class AdminUpgradeModule {}

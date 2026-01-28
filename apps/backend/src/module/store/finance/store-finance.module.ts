@@ -9,7 +9,7 @@ import { StoreOrderRepository } from 'src/module/store/order/store-order.reposit
 
 /**
  * Store端财务管理模块
- * 
+ *
  * @description
  * 采用 Facade 模式拆分服务:
  * - StoreDashboardService: 看板统计

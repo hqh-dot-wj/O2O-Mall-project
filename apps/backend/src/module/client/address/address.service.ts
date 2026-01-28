@@ -16,7 +16,7 @@ export class AddressService {
   // 每个用户最多保存的地址数量
   private readonly MAX_ADDRESS_COUNT = 20;
 
-  constructor(private readonly addressRepo: AddressRepository) { }
+  constructor(private readonly addressRepo: AddressRepository) {}
 
   /**
    * 获取地址列表

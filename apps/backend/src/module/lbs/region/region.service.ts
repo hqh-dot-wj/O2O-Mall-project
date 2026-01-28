@@ -8,7 +8,7 @@ import { SystemCacheable } from 'src/module/admin/common/decorators/system-cache
 export class RegionService implements OnModuleInit {
   private readonly logger = new Logger(RegionService.name);
 
-  constructor(private readonly repo: RegionRepository) { }
+  constructor(private readonly repo: RegionRepository) {}
 
   async onModuleInit() {
     // Check if regions exist, if not, seed them

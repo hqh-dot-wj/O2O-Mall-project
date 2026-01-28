@@ -103,10 +103,7 @@ describe('StockService - updateStock', () => {
       };
 
       await expect(service.updateStock('t1', dto)).rejects.toThrow(
-        new BusinessException(
-          ResponseCode.DATA_NOT_FOUND,
-          'SKU不存在或无权访问',
-        ),
+        new BusinessException(ResponseCode.DATA_NOT_FOUND, 'SKU不存在或无权访问'),
       );
     });
 
@@ -120,10 +117,7 @@ describe('StockService - updateStock', () => {
       };
 
       await expect(service.updateStock('t1', dto)).rejects.toThrow(
-        new BusinessException(
-          ResponseCode.BUSINESS_ERROR,
-          '库存不足,当前库存: 100, 需要: 150',
-        ),
+        new BusinessException(ResponseCode.BUSINESS_ERROR, '库存不足,当前库存: 100, 需要: 150'),
       );
     });
 
@@ -135,9 +129,7 @@ describe('StockService - updateStock', () => {
         },
       };
 
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(
-        otherTenantSku,
-      );
+      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(otherTenantSku);
 
       const dto = {
         tenantSkuId: 'sku1',
@@ -145,10 +137,7 @@ describe('StockService - updateStock', () => {
       };
 
       await expect(service.updateStock('t1', dto)).rejects.toThrow(
-        new BusinessException(
-          ResponseCode.DATA_NOT_FOUND,
-          'SKU不存在或无权访问',
-        ),
+        new BusinessException(ResponseCode.DATA_NOT_FOUND, 'SKU不存在或无权访问'),
       );
     });
 

@@ -115,26 +115,26 @@ export class StoreProductService {
 
   /**
    * 导入商品到店铺
-   * 
+   *
    * @description
    * 将全局商品库中的商品导入到当前店铺,包括商品基础信息和SKU配置。
    * 导入后商品默认为下架状态,需手动上架。
-   * 
+   *
    * @param tenantId - 当前租户ID
    * @param dto - 导入参数
    * @param dto.productId - 全局商品ID
    * @param dto.overrideRadius - 覆盖服务半径(米),null表示使用全局配置
    * @param dto.skus - SKU配置列表
    * @returns 创建的店铺商品记录
-   * 
+   *
    * @throws BusinessException
    * - 商品不存在: 全局商品ID无效
    * - 无效SKU: SKU ID不属于该商品
    * - 利润校验失败: 价格设置导致亏损
-   * 
+   *
    * @transaction 使用数据库事务保证原子性
    * @concurrency 使用 upsert 防止并发重复导入
-   * 
+   *
    * @example
    * await importProduct('tenant123', {
    *   productId: 'prod001',
@@ -158,17 +158,17 @@ export class StoreProductService {
 
       // 2. 校验 SKU 有效性
       if (skus && skus.length > 0) {
-        const validSkuIds = new Set(globalProduct.globalSkus.map(s => s.skuId));
-        const invalidSkus = skus.filter(s => !validSkuIds.has(s.globalSkuId));
+        const validSkuIds = new Set(globalProduct.globalSkus.map((s) => s.skuId));
+        const invalidSkus = skus.filter((s) => !validSkuIds.has(s.globalSkuId));
         BusinessException.throwIf(
           invalidSkus.length > 0,
-          `无效的SKU: ${invalidSkus.map(s => s.globalSkuId).join(',')}`,
+          `无效的SKU: ${invalidSkus.map((s) => s.globalSkuId).join(',')}`,
           ResponseCode.PARAM_INVALID,
         );
 
         // 3. 校验每个SKU的利润
         for (const sku of skus) {
-          const globalSku = globalProduct.globalSkus.find(g => g.skuId === sku.globalSkuId);
+          const globalSku = globalProduct.globalSkus.find((g) => g.skuId === sku.globalSkuId);
           if (globalSku) {
             this.profitValidator.validate(
               sku.price,
@@ -280,24 +280,24 @@ export class StoreProductService {
 
   /**
    * 更新店铺商品价格/分销配置/库存
-   * 
+   *
    * @description
    * 需校验利润风控 (售价 - 成本 - 分销佣金 > 0)
    * 使用乐观锁防止并发更新冲突
-   * 
+   *
    * @param tenantId - 租户ID
    * @param dto - 更新参数
    * @returns 更新后的SKU信息
-   * 
+   *
    * @throws BusinessException
    * - SKU不存在
    * - 无权操作此商品
    * - 价格设置导致亏损
    * - 更新失败,数据已被修改,请重试 (乐观锁冲突)
-   * 
+   *
    * @concurrency 使用乐观锁(version字段)防止并发更新
    * @performance 冲突率低(<1%),适合商品价格更新场景
-   * 
+   *
    * @example
    * // 更新商品价格
    * await updateProductPrice('tenant1', {
@@ -328,12 +328,7 @@ export class StoreProductService {
     const cost = tenantSku.globalSku.costPrice;
 
     // 使用 ProfitValidator 进行完整的参数校验和利润校验
-    this.profitValidator.validate(
-      price,
-      cost,
-      Number(currentDistRate),
-      currentDistMode,
-    );
+    this.profitValidator.validate(price, cost, Number(currentDistRate), currentDistMode);
 
     // 3. 使用乐观锁更新数据库
     // updateMany 返回 { count: number },如果 count=0 说明版本号不匹配(被其他请求修改了)

@@ -45,4 +45,4 @@ import { TransactionRepository } from './wallet/transaction.repository';
     TransactionRepository,
   ],
 })
-export class FinanceModule { }
+export class FinanceModule {}

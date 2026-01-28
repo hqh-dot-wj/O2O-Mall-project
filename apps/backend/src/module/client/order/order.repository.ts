@@ -7,32 +7,32 @@ import { ClsService } from 'nestjs-cls';
 
 @Injectable()
 export class OrderRepository extends SoftDeleteRepository<OmsOrder, Prisma.OmsOrderCreateInput> {
-    constructor(
-        prisma: PrismaService,
-        private readonly clsService: ClsService,
-    ) {
-        super(prisma, clsService, 'omsOrder', 'id', 'deleteTime');
-    }
+  constructor(
+    prisma: PrismaService,
+    private readonly clsService: ClsService,
+  ) {
+    super(prisma, clsService, 'omsOrder', 'id', 'deleteTime');
+  }
 
-    /**
-     * 根据订单号查询
-     */
-    async findBySn(orderSn: string) {
-        return this.prisma.omsOrder.findUnique({
-            where: { orderSn },
-        });
-    }
+  /**
+   * 根据订单号查询
+   */
+  async findBySn(orderSn: string) {
+    return this.prisma.omsOrder.findUnique({
+      where: { orderSn },
+    });
+  }
 
-    /**
-     * 更新订单状态
-     */
-    async updateStatus(orderId: string, status: OrderStatus, remark?: string) {
-        return this.prisma.omsOrder.update({
-            where: { id: orderId },
-            data: {
-                status,
-                remark: remark ? remark : undefined,
-            },
-        });
-    }
+  /**
+   * 更新订单状态
+   */
+  async updateStatus(orderId: string, status: OrderStatus, remark?: string) {
+    return this.prisma.omsOrder.update({
+      where: { id: orderId },
+      data: {
+        status,
+        remark: remark ? remark : undefined,
+      },
+    });
+  }
 }

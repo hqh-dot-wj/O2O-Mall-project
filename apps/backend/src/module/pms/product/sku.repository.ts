@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
  * SKU仓储层
  * 封装商品SKU（Stock Keeping Unit）相关的数据访问逻辑
  * 继承BaseRepository提供通用CRUD操作
- * 
+ *
  * @class SkuRepository
  * @extends {BaseRepository<PmsGlobalSku, Prisma.PmsGlobalSkuCreateInput, Prisma.PmsGlobalSkuUpdateInput>}
  */

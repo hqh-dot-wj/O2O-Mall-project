@@ -43,24 +43,16 @@ describe('CommissionProcessor', () => {
 
       await processor.handleCalcCommission(mockJob as Job);
 
-      expect(mockCommissionService.calculateCommission).toHaveBeenCalledWith(
-        'order1',
-        'tenant1',
-      );
+      expect(mockCommissionService.calculateCommission).toHaveBeenCalledWith('order1', 'tenant1');
     });
 
     it('应该抛出异常以触发重试 - 计算失败', async () => {
       const error = new Error('Database error');
       mockCommissionService.calculateCommission.mockRejectedValue(error);
 
-      await expect(processor.handleCalcCommission(mockJob as Job)).rejects.toThrow(
-        'Database error',
-      );
+      await expect(processor.handleCalcCommission(mockJob as Job)).rejects.toThrow('Database error');
 
-      expect(mockCommissionService.calculateCommission).toHaveBeenCalledWith(
-        'order1',
-        'tenant1',
-      );
+      expect(mockCommissionService.calculateCommission).toHaveBeenCalledWith('order1', 'tenant1');
     });
   });
 });
