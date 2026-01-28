@@ -3,7 +3,7 @@ import { request } from '@/service/request';
 /** Global Product List */
 export function fetchGetGlobalProductList(params?: Api.Pms.ProductSearchParams) {
   return request<Api.Pms.ProductList>({
-    url: '/pms/product/list',
+    url: '/admin/pms/product/list',
     method: 'get',
     params
   });
@@ -12,7 +12,7 @@ export function fetchGetGlobalProductList(params?: Api.Pms.ProductSearchParams) 
 /** Create Global Product */
 export function fetchCreateGlobalProduct(data: Api.Pms.ProductOperateParams) {
   return request<boolean>({
-    url: '/pms/product',
+    url: '/admin/pms/product',
     method: 'post',
     data
   });
@@ -22,7 +22,7 @@ export function fetchCreateGlobalProduct(data: Api.Pms.ProductOperateParams) {
 export function fetchGetGlobalProduct(productId: string) {
   return request<any>({
     // Use any or specific type if available, avoiding strict type check block for now
-    url: `/pms/product/${productId}`,
+    url: `/admin/pms/product/${productId}`,
     method: 'get'
   });
 }
@@ -30,7 +30,7 @@ export function fetchGetGlobalProduct(productId: string) {
 /** Update Global Product */
 export function fetchUpdateGlobalProduct(productId: string, data: Api.Pms.ProductOperateParams) {
   return request<boolean>({
-    url: `/pms/product/${productId}`,
+    url: `/admin/pms/product/${productId}`,
     method: 'put',
     data
   });
@@ -39,7 +39,7 @@ export function fetchUpdateGlobalProduct(productId: string, data: Api.Pms.Produc
 /** Batch Delete Global Product */
 export function fetchBatchDeleteGlobalProduct(productIds: string[]) {
   return request<boolean>({
-    url: `/pms/product/${productIds.join(',')}`,
+    url: `/admin/pms/product/${productIds.join(',')}`,
     method: 'delete'
   });
 }

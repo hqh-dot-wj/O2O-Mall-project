@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MarketingTemplateModule } from './template/template.module';
 import { MarketingConfigModule } from './config/config.module';
 import { PlayInstanceModule } from './instance/instance.module';
@@ -19,7 +19,7 @@ import { MarketingPlayModule } from './play/play.module';
     MarketingStockModule,
     UserAssetModule,
 
-    MarketingPlayModule,
+    forwardRef(() => MarketingPlayModule),
   ],
   exports: [
     MarketingTemplateModule,
@@ -28,7 +28,7 @@ import { MarketingPlayModule } from './play/play.module';
     MarketingStockModule,
     UserAssetModule,
 
-    MarketingPlayModule,
+    forwardRef(() => MarketingPlayModule),
   ],
 })
 export class MarketingModule {}

@@ -3,7 +3,7 @@ import { request } from '../../request';
 /** get attribute template list */
 export function fetchGetAttributeList(params?: Api.Pms.AttributeSearchParams) {
   return request<Api.Pms.AttributeTemplateList>({
-    url: '/pms/attribute/template/list',
+    url: '/admin/pms/attribute/template/list',
     method: 'get',
     params
   });
@@ -12,7 +12,7 @@ export function fetchGetAttributeList(params?: Api.Pms.AttributeSearchParams) {
 /** get attribute template detail */
 export function fetchGetAttribute(id: number) {
   return request<Api.Pms.AttributeTemplate>({
-    url: `/pms/attribute/template/${id}`,
+    url: `/admin/pms/attribute/template/${id}`,
     method: 'get'
   });
 }
@@ -20,7 +20,7 @@ export function fetchGetAttribute(id: number) {
 /** create attribute template */
 export function fetchCreateAttribute(data: Api.Pms.AttributeOperateParams) {
   return request<Api.Pms.AttributeTemplate>({
-    url: '/pms/attribute/template',
+    url: '/admin/pms/attribute/template',
     method: 'post',
     data
   });
@@ -29,7 +29,7 @@ export function fetchCreateAttribute(data: Api.Pms.AttributeOperateParams) {
 /** update attribute template */
 export function fetchUpdateAttribute(id: number, data: Api.Pms.AttributeOperateParams) {
   return request<Api.Pms.AttributeTemplate>({
-    url: `/pms/attribute/template/${id}`,
+    url: `/admin/pms/attribute/template/${id}`,
     method: 'put',
     data
   });
@@ -38,7 +38,7 @@ export function fetchUpdateAttribute(id: number, data: Api.Pms.AttributeOperateP
 /** delete attribute template */
 export function fetchDeleteAttribute(id: number) {
   return request<any>({
-    url: `/pms/attribute/template/${id}`,
+    url: `/admin/pms/attribute/template/${id}`,
     method: 'delete'
   });
 }
@@ -46,7 +46,7 @@ export function fetchDeleteAttribute(id: number) {
 /** get attributes by category id */
 export function fetchGetAttributesByCategory(catId: number) {
   return request<Api.Pms.AttributeItem[]>({
-    url: `/pms/attribute/category/${catId}`,
+    url: `/admin/pms/attribute/category/${catId}`,
     method: 'get'
   });
 }

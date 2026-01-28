@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { StorePlayConfigController } from './config.controller';
 import { StorePlayConfigService } from './config.service';
 import { StorePlayConfigRepository } from './config.repository';
@@ -7,7 +7,7 @@ import { MarketingTemplateModule } from '../template/template.module';
 import { PmsModule } from 'src/module/pms/pms.module';
 
 @Module({
-  imports: [MarketingTemplateModule, PmsModule, MarketingPlayModule],
+  imports: [MarketingTemplateModule, PmsModule, forwardRef(() => MarketingPlayModule)],
   controllers: [StorePlayConfigController],
   providers: [StorePlayConfigService, StorePlayConfigRepository],
   exports: [StorePlayConfigService, StorePlayConfigRepository],

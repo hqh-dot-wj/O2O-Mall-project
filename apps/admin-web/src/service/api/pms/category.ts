@@ -3,7 +3,7 @@ import { request } from '@/service/request';
 /** Get Category Tree */
 export function fetchGetCategoryTree() {
   return request<Api.Pms.CategoryTree>({
-    url: '/pms/category/tree',
+    url: '/admin/pms/category/tree',
     method: 'get'
   });
 }
@@ -11,7 +11,7 @@ export function fetchGetCategoryTree() {
 /** 获取分类列表 (平级) */
 export function fetchGetCategoryList(params?: Api.Pms.CategorySearchParams) {
   return request<Api.Pms.CategoryList>({
-    url: '/pms/category/list',
+    url: '/admin/pms/category/list',
     method: 'get',
     params
   });
@@ -20,7 +20,7 @@ export function fetchGetCategoryList(params?: Api.Pms.CategorySearchParams) {
 /** Add Category */
 export function fetchAddCategory(data: Api.Pms.CategoryOperateParams) {
   return request<Api.Pms.Category>({
-    url: '/pms/category',
+    url: '/admin/pms/category',
     method: 'post',
     data
   });
@@ -29,7 +29,7 @@ export function fetchAddCategory(data: Api.Pms.CategoryOperateParams) {
 /** Update Category */
 export function fetchUpdateCategory(data: Api.Pms.CategoryOperateParams) {
   return request<Api.Pms.Category>({
-    url: `/pms/category/${data.catId}`,
+    url: `/admin/pms/category/${data.catId}`,
     method: 'put',
     data
   });
@@ -38,7 +38,7 @@ export function fetchUpdateCategory(data: Api.Pms.CategoryOperateParams) {
 /** Delete Category */
 export function fetchDeleteCategory(id: number) {
   return request<boolean>({
-    url: `/pms/category/${id}`,
+    url: `/admin/pms/category/${id}`,
     method: 'delete'
   });
 }

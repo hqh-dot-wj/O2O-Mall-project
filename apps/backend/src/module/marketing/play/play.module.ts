@@ -26,7 +26,7 @@ import { MarketingConfigModule } from '../config/config.module';
     MemberModule,
     AdminUpgradeModule,
     ClientOrderModule,
-    MarketingConfigModule,
+    forwardRef(() => MarketingConfigModule),
   ],
   providers: [GroupBuyService, CourseGroupBuyService, MemberUpgradeService, PlayStrategyFactory],
   exports: [GroupBuyService, CourseGroupBuyService, MemberUpgradeService, PlayStrategyFactory],

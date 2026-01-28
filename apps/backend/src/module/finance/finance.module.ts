@@ -34,6 +34,15 @@ import { TransactionRepository } from './wallet/transaction.repository';
     WalletRepository,
     TransactionRepository,
   ],
-  exports: [WalletService, CommissionService, WithdrawalService],
+  exports: [
+    WalletService,
+    CommissionService,
+    WithdrawalService,
+    // 导出 Repositories 供其他模块使用
+    WithdrawalRepository,
+    CommissionRepository,
+    WalletRepository,
+    TransactionRepository,
+  ],
 })
 export class FinanceModule { }

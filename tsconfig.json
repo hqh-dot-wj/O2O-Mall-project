@@ -1,0 +1,14 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "./apps/admin-web"
+        },
+        {
+            "path": "./apps/backend"
+        },
+        {
+            "path": "./apps/miniapp-client"
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Result } from 'src/common/response';
+import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { UpdateDistConfigDto } from './dto/update-dist-config.dto';
 import { DistConfigVo, DistConfigLogVo } from './vo/dist-config.vo';
@@ -56,7 +56,7 @@ export class DistributionService {
   async updateConfig(tenantId: string, dto: UpdateDistConfigDto, operator: string): Promise<Result<boolean>> {
     // 校验比例总和不能超过 100%
     const totalRate = dto.level1Rate + dto.level2Rate;
-    BusinessException.throwIf(totalRate > 100, '一级和二级分佣比例之和不能超过100%');
+    BusinessException.throwIf(totalRate > 100, '一级和二级分佣比例之和不能超过100%', ResponseCode.PARAM_INVALID);
 
     const level1Rate = dto.level1Rate / 100;
     const level2Rate = dto.level2Rate / 100;

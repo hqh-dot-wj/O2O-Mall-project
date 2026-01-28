@@ -380,6 +380,10 @@ model PmsTenantSku {
   // 实际执行比例 (例如总部建议 10%，门店想多推销，设为 15%)
   distRate Decimal @default(0.00) @map("dist_rate") @db.Decimal(10, 2)
 
+  // --- [新增] 乐观锁版本号 ---
+  // 用于防止并发更新冲突,每次更新时自动+1
+  version Int @default(0)
+
   tenantProd PmsTenantProduct @relation(fields: [tenantProductId], references: [id])
 
   @@map("pms_tenant_sku")
@@ -750,6 +754,7 @@ model SysTenant {
 
   // 关联
   geoConfig SysTenantGeo?
+  orders    OmsOrder[]
 
   @@index([delFlag])
   @@map("sys_tenant")
@@ -1616,6 +1621,7 @@ model OmsOrder {
 
   items       OmsOrderItem[]
   commissions FinCommission[]
+  tenant      SysTenant      @relation(fields: [tenantId], references: [tenantId])
 
   @@index([memberId, status])
   @@index([tenantId, createTime])

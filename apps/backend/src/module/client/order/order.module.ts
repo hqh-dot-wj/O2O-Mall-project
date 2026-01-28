@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { FinanceModule } from 'src/module/finance/finance.module';
@@ -21,7 +21,7 @@ import { ClientCartModule } from '../cart/cart.module';
   imports: [
     FinanceModule,
     MessageModule,
-    MarketingModule,
+    forwardRef(() => MarketingModule),
     ClientAddressModule, // For AddressRepository
     ClientCartModule, // For CartService
     BullModule.registerQueue({

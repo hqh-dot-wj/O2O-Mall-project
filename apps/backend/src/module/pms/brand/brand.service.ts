@@ -43,7 +43,7 @@ export class BrandService {
       where,
       pageNum,
       pageSize,
-      orderBy: 'createTime',
+      orderBy: 'brandId',
       order: 'desc',
     });
 

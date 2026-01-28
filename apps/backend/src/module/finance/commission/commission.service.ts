@@ -7,7 +7,7 @@ import { CommissionStatus, OrderType, ProductType, Prisma, TransType } from '@pr
 import { CommissionRepository } from './commission.repository';
 import { WalletRepository } from '../wallet/wallet.repository';
 import { TransactionRepository } from '../wallet/transaction.repository';
-import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { Transactional, IsolationLevel } from 'src/common/decorators/transactional.decorator';
 import { BusinessException } from 'src/common/exceptions';
 import { BusinessConstants } from 'src/common/constants/business.constants';
 import { WalletService } from '../wallet/wallet.service';
@@ -102,8 +102,11 @@ export class CommissionService {
    * 1. 验证订单有效性及自购情形
    * 2. 计算佣金基数
    * 3. 计算并生成 L1/L2 佣金记录
+   * 
+   * @concurrency 使用 RepeatableRead 隔离级别防止并发超限
+   * @transaction 跨店限额检查使用 FOR UPDATE 行锁保证原子性
    */
-  @Transactional()
+  @Transactional({ isolationLevel: IsolationLevel.RepeatableRead })
   async calculateCommission(orderId: string, tenantId: string) {
     // 1. 获取订单详情
     const order = await this.prisma.omsOrder.findUnique({
@@ -564,6 +567,28 @@ export class CommissionService {
   /**
    * 检查跨店佣金日限额
    */
+  /**
+   * 检查跨店日限额
+   * 
+   * @description
+   * 使用数据库行锁(FOR UPDATE)防止并发超限
+   * 
+   * @param tenantId - 租户ID
+   * @param beneficiaryId - 受益人ID
+   * @param amount - 本次佣金金额
+   * @param limit - 日限额
+   * @returns 是否在限额内
+   * 
+   * @concurrency 使用 FOR UPDATE 锁定相关记录,防止并发场景下超限
+   * @performance 锁定范围仅限当日当人的跨店佣金记录,影响范围小
+   * 
+   * @example
+   * // 检查用户今日跨店佣金是否超限
+   * const pass = await checkDailyLimit('tenant1', 'user1', new Decimal(10), new Decimal(500));
+   * if (!pass) {
+   *   throw new BusinessException('超出跨店日限额');
+   * }
+   */
   private async checkDailyLimit(
     tenantId: string,
     beneficiaryId: string,
@@ -573,24 +598,27 @@ export class CommissionService {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const aggregate = await this.commissionRepo.aggregate({
-      where: {
-        tenantId,
-        beneficiaryId,
-        isCrossTenant: true,
-        createTime: {
-          gte: startOfDay,
-        },
-        status: {
-          not: CommissionStatus.CANCELLED,
-        },
-      },
-      _sum: {
-        amount: true,
-      },
-    });
+    // 使用原生 SQL + FOR UPDATE 行锁,防止并发超限
+    // 注意: 必须在 @Transactional 装饰的方法中调用,否则锁无效
+    const result = await this.prisma.$queryRaw<Array<{ total: string | null }>>`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM fin_commission
+      WHERE tenant_id = ${tenantId}
+        AND beneficiary_id = ${beneficiaryId}
+        AND is_cross_tenant = true
+        AND DATE(create_time) = CURDATE()
+        AND status != ${CommissionStatus.CANCELLED}
+      FOR UPDATE
+    `;
 
-    const currentTotal = aggregate._sum.amount ? new Decimal(aggregate._sum.amount) : new Decimal(0);
-    return currentTotal.add(amount).lte(limit);
+    const currentTotal = result[0]?.total ? new Decimal(result[0].total) : new Decimal(0);
+    const newTotal = currentTotal.add(amount);
+    
+    this.logger.debug(
+      `[DailyLimit] tenant=${tenantId}, user=${beneficiaryId}, current=${currentTotal.toFixed(2)}, ` +
+      `new=${amount.toFixed(2)}, total=${newTotal.toFixed(2)}, limit=${limit.toFixed(2)}`
+    );
+    
+    return newTotal.lte(limit);
   }
 }

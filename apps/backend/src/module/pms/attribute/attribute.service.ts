@@ -32,17 +32,17 @@ export class AttributeService {
 
     // 批量创建属性
     if (dto.attributes && dto.attributes.length > 0) {
-      await this.attrRepo.createMany(
-        dto.attributes.map((attr) => ({
-          templateId: template.templateId,
+      for (const attr of dto.attributes) {
+        await this.attrRepo.create({
           name: attr.name,
           usageType: attr.usageType,
           applyType: attr.applyType,
           inputType: attr.inputType,
           inputList: attr.inputList,
           sort: attr.sort,
-        })),
-      );
+          template: { connect: { templateId: template.templateId } },
+        });
+      }
     }
 
     return Result.ok(template);
@@ -70,9 +70,10 @@ export class AttributeService {
 
     const { rows, total } = await this.templateRepo.findPage({
       where,
-      skip,
-      take,
-      orderBy: { createTime: 'desc' },
+      pageNum,
+      pageSize,
+      orderBy: 'createTime',
+      order: 'desc',
     });
 
     return Result.page(rows, total, pageNum, pageSize);
@@ -112,13 +113,13 @@ export class AttributeService {
         } else {
           // 创建新属性
           await this.attrRepo.create({
-            templateId: id,
             name: attr.name,
             usageType: attr.usageType,
             applyType: attr.applyType,
             inputType: attr.inputType,
             inputList: attr.inputList,
             sort: attr.sort,
+            template: { connect: { templateId: id } },
           });
         }
       }
@@ -136,11 +137,7 @@ export class AttributeService {
   async remove(id: number) {
     // 检查模板是否被分类使用
     const isUsed = await this.templateRepo.isUsedByCategories(id);
-    BusinessException.throwIf(
-      isUsed,
-      '该属性模板已被分类使用，无法删除',
-      ResponseCode.BUSINESS_ERROR,
-    );
+    BusinessException.throwIf(isUsed, '该属性模板已被分类使用，无法删除', ResponseCode.BUSINESS_ERROR);
 
     await this.templateRepo.delete(id);
     return Result.ok();
