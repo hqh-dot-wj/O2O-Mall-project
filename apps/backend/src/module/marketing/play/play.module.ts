@@ -12,9 +12,23 @@ import { PlayStrategyFactory } from './play.factory';
 import { CourseGroupBuyService } from './course-group-buy.service';
 import { MemberUpgradeService } from './member-upgrade.service';
 
+import { MemberModule } from 'src/module/admin/member/member.module';
+import { AdminUpgradeModule } from 'src/module/admin/upgrade/admin-upgrade.module';
+
+import { ClientOrderModule } from 'src/module/client/order/order.module';
+import { MarketingConfigModule } from '../config/config.module';
+
 @Module({
-  imports: [forwardRef(() => PlayInstanceModule), MarketingStockModule, UserAssetModule],
+  imports: [
+    forwardRef(() => PlayInstanceModule),
+    MarketingStockModule,
+    UserAssetModule,
+    MemberModule,
+    AdminUpgradeModule,
+    ClientOrderModule,
+    MarketingConfigModule,
+  ],
   providers: [GroupBuyService, CourseGroupBuyService, MemberUpgradeService, PlayStrategyFactory],
   exports: [GroupBuyService, CourseGroupBuyService, MemberUpgradeService, PlayStrategyFactory],
 })
-export class MarketingPlayModule {}
+export class MarketingPlayModule { }

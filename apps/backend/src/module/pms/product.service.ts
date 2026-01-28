@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
-import { CreateProductDto, ListProductDto, ProductType } from './dto';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { PaginationHelper } from 'src/common/utils/pagination.helper';
+import { CreateProductDto, ListProductDto, ProductType, CreateAttrValueDto } from './dto';
+import { ProductRepository } from './product/product.repository';
+import { SkuRepository } from './product/sku.repository';
+import { AttributeRepository } from './attribute/attribute.repository';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
  * 商品管理服务层
@@ -11,7 +16,12 @@ import { CreateProductDto, ListProductDto, ProductType } from './dto';
  */
 @Injectable()
 export class PmsProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly productRepo: ProductRepository,
+    private readonly skuRepo: SkuRepository,
+    private readonly attrRepo: AttributeRepository,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * 创建商品
@@ -20,79 +30,111 @@ export class PmsProductService {
    * @param dto - 创建商品 DTO
    * @returns 创建成功的商品信息
    */
+  @Transactional()
   async create(dto: CreateProductDto) {
     // 1. 业务逻辑校验
-    // 如果是服务类商品，必须填写服务时长
     BusinessException.throwIf(
       dto.type === ProductType.SERVICE && !dto.serviceDuration,
       '服务类商品必须填写服务时长',
       ResponseCode.PARAM_INVALID,
     );
 
-    const product = await this.prisma.$transaction(async (tx) => {
-      // A. 创建商品主表信息
-      const product = await tx.pmsProduct.create({
-        data: {
-          categoryId: dto.categoryId,
-          brandId: dto.brandId,
-          name: dto.name,
-          subTitle: dto.subTitle,
-          mainImages: dto.mainImages,
-          detailHtml: dto.detailHtml,
-          type: dto.type,
-          weight: dto.weight,
-          isFreeShip: dto.isFreeShip,
-          serviceDuration: dto.serviceDuration,
-          serviceRadius: dto.serviceRadius,
-          needBooking: dto.type === ProductType.SERVICE,
-          specDef: dto.specDef || [],
-          publishStatus: dto.publishStatus,
-        },
-      });
+    // 2. 验证属性ID是否存在
+    if (dto.attrs && dto.attrs.length > 0) {
+      await this.validateAttributes(dto.attrs);
+    }
 
-      // B. 批量创建 SKU 信息
-      if (dto.skus && dto.skus.length > 0) {
-        await tx.pmsGlobalSku.createMany({
-          data: dto.skus.map((sku) => ({
-            productId: product.productId,
-            specValues: sku.specValues || {},
-            skuImage: sku.skuImage,
-            guidePrice: sku.guidePrice,
-            distMode: sku.distMode,
-            guideRate: sku.guideRate,
-            minDistRate: sku.minDistRate,
-            maxDistRate: sku.maxDistRate,
-          })),
-        });
-      }
-
-      // C. 批量创建属性值 (AttrValue)
-      // 根据传入的属性ID查询属性定义名称，确保数据一致性
-      if (dto.attrs && dto.attrs.length > 0) {
-        const attrIds = dto.attrs.map((a) => a.attrId);
-        const attrDefinitions = await tx.pmsAttribute.findMany({
-          where: { attrId: { in: attrIds } },
-        });
-
-        const attrValueData = dto.attrs.map((item) => {
-          const def = attrDefinitions.find((d) => d.attrId === item.attrId);
-          return {
-            productId: product.productId,
-            attrId: item.attrId,
-            attrName: def ? def.name : 'Unknown', // 如果属性不存在，暂时记录 Unknown
-            value: item.value,
-          };
-        });
-
-        await tx.pmsProductAttrValue.createMany({
-          data: attrValueData,
-        });
-      }
-
-      return product;
+    // 3. 创建商品主表信息
+    const product = await this.productRepo.create({
+      name: dto.name,
+      subTitle: dto.subTitle,
+      mainImages: dto.mainImages,
+      detailHtml: dto.detailHtml,
+      type: dto.type,
+      weight: dto.weight,
+      isFreeShip: dto.isFreeShip,
+      serviceDuration: dto.serviceDuration,
+      serviceRadius: dto.serviceRadius,
+      needBooking: dto.type === ProductType.SERVICE,
+      specDef: dto.specDef || [],
+      publishStatus: dto.publishStatus,
+      category: { connect: { catId: dto.categoryId } },
+      ...(dto.brandId && { brand: { connect: { brandId: dto.brandId } } }),
     });
 
+    // 4. 创建SKU
+    if (dto.skus && dto.skus.length > 0) {
+      await this.createSkus(product.productId, dto.skus);
+    }
+
+    // 5. 创建属性值
+    if (dto.attrs && dto.attrs.length > 0) {
+      await this.createAttrValues(product.productId, dto.attrs);
+    }
+
     return Result.ok(product);
+  }
+
+  /**
+   * 验证属性ID是否存在
+   */
+  private async validateAttributes(attrs: CreateAttrValueDto[]) {
+    const attrIds = attrs.map((a) => a.attrId);
+    const validation = await this.attrRepo.validateAttrIds(attrIds);
+
+    BusinessException.throwIf(
+      !validation.valid,
+      `属性ID不存在: ${validation.invalidIds.join(', ')}`,
+      ResponseCode.PARAM_INVALID,
+    );
+  }
+
+  /**
+   * 创建SKU列表
+   * @param productId - 商品ID
+   * @param skus - SKU数据数组
+   */
+  private async createSkus(productId: string, skus: any[]) {
+    const skuData = skus.map((sku: any) => ({
+      productId,
+      specValues: sku.specValues || {},
+      skuImage: sku.skuImage,
+      guidePrice: sku.guidePrice,
+      distMode: sku.distMode,
+      guideRate: sku.guideRate,
+      minDistRate: sku.minDistRate,
+      maxDistRate: sku.maxDistRate,
+    }));
+
+    await this.skuRepo.createMany(skuData);
+  }
+
+  /**
+   * 创建属性值列表
+   * @param productId - 商品ID
+   * @param attrs - 属性值数组
+   */
+  private async createAttrValues(productId: string, attrs: CreateAttrValueDto[]) {
+    // 查询属性定义名称
+    const attrIds = attrs.map((a) => a.attrId);
+    const attrDefinitions = await this.attrRepo.findMany({
+      where: { attrId: { in: attrIds } },
+      select: { attrId: true, name: true },
+    });
+
+    const attrValueData = attrs.map((item: CreateAttrValueDto) => {
+      const def = attrDefinitions.find((d: any) => d.attrId === item.attrId);
+      return {
+        productId,
+        attrId: item.attrId,
+        attrName: def!.name, // 已验证存在，可以断言非空
+        value: item.value,
+      };
+    });
+
+    await this.prisma.pmsProductAttrValue.createMany({
+      data: attrValueData,
+    });
   }
 
   /**
@@ -102,6 +144,7 @@ export class PmsProductService {
    * @returns 分页后的商品列表 VO
    */
   async findAll(query: ListProductDto) {
+    const { skip, take } = PaginationHelper.getPagination(query);
     const { name, categoryId } = query;
 
     // 构建查询条件
@@ -113,26 +156,16 @@ export class PmsProductService {
       where.categoryId = Number(categoryId);
     }
 
-    // 并行执行列表查询和总数查询
-    const [list, total] = await Promise.all([
-      this.prisma.pmsProduct.findMany({
-        where,
-        include: {
-          globalSkus: true, // 关联 SKU 获取价格
-        },
-        skip: query.skip,
-        take: query.take,
-        orderBy: { createTime: 'desc' },
-      }),
-      this.prisma.pmsProduct.count({ where }),
-    ]);
+    // 使用Repository查询
+    const list = await this.productRepo.findWithRelations(where, skip, take);
+    const total = await this.productRepo.countWithConditions(where);
 
     // 数据映射：转换为前端期望的 VO 格式
-    const formattedList = list.map((item) => ({
+    const formattedList = list.map((item: any) => ({
       ...item,
-      albumPics: item.mainImages ? item.mainImages.join(',') : '', // 将图片数组转换为逗号分隔字符串
-      publishStatus: item.publishStatus === 'ON_SHELF' ? '1' : '0', // 将枚举状态映射为 '1'/'0'
-      price: item.globalSkus?.[0]?.guidePrice || 0, // 取第一个 SKU 的指导价作为展示价格
+      albumPics: item.mainImages ? item.mainImages.join(',') : '',
+      publishStatus: item.publishStatus === 'ON_SHELF' ? '1' : '0',
+      price: item.globalSkus?.[0]?.guidePrice || 0,
     }));
 
     return Result.page(formattedList, total);
@@ -145,19 +178,12 @@ export class PmsProductService {
    * @returns 商品详情 VO
    */
   async findOne(id: string) {
-    const product = await this.prisma.pmsProduct.findUnique({
-      where: { productId: id },
-      include: {
-        globalSkus: true,
-        attrValues: true,
-      },
-    });
-
-    BusinessException.throwIfNull(product, '商品不存在');
+    const product = await this.productRepo.findOneWithDetails(id);
+    BusinessException.throwIf(!product, '商品不存在', ResponseCode.NOT_FOUND);
 
     return Result.ok({
       ...product,
-      attrs: product.attrValues.map((av) => ({
+      attrs: product.attrValues.map((av: any) => ({
         attrId: av.attrId,
         value: av.value,
       })),
@@ -172,6 +198,7 @@ export class PmsProductService {
    * @param dto - 更新商品 DTO
    * @returns 更新后的商品信息
    */
+  @Transactional()
   async update(id: string, dto: CreateProductDto) {
     // 1. 业务逻辑校验
     BusinessException.throwIf(
@@ -180,113 +207,102 @@ export class PmsProductService {
       ResponseCode.PARAM_INVALID,
     );
 
-    const product = await this.prisma.$transaction(async (tx) => {
-      // A. 更新商品基础信息
-      const product = await tx.pmsProduct.update({
-        where: { productId: id },
-        data: {
-          categoryId: dto.categoryId,
-          brandId: dto.brandId,
-          name: dto.name,
-          subTitle: dto.subTitle,
-          mainImages: dto.mainImages,
-          detailHtml: dto.detailHtml,
-          type: dto.type,
-          weight: dto.weight,
-          isFreeShip: dto.isFreeShip,
-          serviceDuration: dto.serviceDuration,
-          serviceRadius: dto.serviceRadius,
-          needBooking: dto.type === ProductType.SERVICE,
-          specDef: dto.specDef || [],
-          publishStatus: dto.publishStatus,
-        },
-      });
+    // 2. 验证属性ID是否存在
+    if (dto.attrs && dto.attrs.length > 0) {
+      await this.validateAttributes(dto.attrs);
+    }
 
-      // B. 处理 SKU 变动 (增删改)
-      // B1. 获取现有 SKU ID 列表
-      const existingSkus = await tx.pmsGlobalSku.findMany({
-        where: { productId: id },
-        select: { skuId: true },
-      });
-      const existingSkuIds = existingSkus.map((s) => s.skuId);
-
-      // B2. 识别需要保留/更新的 SKU ID
-      const incomingSkuIds = dto.skus.filter((s) => s.skuId).map((s) => s.skuId);
-
-      // B3. 识别需要删除的 SKU ID
-      const skusToDelete = existingSkuIds.filter((id) => !incomingSkuIds.includes(id));
-
-      // B4. 执行删除
-      if (skusToDelete.length > 0) {
-        await tx.pmsGlobalSku.deleteMany({
-          where: { skuId: { in: skusToDelete as string[] } },
-        });
-      }
-
-      // B5. 执行更新或新增
-      for (const sku of dto.skus) {
-        if (sku.skuId && existingSkuIds.includes(sku.skuId)) {
-          // 更新现有 SKU
-          await tx.pmsGlobalSku.update({
-            where: { skuId: sku.skuId },
-            data: {
-              specValues: sku.specValues || {},
-              skuImage: sku.skuImage,
-              guidePrice: sku.guidePrice,
-              distMode: sku.distMode,
-              guideRate: sku.guideRate,
-              minDistRate: sku.minDistRate,
-              maxDistRate: sku.maxDistRate,
-            },
-          });
-        } else {
-          // 创建新 SKU
-          await tx.pmsGlobalSku.create({
-            data: {
-              productId: id,
-              specValues: sku.specValues || {},
-              skuImage: sku.skuImage,
-              guidePrice: sku.guidePrice,
-              distMode: sku.distMode,
-              guideRate: sku.guideRate,
-              minDistRate: sku.minDistRate,
-              maxDistRate: sku.maxDistRate,
-            },
-          });
-        }
-      }
-
-      // C. 处理属性值 (全量覆盖策略)
-      // 先删除现有属性值
-      await tx.pmsProductAttrValue.deleteMany({
-        where: { productId: id },
-      });
-
-      // 重新创建属性值
-      if (dto.attrs && dto.attrs.length > 0) {
-        const attrIds = dto.attrs.map((a) => a.attrId);
-        const attrDefinitions = await tx.pmsAttribute.findMany({
-          where: { attrId: { in: attrIds } },
-        });
-
-        const attrValueData = dto.attrs.map((item) => {
-          const def = attrDefinitions.find((d) => d.attrId === item.attrId);
-          return {
-            productId: id,
-            attrId: item.attrId,
-            attrName: def ? def.name : 'Unknown',
-            value: item.value,
-          };
-        });
-
-        await tx.pmsProductAttrValue.createMany({
-          data: attrValueData,
-        });
-      }
-
-      return product;
+    // 3. 更新商品基础信息
+    const product = await this.productRepo.update(id, {
+      name: dto.name,
+      subTitle: dto.subTitle,
+      mainImages: dto.mainImages,
+      detailHtml: dto.detailHtml,
+      type: dto.type,
+      weight: dto.weight,
+      isFreeShip: dto.isFreeShip,
+      serviceDuration: dto.serviceDuration,
+      serviceRadius: dto.serviceRadius,
+      needBooking: dto.type === ProductType.SERVICE,
+      specDef: dto.specDef || [],
+      publishStatus: dto.publishStatus,
+      category: { connect: { catId: dto.categoryId } },
+      ...(dto.brandId && { brand: { connect: { brandId: dto.brandId } } }),
     });
 
+    // 4. 处理 SKU 变动 (增删改)
+    await this.updateSkus(id, dto.skus);
+
+    // 5. 处理属性值 (全量覆盖策略)
+    await this.updateAttrValues(id, dto.attrs);
+
     return Result.ok(product);
+  }
+
+  /**
+   * 更新SKU列表（增删改）
+   * @param productId - 商品ID
+   * @param skus - SKU数据数组
+   */
+  private async updateSkus(productId: string, skus: any[]) {
+    // 获取现有 SKU ID 列表
+    const existingSkus = await this.skuRepo.findByProductId(productId);
+    const existingSkuIds = existingSkus.map((s) => s.skuId);
+
+    // 识别需要保留/更新的 SKU ID
+    const incomingSkuIds = skus.filter((s: any) => s.skuId).map((s: any) => s.skuId);
+
+    // 识别需要删除的 SKU ID
+    const skusToDelete = existingSkuIds.filter((id) => !incomingSkuIds.includes(id));
+
+    // 执行删除
+    if (skusToDelete.length > 0) {
+      await this.skuRepo.deleteMany({ skuId: { in: skusToDelete } });
+    }
+
+    // 执行更新或新增
+    for (const sku of skus) {
+      if (sku.skuId && existingSkuIds.includes(sku.skuId)) {
+        // 更新现有 SKU
+        await this.skuRepo.update(sku.skuId, {
+          specValues: sku.specValues || {},
+          skuImage: sku.skuImage,
+          guidePrice: sku.guidePrice,
+          distMode: sku.distMode,
+          guideRate: sku.guideRate,
+          minDistRate: sku.minDistRate,
+          maxDistRate: sku.maxDistRate,
+        });
+      } else {
+        // 创建新 SKU
+        await this.skuRepo.create({
+          specValues: sku.specValues || {},
+          skuImage: sku.skuImage,
+          guidePrice: sku.guidePrice,
+          distMode: sku.distMode,
+          guideRate: sku.guideRate,
+          minDistRate: sku.minDistRate,
+          maxDistRate: sku.maxDistRate,
+          product: { connect: { productId } },
+        });
+      }
+    }
+  }
+
+  /**
+   * 更新属性值列表（全量覆盖）
+   * @param productId - 商品ID
+   * @param attrs - 属性值数组
+   */
+  private async updateAttrValues(productId: string, attrs: CreateAttrValueDto[]) {
+    // 先删除现有属性值
+    await this.prisma.pmsProductAttrValue.deleteMany({
+      where: { productId },
+    });
+
+    // 重新创建属性值
+    if (attrs && attrs.length > 0) {
+      await this.createAttrValues(productId, attrs);
+    }
   }
 }

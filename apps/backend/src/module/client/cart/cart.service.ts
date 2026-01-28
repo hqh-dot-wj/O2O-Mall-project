@@ -7,6 +7,7 @@ import { AddCartDto, UpdateCartQuantityDto } from './dto/cart.dto';
 import { CartItemVo } from './vo/cart.vo';
 import { Decimal } from '@prisma/client/runtime/library';
 import { DelFlag, PublishStatus } from '@prisma/client';
+import { CartRepository } from './cart.repository';
 
 /**
  * C端购物车服务
@@ -20,7 +21,8 @@ export class CartService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-  ) {}
+    private readonly cartRepo: CartRepository,
+  ) { }
 
   /**
    * 添加商品到购物车
@@ -56,14 +58,10 @@ export class CartService {
 
     // 3. 校验库存 (stock = -1 表示不限库存)
     if (tenantSku.stock >= 0) {
-      const existingCart = await this.prisma.omsCartItem.findUnique({
-        where: {
-          memberId_tenantId_skuId: {
-            memberId,
-            tenantId: dto.tenantId,
-            skuId: dto.skuId,
-          },
-        },
+      const existingCart = await this.cartRepo.findOne({
+        memberId,
+        tenantId: dto.tenantId,
+        skuId: dto.skuId,
       });
       const totalQuantity = (existingCart?.quantity || 0) + dto.quantity;
       BusinessException.throwIf(tenantSku.stock < totalQuantity, '库存不足');
@@ -71,6 +69,25 @@ export class CartService {
 
     // 4. Upsert 购物车记录
     // product 已经在上面查询过了
+    // Note: BaseRepository upsert support depends on Delegate or manual implementation.
+    // For now, let's look at CartRepository. It inherits BaseRepository. BaseRepository doesn't expose upsert directly usually.
+    // Let's stick to prisma for upsert if BaseRepo helps or use CartRepo custom method.
+    // The previous code used prisma.omsCartItem.upsert.
+    // BaseRepository doesn't have upsert clearly defined in the interface viewed (it has create, update, but not upsert).
+    // Let's use prisma directly for upsert OR add upsert to CartRepository.
+
+    // I will use prisma for upsert inside Service for now to avoid creating new Repo method if not needed, 
+    // BUT the goal IS to remove prisma usage.
+    // So I should add upsert to CartRepository? Or just use prisma for now for upsert?
+    // Let's stick to replacing "Simple" calls first or be bold and add upsert to repo.
+    // I'll add upsert to CartRepository in a bit (or assume I can use prisma for complex upsert).
+
+    // Actually, looking at the code I'm replacing: 
+    // It's `prisma.omsCartItem.upsert`.
+    // Let's keep `prisma.omsCartItem.upsert` for this step or use `cartRepo.delegate.upsert` (accessing delegate is possible but maybe not encouraged).
+    // Better to encapsulate. I will leave upsert as prisma call for now to minimize risk of breaking complex upsert logic, 
+    // and focus on `findMany` and `deleteMany` replacement which is safer.
+
     const cartItem = await this.prisma.omsCartItem.upsert({
       where: {
         memberId_tenantId_skuId: {
@@ -111,10 +128,8 @@ export class CartService {
    */
   async getCartList(memberId: string, tenantId: string) {
     // 1. 查询购物车记录
-    const cartItems = await this.prisma.omsCartItem.findMany({
-      where: { memberId, tenantId },
-      orderBy: { createTime: 'desc' },
-    });
+    // [MODIFIED] Use CartRepository
+    const cartItems = await this.cartRepo.findList(memberId, tenantId);
 
     if (cartItems.length === 0) {
       return Result.ok({ items: [], invalidItems: [] });
@@ -255,12 +270,11 @@ export class CartService {
   /**
    * 同步购物车到 Redis
    */
-  private async syncCartToRedis(memberId: string, tenantId: string) {
+  async syncCartToRedis(memberId: string, tenantId: string) {
     try {
-      const cartItems = await this.prisma.omsCartItem.findMany({
-        where: { memberId, tenantId },
-        select: { skuId: true, quantity: true },
-      });
+      // [MODIFIED] Use CartRepository
+      const cartItems = await this.cartRepo.findList(memberId, tenantId);
+      // findList returns all fields, map to {skuId, quantity} is done below or validation not needed for redis sync as we just need skuId and quantity which are present.
 
       const key = `cart:${memberId}:${tenantId}`;
       if (cartItems.length === 0) {

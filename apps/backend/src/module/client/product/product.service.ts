@@ -5,22 +5,39 @@ import { Result } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { ClientListProductDto } from './dto';
 import { TenantContext } from 'src/common/tenant/tenant.context';
+import { PlayStrategyFactory } from 'src/module/marketing/play/play.factory';
+import { ClientProductRepository } from './product.repository';
+import { RedisService } from 'src/module/common/redis/redis.service';
+import { Cacheable } from 'src/common/decorators/redis.decorator';
+import * as crypto from 'crypto';
 
 /**
  * C端商品服务层
  * 提供商品列表、详情以及分类接口
  * 支持租户上下文：如果有租户ID，返回门店价格；否则返回总部指导价
  */
-import { PlayStrategyFactory } from 'src/module/marketing/play/play.factory';
 
 @Injectable()
 export class ClientProductService {
   private readonly logger = new Logger(ClientProductService.name);
 
+  // Decorator injects 'redis' property, but we inject RedisService manually for findAll usage and safety.
+  // We need to ensure property name matches if decorator uses it, but decorator uses 'redis', 
+  // and we might inject as 'redisService'.
+  // Use 'redisService' for manual calls. Decorator handles its own injection if needed, 
+  // OR returns a function that expects 'this.redis' to exist.
+  // Looking at decorator: `injectRedis(target, 'redis')`. 
+  // It effectively sets `this.redis`.
+  // If we declare `private redis: RedisService` it might conflict or work?
+  // Let's just inject `redisService` for manual use.
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly strategyFactory: PlayStrategyFactory,
-  ) {}
+    // [NEW] Repository
+    private readonly productRepo: ClientProductRepository,
+    private readonly redisService: RedisService,
+  ) { }
 
   /**
    * 获取商品列表
@@ -29,18 +46,34 @@ export class ClientProductService {
    * - 如果是超级租户：返回所有总部已上架的商品（用于Selection Center）
    */
   async findAll(query: ClientListProductDto) {
-    const { name, categoryId, type } = query;
     const tenantId = TenantContext.getTenantId();
+
+    // Manual Cache
+    const cacheKey = `client:product:list:${tenantId}:${crypto.createHash('md5').update(JSON.stringify(query)).digest('hex')}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    // Cache the data part (rows, total) not the full Result object to save space and avoid class issues
+    if (cached) {
+      // Store object: { rows: [...], total: 10 }
+      // result.data is PageResult { rows, total }
+      return Result.page(cached.rows, cached.total, query.pageNum, query.pageSize);
+    }
 
     this.logger.debug(`获取商品列表，租户ID: ${tenantId}`);
 
+    let result;
     // 如果是普通租户，从租户商品表查询（只返回该租户已上架的商品）
     if (tenantId && tenantId !== TenantContext.SUPER_TENANT_ID) {
-      return this.findTenantProducts(query, tenantId);
+      result = await this.findTenantProducts(query, tenantId);
+    } else {
+      // 超级租户：返回所有总部已上架的商品（用于Selection Center等场景）
+      result = await this.findGlobalProducts(query);
     }
 
-    // 超级租户：返回所有总部已上架的商品（用于Selection Center等场景）
-    return this.findGlobalProducts(query);
+    if (result && result.code === 200) {
+      await this.redisService.set(cacheKey, result.data, 60 * 5); // 5 mins cache
+    }
+    return result;
   }
 
   /**
@@ -76,38 +109,10 @@ export class ClientProductService {
       },
     };
 
-    // 并行执行列表查询和总数查询
+    // [MODIFIED] Use ClientProductRepository
     const [tenantProducts, total] = await Promise.all([
-      this.prisma.pmsTenantProduct.findMany({
-        where: tenantProductWhere,
-        include: {
-          product: {
-            include: {
-              globalSkus: {
-                select: {
-                  skuId: true,
-                  guidePrice: true,
-                  specValues: true,
-                  skuImage: true,
-                },
-              },
-              category: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          skus: true, // 租户SKU价格
-        },
-        skip: query.skip,
-        take: query.take,
-        orderBy: [
-          { sort: 'asc' }, // 优先按租户自定义排序
-          { createTime: 'desc' }, // 其次按创建时间
-        ],
-      }),
-      this.prisma.pmsTenantProduct.count({ where: tenantProductWhere }),
+      this.productRepo.findTenantProducts(tenantId, tenantProductWhere, query.skip, query.take),
+      this.productRepo.countTenantProducts(tenantProductWhere),
     ]);
 
     // 数据映射：转换为前端期望的 VO 格式
@@ -164,30 +169,10 @@ export class ClientProductService {
       where.type = type as any;
     }
 
-    // 并行执行列表查询和总数查询
+    // [MODIFIED] Use ClientProductRepository
     const [list, total] = await Promise.all([
-      this.prisma.pmsProduct.findMany({
-        where,
-        include: {
-          globalSkus: {
-            select: {
-              skuId: true,
-              guidePrice: true,
-              specValues: true,
-              skuImage: true,
-            },
-          },
-          category: {
-            select: {
-              name: true,
-            },
-          },
-        },
-        skip: query.skip,
-        take: query.take,
-        orderBy: { createTime: 'desc' },
-      }),
-      this.prisma.pmsProduct.count({ where }),
+      this.productRepo.findGlobalProducts(where, query.skip, query.take),
+      this.productRepo.countGlobalProducts(where),
     ]);
 
     // 数据映射：转换为前端期望的 VO 格式
@@ -217,28 +202,13 @@ export class ClientProductService {
    * 获取商品详情
    * 如果有租户上下文，返回该租户的门店价格，并聚合营销活动
    */
+  @Cacheable('client:product:detail:', '{id}', 600) // 10 mins
   async findOne(id: string) {
     const tenantId = TenantContext.getTenantId();
+    const isSuper = tenantId === TenantContext.SUPER_TENANT_ID;
 
-    const product = await this.prisma.pmsProduct.findUnique({
-      where: { productId: id },
-      include: {
-        globalSkus: true,
-        category: {
-          select: { name: true },
-        },
-        // 如果有有效的租户ID，同时查询该租户的门店商品
-        tenantProducts:
-          tenantId && tenantId !== TenantContext.SUPER_TENANT_ID
-            ? {
-                where: { tenantId, status: 'ON_SHELF' },
-                include: {
-                  skus: true,
-                },
-              }
-            : false,
-      },
-    });
+    // [MODIFIED] Use ClientProductRepository
+    const product = await this.productRepo.findOneWithDetails(id, tenantId, isSuper);
 
     BusinessException.throwIfNull(product, '商品不存在');
 
@@ -268,7 +238,8 @@ export class ClientProductService {
         },
       });
 
-      for (const config of configs) {
+      // 优化: 并行执行策略数据获取
+      const activityPromises = configs.map(async (config) => {
         try {
           const strategy = this.strategyFactory.getStrategy(config.templateCode);
           let displayData = {};
@@ -276,7 +247,7 @@ export class ClientProductService {
             displayData = await strategy.getDisplayData(config);
           }
 
-          marketingActivities.push({
+          return {
             configId: config.id,
             type: config.templateCode, // e.g. GROUP_BUY
             rules: config.rules,
@@ -284,11 +255,15 @@ export class ClientProductService {
             // Priority could be defined in Strategy or Template, hardcoded for now
             // Priority Logic: SECKILL > GROUP_BUY > NORMAL
             priority: config.templateCode === 'SECKILL' ? 100 : 50,
-          });
+          };
         } catch (e) {
           this.logger.warn(`Failed to aggregate activity ${config.id}: ${e.message}`);
+          return null;
         }
-      }
+      });
+
+      const results = await Promise.all(activityPromises);
+      marketingActivities.push(...results.filter((item) => item !== null));
 
       // Sort by priority (High to Low)
       marketingActivities.sort((a, b) => b.priority - a.priority);

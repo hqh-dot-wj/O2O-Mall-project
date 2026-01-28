@@ -1,37 +1,47 @@
-import { Body, Controller, Get, Post, Put, Query, Param } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Api } from 'src/common/decorators/api.decorator';
+import { Body, Controller, Get, Post, Put, Query, Param, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PmsProductService } from './product.service';
 import { CreateProductDto, ListProductDto } from './dto';
 import { ProductVo } from './vo';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 
+/**
+ * 商品管理控制器
+ */
 @ApiTags('商品管理')
-@ApiBearerAuth('Authorization')
-@Controller('pms/product')
+@Controller('admin/pms/product')
 export class PmsProductController {
   constructor(private readonly pmsProductService: PmsProductService) {}
 
-  @Api({ summary: '创建商品' })
-  @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.pmsProductService.create(createProductDto);
-  }
-
-  @Api({ summary: '商品列表', type: ProductVo, isPager: true })
+  @ApiOperation({ summary: '查询商品列表' })
+  @RequirePermission('pms:product:list')
   @Get('list')
-  findAll(@Query() query: ListProductDto) {
+  async list(@Query() query: ListProductDto) {
     return this.pmsProductService.findAll(query);
   }
 
-  @Api({ summary: '商品详情', type: ProductVo })
+  @ApiOperation({ summary: '查询商品详情' })
+  @RequirePermission('pms:product:query')
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async getOne(@Param('id') id: string) {
     return this.pmsProductService.findOne(id);
   }
 
-  @Api({ summary: '更新商品' })
+  @ApiOperation({ summary: '创建商品' })
+  @RequirePermission('pms:product:create')
+  @Operlog({ businessType: BusinessType.INSERT })
+  @Post()
+  async create(@Body() dto: CreateProductDto) {
+    return this.pmsProductService.create(dto);
+  }
+
+  @ApiOperation({ summary: '更新商品' })
+  @RequirePermission('pms:product:update')
+  @Operlog({ businessType: BusinessType.UPDATE })
   @Put(':id')
-  update(@Param('id') id: string, @Body() createProductDto: CreateProductDto) {
-    return this.pmsProductService.update(id, createProductDto);
+  async update(@Param('id') id: string, @Body() dto: CreateProductDto) {
+    return this.pmsProductService.update(id, dto);
   }
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
+import { StationRepository } from './station.repository';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { CreateStationDto } from './dto/station.dto';
 
 /**
  * 服务站管理服务 (Station Service)
@@ -9,7 +11,7 @@ import { GeoService } from '../geo/geo.service';
 @Injectable()
 export class StationService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly repo: StationRepository,
     private readonly geoService: GeoService,
   ) { }
 
@@ -18,35 +20,57 @@ export class StationService {
    * @param data 创建数据 (含网点信息及围栏坐标)
    * @returns 创建的服务站对象
    */
-  async create(data: any) {
-    const { tenantId, name, address, latitude, longitude, fence } = data;
+  @Transactional()
+  async create(data: CreateStationDto) {
+    const { tenantId, name, address, location, fence } = data as any; // DTO has location object, but raw data might be flattened or different. 
+    // Wait, DTO definition: location: StationPointDto {lng, lat}.
+    // Schema: SysStation { latitude, longitude }.
+    // Need mapping.
 
-    // 1. 创建服务站基础信息
-    const station = await this.prisma.sysStation.create({
-      data: {
-        tenantId,
-        name,
-        address,
-        latitude,
-        longitude,
-      },
-    });
+    // Check if input data matches DTO structure (nested) or flat structure from previous implementation?
+    // Previous implementation: const { tenantId, name, address, latitude, longitude, fence } = data;
+    // We should assume data comes from Controller validated DTO? I'll assume flat-ish usage or handle mapping.
+    // The previous code destructured latitude/longitude.
+    // If I use CreateStationDto, it has `location: { lng, lat }`.
+    // I will support both or map DTO to Entity.
+
+    // Mapping DTO to Entity data
+    // If data is CreateStationDto:
+    let lat = data.location?.lat;
+    let lng = data.location?.lng;
+
+    // If legacy call passes flat data (not using DTO class instance strictly?):
+    if (!lat && (data as any).latitude) lat = (data as any).latitude;
+    if (!lng && (data as any).longitude) lng = (data as any).longitude;
+
+    const station = await this.repo.create({
+      tenantId: (data as any).tenantId, // tenantId usually from context, but previous code took it from data.
+      name: data.name,
+      address: data.address,
+      latitude: lat,
+      longitude: lng,
+    } as any);
 
     // 2. 如果提供了围栏数据，则同步创建空间地理围栏记录
-    if (fence && fence.coordinates && fence.coordinates.length > 0) {
-      let polygonCoords = fence.coordinates;
-      // 处理 GeoJSON 多边形标准：取第一个环(外环)
+    if (fence && fence.points && fence.points.length > 0) {
+      // DTO: points: [{lat, lng}, ...]
+      // GeoService.toPolygonWKT expects [[lng, lat], ...] array (coordinates).
+      // Need transformation.
+      const coordinates = fence.points.map((p: any) => [p.lng, p.lat]);
+      const polygonCoords = [coordinates]; // Ring 1
+
+      const wkt = this.geoService.toPolygonWKT(polygonCoords);
+      await this.repo.createFenceWithGeom(station.stationId, 'SERVICE', wkt);
+    } else if ((data as any).fence && (data as any).fence.coordinates) {
+      // Legacy support for raw coordinates if passed
+      // Previous code: fence.coordinates
+      // ... logic ...
+      let polygonCoords = (data as any).fence.coordinates;
       if (Array.isArray(polygonCoords[0]) && Array.isArray(polygonCoords[0][0])) {
         polygonCoords = polygonCoords[0];
       }
-
       const wkt = this.geoService.toPolygonWKT(polygonCoords);
-
-      // ✅ 使用参数化查询，防止 SQL 注入
-      await this.prisma.$executeRaw`
-         INSERT INTO sys_geo_fence (station_id, type, geom)
-         VALUES (${station.stationId}, 'SERVICE', ST_GeomFromText(${wkt}, 4326));
-      `;
+      await this.repo.createFenceWithGeom(station.stationId, 'SERVICE', wkt);
     }
 
     return station;
@@ -57,7 +81,7 @@ export class StationService {
    * @param tenantId 可选租户 ID 过滤
    */
   async findAll(tenantId?: string) {
-    return this.prisma.sysStation.findMany({
+    return this.repo.findMany({
       where: tenantId ? { tenantId } : {},
     });
   }
@@ -74,9 +98,8 @@ export class StationService {
   /**
    * 同步/更新租户的主站点信息 (O2O 适配器使用)
    * 采用 “覆盖更新” 策略，确保每个租户至少有一个主营网点
-   * @param tenantId 租户 ID
-   * @param data 更新的数据 (含地址、经纬度、围栏)
    */
+  @Transactional()
   async upsertMainStation(
     tenantId: string,
     data: {
@@ -88,9 +111,7 @@ export class StationService {
     },
   ) {
     // 1. 查找租户现有的网点
-    let station = await this.prisma.sysStation.findFirst({
-      where: { tenantId },
-    });
+    let station = await this.repo.findOne({ tenantId });
 
     const stationData = {
       latitude: data.latitude,
@@ -100,27 +121,20 @@ export class StationService {
 
     if (station) {
       // 存在则更新
-      station = await this.prisma.sysStation.update({
-        where: { stationId: station.stationId },
-        data: stationData,
-      });
+      station = await this.repo.update(station.stationId, stationData as any);
     } else {
       // 不存在则创建
-      station = await this.prisma.sysStation.create({
-        data: {
-          tenantId,
-          name: `主营网点`,
-          ...stationData,
-        },
-      });
+      station = await this.repo.create({
+        tenantId,
+        name: `主营网点`,
+        ...stationData,
+      } as any);
     }
 
     // 2. 更新地理围栏 (如果数据中有围栏定义)
     if (data.fence && data.fence.coordinates && data.fence.coordinates.length > 0) {
-      // 清理旧的服务区围栏 (一个站点目前只支持一个 SERVICE 类型围栏)
-      await this.prisma.sysGeoFence.deleteMany({
-        where: { stationId: station.stationId, type: 'SERVICE' },
-      });
+      // 清理旧的服务区围栏
+      await this.repo.deleteFencesByStationId(station.stationId, 'SERVICE');
 
       let ringCoords: number[][];
 
@@ -132,12 +146,7 @@ export class StationService {
       }
 
       const wkt = this.geoService.toPolygonWKT(ringCoords);
-
-      // ✅ 使用参数化查询，防止 SQL 注入
-      await this.prisma.$executeRaw`
-        INSERT INTO sys_geo_fence (station_id, type, geom)
-        VALUES (${station.stationId}, 'SERVICE', ST_GeomFromText(${wkt}, 4326));
-      `;
+      await this.repo.createFenceWithGeom(station.stationId, 'SERVICE', wkt);
     }
 
     return station;

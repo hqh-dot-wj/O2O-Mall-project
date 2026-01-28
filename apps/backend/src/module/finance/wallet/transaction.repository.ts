@@ -5,6 +5,9 @@ import { Prisma, FinTransaction } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 
 @Injectable()
+/**
+ * 交易流水仓储
+ */
 export class TransactionRepository extends BaseRepository<
   FinTransaction,
   Prisma.FinTransactionCreateInput,

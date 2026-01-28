@@ -7,6 +7,12 @@ import { MarketingModule } from 'src/module/marketing/marketing.module';
 import { BullModule } from '@nestjs/bull';
 import { NotificationProcessor } from './notification.processor';
 import { OrderDelayProcessor } from './order-delay.processor';
+import { OrderRepository } from './order.repository';
+import { CartRepository } from '../cart/cart.repository';
+import { OrderCheckoutService } from './services/order-checkout.service';
+import { AttributionService } from './services/attribution.service';
+import { ClientAddressModule } from '../address/address.module';
+import { ClientCartModule } from '../cart/cart.module';
 
 /**
  * C端订单模块
@@ -16,6 +22,8 @@ import { OrderDelayProcessor } from './order-delay.processor';
     FinanceModule,
     MessageModule,
     MarketingModule,
+    ClientAddressModule, // For AddressRepository
+    ClientCartModule, // For CartService
     BullModule.registerQueue({
       name: 'ORDER_NOTIFICATION',
     }),
@@ -24,8 +32,16 @@ import { OrderDelayProcessor } from './order-delay.processor';
     }),
   ],
   controllers: [OrderController],
-  providers: [OrderService, NotificationProcessor, OrderDelayProcessor],
+  providers: [
+    OrderService,
+    NotificationProcessor,
+    OrderDelayProcessor,
+    OrderRepository,
+    CartRepository,
+    OrderCheckoutService,
+    AttributionService,
+  ],
 
-  exports: [OrderService],
+  exports: [OrderService, OrderRepository],
 })
-export class ClientOrderModule {}
+export class ClientOrderModule { }

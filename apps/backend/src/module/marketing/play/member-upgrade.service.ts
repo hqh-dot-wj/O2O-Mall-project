@@ -2,9 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { StorePlayConfig, PlayInstance } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { IMarketingStrategy } from './strategy.interface';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response/response.interface';
+import { MemberRepository } from 'src/module/admin/member/member.repository';
+import { UpgradeApplyRepository } from 'src/module/admin/upgrade/upgrade-apply.repository';
+import { ReferralCodeRepository } from 'src/module/admin/member/referral-code.repository';
+import { StorePlayConfigRepository } from '../config/config.repository';
+import { OrderRepository } from 'src/module/client/order/order.repository';
 
 /**
  * 会员升级营销策略插件
@@ -24,15 +28,19 @@ export class MemberUpgradeService implements IMarketingStrategy {
   readonly code = 'MEMBER_UPGRADE';
   private readonly logger = new Logger(MemberUpgradeService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly memberRepo: MemberRepository,
+    private readonly upgradeApplyRepo: UpgradeApplyRepository,
+    private readonly referralRepo: ReferralCodeRepository,
+    private readonly configRepo: StorePlayConfigRepository,
+    private readonly orderRepo: OrderRepository,
+  ) { }
 
   /**
    * 准入校验: 只允许低等级用户购买
    */
   async validateJoin(config: StorePlayConfig, memberId: string, params?: any): Promise<void> {
-    const member = await this.prisma.umsMember.findUnique({
-      where: { memberId },
-    });
+    const member = await this.memberRepo.findById(memberId);
 
     if (!member) {
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, '会员不存在');
@@ -59,9 +67,7 @@ export class MemberUpgradeService implements IMarketingStrategy {
    */
   async onPaymentSuccess(instance: PlayInstance): Promise<void> {
     // 1. 获取活动配置
-    const config = await this.prisma.storePlayConfig.findUnique({
-      where: { id: instance.configId },
-    });
+    const config = await this.configRepo.findById(instance.configId);
 
     if (!config) {
       this.logger.warn(`Config not found for instance ${instance.id}`);
@@ -77,10 +83,7 @@ export class MemberUpgradeService implements IMarketingStrategy {
     let orderId: string | null = null;
 
     if (instance.orderSn) {
-      const order = await this.prisma.omsOrder.findUnique({
-        where: { orderSn: instance.orderSn },
-        select: { id: true, tenantId: true },
-      });
+      const order = await this.orderRepo.findBySn(instance.orderSn);
       if (order) {
         tenantId = order.tenantId;
         orderId = order.id;
@@ -88,23 +91,19 @@ export class MemberUpgradeService implements IMarketingStrategy {
     }
 
     // 3. 查询当前会员等级
-    const member = await this.prisma.umsMember.findUnique({
-      where: { memberId: instance.memberId },
-    });
+    const member = await this.memberRepo.findById(instance.memberId);
 
     if (!member) return;
 
     // 4. 创建升级申请记录
-    await this.prisma.umsUpgradeApply.create({
-      data: {
-        tenantId,
-        memberId: instance.memberId,
-        fromLevel: member.levelId,
-        toLevel: targetLevel,
-        applyType: 'PRODUCT_PURCHASE',
-        orderId,
-        status: autoApprove ? 'APPROVED' : 'PENDING',
-      },
+    await this.upgradeApplyRepo.create({
+      tenantId,
+      memberId: instance.memberId,
+      fromLevel: member.levelId,
+      toLevel: targetLevel,
+      applyType: 'PRODUCT_PURCHASE',
+      orderId,
+      status: autoApprove ? 'APPROVED' : 'PENDING',
     });
 
     // 5. 如果自动通过，则立即升级
@@ -121,14 +120,11 @@ export class MemberUpgradeService implements IMarketingStrategy {
    */
   private async doUpgrade(memberId: string, targetLevel: number, tenantId: string, orderId: string | null) {
     // 1. 升级会员
-    await this.prisma.umsMember.update({
-      where: { memberId },
-      data: {
-        levelId: targetLevel,
-        tenantId, // 升级归属下单门店
-        upgradedAt: new Date(),
-        upgradeOrderId: orderId,
-      },
+    await this.memberRepo.update(memberId, {
+      levelId: targetLevel,
+      tenantId, // 升级归属下单门店
+      upgradedAt: new Date(),
+      upgradeOrderId: orderId,
     });
 
     // 2. 如果升级到C2，自动生成推荐码
@@ -138,20 +134,15 @@ export class MemberUpgradeService implements IMarketingStrategy {
       const randomPart = nanoid(4).toUpperCase();
       const code = `${prefix}-${randomPart}`;
 
-      await this.prisma.umsReferralCode.create({
-        data: {
-          tenantId,
-          memberId,
-          code,
-          isActive: true,
-        },
+      await this.referralRepo.create({
+        tenantId,
+        memberId,
+        code,
+        isActive: true,
       });
 
       // 更新会员推荐码字段
-      await this.prisma.umsMember.update({
-        where: { memberId },
-        data: { referralCode: code },
-      });
+      await this.memberRepo.update(memberId, { referralCode: code });
 
       this.logger.log(`为C2会员 ${memberId} 生成推荐码: ${code}`);
     }
@@ -169,11 +160,31 @@ export class MemberUpgradeService implements IMarketingStrategy {
    */
   async validateConfig(dto: any): Promise<void> {
     const rules = dto.rules;
-    if (!rules?.targetLevel || ![1, 2].includes(rules.targetLevel)) {
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, 'targetLevel 必须为 1 或 2');
+    BusinessException.throwIf(!rules, '规则配置不能为空');
+
+    const { plainToInstance } = await import('class-transformer');
+    const { validate } = await import('class-validator');
+    const { MemberUpgradeRulesDto } = await import('./dto/member-upgrade.dto');
+
+    const rulesDto = plainToInstance(MemberUpgradeRulesDto, rules);
+    const errors = await validate(rulesDto);
+
+    if (errors.length > 0) {
+      const constraints = errors[0].constraints;
+      const msg = constraints ? Object.values(constraints)[0] : '规则配置校验失败';
+      throw new BusinessException(ResponseCode.PARAM_INVALID, msg);
     }
-    if (!rules?.price || rules.price <= 0) {
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, 'price 必须大于 0');
-    }
+  }
+
+  /**
+   * 获取前端展示数据
+   */
+  async getDisplayData(config: StorePlayConfig): Promise<any> {
+    const rules = config.rules as any;
+    return {
+      price: rules?.price || 0,
+      targetLevel: rules?.targetLevel || 1,
+      targetLevelName: rules?.targetLevel === 2 ? '合伙人' : '会员', // 简单示例，实际可能需要查询等级名称
+    };
   }
 }

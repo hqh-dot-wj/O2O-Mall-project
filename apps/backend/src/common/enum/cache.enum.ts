@@ -40,4 +40,13 @@ export enum CacheEnum {
 
   /** 微信Access Token缓存 */
   WECHAT_ACCESS_TOKEN_KEY = 'wechat_token:',
+
+  /** 钱包缓存 */
+  FIN_WALLET_KEY = 'fin_wallet:',
+
+  /** 商品分类树缓存 */
+  PMS_CATEGORY_TREE = 'pms:category:tree',
+
+  /** 属性模板缓存 */
+  PMS_ATTRIBUTE_TEMPLATE = 'pms:attribute:template',
 }

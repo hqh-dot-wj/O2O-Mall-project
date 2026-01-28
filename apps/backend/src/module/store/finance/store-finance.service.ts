@@ -216,7 +216,7 @@ export class StoreFinanceService {
     searchParams.status = query.status;
     searchParams.memberId = query.memberId;
 
-    return await this.withdrawalService.getList(searchParams, tenantId);
+    return await this.withdrawalService.getList(searchParams);
   }
 
   /**
@@ -224,7 +224,7 @@ export class StoreFinanceService {
    */
   async auditWithdrawal(dto: AuditWithdrawalDto, auditBy: string) {
     const tenantId = TenantContext.getTenantId();
-    return await this.withdrawalService.audit(dto.withdrawalId, tenantId, dto.action, auditBy, dto.remark);
+    return await this.withdrawalService.audit(dto.withdrawalId, dto.action, auditBy, dto.remark);
   }
 
   /**

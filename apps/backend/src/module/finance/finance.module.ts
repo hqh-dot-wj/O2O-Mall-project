@@ -4,6 +4,8 @@ import { WalletService } from './wallet/wallet.service';
 import { CommissionService } from './commission/commission.service';
 import { CommissionProcessor } from './commission/commission.processor';
 import { WithdrawalService } from './withdrawal/withdrawal.service';
+import { WithdrawalAuditService } from './withdrawal/withdrawal-audit.service';
+import { WithdrawalPaymentService } from './withdrawal/withdrawal-payment.service';
 import { SettlementScheduler } from './settlement/settlement.scheduler';
 import { WithdrawalController } from './withdrawal/withdrawal.controller';
 import { WithdrawalRepository } from './withdrawal/withdrawal.repository';
@@ -23,6 +25,8 @@ import { TransactionRepository } from './wallet/transaction.repository';
     CommissionService,
     CommissionProcessor,
     WithdrawalService,
+    WithdrawalAuditService,
+    WithdrawalPaymentService,
     SettlementScheduler,
     // Repositories
     WithdrawalRepository,
@@ -32,4 +36,4 @@ import { TransactionRepository } from './wallet/transaction.repository';
   ],
   exports: [WalletService, CommissionService, WithdrawalService],
 })
-export class FinanceModule {}
+export class FinanceModule { }

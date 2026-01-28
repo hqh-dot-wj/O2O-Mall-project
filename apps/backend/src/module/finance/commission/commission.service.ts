@@ -10,6 +10,7 @@ import { TransactionRepository } from '../wallet/transaction.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { BusinessException } from 'src/common/exceptions';
 import { BusinessConstants } from 'src/common/constants/business.constants';
+import { WalletService } from '../wallet/wallet.service';
 
 /**
  * 佣金服务
@@ -27,6 +28,7 @@ export class CommissionService {
     private readonly commissionRepo: CommissionRepository,
     private readonly walletRepo: WalletRepository,
     private readonly transactionRepo: TransactionRepository,
+    private readonly walletService: WalletService,
     @InjectQueue('CALC_COMMISSION') private readonly commissionQueue: Queue,
   ) { }
 
@@ -471,30 +473,14 @@ export class CommissionService {
    */
   @Transactional()
   private async rollbackCommission(commission: any) {
-    const wallet = await this.walletRepo.findOne({
-      memberId: commission.beneficiaryId,
-    });
-
-    if (!wallet) return;
-
     // 扣减余额 (可能变负)
-    await this.walletRepo.update(wallet.id, {
-      balance: { decrement: commission.amount },
-      version: { increment: 1 },
-    });
-
-    // 写入负向流水
-    const updatedWallet = await this.walletRepo.findById(wallet.id);
-
-    await this.transactionRepo.create({
-      wallet: { connect: { id: wallet.id } },
-      tenantId: commission.tenantId,
-      type: TransType.REFUND_DEDUCT,
-      amount: new Decimal(0).minus(commission.amount),
-      balanceAfter: updatedWallet!.balance,
-      relatedId: commission.orderId,
-      remark: `订单退款，佣金回收`,
-    });
+    await this.walletService.deductBalance(
+      commission.beneficiaryId,
+      commission.amount,
+      commission.orderId,
+      `订单退款，佣金回收`,
+      TransType.REFUND_DEDUCT,
+    );
 
     // 更新佣金状态
     await this.commissionRepo.update(commission.id, { status: CommissionStatus.CANCELLED });

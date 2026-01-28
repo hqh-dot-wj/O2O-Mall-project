@@ -77,4 +77,33 @@ export class PlayInstanceRepository extends BaseRepository<PlayInstance, CreateP
 
     return this.update(id, data);
   }
+
+  /**
+   * 批量更新实例状态
+   */
+  async batchUpdateStatus(ids: string[], status: PlayInstanceStatus, instanceData?: any) {
+    const data: any = { status };
+    if (instanceData) {
+      data.instanceData = instanceData;
+    }
+
+    const finalStatuses: PlayInstanceStatus[] = [
+      PlayInstanceStatus.SUCCESS,
+      PlayInstanceStatus.FAILED,
+      PlayInstanceStatus.REFUNDED,
+      PlayInstanceStatus.TIMEOUT,
+    ];
+    if (finalStatuses.includes(status)) {
+      data.endTime = new Date();
+    }
+
+    if (status === PlayInstanceStatus.PAID) {
+      data.payTime = new Date();
+    }
+
+    return this.prisma.playInstance.updateMany({
+      where: { id: { in: ids } },
+      data,
+    });
+  }
 }

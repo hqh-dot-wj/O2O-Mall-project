@@ -28587,14 +28587,7 @@
             }
           },
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           },
           "401": {
             "description": "未登录或登录已过期",

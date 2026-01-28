@@ -1,17 +1,18 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { RegionRepository } from './region.repository';
+import { SystemCacheable } from 'src/module/admin/common/decorators/system-cache.decorator';
 
 @Injectable()
 export class RegionService implements OnModuleInit {
   private readonly logger = new Logger(RegionService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly repo: RegionRepository) { }
 
   async onModuleInit() {
     // Check if regions exist, if not, seed them
-    const count = await this.prisma.sysRegion.count();
+    const count = await this.repo.count();
     if (count === 0) {
       this.logger.log('No regions found. Starting seeding process...');
       await this.seedRegions();
@@ -19,44 +20,26 @@ export class RegionService implements OnModuleInit {
   }
 
   async seedRegions() {
-    // Assuming pcas-code.json is in the project root or accessible
-    // Adjust path as needed, maybe project root
-    // Try multiple paths to find pcas-code.json
-    const possiblePaths = [
-      path.resolve(process.cwd(), 'pcas-code.json'), // Root
-      path.resolve(process.cwd(), '../../pcas-code.json'), // From apps/backend
-      path.join(__dirname, '../../../../../../pcas-code.json'), // Relative to source file
-    ];
+    // Standardized path: apps/backend/src/assets/json/pcas-code.json
+    // In dev (src context): ../../assets/json/pcas-code.json (from region module)
+    // In prod (dist context): same relative path usually works if assets are copied, or use absolute path strategy
+    const jsonPath = path.resolve(process.cwd(), 'src/assets/json/pcas-code.json');
 
-    let jsonPath = '';
-    for (const p of possiblePaths) {
-      if (fs.existsSync(p)) {
-        jsonPath = p;
-        break;
-      }
-    }
-
-    if (!jsonPath) {
-      this.logger.warn(`Region JSON file not found in [${possiblePaths.join(', ')}]. Skipping seed.`);
+    if (!fs.existsSync(jsonPath)) {
+      this.logger.warn(`Region JSON file not found at [${jsonPath}]. Skipping seed.`);
       return;
     }
 
     const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-    this.logger.log('Read JSON data, starting recursion...');
-
-    // Recursive insert is too slow if done one by one.
-    // We should flatten the data and use createMany if possible, but createMany is not supported nicely for self-relations in some DBs or limits.
-    // However, Prisma createMany is fine for flat tables. sys_region is flat if we just insert rows.
+    this.logger.log('Read JSON data, starting seeding...');
 
     const flattenData: any[] = [];
-
     const traverse = (node: any, parentCode: string | null = null, level: number = 1) => {
       flattenData.push({
         code: node.code,
         name: node.name,
-        parentId: parentCode,
+        parentCode: parentCode, // Note: Schema uses 'parentCode' (String), check repository definition
         level: level,
-        // Map coordinates if they exist in the source data
         latitude: node.latitude || node.lat || null,
         longitude: node.longitude || node.lng || null,
       });
@@ -70,45 +53,58 @@ export class RegionService implements OnModuleInit {
 
     this.logger.log(`Prepared ${flattenData.length} region records. Inserting in batches...`);
 
+    // Use createMany from BaseRepository (if enabled/supported) or raw Prisma
+    // Since RegionRepository extends BaseRepository<SysRegion>, and base has createMany
     const BATCH_SIZE = 1000;
     for (let i = 0; i < flattenData.length; i += BATCH_SIZE) {
       const batch = flattenData.slice(i, i + BATCH_SIZE);
-      await this.prisma.sysRegion.createMany({
-        data: batch,
-        skipDuplicates: true,
-      });
-      // this.logger.log(`Inserted batch ${i / BATCH_SIZE + 1}`);
+      // Note: skipDuplicates is important
+      await this.repo.createMany(batch);
     }
 
     this.logger.log('Region seeding completed.');
   }
 
-  async getTree(): Promise<any[]> {
-    // Need efficient way to build tree.
-    // For full tree, it's HUGE. Usually we load by level or lazy load.
-    // Let's implement lazy load by parentId.
-    return [];
+  /**
+   * 获取所有区域树 (带缓存)
+   * 缓存 24 小时 (static data)
+   */
+  @SystemCacheable({ key: 'sys:region:tree', ttl: 86400 })
+  async getTree() {
+    // Build tree
+    const regions = await this.repo.findAllRegions();
+    return this.buildTree(regions);
   }
 
-  async getChildren(parentId?: string) {
-    if (!parentId) {
-      // Return provinces
-      return this.prisma.sysRegion.findMany({
-        where: { level: 1 },
-        orderBy: { code: 'asc' },
-      });
+  async getChildren(parentCode?: string) {
+    if (!parentCode) {
+      return this.repo.findRoots();
     }
-    return this.prisma.sysRegion.findMany({
-      where: { parentId },
-      orderBy: { code: 'asc' },
-    });
+    return this.repo.findChildren(parentCode);
   }
 
   async getRegionName(code: string) {
-    const region = await this.prisma.sysRegion.findUnique({
-      where: { code },
-      select: { name: true },
-    });
+    const region = await this.repo.findById(code, { select: { name: true } });
     return region?.name || '';
+  }
+
+  private buildTree(regions: any[]) {
+    const map = new Map<string, any>();
+    const roots: any[] = [];
+
+    regions.forEach((item) => {
+      map.set(item.code, { ...item, children: [] });
+    });
+
+    regions.forEach((item) => {
+      const node = map.get(item.code);
+      if (item.parentCode && map.has(item.parentCode)) {
+        map.get(item.parentCode).children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
   }
 }

@@ -16,6 +16,6 @@ import { forwardRef } from '@nestjs/common';
   imports: [UserAssetModule, FinanceModule, forwardRef(() => MarketingPlayModule)],
   controllers: [PlayInstanceController],
   providers: [PlayInstanceService, PlayInstanceRepository],
-  exports: [PlayInstanceService],
+  exports: [PlayInstanceService, PlayInstanceRepository],
 })
-export class PlayInstanceModule {}
+export class PlayInstanceModule { }

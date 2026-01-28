@@ -1,12 +1,15 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PlayInstanceService } from '../instance/instance.service';
+import { PlayInstanceRepository } from '../instance/instance.repository';
 import { PlayInstanceStatus, StorePlayConfig, PlayInstance } from '@prisma/client';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { MarketingStockService } from '../stock/stock.service';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { IMarketingStrategy } from './strategy.interface';
 import { Decimal } from '@prisma/client/runtime/library';
+import { GroupBuyJoinDto, GroupBuyRulesDto } from './dto/group-buy.dto';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 
 /**
  * 拼团玩法核心逻辑
@@ -18,9 +21,9 @@ export class GroupBuyService implements IMarketingStrategy {
   constructor(
     @Inject(forwardRef(() => PlayInstanceService))
     private readonly instanceService: PlayInstanceService,
+    private readonly repo: PlayInstanceRepository,
     private readonly stockService: MarketingStockService,
-    private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   /**
    * 1.1 配置校验
@@ -29,23 +32,18 @@ export class GroupBuyService implements IMarketingStrategy {
     const rules = dto.rules;
     BusinessException.throwIf(!rules, '规则配置不能为空');
 
-    // 1. 价格校验
-    if (rules.price !== undefined) {
-      const price = new Decimal(rules.price);
-      BusinessException.throwIf(price.lte(0), '拼团价格必须大于 0');
+    const rulesDto = plainToInstance(GroupBuyRulesDto, rules);
+    const errors = await validate(rulesDto);
+
+    if (errors.length > 0) {
+      const constraints = errors[0].constraints;
+      const msg = constraints ? Object.values(constraints)[0] : '规则配置校验失败';
+      throw new BusinessException(ResponseCode.PARAM_INVALID, msg);
     }
 
-    // 2. 人数校验
-    if (rules.minCount !== undefined) {
-      BusinessException.throwIf(Number(rules.minCount) < 2, '成团人数最少为 2 人');
-    }
-    if (rules.maxCount !== undefined && rules.maxCount < rules.minCount) {
+    // 额外逻辑：最大人数不能小于最小人数
+    if (rulesDto.maxCount !== undefined && rulesDto.minCount !== undefined && rulesDto.maxCount < rulesDto.minCount) {
       throw new BusinessException(ResponseCode.PARAM_INVALID, '最大人数不能小于最小人数');
-    }
-
-    // 3. 有效期校验
-    if (rules.validDays !== undefined && Number(rules.validDays) <= 0) {
-      throw new BusinessException(ResponseCode.PARAM_INVALID, '拼团有效期必须大于 0');
     }
   }
 
@@ -53,7 +51,12 @@ export class GroupBuyService implements IMarketingStrategy {
    * 1. 准入校验
    */
   async validateJoin(config: StorePlayConfig, memberId: string, params: any = {}): Promise<void> {
-    const { groupId } = params;
+    const joinDto = plainToInstance(GroupBuyJoinDto, params);
+    // 可选：严格校验
+    // const errors = await validate(joinDto);
+    // if (errors.length > 0) ...
+
+    const { groupId } = joinDto;
 
     // 如果是参团，检查父团状态
     if (groupId) {
@@ -104,6 +107,20 @@ export class GroupBuyService implements IMarketingStrategy {
   }
 
   /**
+   * 5. 前端展示增强数据
+   */
+  async getDisplayData(config: StorePlayConfig): Promise<any> {
+    const rules = config.rules as any;
+    return {
+      price: rules.price,
+      minCount: rules.minCount || 2,
+      maxCount: rules.maxCount,
+      validDays: rules.validDays || 24,
+      skus: rules.skus || [],
+    };
+  }
+
+  /**
    * @deprecated Legacy method, kept for reference or internal use
    */
   async joinGroup(memberId: string, configId: string, groupId?: string): Promise<any> {
@@ -132,11 +149,8 @@ export class GroupBuyService implements IMarketingStrategy {
     const newCount = leaderData.currentCount + 1;
 
     // 更新团长数据
-    await this.prisma.playInstance.update({
-      where: { id: leaderId },
-      data: {
-        instanceData: { ...leaderData, currentCount: newCount },
-      },
+    await this.repo.update(leaderId, {
+      instanceData: { ...leaderData, currentCount: newCount },
     });
 
     // 4. 判断是否成团
@@ -144,7 +158,6 @@ export class GroupBuyService implements IMarketingStrategy {
       await this.finalizeGroup(leaderId);
     } else {
       // 尚未成团，状态保持 (或如果是成员，状态流转为 ACTIVE)
-      // 注意：PaymentSuccess 默认流转为 PAID，如需变为 ACTIVE (待成团)，可在此调用
       if (instance.status !== PlayInstanceStatus.ACTIVE) {
         await this.instanceService.transitStatus(instance.id, PlayInstanceStatus.ACTIVE);
       }
@@ -160,7 +173,7 @@ export class GroupBuyService implements IMarketingStrategy {
    */
   private async finalizeGroup(leaderId: string) {
     // 1. 找齐所有相关实例
-    const instances = await this.prisma.playInstance.findMany({
+    const instances = await this.repo.findMany({
       where: {
         OR: [{ id: leaderId }, { instanceData: { path: ['parentId'], equals: leaderId } }],
         status: {
@@ -170,8 +183,9 @@ export class GroupBuyService implements IMarketingStrategy {
     });
 
     // 2. 批量流转状态 -> SUCCESS
-    for (const ins of instances) {
-      await this.instanceService.transitStatus(ins.id, PlayInstanceStatus.SUCCESS);
+    const ids = instances.map((ins) => ins.id);
+    if (ids.length > 0) {
+      await this.instanceService.batchTransitStatus(ids, PlayInstanceStatus.SUCCESS);
     }
   }
 }

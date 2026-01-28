@@ -11,6 +11,6 @@ import { UpgradeReferralService } from './services/upgrade-referral.service';
     UpgradeApplyRepository,
     UpgradeReferralService,
   ],
-  exports: [AdminUpgradeService],
+  exports: [AdminUpgradeService, UpgradeApplyRepository],
 })
 export class AdminUpgradeModule { }

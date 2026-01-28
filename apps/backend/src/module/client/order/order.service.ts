@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/module/common/redis/redis.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
@@ -10,13 +9,14 @@ import { CommissionService } from 'src/module/finance/commission/commission.serv
 import { RiskService } from 'src/module/risk/risk.service';
 import { MessageService } from 'src/module/admin/system/message/message.service';
 import { ClientInfoDto } from 'src/common/decorators/common.decorator';
-import { CreateOrderDto, ListOrderDto, CancelOrderDto, OrderItemDto } from './dto/order.dto';
-import { OrderDetailVo, OrderListItemVo, CheckoutPreviewVo, OrderItemVo } from './vo/order.vo';
-import { StorePlayConfigService } from 'src/module/marketing/config/config.service';
-import { PlayStrategyFactory } from 'src/module/marketing/play/play.factory';
-import { Decimal } from '@prisma/client/runtime/library';
-import { DelFlag, PublishStatus } from '@prisma/client';
+import { CreateOrderDto, ListOrderDto, CancelOrderDto } from './dto/order.dto';
+import { OrderDetailVo, OrderListItemVo } from './vo/order.vo';
 import { nanoid } from 'nanoid';
+import { OrderRepository } from './order.repository';
+import { CartRepository } from '../cart/cart.repository';
+import { OrderCheckoutService } from './services/order-checkout.service';
+import { AttributionService } from './services/attribution.service';
+import { CartService } from '../cart/cart.service';
 
 /**
  * C端订单服务
@@ -28,56 +28,18 @@ export class OrderService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
     private readonly commissionService: CommissionService,
     private readonly riskService: RiskService,
     private readonly messageService: MessageService,
     @InjectQueue('ORDER_NOTIFICATION') private readonly notificationQueue: Queue,
     @InjectQueue('ORDER_DELAY') private readonly orderDelayQueue: Queue,
-    private readonly storePlayConfigService: StorePlayConfigService,
-    private readonly playStrategyFactory: PlayStrategyFactory,
-  ) {}
-
-  /**
-   * 计算两点距离 (Haversine Formula) return meters
-   */
-  private calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371e3; // Earth radius in meters
-    const phi1 = (lat1 * Math.PI) / 180;
-    const phi2 = (lat2 * Math.PI) / 180;
-    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
-    const deltaLambda = ((lng2 - lng1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  }
-
-  /**
-   * 获取最终归因人 (优先级: 参数 > Redis > 绑定)
-   */
-  private async getFinalShareUserId(memberId: string, inputShareId?: string): Promise<string | null> {
-    // 0. 如果 memberId 为空，直接返回 inputShareId 或 null
-    if (!memberId) return inputShareId || null;
-
-    // 1. 优先使用本次参数
-    if (inputShareId) return inputShareId;
-
-    // 2. 其次查询 Redis (7天点击归因)
-    const redisKey = `attr:member:${memberId}`;
-    const cachedId = await this.redis.get(redisKey);
-    if (cachedId) return cachedId;
-
-    // 3. 最后使用永久绑定 (parentId)
-    const member = await this.prisma.umsMember.findUnique({
-      where: { memberId },
-      select: { parentId: true },
-    });
-    return member?.parentId || null;
-  }
+    // [NEW] Repositories & Services
+    private readonly orderRepo: OrderRepository,
+    private readonly cartRepo: CartRepository,
+    private readonly checkoutService: OrderCheckoutService,
+    private readonly attributionService: AttributionService,
+    private readonly cartService: CartService,
+  ) { }
 
   /**
    * 结算预览 - 从购物车或直接购买获取结算信息
@@ -85,139 +47,10 @@ export class OrderService {
   async getCheckoutPreview(
     memberId: string,
     tenantId: string,
-    items: OrderItemDto[],
+    items: any[],
     marketingConfigId?: string,
-  ): Promise<CheckoutPreviewVo> {
-    // 1. 批量查询 SKU 信息
-    const skuIds = items.map((i) => i.skuId);
-    const skus = await this.prisma.pmsTenantSku.findMany({
-      where: { id: { in: skuIds }, isActive: true },
-      include: {
-        tenantProd: {
-          include: { product: true },
-        },
-        globalSku: true,
-      },
-    });
-
-    // 2. 校验商品有效性
-    const skuMap = new Map(skus.map((s) => [s.id, s]));
-    const previewItems: OrderItemVo[] = [];
-    let totalAmount = new Decimal(0);
-
-    // [Marketing] Pre-load config and strategy
-    let marketingConfig: any = null;
-    let marketingStrategy: any = null;
-    if (marketingConfigId) {
-      const configRes = await this.storePlayConfigService.findOne(marketingConfigId);
-      if (configRes && configRes.data) {
-        marketingConfig = configRes.data;
-        marketingStrategy = this.playStrategyFactory.getStrategy(marketingConfig.templateCode);
-      }
-    }
-
-    for (const item of items) {
-      const sku = skuMap.get(item.skuId);
-      BusinessException.throwIfNull(sku, `商品 ${item.skuId} 不存在或已下架`);
-      BusinessException.throwIf(sku.tenantProd.tenantId !== tenantId, '商品不属于该门店');
-
-      // 校验库存
-      if (sku.stock >= 0 && sku.stock < item.quantity) {
-        BusinessException.throwIf(true, `${sku.tenantProd.product.name} 库存不足`);
-      }
-
-      // 1.2 校验状态 (新增)
-      const product = sku.tenantProd.product;
-      if (
-        !sku.isActive ||
-        sku.tenantProd.status !== PublishStatus.ON_SHELF ||
-        product.delFlag === DelFlag.DELETE ||
-        product.publishStatus !== PublishStatus.ON_SHELF
-      ) {
-        BusinessException.throw(ResponseCode.BUSINESS_ERROR, `商品 ${product.name} 已下架或暂停销售`);
-      }
-
-      let finalPrice = sku.price;
-      // [Marketing] Apply Strategy Price
-      if (marketingConfig && marketingStrategy && marketingConfig.serviceId === sku.tenantProd.productId) {
-        if (marketingStrategy.calculatePrice) {
-          finalPrice = await marketingStrategy.calculatePrice(marketingConfig, { skuId: sku.id });
-        }
-      }
-
-      const itemTotal = finalPrice.mul(item.quantity);
-      totalAmount = totalAmount.add(itemTotal);
-
-      previewItems.push({
-        productId: sku.tenantProd.productId,
-        productName: sku.tenantProd.product.name,
-        productImg: sku.tenantProd.product.mainImages?.[0] || '',
-        skuId: sku.id,
-        specData: (sku.globalSku?.specValues as Record<string, string>) || null,
-        price: finalPrice.toNumber(),
-        quantity: item.quantity,
-        totalAmount: itemTotal.toNumber(),
-      });
-    }
-
-    // 3. 计算运费 (简化逻辑：暂时为0)
-    const freightAmount = 0;
-    const discountAmount = 0;
-    const payAmount = totalAmount.toNumber() + freightAmount - discountAmount;
-
-    // 验证 LBS 距离
-    const tenant = await this.prisma.sysTenant.findUnique({
-      where: { tenantId },
-      include: { geoConfig: true },
-    });
-
-    // 4. 获取用户默认地址 (从会员表)
-    // 4. 获取用户默认地址 (从会员表)
-    // const member = await this.prisma.umsMember.findUnique({
-    //     where: { memberId },
-    // });
-
-    let outOfRange = false;
-
-    // 修正: 查询用户的默认收货地址
-    let defaultAddress = null;
-    if (memberId) {
-      defaultAddress = await this.prisma.umsAddress.findFirst({
-        where: { memberId, isDefault: true },
-      });
-    }
-
-    if (defaultAddress && defaultAddress.latitude && defaultAddress.longitude && tenant?.geoConfig?.latitude) {
-      const dist = this.calcDistance(
-        tenant.geoConfig.latitude,
-        tenant.geoConfig.longitude,
-        defaultAddress.latitude,
-        defaultAddress.longitude,
-      );
-      if (tenant.geoConfig.serviceRadius && dist > tenant.geoConfig.serviceRadius) {
-        outOfRange = true;
-      }
-    }
-
-    // 5. 判断是否包含服务商品
-    const hasService = skus.some((s) => (s.tenantProd.product as any).type === 'SERVICE');
-
-    return {
-      items: previewItems,
-      totalAmount: totalAmount.toNumber(),
-      freightAmount,
-      discountAmount,
-      payAmount,
-      defaultAddress: defaultAddress
-        ? {
-            name: defaultAddress.name,
-            phone: defaultAddress.phone,
-            address: `${defaultAddress.province}${defaultAddress.city}${defaultAddress.district}${defaultAddress.detail}`,
-          }
-        : undefined,
-      hasService,
-      outOfRange,
-    };
+  ) {
+    return this.checkoutService.getCheckoutPreview(memberId, tenantId, items, marketingConfigId);
   }
 
   /**
@@ -233,46 +66,28 @@ export class OrderService {
       await this.riskService.checkOrderRisk(memberId, dto.tenantId, clientInfo.ipaddr, clientInfo.deviceType);
     }
 
-    // 1. 获取结算预览 (校验商品)
-    const preview = await this.getCheckoutPreview(memberId, dto.tenantId, dto.items, dto.marketingConfigId);
+    // 1. 获取结算预览 (校验商品、库存、价格、LBS距离)
+    const preview = await this.checkoutService.getCheckoutPreview(memberId, dto.tenantId, dto.items, dto.marketingConfigId);
 
-    // 2. 确定订单类型
-    const hasService = await this.checkHasService(dto.items);
-    const orderType = hasService ? 'SERVICE' : 'PRODUCT';
-
-    // 2.1 LBS 校验 (创建时强制校验)
+    // 1.1 LBS 二次校验 (创建时强制校验，使用前端传入的最新坐标)
     if (dto.receiverLat && dto.receiverLng) {
-      const tenant = await this.prisma.sysTenant.findUnique({
-        where: { tenantId: dto.tenantId },
-        include: { geoConfig: true },
-      });
-
-      if (tenant?.geoConfig?.latitude && tenant?.geoConfig?.longitude) {
-        const dist = this.calcDistance(
-          Number(tenant.geoConfig.latitude),
-          Number(tenant.geoConfig.longitude),
-          Number(dto.receiverLat),
-          Number(dto.receiverLng),
-        );
-        // 允许 100米 误差? 还是严格? 严格.
-        if (tenant.geoConfig.serviceRadius && dist > tenant.geoConfig.serviceRadius) {
-          throw new BusinessException(ResponseCode.BUSINESS_ERROR, '超出服务范围，无法配送/服务');
-        }
-      }
+      await this.checkoutService.checkLocation(dto.tenantId, Number(dto.receiverLat), Number(dto.receiverLng));
+    } else if (preview.outOfRange) {
+      // 如果前端没传坐标，且预览结果显示超出范围 (基于默认地址)
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '超出服务范围，无法配送/服务');
     }
 
-    // 3. 获取用户归因信息 (优先级逻辑)
+    // 2. 确定订单类型
+    const orderType = preview.hasService ? 'SERVICE' : 'PRODUCT';
+
+    // 3. 获取用户归因信息
     // 获取商品分享人 (第一个有分享人的商品)
     const itemShareId = dto.items.find((i) => i.shareUserId)?.shareUserId || null;
-    const shareUserId = await this.getFinalShareUserId(memberId, itemShareId || dto.shareUserId); // DTO should have generic shareUserId too? Or just item level? Usually order level.
-
-    // DTO 定义里 createOrderDto 有 shareUserId 吗? 检查 DTO.
-    // 如果 DTO 没有, 可以在 items 里找.
-    // 假设 CreateOrderDto 应该有 shareUserId (Page Load captured).
+    const shareUserId = await this.attributionService.getFinalShareUserId(memberId, itemShareId || dto.shareUserId);
 
     // 4. 获取 ParentId (永久绑定)
     const member = await this.prisma.umsMember.findUnique({ where: { memberId } });
-    const referrerId = member?.parentId || null; // 订单的referrerId字段仍保留，记录绑定关系
+    const referrerId = member?.parentId || null;
 
     // 5. 生成订单号
     const orderSn = this.generateOrderSn();
@@ -315,7 +130,7 @@ export class OrderService {
       include: { items: true },
     });
 
-    // 6. 扣减库存
+    // 7. 扣减库存
     for (const item of dto.items) {
       const result = await this.prisma.pmsTenantSku.updateMany({
         where: {
@@ -332,29 +147,23 @@ export class OrderService {
       }
     }
 
-    // 7. 清除购物车中已下单的商品 (Hard Delete)
-    await this.prisma.omsCartItem.deleteMany({
-      where: {
-        memberId,
-        tenantId: dto.tenantId,
-        skuId: { in: dto.items.map((i) => i.skuId) },
-      },
-    });
+    // 8. 清除购物车中已下单的商品 (Hard Delete)
+    await this.cartRepo.deleteByMemberAndTenant(memberId, dto.tenantId, dto.items.map((i) => i.skuId));
 
-    // 8. 同步购物车到 Redis
-    await this.syncCartToRedis(memberId, dto.tenantId);
+    // 9. 同步购物车到 Redis
+    await this.cartService.syncCartToRedis(memberId, dto.tenantId);
 
-    // 9. 发送新订单通知 (改为延迟队列)
+    // 10. 发送新订单通知 (延迟队列)
     try {
       await this.notificationQueue.add(
         { orderId: order.id },
         { delay: 1000 * 60 * 2 }, // 延迟 2 分钟 (避开秒退)
       );
     } catch (error) {
-      this.logger.error(`Add notification job failed for ${orderSn}`, error);
+      this.logger.error('Add notification job failed for ' + orderSn, error);
     }
 
-    // 10. 添加超时自动关闭任务 (30分钟)
+    // 11. 添加超时自动关闭任务 (30分钟)
     try {
       await this.orderDelayQueue.add(
         'cancel_unpaid',
@@ -362,10 +171,10 @@ export class OrderService {
         { delay: 30 * 60 * 1000 }, // 30 分钟
       );
     } catch (error) {
-      this.logger.error(`Add auto-cancel job failed for ${orderSn}`, error);
+      this.logger.error('Add auto - cancel job failed for ' + orderSn, error);
     }
 
-    this.logger.log(`订单创建成功: ${orderSn}, 会员: ${memberId}`);
+    this.logger.log(`订单创建成功: ${orderSn}, 会员: ${memberId} `);
 
     return Result.ok(
       {
@@ -387,8 +196,8 @@ export class OrderService {
     }
 
     const [total, orders] = await Promise.all([
-      this.prisma.omsOrder.count({ where }),
-      this.prisma.omsOrder.findMany({
+      this.orderRepo.count(where),
+      this.orderRepo.findMany({
         where,
         include: { items: { take: 1 } },
         orderBy: { createTime: 'desc' },
@@ -397,7 +206,7 @@ export class OrderService {
       }),
     ]);
 
-    const list: OrderListItemVo[] = orders.map((order) => ({
+    const list: OrderListItemVo[] = orders.map((order: any) => ({
       id: order.id,
       orderSn: order.orderSn,
       status: order.status,
@@ -415,10 +224,10 @@ export class OrderService {
    * 获取订单详情
    */
   async getOrderDetail(memberId: string, orderId: string): Promise<OrderDetailVo> {
-    const order = await this.prisma.omsOrder.findFirst({
-      where: { id: orderId, memberId, deleteTime: null },
-      include: { items: true },
-    });
+    const order = (await this.orderRepo.findOne(
+      { id: orderId, memberId, deleteTime: null },
+      { include: { items: true } },
+    )) as any;
 
     BusinessException.throwIfNull(order, '订单不存在');
 
@@ -439,7 +248,7 @@ export class OrderService {
       serviceRemark: order.serviceRemark || undefined,
       payTime: order.payTime || undefined,
       createTime: order.createTime,
-      items: order.items.map((item) => ({
+      items: order.items.map((item: any) => ({
         productId: item.productId,
         productName: item.productName,
         productImg: item.productImg,
@@ -456,18 +265,18 @@ export class OrderService {
    * 取消订单
    */
   async cancelOrder(memberId: string, dto: CancelOrderDto) {
-    const order = await this.prisma.omsOrder.findFirst({
-      where: { id: dto.orderId, memberId, deleteTime: null },
-      include: { items: true },
-    });
+    const order = (await this.orderRepo.findOne(
+      { id: dto.orderId, memberId, deleteTime: null },
+      { include: { items: true } },
+    )) as any;
 
     BusinessException.throwIfNull(order, '订单不存在');
     BusinessException.throwIf(order.status !== 'PENDING_PAY', '只能取消待支付订单');
 
     // 1. 更新订单状态
-    await this.prisma.omsOrder.update({
-      where: { id: dto.orderId },
-      data: { status: 'CANCELLED', remark: dto.reason || order.remark },
+    await this.orderRepo.update(dto.orderId, {
+      status: 'CANCELLED',
+      remark: dto.reason || order.remark,
     });
 
     // 2. 恢复库存
@@ -478,7 +287,7 @@ export class OrderService {
       });
     }
 
-    this.logger.log(`订单取消: ${order.orderSn}`);
+    this.logger.log(`订单取消: ${order.orderSn} `);
 
     return Result.ok(null, '订单已取消');
   }
@@ -487,18 +296,15 @@ export class OrderService {
    * 确认收货
    */
   async confirmReceipt(memberId: string, orderId: string) {
-    const order = await this.prisma.omsOrder.findFirst({
-      where: { id: orderId, memberId, deleteTime: null },
+    const order = await this.orderRepo.findOne({
+      id: orderId, memberId, deleteTime: null,
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
     BusinessException.throwIf(order.status !== 'SHIPPED', '订单状态不正确');
 
     // 更新状态
-    await this.prisma.omsOrder.update({
-      where: { id: orderId },
-      data: { status: 'COMPLETED', remark: '用户确认收货' },
-    });
+    await this.orderRepo.updateStatus(orderId, 'COMPLETED', '用户确认收货');
 
     // 触发佣金结算时间更新
     try {
@@ -514,30 +320,21 @@ export class OrderService {
    * 系统自动关闭订单
    */
   async cancelOrderBySystem(orderId: string, reason: string) {
-    const order = await this.prisma.omsOrder.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
+    const order = (await this.orderRepo.findById(orderId, { include: { items: true } })) as any;
 
     if (!order) {
-      this.logger.warn(`Auto-cancel failed: Order ${orderId} not found`);
+      this.logger.warn(`Auto - cancel failed: Order ${orderId} not found`);
       return;
     }
 
     // 必须是待支付状态
     if (order.status !== 'PENDING_PAY') {
-      this.logger.log(`Auto-cancel skipped: Order ${orderId} status is ${order.status}`);
+      this.logger.log(`Auto - cancel skipped: Order ${orderId} status is ${order.status} `);
       return;
     }
 
     // 1. 更新订单状态
-    await this.prisma.omsOrder.update({
-      where: { id: orderId },
-      data: {
-        status: 'CANCELLED',
-        remark: order.remark ? `${order.remark} (${reason})` : reason,
-      },
-    });
+    await this.orderRepo.updateStatus(orderId, 'CANCELLED', order.remark ? `${order.remark} (${reason})` : reason);
 
     // 2. 恢复库存
     for (const item of order.items) {
@@ -547,11 +344,10 @@ export class OrderService {
       });
     }
 
-    this.logger.log(`Order ${orderId} auto-cancelled: ${reason}`);
+    this.logger.log(`Order ${orderId} auto - cancelled: ${reason} `);
   }
 
   // ============ 私有方法 ============
-
   /**
    * 生成订单号
    */
@@ -565,44 +361,5 @@ export class OrderService {
       String(date.getMinutes()).padStart(2, '0'),
     ].join('');
     return `${prefix}${nanoid(8).toUpperCase()}`;
-  }
-
-  /**
-   * 检查是否包含服务类商品
-   */
-  private async checkHasService(items: OrderItemDto[]): Promise<boolean> {
-    const skuIds = items.map((i) => i.skuId);
-    const serviceCount = await this.prisma.pmsTenantSku.count({
-      where: {
-        id: { in: skuIds },
-        tenantProd: { product: { type: 'SERVICE' } },
-      },
-    });
-    return serviceCount > 0;
-  }
-
-  /**
-   * 同步购物车到 Redis
-   */
-  private async syncCartToRedis(memberId: string, tenantId: string) {
-    try {
-      const cartItems = await this.prisma.omsCartItem.findMany({
-        where: { memberId, tenantId },
-        select: { skuId: true, quantity: true },
-      });
-
-      const key = `cart:${memberId}:${tenantId}`;
-      if (cartItems.length === 0) {
-        await this.redis.del(key);
-      } else {
-        const data: Record<string, string> = {};
-        cartItems.forEach((item) => {
-          data[item.skuId] = String(item.quantity);
-        });
-        await this.redis.hmset(key, data, 7 * 24 * 60 * 60);
-      }
-    } catch (error) {
-      this.logger.warn('同步购物车到Redis失败', error);
-    }
   }
 }

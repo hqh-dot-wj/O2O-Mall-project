@@ -16,23 +16,8 @@ export class WithdrawalController {
   @Get('list')
   @Api({ summary: '查询提现列表', type: WithdrawalVo })
   @RequirePermission('finance:withdrawal:list')
-  async list(@Query() query: ListWithdrawalDto, @User() user: UserDto) {
-    // 1. 获取当前用户租户ID
-    const currentUserTenantId = user.user?.tenantId || TenantContext.SUPER_TENANT_ID;
-
-    // 2. 判断是否为超级租户 (HQ)
-    const isSuperTenant = TenantContext.isSuperTenant();
-
-    // 3. 构建最终查询 tenantId
-    let targetTenantId = currentUserTenantId;
-
-    if (isSuperTenant) {
-      // 如果是 HQ，允许查询指定租户，否则查询所有(传递 undefined/null 给 Service处理)
-      // Service 需支持 tenantId 为空查所有
-      targetTenantId = query.tenantId || null;
-    }
-
-    return await this.withdrawalService.getList(query, targetTenantId);
+  async list(@Query() query: ListWithdrawalDto) {
+    return await this.withdrawalService.getList(query);
   }
 
   @Post('audit')
@@ -47,8 +32,6 @@ export class WithdrawalController {
     },
     @User() user: UserDto,
   ) {
-    const tenantId = user.user?.tenantId || TenantContext.SUPER_TENANT_ID;
-
-    return await this.withdrawalService.audit(body.withdrawalId, tenantId, body.action, user.userName, body.remark);
+    return await this.withdrawalService.audit(body.withdrawalId, body.action, user.userName, body.remark);
   }
 }

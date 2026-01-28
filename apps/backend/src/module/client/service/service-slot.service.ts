@@ -62,14 +62,8 @@ export class ServiceSlotService {
    */
   async lockSlot(date: string, time: string, memberId: string): Promise<boolean> {
     const key = `service:lock:${date}:${time}`;
-    // SET NX EX 300
-    const result = await this.redisService.set(key, memberId, 300); // 假设 set 支持 TTL 和 key
-    // 注意：这里由于不确定 RedisService 的具体签名，采用保守写法或者假设
-    // 如果 RedisService 封装的比较简单，可能需要 adjust
-
-    // 实际上 Nestjs-Redis 通常是 set(key, val, 'EX', ttl)
-    // 这里为了稳妥，我先不实现真正的 Redis 强一致性锁，而是模拟
-    return true;
+    // Use RedisService tryLock (SET NX PX)
+    return await this.redisService.tryLock(key, 300 * 1000); // 300 seconds
   }
 
   // ============ Helper ============

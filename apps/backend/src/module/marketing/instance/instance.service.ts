@@ -12,13 +12,8 @@ import { PlayStrategyFactory } from '../play/play.factory';
 import { FormatDateFields } from 'src/common/utils';
 import { Transactional } from 'src/common/decorators/transactional.decorator'; // 使用声明式事务
 
-/**
- * 营销实例服务 (核心交易链路)
- *
- * @description
- * 处理营销活动的参与、支付状态同步及活动状态流转。
- * 包含简单的状态机逻辑。
- */
+import { ConfigService } from 'src/module/admin/system/config/config.service';
+
 @Injectable()
 export class PlayInstanceService {
   constructor(
@@ -26,9 +21,10 @@ export class PlayInstanceService {
     private readonly walletService: WalletService,
     private readonly prisma: PrismaService,
     private readonly assetService: UserAssetService,
+    private readonly configService: ConfigService,
     @Inject(forwardRef(() => PlayStrategyFactory))
     private readonly strategyFactory: PlayStrategyFactory,
-  ) {}
+  ) { }
 
   /**
    * 分页查询实例
@@ -110,7 +106,7 @@ export class PlayInstanceService {
 
     // 2. 通用业务逻辑：状态流转到 SUCCESS 时，自动执行分账和发券
     if (nextStatus === PlayInstanceStatus.SUCCESS) {
-      await this.creditToStore(updated, this.prisma);
+      await this.creditToStore(updated);
     }
 
     // 3. 策略生命周期勾子 (Strategy Hook) - 处理特定玩法的自定义副作用
@@ -121,9 +117,35 @@ export class PlayInstanceService {
   }
 
   /**
+   * 批量状态流转
+   */
+  @Transactional()
+  async batchTransitStatus(ids: string[], nextStatus: PlayInstanceStatus, extraData?: any) {
+    if (ids.length === 0) return;
+
+    // 1. 批量更新状态
+    await this.repo.batchUpdateStatus(ids, nextStatus, extraData);
+
+    // 2. 如果是 SUCCESS，批量执行分账和发券
+    if (nextStatus === PlayInstanceStatus.SUCCESS) {
+      // 需要查询出实例详情以获取 configContext 进行分账
+      const instances = await this.repo.findMany({ where: { id: { in: ids } } });
+      for (const instance of instances) {
+        // TODO: 可考虑异步队列处理以提升性能
+        await this.creditToStore(instance);
+      }
+    }
+  }
+
+  /**
    * 自动分账入账 (Store Wallet) + 权益自动发放 (User Asset)
    */
-  private async creditToStore(instance: any, tx: any) {
+  // private readonly PLATFORM_FEE_RATE = new Decimal(0.01); // Moved to system config
+
+  /**
+   * 自动分账入账 (Store Wallet) + 权益自动发放 (User Asset)
+   */
+  private async creditToStore(instance: any) {
     // 1. 查询关联配置获取门店ID
     const config = await this.prisma.storePlayConfig.findUnique({
       where: { id: instance.configId },
@@ -133,7 +155,11 @@ export class PlayInstanceService {
     // === A. 资金入账 (Wallet) ===
     const amount = new Decimal((instance.instanceData as any)?.price || 0);
     if (amount.gt(0)) {
-      const platformFee = amount.mul(0.01);
+      // 获取平台费率配置
+      const feeRateStr = await this.configService.getSystemConfigValue('marketing.fee_rate');
+      const feeRate = new Decimal(feeRateStr || 0.01);
+
+      const platformFee = amount.mul(feeRate);
       const settleAmount = amount.minus(platformFee);
 
       // 4. 获取/创建门店钱包 (Store 视为一种特殊的 Member ID)
@@ -142,11 +168,10 @@ export class PlayInstanceService {
       const wallet = await this.walletService.getOrCreateWallet(storeMemberId, instance.tenantId);
 
       await this.walletService.addBalance(
-        wallet.id,
+        storeMemberId,
         settleAmount,
         instance.id,
         `营销活动收入: ${instance.templateCode}`,
-        tx,
       );
     }
 
@@ -171,6 +196,7 @@ export class PlayInstanceService {
   /**
    * 支付成功回调处理
    */
+  @Transactional()
   async handlePaymentSuccess(orderSn: string) {
     const instance = await this.repo.findByOrderSn(orderSn);
     if (!instance) return;

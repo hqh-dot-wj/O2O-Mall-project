@@ -5,7 +5,7 @@ import { ClientProductModule } from './product/product.module';
 import { ClientLocationModule } from './location/location.module';
 import { ClientCartModule } from './cart/cart.module';
 import { ClientOrderModule } from './order/order.module';
-import { AddressModule } from './address/address.module';
+import { ClientAddressModule } from './address/address.module';
 import { ServiceSlotModule } from './service/service-slot.module';
 import { PaymentModule } from './payment/payment.module';
 import { ClientFinanceModule } from './finance/client-finance.module';
@@ -19,7 +19,7 @@ import { UpgradeModule } from './upgrade/upgrade.module';
     ClientLocationModule,
     ClientCartModule,
     ClientOrderModule,
-    AddressModule,
+    ClientAddressModule,
     ServiceSlotModule,
     PaymentModule,
     ClientFinanceModule,
@@ -33,9 +33,9 @@ import { UpgradeModule } from './upgrade/upgrade.module';
     ClientLocationModule,
     ClientCartModule,
     ClientOrderModule,
-    AddressModule,
+    ClientAddressModule,
     ServiceSlotModule,
     PaymentModule,
   ],
 })
-export class ClientModule {}
+export class ClientModule { }
