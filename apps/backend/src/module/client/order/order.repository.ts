@@ -11,7 +11,22 @@ export class OrderRepository extends SoftDeleteRepository<OmsOrder, Prisma.OmsOr
     prisma: PrismaService,
     private readonly clsService: ClsService,
   ) {
-    super(prisma, clsService, 'omsOrder', 'id', 'deleteTime');
+    // 5th arg is tenantFieldName (default 'tenantId'). Do not pass 'deleteTime' here.
+    super(prisma, clsService, 'omsOrder', 'id');
+  }
+
+  /**
+   * Override default where for soft delete (OmsOrder uses deleteTime, not delFlag)
+   */
+  protected getDefaultWhere(): Record<string, any> {
+    return { deleteTime: null };
+  }
+
+  /**
+   * Override soft delete implementation
+   */
+  async softDelete(id: string): Promise<OmsOrder> {
+    return this.update(id, { deleteTime: new Date() } as unknown as Prisma.OmsOrderUpdateInput);
   }
 
   /**
