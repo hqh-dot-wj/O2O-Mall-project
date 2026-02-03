@@ -28,6 +28,14 @@ export class ProductRepository extends BaseRepository<
   }
 
   /**
+   * 获取自动租户过滤条件
+   * 全局商品库是跨租户共享的
+   */
+  protected getTenantWhere(): Record<string, any> {
+    return {};
+  }
+
+  /**
    * 查询商品列表（带关联信息）
    * 关联查询分类名称、品牌名称和SKU信息
    * @param where - 查询条件
@@ -45,7 +53,12 @@ export class ProductRepository extends BaseRepository<
           select: {
             skuId: true,
             guidePrice: true,
+            costPrice: true,
             specValues: true,
+            distMode: true,
+            minDistRate: true,
+            guideRate: true,
+            maxDistRate: true,
           },
         },
       },

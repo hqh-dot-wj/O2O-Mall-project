@@ -12,7 +12,7 @@ export class PlayTemplateRepository extends SoftDeleteRepository<
   UpdatePlayTemplateDto
 > {
   constructor(prisma: PrismaService, cls: ClsService) {
-    super(prisma, cls, 'playTemplate');
+    super(prisma, cls, 'playTemplate', 'id', null);
   }
 
   async search(query: ListPlayTemplateDto) {

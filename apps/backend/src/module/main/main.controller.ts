@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MainService } from './main.service';
 import { RegisterDto, LoginDto } from './dto/index';
@@ -11,7 +11,7 @@ import { ConfigService } from 'src/module/admin/system/config/config.service';
 import { ClientInfo, ClientInfoDto } from 'src/common/decorators/common.decorator';
 import { NotRequireAuth, User, UserDto } from 'src/module/admin/system/user/user.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
-import { LoginVo, CaptchaVo, GetInfoVo } from './vo/main.vo';
+import { LoginVo, CaptchaVo, GetInfoVo, DashboardStatsVo } from './vo/main.vo';
 import { RouterVo } from 'src/module/admin/system/menu/vo/menu.vo';
 
 import { AuthService } from '../admin/auth/auth.service';
@@ -142,5 +142,17 @@ export class MainController {
   getRouters(@User() user: UserDto) {
     const userId = user.user.userId.toString();
     return this.mainService.getRouters(+userId);
+  }
+
+  @Api({
+    summary: '获取首页统计数据',
+    description: '获取门店首页的核心统计数据，包括订单、商品、会员、佣金等信息',
+    type: DashboardStatsVo,
+  })
+  @Get('dashboard/stats')
+  async getDashboardStats(@User() user: UserDto) {
+    const tenantId = user.user.tenantId;
+    const stats = await this.mainService.getDashboardStats(tenantId);
+    return Result.ok(stats, '获取成功');
   }
 }

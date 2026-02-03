@@ -28,6 +28,14 @@ export class CategoryRepository extends BaseRepository<
   }
 
   /**
+   * 获取自动租户过滤条件
+   * 商品分类是全局共享的，不进行租户隔离
+   */
+  protected getTenantWhere(): Record<string, any> {
+    return {};
+  }
+
+  /**
    * 查询所有分类（用于构建树形结构）
    * @returns 所有分类的数组
    */

@@ -77,6 +77,9 @@ declare namespace Api {
       skuCode?: string;
       pic?: string;
       costPrice?: number;
+      // Read-only fields (returned from backend in edit mode, but filtered out on submit)
+      skuId?: string;
+      productId?: string;
     }
 
     type ProductList = Common.PaginatingQueryRecord<Product>;

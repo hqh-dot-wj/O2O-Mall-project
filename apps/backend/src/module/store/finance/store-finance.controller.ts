@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 import { User } from 'src/common/decorators/user.decorator';
 import { StoreFinanceService } from './store-finance.service';
 import { ListCommissionDto, ListWithdrawalDto, AuditWithdrawalDto, ListLedgerDto } from './dto/store-finance.dto';
@@ -72,5 +75,30 @@ export class StoreFinanceController {
   @RequirePermission('store:finance:ledger')
   async getLedger(@Query() query: ListLedgerDto) {
     return await this.storeFinanceService.getLedger(query);
+  }
+
+  /**
+   * 获取流水统计
+   */
+  @Get('ledger/stats')
+  @Api({ summary: '获取流水统计' })
+  @RequirePermission('store:finance:ledger')
+  async getLedgerStats(@Query() query: ListLedgerDto) {
+    return await this.storeFinanceService.getLedgerStats(query);
+  }
+
+  /**
+   * 导出流水数据
+   */
+  @Post('ledger/export')
+  @Api({
+    summary: '导出流水数据',
+    description: '导出门店流水数据为Excel文件',
+    produces: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  })
+  @RequirePermission('store:finance:ledger')
+  @Operlog({ businessType: BusinessType.EXPORT })
+  async exportLedger(@Res() res: Response, @Body() query: ListLedgerDto): Promise<void> {
+    return await this.storeFinanceService.exportLedger(res, query);
   }
 }

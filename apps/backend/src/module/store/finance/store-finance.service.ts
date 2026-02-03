@@ -80,4 +80,18 @@ export class StoreFinanceService {
   async getLedger(query: ListLedgerDto) {
     return this.ledgerService.getLedger(query);
   }
+
+  /**
+   * 获取流水统计数据
+   */
+  async getLedgerStats(query: ListLedgerDto) {
+    return this.ledgerService.getLedgerStats(query);
+  }
+
+  /**
+   * 导出流水数据
+   */
+  async exportLedger(res: any, query: ListLedgerDto) {
+    return this.ledgerService.exportLedger(res, query);
+  }
 }

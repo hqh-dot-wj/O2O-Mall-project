@@ -805,6 +805,114 @@
         ]
       }
     },
+    "/api/dashboard/stats": {
+      "get": {
+        "description": "获取门店首页的核心统计数据，包括订单、商品、会员、佣金等信息",
+        "operationId": "MainController_getDashboardStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/DashboardStatsVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "获取首页统计数据",
+        "tags": [
+          "根目录"
+        ]
+      }
+    },
     "/api/auth/publicKey": {
       "get": {
         "description": "获取RSA公钥用于数据加密",
@@ -25064,6 +25172,316 @@
         ]
       }
     },
+    "/api/finance/withdrawal/list": {
+      "get": {
+        "operationId": "StoreFinanceController_getWithdrawalList",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderByColumn",
+            "required": false,
+            "in": "query",
+            "description": "排序字段",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isAsc",
+            "required": false,
+            "in": "query",
+            "description": "排序方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "params",
+            "required": false,
+            "in": "query",
+            "description": "时间范围",
+            "schema": {
+              "$ref": "#/components/schemas/DateRangeDto"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "提现状态",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "memberId",
+            "required": false,
+            "in": "query",
+            "description": "会员ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询提现列表",
+        "tags": [
+          "Store-财务管理"
+        ]
+      }
+    },
+    "/api/finance/withdrawal/audit": {
+      "post": {
+        "operationId": "StoreFinanceController_auditWithdrawal",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditWithdrawalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "审核提现",
+        "tags": [
+          "Store-财务管理"
+        ]
+      }
+    },
     "/api/common/upload": {
       "post": {
         "description": "上传单个文件",
@@ -28352,316 +28770,6 @@
         "summary": "核销资产",
         "tags": [
           "营销-用户资产"
-        ]
-      }
-    },
-    "/api/finance/withdrawal/list": {
-      "get": {
-        "operationId": "StoreFinanceController_getWithdrawalList",
-        "parameters": [
-          {
-            "name": "pageNum",
-            "required": false,
-            "in": "query",
-            "description": "页码",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "每页条数",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "orderByColumn",
-            "required": false,
-            "in": "query",
-            "description": "排序字段",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "isAsc",
-            "required": false,
-            "in": "query",
-            "description": "排序方向",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "asc",
-                "desc"
-              ]
-            }
-          },
-          {
-            "name": "params",
-            "required": false,
-            "in": "query",
-            "description": "时间范围",
-            "schema": {
-              "$ref": "#/components/schemas/DateRangeDto"
-            }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "提现状态",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "APPROVED",
-                "REJECTED",
-                "FAILED"
-              ]
-            }
-          },
-          {
-            "name": "memberId",
-            "required": false,
-            "in": "query",
-            "description": "会员ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "查询提现列表",
-        "tags": [
-          "Store-财务管理"
-        ]
-      }
-    },
-    "/api/finance/withdrawal/audit": {
-      "post": {
-        "operationId": "StoreFinanceController_auditWithdrawal",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AuditWithdrawalDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "操作成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/Result"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "type": "boolean",
-                              "default": true
-                            }
-                          },
-                          "nullable": true
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "201": {
-            "description": ""
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 401
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "请先登录"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 403
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "没有操作权限"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "code": {
-                      "type": "number",
-                      "example": 500
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "系统异常"
-                    },
-                    "data": {
-                      "type": "object",
-                      "nullable": true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "审核提现",
-        "tags": [
-          "Store-财务管理"
         ]
       }
     },
@@ -35885,6 +35993,42 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "relatedId",
+            "required": false,
+            "in": "query",
+            "description": "订单号/交易ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "description": "用户搜索（姓名/手机号）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minAmount",
+            "required": false,
+            "in": "query",
+            "description": "最小金额",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxAmount",
+            "required": false,
+            "in": "query",
+            "description": "最大金额",
+            "schema": {
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -35987,6 +36131,347 @@
           }
         },
         "summary": "查询门店流水",
+        "tags": [
+          "Store-财务管理"
+        ]
+      }
+    },
+    "/api/finance/ledger/stats": {
+      "get": {
+        "operationId": "StoreFinanceController_getLedgerStats",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderByColumn",
+            "required": false,
+            "in": "query",
+            "description": "排序字段",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isAsc",
+            "required": false,
+            "in": "query",
+            "description": "排序方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "params",
+            "required": false,
+            "in": "query",
+            "description": "时间范围",
+            "schema": {
+              "$ref": "#/components/schemas/DateRangeDto"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "交易类型",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": false,
+            "in": "query",
+            "description": "会员ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "relatedId",
+            "required": false,
+            "in": "query",
+            "description": "订单号/交易ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "description": "用户搜索（姓名/手机号）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minAmount",
+            "required": false,
+            "in": "query",
+            "description": "最小金额",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxAmount",
+            "required": false,
+            "in": "query",
+            "description": "最大金额",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取流水统计",
+        "tags": [
+          "Store-财务管理"
+        ]
+      }
+    },
+    "/api/finance/ledger/export": {
+      "post": {
+        "description": "导出门店流水数据为Excel文件",
+        "operationId": "StoreFinanceController_exportLedger",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListLedgerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "导出流水数据",
         "tags": [
           "Store-财务管理"
         ]
@@ -36401,6 +36886,53 @@
           "hidden",
           "component",
           "meta"
+        ]
+      },
+      "DashboardStatsVo": {
+        "type": "object",
+        "properties": {
+          "walletBalance": {
+            "type": "number",
+            "description": "门店钱包余额"
+          },
+          "todayGMV": {
+            "type": "number",
+            "description": "今日GMV"
+          },
+          "todayOrderCount": {
+            "type": "number",
+            "description": "今日订单数"
+          },
+          "monthGMV": {
+            "type": "number",
+            "description": "本月GMV"
+          },
+          "productCount": {
+            "type": "number",
+            "description": "商品总数"
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "会员总数"
+          },
+          "settledCommission": {
+            "type": "number",
+            "description": "已结算佣金"
+          },
+          "pendingCommission": {
+            "type": "number",
+            "description": "待结算佣金"
+          }
+        },
+        "required": [
+          "walletBalance",
+          "todayGMV",
+          "todayOrderCount",
+          "monthGMV",
+          "productCount",
+          "memberCount",
+          "settledCommission",
+          "pendingCommission"
         ]
       },
       "AuthTenantVo": {
@@ -40916,6 +41448,87 @@
           }
         }
       },
+      "WithdrawalVo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID"
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "租户ID"
+          },
+          "memberId": {
+            "type": "string",
+            "description": "用户ID"
+          },
+          "memberName": {
+            "type": "string",
+            "description": "用户昵称"
+          },
+          "memberAvatar": {
+            "type": "string",
+            "description": "用户头像"
+          },
+          "memberMobile": {
+            "type": "string",
+            "description": "用户手机号"
+          },
+          "amount": {
+            "type": "string",
+            "description": "提现金额"
+          },
+          "method": {
+            "type": "string",
+            "description": "提现方式"
+          },
+          "status": {
+            "type": "string",
+            "description": "提现状态",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "FAILED"
+            ]
+          },
+          "realName": {
+            "type": "string",
+            "description": "真实姓名"
+          },
+          "auditBy": {
+            "type": "string",
+            "description": "审核人"
+          },
+          "auditTime": {
+            "type": "string",
+            "description": "审核时间"
+          },
+          "auditRemark": {
+            "type": "string",
+            "description": "审核备注"
+          },
+          "paymentNo": {
+            "type": "string",
+            "description": "支付单号"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "申请时间"
+          }
+        },
+        "required": [
+          "id",
+          "tenantId",
+          "memberId",
+          "amount",
+          "method",
+          "status",
+          "realName",
+          "createTime"
+        ]
+      },
       "ChunkMergeFileDto": {
         "type": "object",
         "properties": {
@@ -41584,87 +42197,6 @@
         "required": [
           "rows",
           "total"
-        ]
-      },
-      "WithdrawalVo": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "ID"
-          },
-          "tenantId": {
-            "type": "string",
-            "description": "租户ID"
-          },
-          "memberId": {
-            "type": "string",
-            "description": "用户ID"
-          },
-          "memberName": {
-            "type": "string",
-            "description": "用户昵称"
-          },
-          "memberAvatar": {
-            "type": "string",
-            "description": "用户头像"
-          },
-          "memberMobile": {
-            "type": "string",
-            "description": "用户手机号"
-          },
-          "amount": {
-            "type": "string",
-            "description": "提现金额"
-          },
-          "method": {
-            "type": "string",
-            "description": "提现方式"
-          },
-          "status": {
-            "type": "string",
-            "description": "提现状态",
-            "enum": [
-              "PENDING",
-              "APPROVED",
-              "REJECTED",
-              "FAILED"
-            ]
-          },
-          "realName": {
-            "type": "string",
-            "description": "真实姓名"
-          },
-          "auditBy": {
-            "type": "string",
-            "description": "审核人"
-          },
-          "auditTime": {
-            "type": "string",
-            "description": "审核时间"
-          },
-          "auditRemark": {
-            "type": "string",
-            "description": "审核备注"
-          },
-          "paymentNo": {
-            "type": "string",
-            "description": "支付单号"
-          },
-          "createTime": {
-            "type": "string",
-            "description": "申请时间"
-          }
-        },
-        "required": [
-          "id",
-          "tenantId",
-          "memberId",
-          "amount",
-          "method",
-          "status",
-          "realName",
-          "createTime"
         ]
       },
       "OrderItemVo": {
@@ -43991,6 +44523,68 @@
           "withdrawalId",
           "action"
         ]
+      },
+      "ListLedgerDto": {
+        "type": "object",
+        "properties": {
+          "pageNum": {
+            "type": "number",
+            "default": 1,
+            "minimum": 1,
+            "description": "页码"
+          },
+          "pageSize": {
+            "type": "number",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "每页条数"
+          },
+          "orderByColumn": {
+            "type": "string",
+            "description": "排序字段"
+          },
+          "isAsc": {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "description": "排序方向"
+          },
+          "params": {
+            "description": "时间范围",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateRangeDto"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "description": "交易类型"
+          },
+          "memberId": {
+            "type": "string",
+            "description": "会员ID"
+          },
+          "relatedId": {
+            "type": "string",
+            "description": "订单号/交易ID"
+          },
+          "keyword": {
+            "type": "string",
+            "description": "用户搜索（姓名/手机号）"
+          },
+          "minAmount": {
+            "type": "number",
+            "description": "最小金额"
+          },
+          "maxAmount": {
+            "type": "number",
+            "description": "最大金额"
+          }
+        }
       }
     }
   }

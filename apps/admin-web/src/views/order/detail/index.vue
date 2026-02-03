@@ -187,6 +187,12 @@ onMounted(() => {
                     </NTag>
                   </td>
                 </tr>
+                <!-- 佣金扣除总计行 -->
+                <tr v-if="orderData.commissions && orderData.commissions.length > 0 && orderData.business?.totalCommissionAmount">
+                  <td colspan="3" class="text-right font-bold">佣金扣除总计</td>
+                  <td class="text-error font-bold">-¥{{ orderData.business.totalCommissionAmount }}</td>
+                  <td>-</td>
+                </tr>
                 <!-- 商户收款行 -->
                 <tr v-if="orderData.business">
                   <td>商户收款</td>
@@ -248,5 +254,14 @@ onMounted(() => {
 <style scoped>
 .text-success {
   color: #18a058;
+}
+.text-error {
+  color: #d03050;
+}
+.font-bold {
+  font-weight: 600;
+}
+.text-right {
+  text-align: right;
 }
 </style>

@@ -63,6 +63,8 @@ declare namespace Api {
       productImg: string;
       /** 佣金金额 */
       commissionAmount: number;
+      /** 商户收款金额（支付金额 - 佣金总额） */
+      remainingAmount: number;
       /** 所属租户 */
       tenantName: string;
     }

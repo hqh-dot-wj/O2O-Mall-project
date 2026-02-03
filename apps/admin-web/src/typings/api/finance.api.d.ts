@@ -118,6 +118,14 @@ declare namespace Api {
       type?: TransType | null;
       /** 会员ID */
       memberId?: string;
+      /** 订单号/交易ID */
+      relatedId?: string;
+      /** 用户搜索（姓名/手机号） */
+      keyword?: string;
+      /** 最小金额 */
+      minAmount?: number;
+      /** 最大金额 */
+      maxAmount?: number;
     }
 
     /** 交易类型 */
@@ -164,5 +172,17 @@ declare namespace Api {
 
     /** 流水列表返回 */
     type LedgerListResult = Common.PaginatingQueryRecord<LedgerRecord>;
+
+    /** 流水统计数据 */
+    interface LedgerStats {
+      /** 总收入 */
+      totalIncome: number;
+      /** 总支出 */
+      totalExpense: number;
+      /** 净利润 */
+      netProfit: number;
+      /** 待结算佣金 */
+      pendingCommission: number;
+    }
   }
 }

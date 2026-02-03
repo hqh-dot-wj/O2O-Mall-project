@@ -1,56 +1,61 @@
 {
-    "prisma.pinToPrisma6": true,
-    "sqltools.connections": [
-        {
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 5432,
-            "askForPassword": true,
-            "driver": "PostgreSQL",
-            "name": "nest-admin-postgres",
-            "database": "nest-admin-soybean",
-            "username": "postgres"
-        }
-    ],
-    "eslint.workingDirectories": [
-        {
-            "directory": "apps/backend",
-            "changeProcessCWD": true
-        },
-        {
-            "directory": "apps/admin-web",
-            "changeProcessCWD": true
-        },
-        {
-            "directory": "apps/miniapp-client",
-            "changeProcessCWD": true
-        }
-    ],
-    "eslint.validate": [
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-        "vue"
-    ],
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
-    },
-    "editor.formatOnSave": true,
-    "[javascript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
-    },
-    "[vue]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    },
-    "[javascriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    },
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  "prisma.pinToPrisma6": true,
+  "sqltools.connections": [
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "askForPassword": true,
+      "driver": "PostgreSQL",
+      "name": "nest-admin-postgres",
+      "database": "nest-admin-soybean",
+      "username": "postgres"
     }
+  ],
+  "eslint.workingDirectories": [
+    {
+      "directory": "apps/backend",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "apps/admin-web",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "apps/miniapp-client",
+      "changeProcessCWD": true
+    }
+  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "vue"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.formatOnSave": true,
+  // 禁用 VSCode 内置格式化器，避免与 Prettier 冲突
+  "typescript.format.enable": false,
+  "javascript.format.enable": false,
+  // 设置 Prettier 为默认格式化器
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

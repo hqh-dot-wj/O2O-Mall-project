@@ -8,7 +8,6 @@ import { fetchBatchDeleteGlobalProduct, fetchGetGlobalProductList } from '@/serv
 import { fetchGetCategoryTree } from '@/service/api/pms/category';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
-import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import GlobalProductSearch from './modules/global-product-search.vue';
 
@@ -17,7 +16,6 @@ defineOptions({
 });
 
 const appStore = useAppStore();
-const { hasAuth } = useAuth();
 const { loading: siderLoading, startLoading: startSiderLoading, endLoading: endSiderLoading } = useLoading();
 
 const tableProps = useTableProps();
@@ -192,12 +190,12 @@ const selectedKeys = ref<number[]>([]);
 async function getCategoryTree() {
   startSiderLoading();
   try {
-    const { data } = await fetchGetCategoryTree();
+    const { data: categoryData } = await fetchGetCategoryTree();
     treeData.value = [
       {
         catId: 0,
         name: '全部商品',
-        children: data || []
+        children: categoryData || []
       }
     ] as any;
     // Expands all keys? Or just root. Let's just expand root/0

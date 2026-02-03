@@ -33,6 +33,16 @@ export interface ProductForm {
   albumPics?: string[];
   publishStatus?: string;
   sort?: number;
+
+  // Read-only fields (returned from backend in edit mode, but filtered out on submit)
+  productId?: string;
+  needBooking?: boolean;
+  delFlag?: string;
+  createTime?: string;
+  category?: any;
+  brand?: any;
+  globalSkus?: any[];
+  attrValues?: any[];
 }
 
 export function createFormModel(): ProductForm {

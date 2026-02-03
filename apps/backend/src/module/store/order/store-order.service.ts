@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { FormatDateFields } from 'src/common/utils';
-import { Prisma, OrderStatus, OrderType } from '@prisma/client';
+import { Prisma, OrderStatus, OrderType, CommissionStatus } from '@prisma/client';
 import { ListStoreOrderDto, ReassignWorkerDto, VerifyServiceDto } from './dto/store-order.dto';
 import { CommissionService } from 'src/module/finance/commission/commission.service';
 import { TenantContext } from 'src/common/tenant/tenant.context';
@@ -88,30 +88,113 @@ export class StoreOrderService {
     const list = result.rows;
     const total = result.total;
 
-    // 2. 批量查询佣金汇总(使用数据库 SUM 聚合)
+    // 2. 批量查询佣金汇总(使用数据库 SUM 聚合，排除已取消的佣金)
+    // 注意：不需要按租户过滤佣金，因为佣金已通过 order_id 关联到订单，订单本身已按租户过滤
     let commissionMap = new Map<string, string>();
     if (list.length > 0) {
       const orderIds = list.map((o) => o.id);
+
+      // 调试日志：检查订单是否在列表中
+      const debugOrder = list.find((o: any) => o.orderSn === '202602031020VJSIA849');
+      if (debugOrder) {
+        this.logger.log(
+          `[订单列表] 找到订单: 202602031020VJSIA849, 订单ID: ${debugOrder.id}, 类型: ${typeof debugOrder.id}`,
+        );
+        this.logger.log(
+          `[订单列表] 订单ID列表长度: ${orderIds.length}, 包含该订单ID: ${orderIds.includes(debugOrder.id)}`,
+        );
+
+        // 先单独查询该订单的佣金，看看是否能查到
+        const debugCommissionsBefore = await this.prisma.$queryRaw<
+          Array<{ orderId: string; amount: any; status: string; tenantId: string }>
+        >`
+          SELECT order_id as "orderId", amount, status::text as status, tenant_id as "tenantId"
+          FROM fin_commission
+          WHERE order_id = ${debugOrder.id}
+        `;
+        this.logger.log(`[订单列表] 单独查询该订单的佣金记录: ${JSON.stringify(debugCommissionsBefore)}`);
+
+        // 测试IN查询
+        const testCommissions = await this.prisma.$queryRaw<Array<{ orderId: string; amount: any; status: string }>>`
+          SELECT order_id as "orderId", amount, status::text as status
+          FROM fin_commission
+          WHERE order_id IN (${Prisma.join([debugOrder.id])})
+            AND status::text != 'CANCELLED'
+        `;
+        this.logger.log(`[订单列表] IN查询测试结果: ${JSON.stringify(testCommissions)}`);
+      }
+
       const commissionSums = await this.prisma.$queryRaw<Array<{ orderId: string; total: string | null }>>`
-        SELECT order_id as orderId, SUM(amount) as total
+        SELECT order_id as "orderId", SUM(amount) as total
         FROM fin_commission
         WHERE order_id IN (${Prisma.join(orderIds)})
+          AND status::text != 'CANCELLED'
         GROUP BY order_id
       `;
 
+      this.logger.log(`[订单列表] 查询到的佣金汇总数: ${commissionSums.length}`);
+      this.logger.log(`[订单列表] 佣金汇总数据: ${JSON.stringify(commissionSums)}`);
+      if (debugOrder) {
+        this.logger.log(
+          `[订单列表] 佣金汇总中是否包含该订单: ${commissionSums.some((c) => c.orderId === debugOrder.id)}`,
+        );
+        if (commissionSums.length > 0) {
+          this.logger.log(
+            `[订单列表] 佣金汇总中的订单ID示例: ${commissionSums[0].orderId}, 类型: ${typeof commissionSums[0].orderId}`,
+          );
+        }
+      }
+
       commissionMap = new Map(commissionSums.map((c) => [c.orderId, c.total || '0.00']));
+
+      // 调试日志：打印特定订单的佣金数据
+      if (debugOrder) {
+        const debugOrderId = debugOrder.id;
+        this.logger.log(`[订单列表] 订单号: 202602031020VJSIA849, 订单ID: ${debugOrderId}`);
+        this.logger.log(`[订单列表] 佣金Map中的值: ${commissionMap.get(debugOrderId) || '未找到'}`);
+        this.logger.log(`[订单列表] 佣金Map的所有键: ${Array.from(commissionMap.keys()).join(', ')}`);
+        const debugCommissions = await this.prisma.$queryRaw<
+          Array<{ orderId: string; amount: any; status: string; tenantId: string }>
+        >`
+          SELECT order_id as "orderId", amount, status::text as status, tenant_id as "tenantId"
+          FROM fin_commission
+          WHERE order_id = ${debugOrderId}
+        `;
+        this.logger.log(`[订单列表] 该订单的所有佣金记录: ${JSON.stringify(debugCommissions)}`);
+        this.logger.log(`[订单列表] 当前租户ID: ${tenantId}, 是否超级管理员: ${isSuper}`);
+      }
+    } else {
+      this.logger.log(`[订单列表] 订单列表为空`);
     }
 
     // 3. 组装数据
-    const resultList = list.map((item: any) => ({
-      ...item,
-      // 取第一个商品的图片作为列表展示图
-      productImg: item.items?.[0]?.productImg || '',
-      // 佣金金额(从 Map 中获取)
-      commissionAmount: commissionMap.get(item.id) || '0.00',
-      // 所属租户(从关联数据中获取)
-      tenantName: item.tenant?.companyName || '',
-    }));
+    const resultList = list.map((item: any) => {
+      const commissionAmountStr = commissionMap.get(item.id) || '0.00';
+      const payAmount = new Prisma.Decimal(item.payAmount);
+      const commission = new Prisma.Decimal(commissionAmountStr);
+      const remainingAmount = payAmount.sub(commission);
+      const commissionAmount = Number(commissionAmountStr);
+
+      // 调试日志：打印特定订单的最终数据
+      if (item.orderSn === '202602031020VJSIA849') {
+        this.logger.log(`[订单列表-组装] 订单号: ${item.orderSn}, 订单ID: ${item.id}`);
+        this.logger.log(`[订单列表-组装] 佣金金额字符串: ${commissionAmountStr}, 转换为数字: ${commissionAmount}`);
+        this.logger.log(`[订单列表-组装] 支付金额: ${payAmount.toString()}, 商户收款: ${remainingAmount.toFixed(2)}`);
+        this.logger.log(`[订单列表-组装] commissionMap中是否有该订单: ${commissionMap.has(item.id)}`);
+      }
+
+      return {
+        ...item,
+        // 取第一个商品的图片作为列表展示图
+        productImg: item.items?.[0]?.productImg || '',
+        // 佣金金额(从 Map 中获取，转换为数字)
+        commissionAmount: commissionAmount,
+        // 商户收款金额(支付金额 - 佣金总额，转换为数字)
+        remainingAmount: Number(remainingAmount.toFixed(2)),
+        // 所属租户(从关联数据中获取)
+        tenantName: item.tenant?.companyName || '',
+      };
+    });
 
     return Result.page(FormatDateFields(resultList), total);
   }
@@ -219,14 +302,60 @@ export class StoreOrderService {
         })
       : null;
 
-    // 4. 计算商户分润后剩余金额
+    // 4. 计算商户分润后剩余金额和佣金总计（排除已取消的佣金）
     let remainingAmount = new Prisma.Decimal(order.payAmount);
+    let totalCommissionAmount = new Prisma.Decimal(0);
+
+    // 调试日志：打印特定订单的佣金数据
+    if (order.orderSn === '202602031020VJSIA849') {
+      this.logger.log(`[订单详情] 订单号: 202602031020VJSIA849, 订单ID: ${orderId}`);
+      this.logger.log(`[订单详情] 查询到的所有佣金记录数: ${commissions?.length || 0}`);
+      if (commissions && commissions.length > 0) {
+        this.logger.log(
+          `[订单详情] 查询到的所有佣金记录: ${JSON.stringify(
+            commissions.map((c: any) => ({
+              id: c.id?.toString(),
+              amount: c.amount?.toString(),
+              status: c.status,
+              beneficiaryId: c.beneficiaryId,
+              tenantId: c.tenantId,
+            })),
+          )}`,
+        );
+      }
+    }
+
     if (commissions && commissions.length > 0) {
-      const totalCommission = commissions.reduce(
+      // 只计算有效状态的佣金（FROZEN 和 SETTLED），排除 CANCELLED
+      const validCommissions = commissions.filter((comm: any) => comm.status !== CommissionStatus.CANCELLED);
+
+      if (order.orderSn === '202602031020VJSIA849') {
+        this.logger.log(`[订单详情] 有效佣金记录数: ${validCommissions.length}`);
+        this.logger.log(
+          `[订单详情] 有效佣金记录: ${JSON.stringify(
+            validCommissions.map((c: any) => ({
+              id: c.id?.toString(),
+              amount: c.amount?.toString(),
+              status: c.status,
+            })),
+          )}`,
+        );
+      }
+
+      totalCommissionAmount = validCommissions.reduce(
         (sum: Prisma.Decimal, item: any) => sum.add(new Prisma.Decimal(item.amount)),
         new Prisma.Decimal(0),
       );
-      remainingAmount = remainingAmount.sub(totalCommission);
+      remainingAmount = remainingAmount.sub(totalCommissionAmount);
+
+      if (order.orderSn === '202602031020VJSIA849') {
+        this.logger.log(`[订单详情] 佣金总计: ${totalCommissionAmount.toString()}`);
+        this.logger.log(`[订单详情] 商户收款: ${remainingAmount.toString()}`);
+      }
+    } else {
+      if (order.orderSn === '202602031020VJSIA849') {
+        this.logger.log(`[订单详情] 未查询到佣金记录`);
+      }
     }
 
     // 5. 组装返回数据
@@ -243,6 +372,7 @@ export class StoreOrderService {
         business: {
           ...tenant,
           remainingAmount: remainingAmount.toFixed(2),
+          totalCommissionAmount: totalCommissionAmount.toFixed(2),
         },
       }),
     );

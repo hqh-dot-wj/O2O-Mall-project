@@ -289,6 +289,10 @@ export abstract class BaseRepository<
    * 获取自动租户过滤条件
    */
   protected getTenantWhere(): Record<string, any> {
+    if (!this.tenantFieldName) {
+      return {};
+    }
+
     const tenantId = TenantContext.getTenantId() || this.cls.get('tenantId');
     const isSuper = TenantContext.isSuperTenant() || false;
     const isIgnore = TenantContext.isIgnoreTenant() || false;

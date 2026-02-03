@@ -116,10 +116,26 @@ const {
     },
     {
       key: 'commissionAmount',
-      title: '分佣金额',
+      title: '佣金扣除',
       align: 'center',
       minWidth: 100,
-      render: row => `¥${row.commissionAmount}`
+      render: row => {
+        const amount = Number(row.commissionAmount || 0);
+        if (amount === 0) {
+          return <span class="text-gray">-¥0.00</span>;
+        }
+        return <span class="text-error font-medium">-¥{amount.toFixed(2)}</span>;
+      }
+    },
+    {
+      key: 'remainingAmount',
+      title: '商户收款',
+      align: 'center',
+      minWidth: 100,
+      render: row => {
+        const amount = Number(row.remainingAmount || row.payAmount || 0);
+        return <span class="text-success font-medium">¥{amount.toFixed(2)}</span>;
+      }
     },
     {
       key: 'receiverAddress',
@@ -204,4 +220,19 @@ function handleViewDetail(orderId: string) {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.text-success {
+  color: #18a058;
+  font-weight: 500;
+}
+.text-error {
+  color: #d03050;
+  font-weight: 500;
+}
+.text-gray {
+  color: #999;
+}
+.font-medium {
+  font-weight: 500;
+}
+</style>

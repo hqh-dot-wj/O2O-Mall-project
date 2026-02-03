@@ -68,19 +68,40 @@ async function handleSubmit() {
       return;
     }
 
-    // Map formModel to DTO requirements if needed
+    // Filter out fields not in CreateProductDto
+    const {
+      description: _description,
+      pic: _pic,
+      albumPics,
+      sort: _sort,
+      productId: _productId,
+      needBooking: _needBooking,
+      delFlag: _delFlag,
+      createTime: _createTime,
+      category: _category,
+      brand: _brand,
+      globalSkus: _globalSkus,
+      attrValues: _attrValues,
+      ...validFormData
+    } = formModel;
+
+    // Map formModel to DTO requirements
     const submitData = {
-      ...formModel,
-      // map albumPics to mainImages if needed, or ensure formModel aligns
-      mainImages: formModel.albumPics || [],
-      // ensure skus have numbers
-      skus: formModel.skus.map(s => ({
-        ...s,
-        guidePrice: Number(s.guidePrice),
-        guideRate: Number(s.guideRate),
-        minDistRate: Number(s.minDistRate || 0),
-        maxDistRate: Number(s.maxDistRate || 50)
-      }))
+      ...validFormData,
+      // map albumPics to mainImages
+      mainImages: albumPics || [],
+      // ensure skus have numbers and remove read-only fields
+      skus: formModel.skus.map(s => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { productId: _skuProductId, costPrice: _costPrice, ...validSkuData } = s;
+        return {
+          ...validSkuData,
+          guidePrice: Number(validSkuData.guidePrice),
+          guideRate: Number(validSkuData.guideRate),
+          minDistRate: Number(validSkuData.minDistRate || 0),
+          maxDistRate: Number(validSkuData.maxDistRate || 50)
+        };
+      })
     } as any;
 
     let error;
@@ -94,7 +115,7 @@ async function handleSubmit() {
 
     if (!error) {
       message.success(isEdit.value ? '保存商品成功' : '发布商品成功');
-      router.push({ path: '/pms/global-product' });
+      router.push({ path: 'pms_global-product' });
     }
   } finally {
     loading.value = false;

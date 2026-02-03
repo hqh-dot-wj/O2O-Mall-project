@@ -63,3 +63,14 @@ export function fetchGetLedger(params: Api.Finance.LedgerSearchParams) {
     params
   });
 }
+
+/**
+ * 获取流水统计
+ */
+export function fetchGetLedgerStats(params: Api.Finance.LedgerSearchParams) {
+  return request<Api.Finance.LedgerStats>({
+    url: '/finance/ledger/stats',
+    method: 'get',
+    params
+  });
+}

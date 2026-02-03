@@ -23,6 +23,14 @@ export class BrandRepository extends BaseRepository<PmsBrand, Prisma.PmsBrandCre
   }
 
   /**
+   * 获取自动租户过滤条件
+   * 品牌数据是全局共享的
+   */
+  protected getTenantWhere(): Record<string, any> {
+    return {};
+  }
+
+  /**
    * 根据品牌名称查询品牌
    * @param name - 品牌名称
    * @returns 品牌对象或null

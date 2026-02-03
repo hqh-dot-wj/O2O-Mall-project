@@ -114,3 +114,32 @@ export class RegisterVo {
   @ApiProperty({ description: '注册结果消息' })
   msg: string;
 }
+
+/**
+ * 首页统计数据响应
+ */
+export class DashboardStatsVo {
+  @ApiProperty({ description: '门店钱包余额' })
+  walletBalance: number;
+
+  @ApiProperty({ description: '今日GMV' })
+  todayGMV: number;
+
+  @ApiProperty({ description: '今日订单数' })
+  todayOrderCount: number;
+
+  @ApiProperty({ description: '本月GMV' })
+  monthGMV: number;
+
+  @ApiProperty({ description: '商品总数' })
+  productCount: number;
+
+  @ApiProperty({ description: '会员总数' })
+  memberCount: number;
+
+  @ApiProperty({ description: '已结算佣金' })
+  settledCommission: number;
+
+  @ApiProperty({ description: '待结算佣金' })
+  pendingCommission: number;
+}

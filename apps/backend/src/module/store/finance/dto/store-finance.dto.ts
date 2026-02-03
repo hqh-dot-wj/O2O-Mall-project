@@ -74,4 +74,22 @@ export class ListLedgerDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   memberId?: string;
+
+  @ApiProperty({ description: '订单号/交易ID', required: false })
+  @IsOptional()
+  @IsString()
+  relatedId?: string;
+
+  @ApiProperty({ description: '用户搜索（姓名/手机号）', required: false })
+  @IsOptional()
+  @IsString()
+  keyword?: string;
+
+  @ApiProperty({ description: '最小金额', required: false })
+  @IsOptional()
+  minAmount?: number;
+
+  @ApiProperty({ description: '最大金额', required: false })
+  @IsOptional()
+  maxAmount?: number;
 }
