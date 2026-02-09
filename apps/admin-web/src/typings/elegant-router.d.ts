@@ -34,6 +34,9 @@ declare module "@elegant-router/types" {
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
     "marketing": "/marketing";
     "marketing_asset": "/marketing/asset";
+    "marketing_course-attendance": "/marketing/course-attendance";
+    "marketing_course-management": "/marketing/course-management";
+    "marketing_course-schedule": "/marketing/course-schedule";
     "marketing_template": "/marketing/template";
     "member": "/member";
     "member_list": "/member/list";
@@ -168,6 +171,9 @@ declare module "@elegant-router/types" {
     | "finance_withdrawal"
     | "home"
     | "marketing_asset"
+    | "marketing_course-attendance"
+    | "marketing_course-management"
+    | "marketing_course-schedule"
     | "marketing_template"
     | "member_list"
     | "member_upgrade"

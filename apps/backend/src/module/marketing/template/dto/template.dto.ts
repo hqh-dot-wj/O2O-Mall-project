@@ -28,6 +28,21 @@ export class PlayTemplateDto {
   @IsOptional()
   @IsString()
   uiComponentId?: string;
+
+  @ApiProperty({ description: '关联商品ID', required: false })
+  @IsOptional()
+  @IsString()
+  productId?: string;
+
+  @ApiProperty({ description: '关联规格ID', required: false })
+  @IsOptional()
+  @IsString()
+  skuId?: string;
+
+  @ApiProperty({ description: '商品名称', required: false })
+  @IsOptional()
+  @IsString()
+  productName?: string;
 }
 
 export class CreatePlayTemplateDto extends PlayTemplateDto {}

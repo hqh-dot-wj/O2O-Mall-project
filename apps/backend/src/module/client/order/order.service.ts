@@ -17,6 +17,7 @@ import { CartRepository } from '../cart/cart.repository';
 import { OrderCheckoutService } from './services/order-checkout.service';
 import { AttributionService } from './services/attribution.service';
 import { CartService } from '../cart/cart.service';
+import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
 
 /**
  * C端订单服务
@@ -39,6 +40,7 @@ export class OrderService {
     private readonly checkoutService: OrderCheckoutService,
     private readonly attributionService: AttributionService,
     private readonly cartService: CartService,
+    private readonly orderIntegrationService: OrderIntegrationService,
   ) {}
 
   /**
@@ -92,6 +94,38 @@ export class OrderService {
     // 5. 生成订单号
     const orderSn = this.generateOrderSn();
 
+    // 5.1 计算优惠券和积分抵扣
+    let couponDiscount = 0;
+    let pointsDiscount = 0;
+    let finalPayAmount = Number(preview.payAmount);
+
+    if (dto.userCouponId || (dto.pointsUsed && dto.pointsUsed > 0)) {
+      try {
+        const discountResult = await this.orderIntegrationService.calculateOrderDiscount(memberId, {
+          items: dto.items.map((item) => {
+            const previewItem = preview.items.find((p) => p.skuId === item.skuId);
+            return {
+              productId: previewItem?.productId || '',
+              productName: previewItem?.productName || '',
+              price: Number(previewItem?.price || 0),
+              quantity: item.quantity,
+            };
+          }),
+          userCouponId: dto.userCouponId,
+          pointsUsed: dto.pointsUsed,
+        });
+
+        if (discountResult.data) {
+          couponDiscount = discountResult.data.couponDiscount;
+          pointsDiscount = discountResult.data.pointsDiscount;
+          finalPayAmount = discountResult.data.finalAmount;
+        }
+      } catch (error) {
+        this.logger.error(`计算优惠失败: ${error.message}`);
+        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `优惠计算失败: ${error.message}`);
+      }
+    }
+
     // 6. 创建订单
     const order = await this.prisma.omsOrder.create({
       data: {
@@ -102,7 +136,13 @@ export class OrderService {
         totalAmount: preview.totalAmount,
         freightAmount: preview.freightAmount,
         discountAmount: preview.discountAmount,
-        payAmount: preview.payAmount,
+        payAmount: finalPayAmount,
+        // 优惠券相关
+        userCouponId: dto.userCouponId,
+        couponDiscount,
+        // 积分相关
+        pointsUsed: dto.pointsUsed || 0,
+        pointsDiscount,
         receiverName: dto.receiverName,
         receiverPhone: dto.receiverPhone,
         receiverAddress: dto.receiverAddress,
@@ -115,20 +155,47 @@ export class OrderService {
         remark: dto.remark,
 
         items: {
-          create: preview.items.map((item) => ({
-            productId: item.productId,
-            productName: item.productName,
-            productImg: item.productImg,
-            skuId: item.skuId,
-            specData: item.specData || undefined,
-            price: item.price,
-            quantity: item.quantity,
-            totalAmount: item.totalAmount,
-          })),
+          create: await Promise.all(
+            preview.items.map(async (item) => {
+              // 查询SKU的积分比例
+              const sku = await this.prisma.pmsTenantSku.findUnique({
+                where: { id: item.skuId },
+                select: { pointsRatio: true },
+              });
+
+              return {
+                productId: item.productId,
+                productName: item.productName,
+                productImg: item.productImg,
+                skuId: item.skuId,
+                specData: item.specData || undefined,
+                price: item.price,
+                quantity: item.quantity,
+                totalAmount: item.totalAmount,
+                pointsRatio: sku?.pointsRatio || 100, // 保存积分比例快照
+              };
+            }),
+          ),
         },
       },
       include: { items: true },
     });
+
+    // 6.1 锁定优惠券和冻结积分
+    if (dto.userCouponId || (dto.pointsUsed && dto.pointsUsed > 0)) {
+      try {
+        await this.orderIntegrationService.handleOrderCreated(
+          order.id,
+          memberId,
+          dto.userCouponId,
+          dto.pointsUsed,
+        );
+      } catch (error) {
+        this.logger.error(`锁定优惠券/冻结积分失败: ${error.message}`);
+        // 如果锁定失败，需要回滚订单创建
+        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `优惠券或积分处理失败: ${error.message}`);
+      }
+    }
 
     // 7. 扣减库存
     for (const item of dto.items) {
@@ -291,6 +358,14 @@ export class OrderService {
       });
     }
 
+    // 3. 触发订单取消事件处理（优惠券和积分）
+    try {
+      await this.orderIntegrationService.handleOrderCancelled(dto.orderId, memberId);
+    } catch (error) {
+      this.logger.error(`Handle order cancelled event failed for order ${dto.orderId}`, error);
+      // 不抛出异常，避免影响取消流程
+    }
+
     this.logger.log(`订单取消: ${order.orderSn} `);
 
     return Result.ok(null, '订单已取消');
@@ -348,6 +423,14 @@ export class OrderService {
         where: { id: item.skuId },
         data: { stock: { increment: item.quantity } },
       });
+    }
+
+    // 3. 触发订单取消事件处理（优惠券和积分）
+    try {
+      await this.orderIntegrationService.handleOrderCancelled(orderId, order.memberId);
+    } catch (error) {
+      this.logger.error(`Handle order cancelled event failed for order ${orderId}`, error);
+      // 不抛出异常，避免影响取消流程
     }
 
     this.logger.log(`Order ${orderId} auto - cancelled: ${reason} `);

@@ -91,6 +91,17 @@ async function bootstrap() {
 
   app.setGlobalPrefix(prefix);
 
+  // 根路径 GET / 处理，避免 404（API 实际在 prefix 下，如 /api）
+  const server = app.getHttpAdapter().getInstance();
+  server.get('/', (_req: any, res: any) => {
+    res.json({
+      name: API_INFO.title,
+      version: API_INFO.version,
+      docs: `${prefix}/swagger-ui`,
+      health: `${prefix}/health`,
+    });
+  });
+
   // 全局验证
   app.useGlobalPipes(
     new ValidationPipe({

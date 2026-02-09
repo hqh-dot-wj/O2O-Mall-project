@@ -65,9 +65,9 @@ describe('RegionService', () => {
   describe('getTree', () => {
     it('should build a tree from flat records', async () => {
       const mockRegions = [
-        { code: '11', name: 'Province 1', parentCode: null },
-        { code: '1101', name: 'City 1', parentCode: '11' },
-        { code: '12', name: 'Province 2', parentCode: '' },
+        { code: '11', name: 'Province 1', parentId: null },
+        { code: '1101', name: 'City 1', parentId: '11' },
+        { code: '12', name: 'Province 2', parentId: '' },
       ];
       mockRepo.findAllRegions.mockResolvedValue(mockRegions);
 

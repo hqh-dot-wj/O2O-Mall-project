@@ -67,6 +67,8 @@ export class CommissionService {
         enableCrossTenant: false, // 默认不开启跨店
         crossTenantRate: new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE),
         crossMaxDaily: new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
+        commissionBaseType: 'ORIGINAL_PRICE' as const, // 默认基于原价
+        maxCommissionRate: new Decimal(0.5), // 默认最大50%
       };
     }
 
@@ -76,6 +78,8 @@ export class CommissionService {
       enableCrossTenant: config.enableCrossTenant ?? false,
       crossTenantRate: config.crossTenantRate ?? new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE),
       crossMaxDaily: config.crossMaxDaily ?? new Decimal(BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
+      commissionBaseType: config.commissionBaseType ?? 'ORIGINAL_PRICE',
+      maxCommissionRate: config.maxCommissionRate ?? new Decimal(0.5),
     };
   }
 
@@ -100,8 +104,9 @@ export class CommissionService {
    * @description
    * 采用 @Transactional 保证数据一致性
    * 1. 验证订单有效性及自购情形
-   * 2. 计算佣金基数
+   * 2. 计算佣金基数（支持原价/实付/兑换商品）
    * 3. 计算并生成 L1/L2 佣金记录
+   * 4. 熔断保护：总佣金不超过实付金额的配置比例
    *
    * @concurrency 使用 RepeatableRead 隔离级别防止并发超限
    * @transaction 跨店限额检查使用 FOR UPDATE 行锁保证原子性
@@ -138,15 +143,26 @@ export class CommissionService {
       return;
     }
 
-    // 4. 计算佣金基数
-    const commissionBase = await this.calculateCommissionBase(order);
-    if (commissionBase.lte(0)) {
-      this.logger.log(`[Commission] Order ${orderId} commission base is 0, skip`);
+    // 4. 获取分销配置
+    const distConfig = await this.getDistConfig(tenantId);
+
+    // 5. 计算佣金基数（支持多种策略）
+    const commissionBaseResult = await this.calculateCommissionBase(order, distConfig.commissionBaseType);
+    
+    if (commissionBaseResult.base.lte(0)) {
+      this.logger.log(`[Commission] Order ${orderId} commission base is 0, skip (type: ${commissionBaseResult.type})`);
       return;
     }
 
-    // 5. 获取分销配置
-    const distConfig = await this.getDistConfig(tenantId);
+    const commissionBase = commissionBaseResult.base;
+    const baseType = commissionBaseResult.type;
+    
+    this.logger.log(
+      `[Commission] Order ${orderId} base calculation: ` +
+      `type=${baseType}, base=${commissionBase.toFixed(2)}, ` +
+      `original=${order.totalAmount.toFixed(2)}, paid=${order.payAmount.toFixed(2)}`
+    );
+
     const planSettleTime = this.calculateSettleTime(order.orderType);
     const records: any[] = [];
 
@@ -168,8 +184,38 @@ export class CommissionService {
     );
     if (l2Record) records.push(l2Record);
 
-    // 8. 批量持久化 (使用 upsert 防止重复计算)
+    // 8. 熔断保护：总佣金不能超过实付金额的配置比例
+    const totalCommission = records.reduce((sum, r) => sum.add(r.amount), new Decimal(0));
+    const maxAllowed = order.payAmount.mul(distConfig.maxCommissionRate);
+    
+    if (totalCommission.gt(maxAllowed)) {
+      const ratio = maxAllowed.div(totalCommission);
+      this.logger.warn(
+        `[Commission] Order ${orderId} commission capped: ` +
+        `original=${totalCommission.toFixed(2)}, max=${maxAllowed.toFixed(2)}, ` +
+        `ratio=${ratio.toFixed(4)}`
+      );
+      
+      // 按比例缩减所有佣金
+      records.forEach(record => {
+        record.amount = record.amount.mul(ratio).toDecimalPlaces(2);
+        record.isCapped = true;
+      });
+    }
+
+    // 9. 批量持久化 (使用 upsert 防止重复计算)
     for (const record of records) {
+      // 补充审计字段
+      const enrichedRecord = {
+        ...record,
+        commissionBase,
+        commissionBaseType: baseType,
+        orderOriginalPrice: order.totalAmount,
+        orderActualPaid: order.payAmount,
+        couponDiscount: order.couponDiscount,
+        pointsDiscount: order.pointsDiscount,
+      };
+
       await this.commissionRepo.upsert({
         where: {
           orderId_beneficiaryId_level: {
@@ -178,7 +224,7 @@ export class CommissionService {
             level: record.level,
           },
         },
-        create: record,
+        create: enrichedRecord,
         update: {}, // 若存在则忽略
       });
     }
@@ -388,10 +434,22 @@ export class CommissionService {
 
   /**
    * 计算佣金基数
-   * 从订单商品的 SKU 分佣配置计算
+   * 
+   * @description
+   * 支持三种计算策略：
+   * 1. ORIGINAL_PRICE: 基于商品原价（优惠由平台承担）
+   * 2. ACTUAL_PAID: 基于实付金额（优惠由推广者承担）
+   * 3. ZERO: 兑换商品不分佣
+   * 
+   * @returns { base: 分佣基数, type: 基数类型 }
    */
-  private async calculateCommissionBase(order: any): Promise<Decimal> {
+  private async calculateCommissionBase(
+    order: any,
+    baseType: string = 'ORIGINAL_PRICE'
+  ): Promise<{ base: Decimal; type: string }> {
     let totalBase = new Decimal(0);
+    let hasExchangeProduct = false;
+    let hasNormalProduct = false;
 
     for (const item of order.items) {
       // 查询 SKU 的分佣配置
@@ -404,18 +462,60 @@ export class CommissionService {
         },
       });
 
-      if (tenantSku && tenantSku.distMode !== 'NONE') {
-        if (tenantSku.distMode === 'RATIO') {
-          // 按比例
-          totalBase = totalBase.add(item.totalAmount.mul(tenantSku.distRate));
-        } else if (tenantSku.distMode === 'FIXED') {
-          // 固定金额
-          totalBase = totalBase.add(tenantSku.distRate.mul(item.quantity));
-        }
+      if (!tenantSku || tenantSku.distMode === 'NONE') {
+        continue;
       }
+
+      // 检查是否为兑换商品
+      if (tenantSku.isExchangeProduct) {
+        hasExchangeProduct = true;
+        // 兑换商品不参与分佣基数计算
+        continue;
+      }
+
+      hasNormalProduct = true;
+
+      // 计算单个商品的分佣基数
+      let itemBase = new Decimal(0);
+      if (tenantSku.distMode === 'RATIO') {
+        // 按比例
+        itemBase = item.totalAmount.mul(tenantSku.distRate);
+      } else if (tenantSku.distMode === 'FIXED') {
+        // 固定金额
+        itemBase = tenantSku.distRate.mul(item.quantity);
+      }
+
+      totalBase = totalBase.add(itemBase);
     }
 
-    return totalBase;
+    // 如果全部是兑换商品，返回0
+    if (hasExchangeProduct && !hasNormalProduct) {
+      return { base: new Decimal(0), type: 'ZERO' };
+    }
+
+    // 根据配置的基数类型调整
+    if (baseType === 'ACTUAL_PAID' && hasNormalProduct) {
+      // 基于实付金额：按比例缩减
+      // 缩减比例 = 实付金额 / 商品原价
+      const originalPrice = order.totalAmount;
+      const actualPaid = order.payAmount;
+      
+      if (originalPrice.gt(0)) {
+        const ratio = actualPaid.div(originalPrice);
+        totalBase = totalBase.mul(ratio);
+        
+        this.logger.debug(
+          `[CommissionBase] Adjusted by actual paid: ` +
+          `original=${originalPrice.toFixed(2)}, paid=${actualPaid.toFixed(2)}, ` +
+          `ratio=${ratio.toFixed(4)}`
+        );
+      }
+      
+      return { base: totalBase, type: 'ACTUAL_PAID' };
+    }
+
+    // 默认基于原价
+    return { base: totalBase, type: 'ORIGINAL_PRICE' };
   }
 
   /**

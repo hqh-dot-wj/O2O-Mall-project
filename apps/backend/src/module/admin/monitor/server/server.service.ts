@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Result } from 'src/common/response';
 import os, { networkInterfaces } from 'os';
 import path from 'path';
-import * as nodeDiskInfo from 'node-disk-info';
+import si from 'systeminformation';
 
 @Injectable()
 export class ServerService {
@@ -27,19 +27,23 @@ export class ServerService {
     return Result.ok(data);
   }
 
+  /**
+   * 获取磁盘状态（使用 systeminformation，兼容 Windows 11 等无 wmic 环境）
+   */
   async getDiskStatus() {
-    const disks = await nodeDiskInfo.getDiskInfoSync();
-    const sysFiles = disks.map((disk: any) => {
-      return {
-        dirName: disk._mounted,
-        typeName: disk._filesystem,
-        total: this.bytesToGB(disk._blocks) + 'GB',
-        used: this.bytesToGB(disk._used) + 'GB',
-        free: this.bytesToGB(disk._available) + 'GB',
-        usage: ((disk._used / disk._blocks || 0) * 100).toFixed(2),
-      };
-    });
-    return sysFiles;
+    try {
+      const disks = await si.fsSize();
+      return disks.map((disk) => ({
+        dirName: disk.mount,
+        typeName: disk.type,
+        total: this.bytesToGB(disk.size) + 'GB',
+        used: this.bytesToGB(disk.used) + 'GB',
+        free: this.bytesToGB(disk.available) + 'GB',
+        usage: (disk.use ?? (disk.size > 0 ? (disk.used / disk.size) * 100 : 0)).toFixed(2),
+      }));
+    } catch (err) {
+      return [];
+    }
   }
 
   // 获取服务器IP地址

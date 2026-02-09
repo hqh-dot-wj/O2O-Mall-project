@@ -27837,6 +27837,952 @@
         ]
       }
     },
+    "/api/api/marketing/play/types": {
+      "get": {
+        "operationId": "PlayController_getAllPlayTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取所有可用玩法列表\n\n@description\n返回系统中所有已注册的营销玩法元数据。\n前端可以基于此接口动态生成玩法选择器。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/types/{code}": {
+      "get": {
+        "operationId": "PlayController_getPlayType",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取指定玩法的元数据\n\n@description\n根据玩法代码获取该玩法的详细元数据。\n前端可以基于此接口动态生成规则配置表单。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/types/{code}/exists": {
+      "get": {
+        "operationId": "PlayController_checkPlayExists",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "检查玩法是否存在\n\n@description\n检查指定的玩法代码是否已注册。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/types/{code}/features": {
+      "get": {
+        "operationId": "PlayController_getPlayFeatures",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取玩法特性信息\n\n@description\n获取指定玩法的特性信息（是否有实例、是否可失败等）。\n用于前端根据玩法特性动态调整 UI 和业务逻辑。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/course/{instanceId}/schedules": {
+      "get": {
+        "operationId": "PlayController_getCourseSchedules",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取课程排课信息",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/course/{instanceId}/attendances": {
+      "get": {
+        "operationId": "PlayController_getCourseAttendances",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取课程考勤信息\n\n@description\n获取指定课程实例的考勤记录。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/course/{instanceId}/attendance": {
+      "post": {
+        "operationId": "PlayController_markAttendance",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "标记学员出勤\n\n@description\n标记指定学员在指定日期的出勤情况。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
+    "/api/api/marketing/play/course/{instanceId}/attendance-rate": {
+      "get": {
+        "operationId": "PlayController_getAttendanceRate",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取学员出勤率\n\n@description\n获取指定学员的出勤率统计。",
+        "tags": [
+          "营销-玩法管理"
+        ]
+      }
+    },
     "/api/marketing/instance/list": {
       "get": {
         "operationId": "PlayInstanceController_findAll",
@@ -28178,7 +29124,14 @@
             }
           },
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
           "401": {
             "description": "未登录或登录已过期",
@@ -30890,6 +31843,371 @@
         ]
       }
     },
+    "/api/marketing/config/{id}/history": {
+      "get": {
+        "operationId": "StorePlayConfigController_getRulesHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取规则历史版本列表",
+        "tags": [
+          "营销-门店商品配置"
+        ]
+      }
+    },
+    "/api/marketing/config/{id}/rollback": {
+      "post": {
+        "operationId": "StorePlayConfigController_rollbackToVersion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "回滚到指定版本",
+        "tags": [
+          "营销-门店商品配置"
+        ]
+      }
+    },
+    "/api/marketing/config/{id}/compare/{version}": {
+      "get": {
+        "operationId": "StorePlayConfigController_compareVersions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "比较当前版本和指定版本的差异",
+        "tags": [
+          "营销-门店商品配置"
+        ]
+      }
+    },
     "/api/admin/pms/product/list": {
       "get": {
         "operationId": "PmsProductController_list",
@@ -31589,6 +32907,2677 @@
         "summary": "创建品牌",
         "tags": [
           "品牌管理"
+        ]
+      }
+    },
+    "/api/api/marketing/rule/validate": {
+      "post": {
+        "description": "对营销活动的规则配置进行完整校验，包括字段类型、约束和业务逻辑校验",
+        "operationId": "RuleController_validateRule",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "校验规则配置\n\n@description\n对单个活动的规则配置进行完整校验，包括：\n1. 字段类型校验（基于 class-validator）\n2. 字段约束校验（最小值、最大值、长度等）\n3. 业务逻辑校验（基于玩法策略）\n\n使用场景：\n- 运营后台创建/编辑活动时的实时校验\n- 保存前的最终校验\n- 批量导入前的预校验",
+        "tags": [
+          "营销-规则校验"
+        ]
+      }
+    },
+    "/api/api/marketing/rule/schema/{templateCode}": {
+      "get": {
+        "description": "根据玩法代码获取该玩法的规则表单 Schema，用于前端动态表单生成",
+        "operationId": "RuleController_getRuleFormSchema",
+        "parameters": [
+          {
+            "name": "templateCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "获取规则表单 Schema\n\n@description\n根据玩法代码获取该玩法的规则表单 Schema。\n前端可以基于此 Schema 动态生成表单组件，实现配置界面的自动化。\n\nSchema 包含：\n- 字段名称、类型、标签\n- 是否必填\n- 默认值\n- 校验规则（最小值、最大值、长度、正则等）\n\n使用场景：\n- 前端动态表单生成\n- 表单验证规则配置\n- API 文档生成",
+        "tags": [
+          "营销-规则校验"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/templates": {
+      "get": {
+        "operationId": "CouponTemplateController_findAll",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderByColumn",
+            "required": false,
+            "in": "query",
+            "description": "排序字段",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isAsc",
+            "required": false,
+            "in": "query",
+            "description": "排序方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "params",
+            "required": false,
+            "in": "query",
+            "description": "时间范围",
+            "schema": {
+              "$ref": "#/components/schemas/DateRangeDto"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "优惠券名称（模糊搜索）",
+            "schema": {
+              "example": "满减",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "优惠券类型",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DISCOUNT",
+                "PERCENTAGE",
+                "EXCHANGE"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "优惠券状态",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "INACTIVE",
+                "EXPIRED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CouponTemplateListVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询优惠券模板列表\n支持分页、筛选和排序",
+        "tags": [
+          "营销-优惠券模板"
+        ]
+      },
+      "post": {
+        "operationId": "CouponTemplateController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCouponTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CouponTemplateVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "创建优惠券模板\n验证模板配置的合法性",
+        "tags": [
+          "营销-优惠券模板"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/templates/{id}": {
+      "get": {
+        "operationId": "CouponTemplateController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CouponTemplateVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询优惠券模板详情\n包含统计信息（已发放数量、已使用数量、核销率）",
+        "tags": [
+          "营销-优惠券模板"
+        ]
+      },
+      "put": {
+        "operationId": "CouponTemplateController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCouponTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CouponTemplateVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "更新优惠券模板\n如果模板已发放，则不允许修改关键配置",
+        "tags": [
+          "营销-优惠券模板"
+        ]
+      },
+      "delete": {
+        "operationId": "CouponTemplateController_deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "停用优惠券模板\n将模板状态设置为 INACTIVE",
+        "tags": [
+          "营销-优惠券模板"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/distribute/manual": {
+      "post": {
+        "operationId": "CouponDistributionController_distributeManually",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualDistributionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "手动发放优惠券（管理端）\n批量发放优惠券给指定用户",
+        "tags": [
+          "营销-优惠券发放"
+        ]
+      }
+    },
+    "/api/client/marketing/coupon/claim/{templateId}": {
+      "post": {
+        "operationId": "CouponDistributionController_claimCoupon",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "用户领取优惠券（C端）\n用户主动领取指定模板的优惠券",
+        "tags": [
+          "营销-优惠券发放"
+        ]
+      }
+    },
+    "/api/client/marketing/coupon/available": {
+      "get": {
+        "operationId": "CouponDistributionController_getAvailableCoupons",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询可领取的优惠券列表（C端）\n返回当前用户可以领取的所有优惠券模板",
+        "tags": [
+          "营销-优惠券发放"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/user-coupons": {
+      "get": {
+        "operationId": "CouponManagementController_getUserCoupons",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询用户优惠券列表（管理端）",
+        "tags": [
+          "营销-优惠券管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/usage-records": {
+      "get": {
+        "operationId": "CouponManagementController_getUsageRecords",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询优惠券使用记录（管理端）",
+        "tags": [
+          "营销-优惠券管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/statistics": {
+      "get": {
+        "operationId": "CouponManagementController_getStatistics",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询优惠券统计数据（管理端）",
+        "tags": [
+          "营销-优惠券管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/coupon/export": {
+      "get": {
+        "operationId": "CouponManagementController_exportUsageRecords",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "导出优惠券使用记录（管理端）",
+        "tags": [
+          "营销-优惠券管理"
+        ]
+      }
+    },
+    "/api/client/marketing/coupon/my-coupons": {
+      "get": {
+        "operationId": "CouponManagementController_getMyCoupons",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询我的优惠券（C端）",
+        "tags": [
+          "营销-优惠券管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/rules": {
+      "get": {
+        "operationId": "PointsRuleController_getRules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取积分规则配置",
+        "tags": [
+          "积分规则"
+        ]
+      },
+      "put": {
+        "operationId": "PointsRuleController_updateRules",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePointsRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新积分规则配置",
+        "tags": [
+          "积分规则"
+        ]
+      }
+    },
+    "/api/client/marketing/points/balance": {
+      "get": {
+        "operationId": "PointsAccountClientController_getBalance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分余额",
+        "tags": [
+          "积分账户"
+        ]
+      }
+    },
+    "/api/client/marketing/points/transactions": {
+      "get": {
+        "operationId": "PointsAccountClientController_getTransactions",
+        "parameters": [
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "交易类型",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EARN_ORDER",
+                "EARN_SIGNIN",
+                "EARN_TASK",
+                "EARN_ADMIN",
+                "USE_ORDER",
+                "USE_COUPON",
+                "USE_PRODUCT",
+                "FREEZE",
+                "UNFREEZE",
+                "EXPIRE",
+                "REFUND",
+                "DEDUCT_ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "startTime",
+            "required": false,
+            "in": "query",
+            "description": "开始时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": false,
+            "in": "query",
+            "description": "结束时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "minimum": 1,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分明细",
+        "tags": [
+          "积分账户"
+        ]
+      }
+    },
+    "/api/client/marketing/points/expiring": {
+      "get": {
+        "operationId": "PointsAccountClientController_getExpiringPoints",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询即将过期的积分",
+        "tags": [
+          "积分账户"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/adjust": {
+      "post": {
+        "operationId": "PointsAccountAdminController_adjustPoints",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddPointsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "调整用户积分",
+        "tags": [
+          "积分账户管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/accounts": {
+      "get": {
+        "operationId": "PointsAccountAdminController_getAccounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分账户列表",
+        "tags": [
+          "积分账户管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/transactions": {
+      "get": {
+        "operationId": "PointsAccountAdminController_getTransactions",
+        "parameters": [
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "交易类型",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EARN_ORDER",
+                "EARN_SIGNIN",
+                "EARN_TASK",
+                "EARN_ADMIN",
+                "USE_ORDER",
+                "USE_COUPON",
+                "USE_PRODUCT",
+                "FREEZE",
+                "UNFREEZE",
+                "EXPIRE",
+                "REFUND",
+                "DEDUCT_ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "startTime",
+            "required": false,
+            "in": "query",
+            "description": "开始时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": false,
+            "in": "query",
+            "description": "结束时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "minimum": 1,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分交易记录",
+        "tags": [
+          "积分账户管理"
+        ]
+      }
+    },
+    "/api/client/marketing/points/signin": {
+      "post": {
+        "operationId": "PointsSigninController_signin",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "用户签到",
+        "tags": [
+          "积分签到"
+        ]
+      }
+    },
+    "/api/client/marketing/points/signin/status": {
+      "get": {
+        "operationId": "PointsSigninController_checkSigninStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询签到状态",
+        "tags": [
+          "积分签到"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/tasks": {
+      "post": {
+        "operationId": "PointsTaskAdminController_createTask",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePointsTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "创建积分任务",
+        "tags": [
+          "积分任务管理"
+        ]
+      },
+      "get": {
+        "operationId": "PointsTaskAdminController_findAll",
+        "parameters": [
+          {
+            "name": "isEnabled",
+            "required": false,
+            "in": "query",
+            "description": "是否启用",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "minimum": 1,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分任务列表",
+        "tags": [
+          "积分任务管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/tasks/{id}": {
+      "put": {
+        "operationId": "PointsTaskAdminController_updateTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePointsTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新积分任务",
+        "tags": [
+          "积分任务管理"
+        ]
+      },
+      "delete": {
+        "operationId": "PointsTaskAdminController_deleteTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "删除积分任务",
+        "tags": [
+          "积分任务管理"
+        ]
+      }
+    },
+    "/api/client/marketing/points/tasks": {
+      "get": {
+        "operationId": "PointsTaskClientController_findAvailableTasks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询可用任务列表",
+        "tags": [
+          "积分任务"
+        ]
+      }
+    },
+    "/api/client/marketing/points/tasks/{taskKey}/complete": {
+      "post": {
+        "operationId": "PointsTaskClientController_completeTask",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "完成任务",
+        "tags": [
+          "积分任务"
+        ]
+      }
+    },
+    "/api/client/marketing/points/tasks/my-completions": {
+      "get": {
+        "operationId": "PointsTaskClientController_getMyCompletions",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询我的任务完成记录",
+        "tags": [
+          "积分任务"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/statistics/earn": {
+      "get": {
+        "operationId": "PointsManagementController_getEarnStatistics",
+        "parameters": [
+          {
+            "name": "startTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分发放统计",
+        "tags": [
+          "积分管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/statistics/use": {
+      "get": {
+        "operationId": "PointsManagementController_getUseStatistics",
+        "parameters": [
+          {
+            "name": "startTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分使用统计",
+        "tags": [
+          "积分管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/statistics/balance": {
+      "get": {
+        "operationId": "PointsManagementController_getBalanceStatistics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分余额统计",
+        "tags": [
+          "积分管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/statistics/expire": {
+      "get": {
+        "operationId": "PointsManagementController_getExpireStatistics",
+        "parameters": [
+          {
+            "name": "startTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分过期统计",
+        "tags": [
+          "积分管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/ranking": {
+      "get": {
+        "operationId": "PointsManagementController_getRanking",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分排行榜",
+        "tags": [
+          "积分管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/export": {
+      "get": {
+        "operationId": "PointsManagementController_exportTransactions",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "导出积分明细",
+        "tags": [
+          "积分管理"
+        ]
+      }
+    },
+    "/api/client/order/calculate-discount": {
+      "post": {
+        "operationId": "OrderIntegrationController_calculateDiscount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateDiscountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "计算订单优惠",
+        "tags": [
+          "C端-订单集成"
         ]
       }
     },
@@ -42396,6 +46385,15 @@
           "playInstanceId": {
             "type": "string",
             "description": "营销玩法实例ID (参团/秒杀)"
+          },
+          "userCouponId": {
+            "type": "string",
+            "description": "用户优惠券ID"
+          },
+          "pointsUsed": {
+            "type": "number",
+            "minimum": 0,
+            "description": "使用积分数量"
           }
         },
         "required": [
@@ -42586,6 +46584,18 @@
             "type": "string",
             "description": "前端组件ID"
           },
+          "productId": {
+            "type": "string",
+            "description": "关联商品ID"
+          },
+          "skuId": {
+            "type": "string",
+            "description": "关联规格ID"
+          },
+          "productName": {
+            "type": "string",
+            "description": "商品名称"
+          },
           "createTime": {
             "type": "string",
             "description": "创建时间"
@@ -42601,7 +46611,6 @@
           "code",
           "unitName",
           "ruleSchema",
-          "uiComponentId",
           "createTime",
           "updateTime"
         ]
@@ -42648,6 +46657,18 @@
           "uiComponentId": {
             "type": "string",
             "description": "前端组件ID"
+          },
+          "productId": {
+            "type": "string",
+            "description": "关联商品ID"
+          },
+          "skuId": {
+            "type": "string",
+            "description": "关联规格ID"
+          },
+          "productName": {
+            "type": "string",
+            "description": "商品名称"
           }
         },
         "required": [
@@ -42679,6 +46700,18 @@
           "uiComponentId": {
             "type": "string",
             "description": "前端组件ID"
+          },
+          "productId": {
+            "type": "string",
+            "description": "关联商品ID"
+          },
+          "skuId": {
+            "type": "string",
+            "description": "关联规格ID"
+          },
+          "productName": {
+            "type": "string",
+            "description": "商品名称"
           }
         },
         "required": [
@@ -42827,7 +46860,6 @@
           }
         },
         "required": [
-          "storeId",
           "serviceId",
           "serviceType",
           "templateCode",
@@ -42861,9 +46893,16 @@
             "type": "object",
             "description": "营销规则配置"
           },
+          "rulesHistory": {
+            "description": "规则历史版本",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
           "stockMode": {
             "type": "string",
-            "description": "库存策略 (自动计算)",
+            "description": "库存策略",
             "enum": [
               "STRONG_LOCK",
               "LAZY_CHECK"
@@ -42877,14 +46916,7 @@
               "ON_SHELF"
             ]
           }
-        },
-        "required": [
-          "storeId",
-          "serviceId",
-          "serviceType",
-          "templateCode",
-          "rules"
-        ]
+        }
       },
       "CreateSkuDto": {
         "type": "object",
@@ -43239,6 +47271,832 @@
             "example": 0
           }
         }
+      },
+      "ValidateRuleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CouponTemplateListVo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "模板ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "优惠券名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "优惠券描述"
+          },
+          "type": {
+            "type": "string",
+            "description": "优惠券类型",
+            "enum": [
+              "DISCOUNT",
+              "PERCENTAGE",
+              "EXCHANGE"
+            ]
+          },
+          "discountAmount": {
+            "type": "number",
+            "description": "满减金额"
+          },
+          "discountPercent": {
+            "type": "number",
+            "description": "折扣百分比"
+          },
+          "minOrderAmount": {
+            "type": "number",
+            "description": "最低消费金额"
+          },
+          "validityType": {
+            "type": "string",
+            "description": "有效期类型",
+            "enum": [
+              "FIXED",
+              "RELATIVE"
+            ]
+          },
+          "startTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "开始时间"
+          },
+          "endTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "结束时间"
+          },
+          "validDays": {
+            "type": "number",
+            "description": "有效天数"
+          },
+          "totalStock": {
+            "type": "number",
+            "description": "发放总量"
+          },
+          "remainingStock": {
+            "type": "number",
+            "description": "剩余库存"
+          },
+          "distributedCount": {
+            "type": "number",
+            "description": "已发放数量"
+          },
+          "limitPerUser": {
+            "type": "number",
+            "description": "每人限领数量"
+          },
+          "usedCount": {
+            "type": "number",
+            "description": "已使用数量"
+          },
+          "usageRate": {
+            "type": "number",
+            "description": "使用率（百分比）"
+          },
+          "status": {
+            "type": "string",
+            "description": "优惠券状态",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "EXPIRED"
+            ]
+          },
+          "createTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          },
+          "updateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "minOrderAmount",
+          "validityType",
+          "totalStock",
+          "remainingStock",
+          "distributedCount",
+          "limitPerUser",
+          "usedCount",
+          "usageRate",
+          "status",
+          "createTime",
+          "updateTime"
+        ]
+      },
+      "CouponTemplateVo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "模板ID"
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "租户ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "优惠券名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "优惠券描述"
+          },
+          "type": {
+            "type": "string",
+            "description": "优惠券类型",
+            "enum": [
+              "DISCOUNT",
+              "PERCENTAGE",
+              "EXCHANGE"
+            ]
+          },
+          "discountAmount": {
+            "type": "number",
+            "description": "满减金额"
+          },
+          "discountPercent": {
+            "type": "number",
+            "description": "折扣百分比(1-99)"
+          },
+          "maxDiscountAmount": {
+            "type": "number",
+            "description": "最高优惠金额"
+          },
+          "minOrderAmount": {
+            "type": "number",
+            "description": "最低消费金额"
+          },
+          "applicableProducts": {
+            "description": "适用商品ID列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicableCategories": {
+            "description": "适用分类ID列表",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "memberLevels": {
+            "description": "适用会员等级列表",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "exchangeProductId": {
+            "type": "string",
+            "description": "可兑换的商品ID"
+          },
+          "exchangeSkuId": {
+            "type": "string",
+            "description": "可兑换的SKU ID"
+          },
+          "validityType": {
+            "type": "string",
+            "description": "有效期类型",
+            "enum": [
+              "FIXED",
+              "RELATIVE"
+            ]
+          },
+          "startTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "开始时间"
+          },
+          "endTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "结束时间"
+          },
+          "validDays": {
+            "type": "number",
+            "description": "有效天数"
+          },
+          "totalStock": {
+            "type": "number",
+            "description": "发放总量"
+          },
+          "remainingStock": {
+            "type": "number",
+            "description": "剩余库存"
+          },
+          "limitPerUser": {
+            "type": "number",
+            "description": "每人限领数量"
+          },
+          "status": {
+            "type": "string",
+            "description": "优惠券状态",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "EXPIRED"
+            ]
+          },
+          "distributedCount": {
+            "type": "number",
+            "description": "已发放数量"
+          },
+          "usedCount": {
+            "type": "number",
+            "description": "已使用数量"
+          },
+          "usageRate": {
+            "type": "number",
+            "description": "使用率（百分比）"
+          },
+          "createBy": {
+            "type": "string",
+            "description": "创建人"
+          },
+          "createTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          },
+          "updateBy": {
+            "type": "string",
+            "description": "更新人"
+          },
+          "updateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "id",
+          "tenantId",
+          "name",
+          "type",
+          "minOrderAmount",
+          "applicableProducts",
+          "applicableCategories",
+          "memberLevels",
+          "validityType",
+          "totalStock",
+          "remainingStock",
+          "limitPerUser",
+          "status",
+          "distributedCount",
+          "usedCount",
+          "usageRate",
+          "createBy",
+          "createTime",
+          "updateTime"
+        ]
+      },
+      "CreateCouponTemplateDto": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "description": "租户ID",
+            "example": "000000"
+          },
+          "createBy": {
+            "type": "string",
+            "description": "创建人",
+            "example": "admin"
+          },
+          "name": {
+            "type": "string",
+            "description": "优惠券名称",
+            "example": "满100减20优惠券"
+          },
+          "description": {
+            "type": "string",
+            "description": "优惠券描述",
+            "example": "全场通用，满100减20"
+          },
+          "type": {
+            "type": "string",
+            "description": "优惠券类型",
+            "enum": [
+              "DISCOUNT",
+              "PERCENTAGE",
+              "EXCHANGE"
+            ],
+            "example": "DISCOUNT"
+          },
+          "discountAmount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "满减金额（满减券必填）",
+            "example": 20
+          },
+          "discountPercent": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99,
+            "description": "折扣百分比（折扣券必填，1-99）",
+            "example": 90
+          },
+          "maxDiscountAmount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "最高优惠金额（折扣券可选）",
+            "example": 50
+          },
+          "minOrderAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "最低消费金额",
+            "example": 100,
+            "default": 0
+          },
+          "applicableProducts": {
+            "description": "适用商品ID列表",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicableCategories": {
+            "description": "适用分类ID列表",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "memberLevels": {
+            "description": "适用会员等级列表",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "exchangeProductId": {
+            "type": "string",
+            "description": "可兑换的商品ID（兑换券必填）",
+            "example": "prod_123"
+          },
+          "exchangeSkuId": {
+            "type": "string",
+            "description": "可兑换的SKU ID（兑换券可选）",
+            "example": "sku_456"
+          },
+          "validityType": {
+            "type": "string",
+            "description": "有效期类型",
+            "enum": [
+              "FIXED",
+              "RELATIVE"
+            ],
+            "example": "FIXED"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "开始时间（固定时间段必填）",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "结束时间（固定时间段必填）",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "validDays": {
+            "type": "number",
+            "minimum": 1,
+            "description": "有效天数（相对时间必填）",
+            "example": 30
+          },
+          "totalStock": {
+            "type": "number",
+            "minimum": 1,
+            "description": "发放总量",
+            "example": 1000
+          },
+          "limitPerUser": {
+            "type": "number",
+            "minimum": 1,
+            "description": "每人限领数量",
+            "example": 1,
+            "default": 1
+          }
+        },
+        "required": [
+          "tenantId",
+          "createBy",
+          "name",
+          "type",
+          "validityType",
+          "totalStock"
+        ]
+      },
+      "UpdateCouponTemplateDto": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "description": "租户ID",
+            "example": "000000"
+          },
+          "createBy": {
+            "type": "string",
+            "description": "创建人",
+            "example": "admin"
+          },
+          "name": {
+            "type": "string",
+            "description": "优惠券名称",
+            "example": "满100减20优惠券"
+          },
+          "description": {
+            "type": "string",
+            "description": "优惠券描述",
+            "example": "全场通用，满100减20"
+          },
+          "type": {
+            "type": "string",
+            "description": "优惠券类型",
+            "enum": [
+              "DISCOUNT",
+              "PERCENTAGE",
+              "EXCHANGE"
+            ],
+            "example": "DISCOUNT"
+          },
+          "discountAmount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "满减金额（满减券必填）",
+            "example": 20
+          },
+          "discountPercent": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99,
+            "description": "折扣百分比（折扣券必填，1-99）",
+            "example": 90
+          },
+          "maxDiscountAmount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "最高优惠金额（折扣券可选）",
+            "example": 50
+          },
+          "minOrderAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "最低消费金额",
+            "example": 100,
+            "default": 0
+          },
+          "applicableProducts": {
+            "description": "适用商品ID列表",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicableCategories": {
+            "description": "适用分类ID列表",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "memberLevels": {
+            "description": "适用会员等级列表",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "exchangeProductId": {
+            "type": "string",
+            "description": "可兑换的商品ID（兑换券必填）",
+            "example": "prod_123"
+          },
+          "exchangeSkuId": {
+            "type": "string",
+            "description": "可兑换的SKU ID（兑换券可选）",
+            "example": "sku_456"
+          },
+          "validityType": {
+            "type": "string",
+            "description": "有效期类型",
+            "enum": [
+              "FIXED",
+              "RELATIVE"
+            ],
+            "example": "FIXED"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "开始时间（固定时间段必填）",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "结束时间（固定时间段必填）",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "validDays": {
+            "type": "number",
+            "minimum": 1,
+            "description": "有效天数（相对时间必填）",
+            "example": 30
+          },
+          "totalStock": {
+            "type": "number",
+            "minimum": 1,
+            "description": "发放总量",
+            "example": 1000
+          },
+          "limitPerUser": {
+            "type": "number",
+            "minimum": 1,
+            "description": "每人限领数量",
+            "example": 1,
+            "default": 1
+          }
+        }
+      },
+      "ManualDistributionDto": {
+        "type": "object",
+        "properties": {
+          "templateId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "优惠券模板ID"
+          },
+          "memberIds": {
+            "description": "用户ID列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "templateId",
+          "memberIds"
+        ]
+      },
+      "UpdatePointsRuleDto": {
+        "type": "object",
+        "properties": {
+          "orderPointsEnabled": {
+            "type": "boolean",
+            "description": "是否启用消费积分",
+            "example": true
+          },
+          "orderPointsRatio": {
+            "type": "number",
+            "minimum": 0,
+            "description": "消费积分比例（每消费N元获得M积分）",
+            "example": 1
+          },
+          "orderPointsBase": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "消费积分基数（N元）",
+            "example": 1
+          },
+          "signinPointsEnabled": {
+            "type": "boolean",
+            "description": "是否启用签到积分",
+            "example": true
+          },
+          "signinPointsAmount": {
+            "type": "number",
+            "minimum": 1,
+            "description": "签到积分数量",
+            "example": 10
+          },
+          "pointsValidityEnabled": {
+            "type": "boolean",
+            "description": "是否启用积分有效期",
+            "example": false
+          },
+          "pointsValidityDays": {
+            "type": "number",
+            "minimum": 1,
+            "description": "积分有效天数（null表示永久有效）",
+            "example": 365
+          },
+          "pointsRedemptionEnabled": {
+            "type": "boolean",
+            "description": "是否启用积分抵扣",
+            "example": true
+          },
+          "pointsRedemptionRatio": {
+            "type": "number",
+            "minimum": 0,
+            "description": "积分抵扣比例（N积分抵扣M元）",
+            "example": 100
+          },
+          "pointsRedemptionBase": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "积分抵扣基数（M元）",
+            "example": 1
+          },
+          "maxPointsPerOrder": {
+            "type": "number",
+            "minimum": 0,
+            "description": "单笔订单最多可使用积分数量",
+            "example": 10000
+          },
+          "maxDiscountPercentOrder": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "单笔订单最多可抵扣百分比（1-100）",
+            "example": 50
+          },
+          "systemEnabled": {
+            "type": "boolean",
+            "description": "系统开关",
+            "example": true
+          }
+        }
+      },
+      "AddPointsDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "用户ID"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 1,
+            "description": "积分数量",
+            "example": 100
+          },
+          "type": {
+            "type": "string",
+            "description": "交易类型",
+            "enum": [
+              "EARN_ORDER",
+              "EARN_SIGNIN",
+              "EARN_TASK",
+              "EARN_ADMIN",
+              "USE_ORDER",
+              "USE_COUPON",
+              "USE_PRODUCT",
+              "FREEZE",
+              "UNFREEZE",
+              "EXPIRE",
+              "REFUND",
+              "DEDUCT_ADMIN"
+            ]
+          },
+          "relatedId": {
+            "type": "string",
+            "description": "关联ID（订单ID、任务ID等）"
+          },
+          "remark": {
+            "type": "string",
+            "description": "备注"
+          },
+          "expireTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "过期时间（null表示永久有效）"
+          }
+        },
+        "required": [
+          "memberId",
+          "amount",
+          "type"
+        ]
+      },
+      "CreatePointsTaskDto": {
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string",
+            "description": "任务唯一标识",
+            "example": "COMPLETE_PROFILE"
+          },
+          "taskName": {
+            "type": "string",
+            "description": "任务名称",
+            "example": "完善个人资料"
+          },
+          "taskDescription": {
+            "type": "string",
+            "description": "任务描述"
+          },
+          "pointsReward": {
+            "type": "number",
+            "minimum": 1,
+            "description": "积分奖励",
+            "example": 50
+          },
+          "completionCondition": {
+            "type": "object",
+            "description": "完成条件（JSON格式）",
+            "example": {}
+          },
+          "isRepeatable": {
+            "type": "boolean",
+            "description": "是否可重复完成",
+            "example": false
+          },
+          "maxCompletions": {
+            "type": "number",
+            "minimum": 1,
+            "description": "最多完成次数"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "description": "是否启用",
+            "example": true
+          }
+        },
+        "required": [
+          "taskKey",
+          "taskName",
+          "pointsReward"
+        ]
+      },
+      "UpdatePointsTaskDto": {
+        "type": "object",
+        "properties": {
+          "taskName": {
+            "type": "string",
+            "description": "任务名称"
+          },
+          "taskDescription": {
+            "type": "string",
+            "description": "任务描述"
+          },
+          "pointsReward": {
+            "type": "number",
+            "minimum": 1,
+            "description": "积分奖励"
+          },
+          "completionCondition": {
+            "type": "object",
+            "description": "完成条件（JSON格式）"
+          },
+          "isRepeatable": {
+            "type": "boolean",
+            "description": "是否可重复完成"
+          },
+          "maxCompletions": {
+            "type": "number",
+            "minimum": 1,
+            "description": "最多完成次数"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "description": "是否启用"
+          }
+        }
+      },
+      "CalculateDiscountDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "订单商品列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemDto"
+            }
+          },
+          "userCouponId": {
+            "type": "string",
+            "description": "用户优惠券ID"
+          },
+          "pointsUsed": {
+            "type": "number",
+            "minimum": 0,
+            "description": "使用积分数量"
+          }
+        },
+        "required": [
+          "items"
+        ]
       },
       "CreateAddressDto": {
         "type": "object",
@@ -44244,6 +49102,16 @@
               "FIXED",
               "NONE"
             ]
+          },
+          "pointsRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "积分获得比例（0-100，默认100表示正常获得积分）"
+          },
+          "isPromotionProduct": {
+            "type": "boolean",
+            "description": "是否营销活动商品"
           }
         },
         "required": [

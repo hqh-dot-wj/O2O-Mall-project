@@ -16,7 +16,7 @@ export class RegionRepository extends BaseRepository<SysRegion> {
   async findRoots() {
     return this.findMany({
       where: {
-        OR: [{ parentCode: null }, { parentCode: '' }, { level: 1 }],
+        OR: [{ parentId: null }, { parentId: '' }, { level: 1 }],
       },
       orderBy: { code: 'asc' },
     });
@@ -27,7 +27,7 @@ export class RegionRepository extends BaseRepository<SysRegion> {
    */
   async findChildren(parentCode: string) {
     return this.findMany({
-      where: { parentCode },
+      where: { parentId: parentCode },
       orderBy: { code: 'asc' },
     });
   }

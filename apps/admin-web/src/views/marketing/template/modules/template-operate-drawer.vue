@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import {
   NButton,
   NCard,
@@ -10,10 +10,12 @@ import {
   NFormItem,
   NInput,
   NSelect,
-  NSpace
+  NSpace,
+  NTag
 } from 'naive-ui';
 import { fetchCreateTemplate, fetchUpdateTemplate } from '@/service/api/marketing';
 import { useNaiveForm } from '@/hooks/common/form';
+import ProductSelectModal from '@/components/business/product-select-modal.vue';
 
 defineOptions({ name: 'TemplateOperateDrawer' });
 
@@ -85,6 +87,25 @@ const fieldTypeOptions = [
   { label: '日期时间范围 (DateTimeRange)', value: 'datetimerange' }
 ];
 
+// 商品选择模态框
+const productModalVisible = ref(false);
+const selectedProduct = ref<any>(null);
+
+/**
+ * 打开商品选择模态框
+ */
+function openProductModal() {
+  productModalVisible.value = true;
+}
+
+/**
+ * 处理商品选择
+ */
+function handleProductSelect(product: any) {
+  selectedProduct.value = product;
+  window.$message?.success(`已选择: ${product.name}`);
+}
+
 // 监听抽屉打开，初始化数据
 watch(visible, () => {
   if (visible.value) {
@@ -109,6 +130,18 @@ function handleInit() {
     } else {
       schemaFields.splice(0, schemaFields.length);
     }
+
+    // 回填已选择的商品/规格
+    if (props.rowData.productId || props.rowData.skuId) {
+      selectedProduct.value = {
+        id: props.rowData.skuId || props.rowData.productId,
+        name: props.rowData.productName || '已选择的商品',
+        productId: props.rowData.productId,
+        skuId: props.rowData.skuId
+      };
+    } else {
+      selectedProduct.value = null;
+    }
   } else {
     // 新增模式：重置为空
     Object.assign(model, {
@@ -119,6 +152,7 @@ function handleInit() {
       uiComponentId: ''
     });
     schemaFields.splice(0, schemaFields.length);
+    selectedProduct.value = null;
   }
 }
 
@@ -134,7 +168,23 @@ async function handleSubmit() {
     fields: schemaFields
   };
 
-  // 3. 调用 API
+  // 3. 组装商品/规格数据
+  if (selectedProduct.value) {
+    Object.assign(model, {
+      productId: selectedProduct.value.productId,
+      skuId: selectedProduct.value.skuId,
+      productName: selectedProduct.value.name
+    });
+  } else {
+    // 清空商品相关字段
+    Object.assign(model, {
+      productId: undefined,
+      skuId: undefined,
+      productName: undefined
+    });
+  }
+
+  // 4. 调用 API
   if (props.operateType === 'add') {
     await fetchCreateTemplate(model);
   } else {
@@ -142,7 +192,7 @@ async function handleSubmit() {
     await fetchUpdateTemplate(props.rowData.id, model);
   }
 
-  // 4. 反馈与关闭
+  // 5. 反馈与关闭
   window.$message?.success(props.operateType === 'add' ? '新增成功' : '修改成功');
   visible.value = false;
   emit('submitted');
@@ -168,6 +218,35 @@ async function handleSubmit() {
           <NFormItem label="计量单位" path="unitName" rule-path="required">
             <NInput v-model:value="model.unitName" placeholder="如：人、件、小时" />
           </NFormItem>
+        </NCard>
+
+        <!-- 商品/规格选择卡片 -->
+        <NCard title="关联商品/规格" class="mb-4" size="small">
+          <div class="mb-2 text-xs text-gray-500">
+            选择此玩法模板关联的商品或服务规格（可选）
+          </div>
+          
+          <NSpace vertical>
+            <NButton type="primary" ghost @click="openProductModal">
+              <template #icon>
+                <icon-ic-round-add class="text-16px" />
+              </template>
+              选择商品/规格
+            </NButton>
+            
+            <div v-if="selectedProduct" class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+              <NTag type="success" size="small">已选择</NTag>
+              <span class="text-sm">{{ selectedProduct.name }}</span>
+              <NButton
+                text
+                type="error"
+                size="tiny"
+                @click="selectedProduct = null"
+              >
+                移除
+              </NButton>
+            </div>
+          </NSpace>
         </NCard>
 
         <!-- 规则定义卡片 (Schema Builder) -->
@@ -201,5 +280,11 @@ async function handleSubmit() {
         </NSpace>
       </template>
     </NDrawerContent>
+
+    <!-- 商品选择模态框 -->
+    <ProductSelectModal
+      v-model:visible="productModalVisible"
+      @select="handleProductSelect"
+    />
   </NDrawer>
 </template>

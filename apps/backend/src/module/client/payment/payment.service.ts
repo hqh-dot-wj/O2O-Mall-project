@@ -6,6 +6,7 @@ import { OrderStatus } from '@prisma/client';
 import { CommissionService } from '../../finance/commission/commission.service';
 import { OrderRepository } from '../order/order.repository';
 import { PrismaService } from 'src/prisma/prisma.service'; // Needed for atomic updates if repo doesn't cover it? Repo covers it.
+import { OrderIntegrationService } from '../../marketing/integration/integration.service';
 
 @Injectable()
 export class PaymentService {
@@ -14,6 +15,7 @@ export class PaymentService {
   constructor(
     private readonly orderRepo: OrderRepository,
     private readonly commissionService: CommissionService,
+    private readonly orderIntegrationService: OrderIntegrationService,
   ) {}
 
   /**
@@ -112,6 +114,18 @@ export class PaymentService {
       await this.commissionService.triggerCalculation(orderId, order.tenantId);
     } catch (error) {
       this.logger.error(`Trigger commission calculation failed for order ${orderId}`, error);
+    }
+
+    // 触发订单支付事件处理（优惠券和积分）
+    try {
+      await this.orderIntegrationService.handleOrderPaid(
+        orderId,
+        order.memberId,
+        payAmount,
+      );
+    } catch (error) {
+      this.logger.error(`Handle order paid event failed for order ${orderId}`, error);
+      // 不抛出异常，避免影响支付流程
     }
 
     this.logger.log(`Order ${orderId} payment processed. Transaction: ${transactionId}`);

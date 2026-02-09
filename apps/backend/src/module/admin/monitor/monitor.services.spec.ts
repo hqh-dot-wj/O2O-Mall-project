@@ -11,7 +11,7 @@ import { createPrismaMock, PrismaMock } from 'src/test-utils/prisma-mock';
 import { Result } from 'src/common/response';
 import { ExportTable } from 'src/common/utils/export';
 import { ModuleRef } from '@nestjs/core';
-import * as nodeDiskInfo from 'node-disk-info';
+import si from 'systeminformation';
 
 jest.mock('src/common/utils/export', () => ({
   ExportTable: jest.fn(),
@@ -30,10 +30,22 @@ jest.mock('cron', () => ({
   }),
 }));
 
-jest.mock('node-disk-info', () => ({
-  getDiskInfoSync: jest
-    .fn()
-    .mockReturnValue([{ _mounted: '/', _filesystem: 'apfs', _blocks: 1024, _used: 256, _available: 768 }]),
+jest.mock('systeminformation', () => ({
+  __esModule: true,
+  default: {
+    fsSize: jest
+      .fn()
+      .mockResolvedValue([
+        {
+          mount: '/',
+          type: 'apfs',
+          size: 1024 * 4 * 1024 * 1024,
+          used: 1024 * 1024 * 1024,
+          available: 1024 * 3 * 1024 * 1024,
+          use: 25,
+        },
+      ]),
+  },
 }));
 
 describe('Monitor module services', () => {
@@ -301,8 +313,8 @@ describe('Monitor module services', () => {
     const service = new ServerService();
 
     beforeEach(() => {
-      (nodeDiskInfo.getDiskInfoSync as jest.Mock).mockReturnValue([
-        { _mounted: '/', _filesystem: 'apfs', _blocks: 1024 * 4, _used: 1024, _available: 1024 * 3 },
+      (si.fsSize as jest.Mock).mockResolvedValue([
+        { mount: '/', type: 'apfs', size: 4 * 1024 ** 3, used: 1024 ** 3, available: 3 * 1024 ** 3, use: 25 },
       ]);
     });
 

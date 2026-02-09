@@ -38,8 +38,9 @@ export class StorePlayConfigController {
 
   @Put(':id')
   @Api({ summary: '更新营销商品', type: StorePlayConfigVo })
-  async update(@Param('id') id: string, @Body() dto: UpdateStorePlayConfigDto) {
-    return await this.service.update(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdateStorePlayConfigDto, @User() user?: UserDto) {
+    const operatorId = user?.user?.userId?.toString();
+    return await this.service.update(id, dto, operatorId);
   }
 
   @Patch(':id/status')
@@ -52,5 +53,31 @@ export class StorePlayConfigController {
   @Api({ summary: '删除营销商品' })
   async delete(@Param('id') id: string) {
     return await this.service.delete(id);
+  }
+
+  // ==================== 版本控制相关接口 ====================
+
+  @Get(':id/history')
+  @Api({ summary: '获取规则历史版本列表' })
+  async getRulesHistory(@Param('id') id: string) {
+    return await this.service.getRulesHistory(id);
+  }
+
+  @Post(':id/rollback')
+  @Api({ summary: '回滚到指定版本' })
+  async rollbackToVersion(
+    @Param('id') id: string,
+    @Body('targetVersion') targetVersion: number,
+    @User() user?: UserDto,
+  ) {
+    const operatorId = user?.user?.userId?.toString();
+    return await this.service.rollbackToVersion(id, targetVersion, operatorId);
+  }
+
+  @Get(':id/compare/:version')
+  @Api({ summary: '比较当前版本和指定版本的差异' })
+  async compareVersions(@Param('id') id: string, @Param('version') version: string) {
+    const targetVersion = parseInt(version, 10);
+    return await this.service.compareVersions(id, targetVersion);
   }
 }

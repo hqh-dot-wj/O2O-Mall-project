@@ -143,6 +143,33 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'marketing_course-attendance',
+        path: '/marketing/course-attendance',
+        component: 'view.marketing_course-attendance',
+        meta: {
+          title: 'marketing_course-attendance',
+          i18nKey: 'route.marketing_course-attendance'
+        }
+      },
+      {
+        name: 'marketing_course-management',
+        path: '/marketing/course-management',
+        component: 'view.marketing_course-management',
+        meta: {
+          title: 'marketing_course-management',
+          i18nKey: 'route.marketing_course-management'
+        }
+      },
+      {
+        name: 'marketing_course-schedule',
+        path: '/marketing/course-schedule',
+        component: 'view.marketing_course-schedule',
+        meta: {
+          title: 'marketing_course-schedule',
+          i18nKey: 'route.marketing_course-schedule'
+        }
+      },
+      {
         name: 'marketing_template',
         path: '/marketing/template',
         component: 'view.marketing_template',

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsNumber, IsString, IsEnum, IsOptional, IsBoolean, Min, Max } from 'class-validator';
 import { DistributionMode } from '@prisma/client';
 
 export class UpdateProductPriceDto {
@@ -23,4 +23,16 @@ export class UpdateProductPriceDto {
   @IsOptional()
   @IsEnum(DistributionMode)
   distMode?: DistributionMode;
+
+  @ApiProperty({ description: '积分获得比例（0-100，默认100表示正常获得积分）', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  pointsRatio?: number;
+
+  @ApiProperty({ description: '是否营销活动商品', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isPromotionProduct?: boolean;
 }

@@ -2,10 +2,13 @@
 import { h } from 'vue';
 import { NAvatar, NButton, NCard, NDataTable, NPopconfirm, NSpace } from 'naive-ui';
 import { fetchDeleteBrand, fetchGetBrandList } from '@/service/api/pms/brand';
+import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import BrandOperateDrawer from './modules/brand-operate-drawer.vue';
 import BrandSearch from './modules/brand-search.vue';
+
+const appStore = useAppStore();
 
 defineOptions({
   name: 'PmsBrand'
@@ -107,9 +110,9 @@ function edit(row: Api.Pms.Brand) {
 </script>
 
 <template>
-  <div class="h-full flex-col-stretch gap-16px overflow-hidden">
+  <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <BrandSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getData" />
-    <NCard :title="$t('page.pms.brand.title')" :bordered="false" class="h-full flex-1-hidden rounded-8px shadow-sm">
+    <NCard :title="$t('page.pms.brand.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
         <TableHeaderOperation
           v-model:columns="columnChecks"
@@ -120,24 +123,23 @@ function edit(row: Api.Pms.Brand) {
           @refresh="getData"
         />
       </template>
-      <div class="h-full flex-col-stretch gap-12px">
-        <NDataTable
-          v-model:checked-row-keys="checkedRowKeys"
-          :columns="columns"
-          :data="data"
-          :loading="loading"
-          remote
-          :row-key="row => row.brandId"
-          :pagination="mobilePagination"
-          class="flex-1-hidden"
-        />
-        <BrandOperateDrawer
-          v-model:visible="drawerVisible"
-          :operate-type="operateType"
-          :row-data="editingData"
-          @submitted="getData"
-        />
-      </div>
+      <NDataTable
+        v-model:checked-row-keys="checkedRowKeys"
+        :columns="columns"
+        :data="data"
+        :flex-height="!appStore.isMobile"
+        :loading="loading"
+        remote
+        :row-key="row => row.brandId"
+        :pagination="mobilePagination"
+        class="sm:h-full"
+      />
+      <BrandOperateDrawer
+        v-model:visible="drawerVisible"
+        :operate-type="operateType"
+        :row-data="editingData"
+        @submitted="getData"
+      />
     </NCard>
   </div>
 </template>

@@ -26,6 +26,7 @@ import { fetchCreateStoreConfig, fetchUpdateStoreConfig } from '@/service/api/ma
 import { fetchGetTemplateList } from '@/service/api/marketing';
 import { useNaiveForm } from '@/hooks/common/form';
 import { usePreview } from '@/hooks/business/usePreview';
+import { useAuthStore } from '@/store/modules/auth';
 import MapPointPicker from '@/components/custom/MapPointPicker.vue';
 
 // --- 选品弹窗逻辑 ---
@@ -47,6 +48,7 @@ defineOptions({ name: 'ConfigOperateDrawer' });
  * - 通过 usePreview Hook 发送 postMessage 给右侧 Iframe。
  */
 
+const authStore = useAuthStore();
 interface Props {
   operateType: NaiveUI.TableOperateType;
   rowData?: Api.Marketing.StoreConfig | null;
@@ -66,11 +68,15 @@ const { formRef, validate, restoreValidation } = useNaiveForm();
 
 // --- 预览核心逻辑 ---
 const iframeRef = ref<HTMLIFrameElement | null>(null);
-// 预览页地址：开发环境走 localhost，生产环境走静态资源路径
-const previewUrl = import.meta.env.DEV ? 'http://localhost:9000/#/pages/preview/card' : '/pages/preview/card';
+// 预览模式：card（卡片预览）或 product（商品详情预览）
+const previewMode = ref<'card' | 'product'>('card');
+// 预览页地址：根据模式动态切换
+const previewUrl = computed(() => {
+  const baseUrl = import.meta.env.DEV ? 'http://localhost:9000/#/pages/preview' : '/pages/preview';
+  return previewMode.value === 'card' ? `${baseUrl}/card` : `${baseUrl}/product-detail`;
+});
 // 引入通信 Hook
-// 引入通信 Hook
-const { syncForm } = usePreview(iframeRef, previewUrl);
+const { syncForm } = usePreview(iframeRef, previewUrl.value);
 const showProductModal = ref(false);
 
 // SKU 选项相关
@@ -111,16 +117,29 @@ function handleProductSelect(row: any) {
 
   // 重置选中
   selectedSkuIds.value = [];
+
+  // 保存商品信息用于预览
+  model.product = {
+    name: row.name || row.productName,
+    subTitle: row.subTitle,
+    mainImages: row.mainImages || [row.coverImage] || [],
+    price: row.price || row.guidePrice || 0,
+    skus: skus.map((s: any) => ({
+      skuId: s.skuId || s.id,
+      specValues: typeof s.specValues === 'string' ? JSON.parse(s.specValues) : s.specValues,
+      price: s.price || s.guidePrice
+    }))
+  };
 }
 
 // --- 表单数据 ---
-const model = reactive<Api.Marketing.StoreConfigCreate>({
-  storeId: '', // 默认为空，由后端从 Token 中获取当前租户，或人工选择
+const model = reactive<Api.Marketing.StoreConfigCreate & { product?: any }>({
   serviceId: '',
   serviceType: 'SERVICE',
   templateCode: '',
   rules: {},
-  stockMode: 'LAZY_CHECK'
+  stockMode: 'LAZY_CHECK',
+  product: undefined // 用于预览的商品信息
 });
 
 // 模板选项缓存 (包含 Schema)
@@ -139,6 +158,10 @@ watch(visible, async () => {
   if (visible.value) {
     await loadTemplates(); // 每次打开都尝试加载，防止首次加载失败
     handleInit();
+    // 初始化后立即发送数据到预览
+    setTimeout(() => {
+      syncForm(JSON.parse(JSON.stringify(model)));
+    }, 500);
   }
 });
 
@@ -151,6 +174,22 @@ watch(
   },
   { deep: true }
 );
+
+// 3. 监听预览模式切换，切换后立即发送数据
+watch(previewMode, () => {
+  // 等待 iframe 加载完成后发送数据
+  setTimeout(() => {
+    syncForm(JSON.parse(JSON.stringify(model)));
+  }, 500);
+});
+
+// 4. iframe 加载完成后发送数据
+function handleIframeLoad() {
+  // 等待一小段时间确保 iframe 内的 Vue 应用已经挂载
+  setTimeout(() => {
+    syncForm(JSON.parse(JSON.stringify(model)));
+  }, 300);
+}
 
 // 加载模板 API
 async function loadTemplates() {
@@ -205,16 +244,34 @@ function handleMapConfirm() {
   showMapModal.value = false;
 }
 // 初始化表单值
-function handleInit() {
+async function handleInit() {
   restoreValidation();
   if (props.operateType === 'edit' && props.rowData) {
     Object.assign(model, props.rowData);
+    
+    // 如果是编辑模式，需要加载商品信息用于预览
+    if (model.serviceId) {
+      try {
+        // 这里需要调用商品详情API获取商品信息
+        // 暂时使用占位数据，实际应该调用 API
+        model.product = {
+          name: props.rowData.productName || '商品名称',
+          subTitle: '',
+          mainImages: [props.rowData.productImage] || [],
+          price: 0,
+          skus: []
+        };
+      } catch (err) {
+        console.error('Failed to load product info', err);
+      }
+    }
   } else {
     // 重置表单
     model.serviceId = '';
     model.templateCode = '';
     model.rules = {};
     model.stockMode = 'LAZY_CHECK';
+    model.product = undefined;
   }
 }
 
@@ -222,11 +279,21 @@ function handleInit() {
 async function handleSubmit() {
   await validate();
 
+  // 准备提交数据，移除 product 字段（仅用于预览）和 storeId（后端自动获取）
+  const submitData = {
+    serviceId: model.serviceId,
+    serviceType: model.serviceType,
+    templateCode: model.templateCode,
+    rules: model.rules,
+    stockMode: model.stockMode,
+    status: model.status
+  };
+
   if (props.operateType === 'add') {
-    await fetchCreateStoreConfig(model);
+    await fetchCreateStoreConfig(submitData);
   } else {
     if (!props.rowData?.id) return;
-    await fetchUpdateStoreConfig(props.rowData.id, model);
+    await fetchUpdateStoreConfig(props.rowData.id, submitData);
   }
 
   window.$message?.success(props.operateType === 'add' ? '创建成功' : '修改成功');
@@ -322,7 +389,26 @@ async function handleSubmit() {
         </div>
 
         <!-- Right: 手机模拟预览 (50%) -->
-        <div class="w-1/2 flex justify-center rounded-lg bg-gray-50 py-4">
+        <div class="w-1/2 flex flex-col items-center rounded-lg bg-gray-50 py-4">
+          <!-- 预览模式切换 -->
+          <div class="mb-4 flex gap-2">
+            <NButton
+              :type="previewMode === 'card' ? 'primary' : 'default'"
+              size="small"
+              @click="previewMode = 'card'"
+            >
+              卡片预览
+            </NButton>
+            <NButton
+              :type="previewMode === 'product' ? 'primary' : 'default'"
+              size="small"
+              :disabled="!model.serviceId"
+              @click="previewMode = 'product'"
+            >
+              商品详情预览
+            </NButton>
+          </div>
+
           <!-- 手机外壳 -->
           <div
             class="relative h-[667px] w-[375px] overflow-hidden border-8 border-gray-800 rounded-[30px] bg-white shadow-2xl"
@@ -334,11 +420,13 @@ async function handleSubmit() {
 
             <!-- 嵌入 Iframe -->
             <iframe
+              :key="previewMode"
               ref="iframeRef"
               :src="previewUrl"
               class="h-full w-full border-none"
-              scrolling="no"
+              scrolling="yes"
               title="Preview"
+              @load="handleIframeLoad"
             ></iframe>
 
             <!-- 底部导航条 -->

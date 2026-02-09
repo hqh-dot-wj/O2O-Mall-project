@@ -9,6 +9,7 @@ import { CommissionService } from 'src/module/finance/commission/commission.serv
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { StoreOrderRepository } from './store-order.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
 
 /**
  * Store端订单服务
@@ -22,6 +23,7 @@ export class StoreOrderService {
     private readonly prisma: PrismaService,
     private readonly orderRepo: StoreOrderRepository,
     private readonly commissionService: CommissionService,
+    private readonly orderIntegrationService: OrderIntegrationService,
   ) {}
 
   /**
@@ -509,6 +511,14 @@ export class StoreOrderService {
       await this.commissionService.cancelCommissions(orderId);
     } catch (error) {
       this.logger.error(`Cancel commission failed for order ${orderId}`, error);
+    }
+
+    // 触发订单退款事件处理（优惠券和积分）
+    try {
+      await this.orderIntegrationService.handleOrderRefunded(orderId, order!.memberId);
+    } catch (error) {
+      this.logger.error(`Handle order refunded event failed for order ${orderId}`, error);
+      // 不抛出异常，避免影响退款流程
     }
 
     this.logger.log(`订单 ${orderId} 退款, 操作人: ${operatorId}`);

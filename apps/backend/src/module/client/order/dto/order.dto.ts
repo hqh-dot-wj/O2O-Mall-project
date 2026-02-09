@@ -89,6 +89,18 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   playInstanceId?: string;
+
+  @ApiPropertyOptional({ description: '用户优惠券ID' })
+  @IsOptional()
+  @IsString()
+  userCouponId?: string;
+
+  @ApiPropertyOptional({ description: '使用积分数量' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Type(() => Number)
+  pointsUsed?: number;
 }
 
 /**

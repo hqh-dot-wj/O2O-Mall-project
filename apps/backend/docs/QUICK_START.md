@@ -1,9 +1,5 @@
-# 企业级架构快速上手指南
-
-## 🎯 核心改变
-
-本次重构完全移除了向后兼容代码，统一使用企业级标准 API。
-
+---
+trigger: always_on
 ---
 
 ## 📦 1. 统一响应 API
@@ -11,7 +7,7 @@
 ### Result<T> - 通用响应
 
 ```typescript
-import { Result } from 'src/common/response';
+
 
 // ✅ 成功响应
 return Result.ok(data);
@@ -51,7 +47,7 @@ enum ResponseCode {
   FORBIDDEN = 403,
   NOT_FOUND = 404,
   INTERNAL_SERVER_ERROR = 500,
-  
+
   // 业务错误码 (1000+)
   BUSINESS_ERROR = 1000,
   VALIDATION_ERROR = 1001,
@@ -119,7 +115,7 @@ export class ListUserDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   username?: string;
-  
+
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;
@@ -136,11 +132,11 @@ class PageQueryDto {
   isAsc?: 'asc' | 'desc';   // 排序方式
   beginTime?: string;       // 开始时间
   endTime?: string;         // 结束时间
-  
+
   // 计算属性
   get skip(): number;       // 跳过记录数
   get take(): number;       // 获取记录数
-  
+
   // 便捷方法
   getOrderBy(defaultField?: string): Prisma.OrderByInput | undefined;
   getDateRange(field: string): { [field]: { gte, lte } } | undefined;
@@ -152,15 +148,15 @@ class PageQueryDto {
 ```typescript
 async findAll(query: ListUserDto) {
   const where: Prisma.UserWhereInput = {};
-  
+
   // ✅ 使用便捷方法构建查询条件
   const dateRange = query.getDateRange('createTime');
   if (dateRange) Object.assign(where, dateRange);
-  
+
   if (query.username) {
     where.username = { contains: query.username };
   }
-  
+
   const [list, total] = await this.prisma.$transaction([
     this.prisma.user.findMany({
       where,
@@ -170,7 +166,7 @@ async findAll(query: ListUserDto) {
     }),
     this.prisma.user.count({ where }),
   ]);
-  
+
   // ✅ 使用 Result.page 返回分页数据
   return Result.page(FormatDateFields(list), total);
 }
@@ -191,7 +187,7 @@ export class UserRepository extends BaseRepository<SysUser, CreateUserDto> {
   constructor(prisma: PrismaService) {
     super(prisma, 'sysUser'); // 传入 Prisma model 名称
   }
-  
+
   // 继承的方法：
   // - findById(id)
   // - findPage(query, where?, orderBy?)
@@ -213,7 +209,7 @@ export class UserRepository extends SoftDeleteRepository<SysUser, CreateUserDto>
   constructor(prisma: PrismaService) {
     super(prisma, 'sysUser', 'delFlag'); // 传入软删除字段
   }
-  
+
   // 额外的方法：
   // - softDelete(id)
   // - restore(id)
@@ -226,23 +222,23 @@ export class UserRepository extends SoftDeleteRepository<SysUser, CreateUserDto>
 @Injectable()
 export class UserService {
   constructor(private readonly userRepo: UserRepository) {}
-  
+
   async findAll(query: ListUserDto) {
     const where = { username: { contains: query.username } };
     const result = await this.userRepo.findPage(query, where);
     return Result.page(result.rows, result.total);
   }
-  
+
   async findOne(id: string) {
     const user = await this.userRepo.findById(id);
     BusinessException.throwIfNull(user, '用户不存在');
     return Result.ok(user);
   }
-  
+
   async create(dto: CreateUserDto) {
     const exists = await this.userRepo.exists({ username: dto.username });
     BusinessException.throwIf(exists, '用户名已存在');
-    
+
     const user = await this.userRepo.create(dto);
     return Result.ok(user);
   }
@@ -268,10 +264,10 @@ export class UserService {
       userId: user.userId,
       nickname: dto.username,
     });
-    
+
     // ✅ 任何异常自动回滚
     BusinessException.throwIf(user.age < 18, '年龄不符合要求');
-    
+
     return user;
   }
 }
@@ -286,14 +282,14 @@ async updateUserAndLog(userId: string, data: UpdateUserDto) {
       where: { userId },
       data,
     });
-    
+
     await tx.sysOperLog.create({
       data: {
         operName: '更新用户',
         userId,
       },
     });
-    
+
     return user;
   });
 }
@@ -304,30 +300,26 @@ async updateUserAndLog(userId: string, data: UpdateUserDto) {
 ## 🎨 6. Controller 最佳实践
 
 ```typescript
-import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
-import { Api } from 'src/common/decorators/api.decorator';
-import { RequirePermission } from 'src/common/decorators/permission.decorator';
-import { User } from 'src/common/decorators/user.decorator';
-import { Result } from 'src/common/response';
+
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  
+
   @Get()
   @Api({ summary: '查询用户列表', type: UserListVo })
   @RequirePermission('system:user:list')
   async findAll(@Query() query: ListUserDto) {
     return await this.userService.findAll(query);
   }
-  
+
   @Get(':id')
   @Api({ summary: '查询用户详情', type: UserVo })
   @RequirePermission('system:user:query')
   async findOne(@Param('id') id: string) {
     return await this.userService.findOne(id);
   }
-  
+
   @Post()
   @Api({ summary: '创建用户', type: UserVo })
   @RequirePermission('system:user:add')
@@ -345,6 +337,7 @@ export class UserController {
 ## 📋 7. 完整示例
 
 ### DTO 定义
+
 ```typescript
 // list-user.dto.ts
 import { PageQueryDto } from 'src/common/dto';
@@ -356,7 +349,7 @@ export class ListUserDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   username?: string;
-  
+
   @ApiProperty({ description: '状态', enum: ['0', '1'], required: false })
   @IsOptional()
   @IsEnum(['0', '1'])
@@ -365,6 +358,7 @@ export class ListUserDto extends PageQueryDto {
 ```
 
 ### Service 实现
+
 ```typescript
 // user.service.ts
 import { Injectable } from '@nestjs/common';
@@ -378,22 +372,22 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
-  
+
   async findAll(query: ListUserDto) {
     const where: Prisma.SysUserWhereInput = { delFlag: '0' };
-    
+
     // 使用便捷方法构建查询条件
     const dateRange = query.getDateRange('createTime');
     if (dateRange) Object.assign(where, dateRange);
-    
+
     if (query.username) {
       where.username = { contains: query.username };
     }
-    
+
     if (query.status) {
       where.status = query.status;
     }
-    
+
     const [list, total] = await this.prisma.$transaction([
       this.prisma.sysUser.findMany({
         where,
@@ -403,19 +397,19 @@ export class UserService {
       }),
       this.prisma.sysUser.count({ where }),
     ]);
-    
+
     return Result.page(FormatDateFields(list), total);
   }
-  
+
   async findOne(id: string) {
     const user = await this.prisma.sysUser.findUnique({
       where: { userId: id, delFlag: '0' },
     });
-    
+
     BusinessException.throwIfNull(user, '用户不存在');
     return Result.ok(FormatDateFields(user));
   }
-  
+
   @Transactional()
   async create(dto: CreateUserDto) {
     // 检查用户名是否存在
@@ -423,7 +417,7 @@ export class UserService {
       where: { username: dto.username, delFlag: '0' },
     });
     BusinessException.throwIf(exists !== null, '用户名已存在');
-    
+
     // 创建用户
     const user = await this.prisma.sysUser.create({
       data: {
@@ -432,15 +426,15 @@ export class UserService {
         status: dto.status ?? '0',
       },
     });
-    
+
     // 创建用户配置（事务中）
     await this.prisma.sysUserConfig.create({
       data: { userId: user.userId },
     });
-    
+
     return Result.ok(FormatDateFields(user), '创建成功');
   }
-  
+
   @Transactional()
   async update(id: string, dto: UpdateUserDto) {
     // 验证用户存在
@@ -448,22 +442,22 @@ export class UserService {
       where: { userId: id, delFlag: '0' },
     });
     BusinessException.throwIfNull(user, '用户不存在');
-    
+
     // 更新用户
     const updated = await this.prisma.sysUser.update({
       where: { userId: id },
       data: dto,
     });
-    
+
     return Result.ok(FormatDateFields(updated), '更新成功');
   }
-  
+
   async softDelete(ids: string[]) {
     const result = await this.prisma.sysUser.updateMany({
       where: { userId: { in: ids } },
       data: { delFlag: '1' },
     });
-    
+
     BusinessException.throwIf(result.count === 0, '删除失败');
     return Result.ok(null, '删除成功');
   }
@@ -471,78 +465,48 @@ export class UserService {
 ```
 
 ### Controller 实现
+
 ```typescript
 // user.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Query, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Api } from 'src/common/decorators/api.decorator';
-import { RequirePermission } from 'src/common/decorators/permission.decorator';
-import { UserService } from './user.service';
-import { ListUserDto, CreateUserDto, UpdateUserDto } from './dto';
-import { UserListVo, UserVo } from './vo';
+
 
 @ApiTags('用户管理')
 @Controller('system/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  
+
   @Get('list')
   @Api({ summary: '查询用户列表', type: UserListVo })
   @RequirePermission('system:user:list')
   async findAll(@Query() query: ListUserDto) {
     return await this.userService.findAll(query);
   }
-  
+
   @Get(':id')
   @Api({ summary: '查询用户详情', type: UserVo })
   @RequirePermission('system:user:query')
   async findOne(@Param('id') id: string) {
     return await this.userService.findOne(id);
   }
-  
+
   @Post()
   @Api({ summary: '创建用户', type: UserVo })
   @RequirePermission('system:user:add')
   async create(@Body() dto: CreateUserDto) {
     return await this.userService.create(dto);
   }
-  
+
   @Put(':id')
   @Api({ summary: '更新用户', type: UserVo })
   @RequirePermission('system:user:edit')
   async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return await this.userService.update(id, dto);
-  }
-  
-  @Delete(':ids')
-  @Api({ summary: '删除用户' })
-  @RequirePermission('system:user:remove')
-  async remove(@Param('ids') ids: string) {
-    return await this.userService.softDelete(ids.split(','));
-  }
-}
-```
+    return await this.userServi
 
----
-
-## ✅ 迁移检查清单
-
-从旧 API 迁移到新 API，确保：
-
-- [ ] 所有 `ResultData` 替换为 `Result`
-- [ ] 所有 `PagingDto` 替换为 `PageQueryDto`
-- [ ] 使用 `query.skip` 和 `query.take` 代替手动计算
-- [ ] 使用 `query.getDateRange()` 代替手动时间范围处理
-- [ ] 使用 `query.getOrderBy()` 代替手动排序处理
-- [ ] 分页响应使用 `Result.page(list, total)`
-- [ ] 异常抛出使用断言 API（如 `BusinessException.throwIfNull()`）
-- [ ] Service 层数据库操作考虑使用 Repository 模式
- [ ] Service 层的方法都要写好详细中文注解，然后不能有硬编码
-- [ ] 需要事务的操作使用 `@Transactional()` 装饰器
-- [ ] Controller 使用 `@Api()` 装饰器统一 Swagger 文档
-
----
-
-
-
-**恭喜！你现在已经掌握了企业级 NestJS 项目的核心开发模式！** 🎉
+| **维度** | **坏习惯 (Bad Smell)** | **最佳实践 (Best Practice)**   |
+| ------ | ------------------- | -------------------------- |
+| **逻辑** | 层层嵌套 if-else        | 卫语句、策略模式、状态模式              |
+| **代码** | 魔法值 `if type==1`    | 枚举 `if type==Type.PAYMENT` |
+| **并发** | 直接 Update 库存        | 乐观锁、Redis Lua 脚本           |
+| **事务** | 事务里调 RPC/HTTP       | 事务仅包裹 DB 操作                |
+| **DB** | 循环里查库 (N+1)         | `Where IN` 批量查询，内存组装       |
+| **日志** | 仅打印“出错啦”            | 打印关键 ID、参数和堆栈              |

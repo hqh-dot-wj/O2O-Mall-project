@@ -96,14 +96,25 @@ const {
       key: 'type',
       title: '类型',
       align: 'center',
-      render: row => row.typeName || (row.type === 'COMMISSION_IN' ? '分销佣金' : '其他')
+      render: row => {
+        // 从会员视角转换类型名称
+        if (row.type === 'ORDER_INCOME') {
+          return '购买支出';
+        }
+        return row.typeName || (row.type === 'COMMISSION_IN' ? '分销佣金' : '其他');
+      }
     },
     {
       key: 'amount',
       title: '变动金额',
       align: 'center',
       render: row => {
-        return row.amount > 0 ? `+${row.amount}` : `${row.amount}`;
+        // 从会员视角转换金额符号
+        let amount = row.amount;
+        if (row.type === 'ORDER_INCOME') {
+          amount = -amount; // 订单收入对会员来说是支出
+        }
+        return amount > 0 ? `+${amount}` : `${amount}`;
       }
     },
     {

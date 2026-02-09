@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Result } from 'src/common/response';
 import { FormatDateFields } from 'src/common/utils';
 import { ExportTable, ExportOptions } from 'src/common/utils/export';
-import { Prisma, TransType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { ListLedgerDto } from './dto/store-finance.dto';
 import { Response } from 'express';
@@ -29,14 +29,16 @@ export class StoreLedgerService {
     const startTime = dateRange?.createTime?.gte;
     const endTime = dateRange?.createTime?.lte;
 
-    const shouldIncludeOrders = !query.memberId;
+    // 统一的租户过滤逻辑
+    const tenantFilter = isSuper ? Prisma.sql`1=1` : Prisma.sql`tenant_id = ${tenantId}`;
+
+    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
     const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
 
     const unionQueries: Prisma.Sql[] = [];
 
     // 1. 订单收入
     if (shouldIncludeOrders) {
-      const orderTenantFilter = isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`o.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('order-', o.id) as id,
@@ -47,17 +49,19 @@ export class StoreLedgerService {
           o.order_sn as related_id,
           CONCAT('订单支付: ', o.order_sn) as remark,
           o.create_time,
-          o.receiver_name as user_name,
-          o.receiver_phone as user_phone,
-          NULL as user_id,
+          m.nickname as user_name,
+          m.mobile as user_phone,
+          m.member_id as user_id,
           NULL as status
         FROM oms_order o
-        WHERE ${orderTenantFilter}
+        INNER JOIN ums_member m ON o.member_id = m.member_id
+        WHERE ${tenantFilter}
           AND o.pay_status = '1'
+          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
           ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
           ${query.relatedId ? Prisma.sql`AND o.order_sn LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (o.receiver_name LIKE ${`%${query.keyword}%`} OR o.receiver_phone LIKE ${`%${query.keyword}%`})` : Prisma.empty}
+          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
           ${query.minAmount ? Prisma.sql`AND o.pay_amount >= ${query.minAmount}` : Prisma.empty}
           ${query.maxAmount ? Prisma.sql`AND o.pay_amount <= ${query.maxAmount}` : Prisma.empty}
       `);
@@ -65,7 +69,6 @@ export class StoreLedgerService {
 
     // 2. 钱包流水
     if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
-      const transTenantFilter = isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`t.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('trans-', t.id) as id,
@@ -87,7 +90,7 @@ export class StoreLedgerService {
         FROM fin_transaction t
         INNER JOIN fin_wallet w ON t.wallet_id = w.id
         INNER JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${transTenantFilter}
+        WHERE ${tenantFilter}
           AND t.type != 'COMMISSION_IN'
           ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
           ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
@@ -102,8 +105,6 @@ export class StoreLedgerService {
 
     // 3. 提现支出
     if (!query.type || query.type === 'WITHDRAW_OUT') {
-      const withdrawalTenantFilter =
-        isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`w.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('withdraw-', w.id) as id,
@@ -132,7 +133,7 @@ export class StoreLedgerService {
           NULL as status
         FROM fin_withdrawal w
         LEFT JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${withdrawalTenantFilter}
+        WHERE ${tenantFilter}
           AND w.status = 'APPROVED'
           ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
@@ -146,8 +147,6 @@ export class StoreLedgerService {
 
     // 4. 佣金记录
     if (shouldIncludeCommissions) {
-      const commissionTenantFilter =
-        isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`c.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('commission-', c.id) as id,
@@ -186,7 +185,7 @@ export class StoreLedgerService {
         FROM fin_commission c
         LEFT JOIN oms_order o ON c.order_id = o.id
         LEFT JOIN ums_member m ON c.beneficiary_id = m.member_id
-        WHERE ${commissionTenantFilter}
+        WHERE ${tenantFilter}
           ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
           ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}
@@ -349,21 +348,25 @@ export class StoreLedgerService {
     const startTime = dateRange?.createTime?.gte;
     const endTime = dateRange?.createTime?.lte;
 
-    const shouldIncludeOrders = !query.memberId;
+    // 统一的租户过滤逻辑
+    const tenantFilter = isSuper ? Prisma.sql`1=1` : Prisma.sql`tenant_id = ${tenantId}`;
+
+    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
     const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
 
     const unionQueries: Prisma.Sql[] = [];
 
     // 1. 订单收入
     if (shouldIncludeOrders) {
-      const orderTenantFilter = isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`o.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           'ORDER_INCOME' as type,
           o.pay_amount as amount
         FROM oms_order o
-        WHERE ${orderTenantFilter}
+        INNER JOIN ums_member m ON o.member_id = m.member_id
+        WHERE ${tenantFilter}
           AND o.pay_status = '1'
+          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
           ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
       `);
@@ -371,7 +374,6 @@ export class StoreLedgerService {
 
     // 2. 钱包流水
     if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
-      const transTenantFilter = isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`t.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           t.type::text as type,
@@ -379,7 +381,7 @@ export class StoreLedgerService {
         FROM fin_transaction t
         INNER JOIN fin_wallet w ON t.wallet_id = w.id
         INNER JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${transTenantFilter}
+        WHERE ${tenantFilter}
           AND t.type != 'COMMISSION_IN'
           ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
           ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
@@ -390,14 +392,12 @@ export class StoreLedgerService {
 
     // 3. 提现支出
     if (!query.type || query.type === 'WITHDRAW_OUT') {
-      const withdrawalTenantFilter =
-        isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`w.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           'WITHDRAW_OUT' as type,
           -w.amount as amount
         FROM fin_withdrawal w
-        WHERE ${withdrawalTenantFilter}
+        WHERE ${tenantFilter}
           AND w.status = 'APPROVED'
           ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
@@ -407,8 +407,6 @@ export class StoreLedgerService {
 
     // 4. 佣金记录
     if (shouldIncludeCommissions) {
-      const commissionTenantFilter =
-        isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`c.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CASE c.status
@@ -417,7 +415,7 @@ export class StoreLedgerService {
           END as type,
           c.amount as amount
         FROM fin_commission c
-        WHERE ${commissionTenantFilter}
+        WHERE ${tenantFilter}
           ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
           ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}
@@ -482,14 +480,16 @@ export class StoreLedgerService {
     const startTime = dateRange?.createTime?.gte;
     const endTime = dateRange?.createTime?.lte;
 
-    const shouldIncludeOrders = !query.memberId;
+    // 统一的租户过滤逻辑
+    const tenantFilter = isSuper ? Prisma.sql`1=1` : Prisma.sql`tenant_id = ${tenantId}`;
+
+    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
     const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
 
     const unionQueries: Prisma.Sql[] = [];
 
     // 1. 订单收入
     if (shouldIncludeOrders) {
-      const orderTenantFilter = isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`o.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('order-', o.id) as id,
@@ -500,15 +500,17 @@ export class StoreLedgerService {
           o.order_sn as related_id,
           CONCAT('订单支付: ', o.order_sn) as remark,
           o.create_time,
-          o.receiver_name as user_name,
-          o.receiver_phone as user_phone
+          m.nickname as user_name,
+          m.mobile as user_phone
         FROM oms_order o
-        WHERE ${orderTenantFilter}
+        INNER JOIN ums_member m ON o.member_id = m.member_id
+        WHERE ${tenantFilter}
           AND o.pay_status = '1'
+          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
           ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
           ${query.relatedId ? Prisma.sql`AND o.order_sn LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (o.receiver_name LIKE ${`%${query.keyword}%`} OR o.receiver_phone LIKE ${`%${query.keyword}%`})` : Prisma.empty}
+          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
           ${query.minAmount ? Prisma.sql`AND o.pay_amount >= ${query.minAmount}` : Prisma.empty}
           ${query.maxAmount ? Prisma.sql`AND o.pay_amount <= ${query.maxAmount}` : Prisma.empty}
       `);
@@ -516,7 +518,6 @@ export class StoreLedgerService {
 
     // 2. 钱包流水
     if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
-      const transTenantFilter = isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`t.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('trans-', t.id) as id,
@@ -536,7 +537,7 @@ export class StoreLedgerService {
         FROM fin_transaction t
         INNER JOIN fin_wallet w ON t.wallet_id = w.id
         INNER JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${transTenantFilter}
+        WHERE ${tenantFilter}
           AND t.type != 'COMMISSION_IN'
           ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
           ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
@@ -551,8 +552,6 @@ export class StoreLedgerService {
 
     // 3. 提现支出
     if (!query.type || query.type === 'WITHDRAW_OUT') {
-      const withdrawalTenantFilter =
-        isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`w.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('withdraw-', w.id) as id,
@@ -567,7 +566,7 @@ export class StoreLedgerService {
           COALESCE(m.mobile, '') as user_phone
         FROM fin_withdrawal w
         LEFT JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${withdrawalTenantFilter}
+        WHERE ${tenantFilter}
           AND w.status = 'APPROVED'
           ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
@@ -581,8 +580,6 @@ export class StoreLedgerService {
 
     // 4. 佣金记录
     if (shouldIncludeCommissions) {
-      const commissionTenantFilter =
-        isSuper && query.memberId ? Prisma.sql`1=1` : Prisma.sql`c.tenant_id = ${tenantId}`;
       unionQueries.push(Prisma.sql`
         SELECT 
           CONCAT('commission-', c.id) as id,
@@ -604,7 +601,7 @@ export class StoreLedgerService {
         FROM fin_commission c
         LEFT JOIN oms_order o ON c.order_id = o.id
         LEFT JOIN ums_member m ON c.beneficiary_id = m.member_id
-        WHERE ${commissionTenantFilter}
+        WHERE ${tenantFilter}
           ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
           ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
           ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}

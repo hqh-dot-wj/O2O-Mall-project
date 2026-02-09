@@ -8,7 +8,7 @@ export class RegionVo {
   name: string;
 
   @ApiProperty({ description: '父级编码' })
-  parentCode: string;
+  parentId: string;
 
   @ApiProperty({ description: '层级' })
   level: number;

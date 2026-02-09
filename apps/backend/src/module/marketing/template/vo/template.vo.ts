@@ -16,8 +16,17 @@ export class PlayTemplateVo {
   @ApiProperty({ description: '规则Schema配置' })
   ruleSchema: any;
 
-  @ApiProperty({ description: '前端组件ID' })
+  @ApiProperty({ description: '前端组件ID', required: false })
   uiComponentId: string;
+
+  @ApiProperty({ description: '关联商品ID', required: false })
+  productId?: string;
+
+  @ApiProperty({ description: '关联规格ID', required: false })
+  skuId?: string;
+
+  @ApiProperty({ description: '商品名称', required: false })
+  productName?: string;
 
   @ApiProperty({ description: '创建时间' })
   createTime: string;

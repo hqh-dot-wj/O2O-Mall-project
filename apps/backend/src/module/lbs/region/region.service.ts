@@ -34,11 +34,11 @@ export class RegionService implements OnModuleInit {
     this.logger.log('Read JSON data, starting seeding...');
 
     const flattenData: any[] = [];
-    const traverse = (node: any, parentCode: string | null = null, level: number = 1) => {
+    const traverse = (node: any, parentId: string | null = null, level: number = 1) => {
       flattenData.push({
         code: node.code,
         name: node.name,
-        parentCode: parentCode, // Note: Schema uses 'parentCode' (String), check repository definition
+        parentId: parentId,
         level: level,
         latitude: node.latitude || node.lat || null,
         longitude: node.longitude || node.lng || null,
@@ -98,8 +98,8 @@ export class RegionService implements OnModuleInit {
 
     regions.forEach((item) => {
       const node = map.get(item.code);
-      if (item.parentCode && map.has(item.parentCode)) {
-        map.get(item.parentCode).children.push(node);
+      if (item.parentId && map.has(item.parentId)) {
+        map.get(item.parentId).children.push(node);
       } else {
         roots.push(node);
       }

@@ -9,6 +9,7 @@ import { UpgradeApplyRepository } from 'src/module/admin/upgrade/upgrade-apply.r
 import { ReferralCodeRepository } from 'src/module/admin/member/referral-code.repository';
 import { StorePlayConfigRepository } from '../config/config.repository';
 import { OrderRepository } from 'src/module/client/order/order.repository';
+import { PlayStrategy } from './play-strategy.decorator';
 
 /**
  * 会员升级营销策略插件
@@ -24,6 +25,7 @@ import { OrderRepository } from 'src/module/client/order/order.repository';
  * }
  */
 @Injectable()
+@PlayStrategy('MEMBER_UPGRADE')
 export class MemberUpgradeService implements IMarketingStrategy {
   readonly code = 'MEMBER_UPGRADE';
   private readonly logger = new Logger(MemberUpgradeService.name);

@@ -1,10 +1,13 @@
 <script setup lang="tsx">
 import { NButton, NCard, NDataTable, NSpace, NTag } from 'naive-ui';
 import { fetchGetStoreProductList } from '@/service/api/store/product';
+import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import ProductSearch from './modules/product-search.vue';
 import ProductOperateDrawer from './modules/product-operate-drawer.vue';
+
+const appStore = useAppStore();
 
 const {
   columns,
@@ -117,7 +120,7 @@ const {
   ]
 });
 
-const { drawerVisible, operateType, editingData, edit } = useTableOperate<Api.Store.TenantProduct>(data, getData);
+const { drawerVisible, operateType, editingData, edit, checkedRowKeys } = useTableOperate<Api.Store.TenantProduct>(data, getData);
 </script>
 
 <template>
@@ -128,16 +131,17 @@ const { drawerVisible, operateType, editingData, edit } = useTableOperate<Api.St
         <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" @refresh="getData" />
       </template>
       <NDataTable
+        v-model:checked-row-keys="checkedRowKeys"
         remote
         striped
         size="small"
-        class="sm:flex-1-hidden"
         :data="data"
         :columns="columns"
-        :flex-height="!mobilePagination"
+        :flex-height="!appStore.isMobile"
         :loading="loading"
         :pagination="mobilePagination"
         :row-key="row => row.id"
+        class="sm:h-full"
       />
       <ProductOperateDrawer
         v-model:visible="drawerVisible"

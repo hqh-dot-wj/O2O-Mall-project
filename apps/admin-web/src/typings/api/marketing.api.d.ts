@@ -9,6 +9,10 @@ declare namespace Api {
       uiComponentId?: string;
       status: string;
       createTime: string;
+      // 关联商品/规格字段
+      productId?: string;
+      skuId?: string;
+      productName?: string;
     }
 
     interface SchemaField {
@@ -26,7 +30,10 @@ declare namespace Api {
       } & Common.CommonSearchParams
     >;
 
-    type PlayTemplateCreate = Pick<PlayTemplate, 'name' | 'code' | 'unitName' | 'ruleSchema' | 'uiComponentId'>;
+    type PlayTemplateCreate = Pick<
+      PlayTemplate,
+      'name' | 'code' | 'unitName' | 'ruleSchema' | 'uiComponentId' | 'productId' | 'skuId' | 'productName'
+    >;
     type PlayTemplateUpdate = Partial<PlayTemplateCreate>;
 
     type PlayTemplateList = Common.PaginatingQueryRecord<PlayTemplate>;

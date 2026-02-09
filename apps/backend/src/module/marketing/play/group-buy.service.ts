@@ -10,11 +10,13 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { GroupBuyJoinDto, GroupBuyRulesDto } from './dto/group-buy.dto';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { PlayStrategy } from './play-strategy.decorator';
 
 /**
  * 拼团玩法核心逻辑
  */
 @Injectable()
+@PlayStrategy('GROUP_BUY')
 export class GroupBuyService implements IMarketingStrategy {
   readonly code = 'GROUP_BUY';
 

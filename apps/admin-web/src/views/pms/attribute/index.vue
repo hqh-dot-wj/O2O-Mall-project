@@ -117,8 +117,8 @@ async function handleBatchDelete() {
     <NCard
       :title="$t('page.pms.attribute.title')"
       :bordered="false"
+      size="small"
       class="card-wrapper sm:flex-1-hidden"
-      content-class="flex-col-stretch gap-16px"
     >
       <template #header-extra>
         <TableHeaderOperation

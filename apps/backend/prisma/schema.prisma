@@ -380,9 +380,20 @@ model PmsTenantSku {
   // 实际执行比例 (例如总部建议 10%，门店想多推销，设为 15%)
   distRate Decimal @default(0.00) @map("dist_rate") @db.Decimal(10, 2)
 
+  // --- [新增] 兑换商品标识 ---
+  // 标识该商品是否为兑换商品（优惠券/积分全额兑换，不参与分佣）
+  isExchangeProduct Boolean @default(false) @map("is_exchange_product")
+
   // --- [新增] 乐观锁版本号 ---
   // 用于防止并发更新冲突,每次更新时自动+1
   version Int @default(0)
+
+  // --- [新增] 积分配置 ---
+  // 积分获得比例（0-100，默认100表示正常获得积分，0表示不产生积分）
+  pointsRatio Int @default(100) @map("points_ratio")
+  
+  // 是否营销活动商品
+  isPromotionProduct Boolean @default(false) @map("is_promotion_product")
 
   tenantProd PmsTenantProduct @relation(fields: [tenantProductId], references: [id])
 
@@ -393,6 +404,13 @@ enum DistributionMode {
   RATIO // 按比例 (如: 销售额的 10%)
   FIXED // 按固定金额 (如: 每单固定分 10 元)
   NONE // 不参与分销 (如: 特价引流品)
+}
+
+/// 佣金计算基数类型
+enum CommissionBaseType {
+  ORIGINAL_PRICE // 基于商品原价（优惠由平台承担）
+  ACTUAL_PAID // 基于实付金额（优惠由推广者承担）
+  ZERO // 不分佣（兑换商品）
 }
 
 /// C端会员表 (一切业务的源头)
@@ -1473,6 +1491,10 @@ model SysDistConfig {
   crossTenantRate   Decimal @default(1.00) @map("cross_tenant_rate") @db.Decimal(5, 2) // 跨店分佣折扣 (1.00=100%, 0.80=80%)
   crossMaxDaily     Decimal @default(500.00) @map("cross_max_daily") @db.Decimal(10, 2) // 跨店佣金日限额
 
+  // === 佣金计算策略 ===
+  commissionBaseType CommissionBaseType @default(ORIGINAL_PRICE) @map("commission_base_type") // 佣金计算基数类型
+  maxCommissionRate  Decimal            @default(0.50) @map("max_commission_rate") @db.Decimal(5, 2) // 最大佣金比例（熔断保护，如50%）
+
   createBy      String         @default("") @map("create_by") @db.VarChar(64)
   createTime    DateTime       @default(now()) @map("create_time")
   updateBy      String         @default("") @map("update_by") @db.VarChar(64)
@@ -1587,6 +1609,15 @@ model OmsOrder {
   discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(10, 2)
   payAmount      Decimal @map("pay_amount") @db.Decimal(10, 2)
 
+  // 优惠券相关
+  userCouponId   String? @map("user_coupon_id") // 使用的优惠券ID
+  couponDiscount Decimal @default(0) @map("coupon_discount") @db.Decimal(10, 2) // 优惠券优惠金额
+
+  // 积分相关
+  pointsUsed     Int     @default(0) @map("points_used") // 使用的积分数量
+  pointsDiscount Decimal @default(0) @map("points_discount") @db.Decimal(10, 2) // 积分抵扣金额
+  pointsEarned   Int     @default(0) @map("points_earned") // 本次订单获得的积分
+
   // 收货信息
   receiverName    String? @map("receiver_name")
   receiverPhone   String? @map("receiver_phone")
@@ -1621,7 +1652,7 @@ model OmsOrder {
 
   items       OmsOrderItem[]
   commissions FinCommission[]
-  tenant      SysTenant      @relation(fields: [tenantId], references: [tenantId])
+  tenant      SysTenant       @relation(fields: [tenantId], references: [tenantId])
 
   @@index([memberId, status])
   @@index([tenantId, createTime])
@@ -1644,6 +1675,13 @@ model OmsOrderItem {
   price       Decimal @db.Decimal(10, 2)
   quantity    Int
   totalAmount Decimal @map("total_amount") @db.Decimal(10, 2)
+
+  // --- [新增] 积分相关 ---
+  // 下单时的积分比例（快照，防止后续修改影响已下单商品）
+  pointsRatio Int @default(100) @map("points_ratio")
+  
+  // 该商品产生的积分
+  earnedPoints Int @default(0) @map("earned_points")
 
   order OmsOrder @relation(fields: [orderId], references: [id])
 
@@ -1716,6 +1754,15 @@ model FinCommission {
 
   // 分佣比例快照 (记录当时的比例，防止配置修改后对账不准)
   rateSnapshot Decimal @default(0) @map("rate_snapshot") @db.Decimal(5, 2)
+
+  // === 佣金计算详情（用于审计和对账） ===
+  commissionBase     Decimal             @map("commission_base") @db.Decimal(10, 2) // 分佣基数
+  commissionBaseType CommissionBaseType? @map("commission_base_type") // 基数类型快照
+  orderOriginalPrice Decimal?            @map("order_original_price") @db.Decimal(10, 2) // 订单原价
+  orderActualPaid    Decimal?            @map("order_actual_paid") @db.Decimal(10, 2) // 订单实付
+  couponDiscount     Decimal?            @default(0) @map("coupon_discount") @db.Decimal(10, 2) // 优惠券抵扣
+  pointsDiscount     Decimal?            @default(0) @map("points_discount") @db.Decimal(10, 2) // 积分抵扣
+  isCapped           Boolean             @default(false) @map("is_capped") // 是否触发熔断
 
   status CommissionStatus @default(FROZEN)
 
@@ -1808,6 +1855,11 @@ model PlayTemplate {
 
   uiComponentId String? @map("ui_component_id") // 前端组件映射
 
+  // 关联商品/规格 (可选)
+  productId   String? @map("product_id") // 关联的商品ID
+  skuId       String? @map("sku_id") // 关联的规格ID
+  productName String? @map("product_name") // 商品名称 (冗余字段，用于显示)
+
   status     Status   @default(NORMAL)
   delFlag    DelFlag  @default(NORMAL) @map("del_flag")
   createTime DateTime @default(now()) @map("create_time")
@@ -1831,6 +1883,9 @@ model StorePlayConfig {
 
   // 营销规则配置
   rules Json // { targetCount: 3, discountPrice: 99 }
+
+  // 规则历史版本（用于版本控制和回滚）
+  rulesHistory Json[] @default([]) @map("rules_history")
 
   // 库存策略
   stockMode MarketingStockMode @map("stock_mode")
@@ -1883,6 +1938,9 @@ model PlayInstance {
   sysDistConfig   SysDistConfig? @relation(fields: [sysDistConfigId], references: [id])
   sysDistConfigId Int?
 
+  // 扩展关联
+  courseGroupBuyExtension CourseGroupBuyExtension?
+
   @@index([configId])
   @@index([memberId])
   @@map("mkt_play_instance")
@@ -1920,4 +1978,475 @@ model MktUserAsset {
   @@index([memberId, status])
   @@index([instanceId])
   @@map("mkt_user_asset")
+}
+
+// ============================================
+// 营销玩法扩展表
+// ============================================
+
+/// 课程拼团扩展表
+/// 用于存储课程拼团的详细信息，包括排课、考勤等
+model CourseGroupBuyExtension {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+
+  // 关联实例
+  instanceId String @unique @map("instance_id")
+  groupId    String @map("group_id") // 团ID（团长实例ID）
+
+  // 课程信息
+  totalLessons     Int       @map("total_lessons") // 总课时数
+  completedLessons Int       @default(0) @map("completed_lessons") // 已完成课时数
+  classAddress     String?   @map("class_address") // 上课地址
+  classStartTime   DateTime? @map("class_start_time") // 上课开始时间
+  classEndTime     DateTime? @map("class_end_time") // 上课结束时间
+
+  // 团长信息
+  leaderId       String  @map("leader_id") // 团长ID
+  leaderDiscount Decimal @default(0) @map("leader_discount") @db.Decimal(10, 2) // 团长优惠金额
+
+  // 状态
+  status     String   @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
+  delFlag    DelFlag  @default(NORMAL) @map("del_flag")
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // 关联
+  instance    PlayInstance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  schedules   CourseSchedule[]
+  attendances CourseAttendance[]
+
+  @@index([groupId])
+  @@index([leaderId])
+  @@index([tenantId])
+  @@map("mkt_course_group_buy_ext")
+}
+
+/// 课程排课表
+/// 记录每节课的时间安排
+model CourseSchedule {
+  id          String @id @default(cuid())
+  tenantId    String @map("tenant_id")
+  extensionId String @map("extension_id")
+
+  // 排课信息
+  date      DateTime @db.Date // 上课日期
+  startTime String   @map("start_time") // 开始时间 "09:00"
+  endTime   String   @map("end_time") // 结束时间 "11:00"
+  lessons   Int // 课时数
+
+  // 状态
+  status     String   @default("SCHEDULED") @map("status") // SCHEDULED, COMPLETED, CANCELLED
+  remark     String?  @db.Text // 备注
+  delFlag    DelFlag  @default(NORMAL) @map("del_flag")
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // 关联
+  extension CourseGroupBuyExtension @relation(fields: [extensionId], references: [id], onDelete: Cascade)
+
+  @@index([extensionId, date])
+  @@index([tenantId])
+  @@map("mkt_course_schedule")
+}
+
+/// 课程考勤表
+/// 记录学员的出勤情况
+model CourseAttendance {
+  id          String  @id @default(cuid())
+  tenantId    String  @map("tenant_id")
+  extensionId String  @map("extension_id")
+  scheduleId  String? @map("schedule_id") // 关联排课（可选）
+
+  // 考勤信息
+  memberId String   @map("member_id") // 学员ID
+  date     DateTime @db.Date // 考勤日期
+  attended Boolean  @default(false) // 是否出勤
+  remark   String?  @db.Text // 备注
+
+  // 状态
+  delFlag    DelFlag  @default(NORMAL) @map("del_flag")
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // 关联
+  extension CourseGroupBuyExtension @relation(fields: [extensionId], references: [id], onDelete: Cascade)
+
+  @@unique([extensionId, memberId, date])
+  @@index([memberId])
+  @@index([tenantId])
+  @@map("mkt_course_attendance")
+}
+
+// ==========================================
+// 📌 优惠券和积分系统
+// ==========================================
+
+/// 优惠券类型枚举
+enum CouponType {
+  DISCOUNT // 满减券
+  PERCENTAGE // 折扣券
+  EXCHANGE // 兑换券
+}
+
+/// 优惠券状态枚举
+enum CouponStatus {
+  ACTIVE // 启用中
+  INACTIVE // 已停用
+  EXPIRED // 已过期
+}
+
+/// 用户优惠券状态枚举
+enum UserCouponStatus {
+  UNUSED // 未使用
+  LOCKED // 已锁定（订单创建时）
+  USED // 已使用
+  EXPIRED // 已过期
+  CANCELLED // 已取消
+}
+
+/// 优惠券有效期类型枚举
+enum CouponValidityType {
+  FIXED // 固定时间段
+  RELATIVE // 相对时间（领取后N天）
+}
+
+/// 优惠券发放方式枚举
+enum CouponDistributionType {
+  MANUAL // 手动发放
+  AUTO // 自动发放
+  ACTIVITY // 活动发放
+  ORDER // 订单赠送
+}
+
+/// 积分交易类型枚举
+enum PointsTransactionType {
+  EARN_ORDER // 消费获得
+  EARN_SIGNIN // 签到获得
+  EARN_TASK // 任务获得
+  EARN_ADMIN // 管理员调整（增加）
+  USE_ORDER // 订单抵扣
+  USE_COUPON // 兑换优惠券
+  USE_PRODUCT // 兑换商品
+  FREEZE // 冻结
+  UNFREEZE // 解冻
+  EXPIRE // 过期扣减
+  REFUND // 退款返还
+  DEDUCT_ADMIN // 管理员调整（扣减）
+}
+
+/// 积分交易状态枚举
+enum PointsTransactionStatus {
+  PENDING // 待处理
+  COMPLETED // 已完成
+  CANCELLED // 已取消
+}
+
+/// 优惠券模板表
+model MktCouponTemplate {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+
+  // 基础信息
+  name        String     @db.VarChar(100)
+  description String?    @db.VarChar(500)
+  type        CouponType
+
+  // 优惠金额配置
+  discountAmount    Decimal? @map("discount_amount") @db.Decimal(10, 2) // 满减金额
+  discountPercent   Int?     @map("discount_percent") // 折扣百分比(1-99)
+  maxDiscountAmount Decimal? @map("max_discount_amount") @db.Decimal(10, 2) // 最高优惠金额
+
+  // 使用条件
+  minOrderAmount       Decimal  @default(0) @map("min_order_amount") @db.Decimal(10, 2) // 最低消费金额
+  minActualPayAmount   Decimal? @map("min_actual_pay_amount") @db.Decimal(10, 2) // 最低实付金额（使用优惠券后）
+  applicableProducts   String[] @map("applicable_products") // 适用商品ID列表
+  applicableCategories Int[]    @map("applicable_categories") // 适用分类ID列表
+  memberLevels         Int[]    @map("member_levels") // 适用会员等级
+
+  // 兑换券专属
+  exchangeProductId String? @map("exchange_product_id") // 可兑换的商品ID
+  exchangeSkuId     String? @map("exchange_sku_id") // 可兑换的SKU ID
+
+  // 有效期配置
+  validityType CouponValidityType @map("validity_type")
+  startTime    DateTime?          @map("start_time") // 固定时间段-开始时间
+  endTime      DateTime?          @map("end_time") // 固定时间段-结束时间
+  validDays    Int?               @map("valid_days") // 相对时间-有效天数
+
+  // 发放配置
+  totalStock     Int @map("total_stock") // 发放总量
+  remainingStock Int @map("remaining_stock") // 剩余库存
+  limitPerUser   Int @default(1) @map("limit_per_user") // 每人限领数量
+
+  // 状态
+  status CouponStatus @default(ACTIVE)
+
+  // 审计字段
+  createBy   String   @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+  updateBy   String?  @map("update_by") @db.VarChar(64)
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // 关联
+  userCoupons MktUserCoupon[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, type])
+  @@map("mkt_coupon_template")
+}
+
+/// 用户优惠券表
+model MktUserCoupon {
+  id         String @id @default(uuid())
+  tenantId   String @map("tenant_id") @db.VarChar(20)
+  memberId   String @map("member_id")
+  templateId String @map("template_id")
+
+  // 优惠券信息快照（防止模板修改影响已发放的券）
+  couponName        String     @map("coupon_name") @db.VarChar(100)
+  couponType        CouponType @map("coupon_type")
+  discountAmount    Decimal?   @map("discount_amount") @db.Decimal(10, 2)
+  discountPercent   Int?       @map("discount_percent")
+  maxDiscountAmount Decimal?   @map("max_discount_amount") @db.Decimal(10, 2)
+  minOrderAmount    Decimal    @map("min_order_amount") @db.Decimal(10, 2)
+
+  // 有效期
+  startTime DateTime @map("start_time")
+  endTime   DateTime @map("end_time")
+
+  // 状态
+  status UserCouponStatus @default(UNUSED)
+
+  // 发放信息
+  distributionType   CouponDistributionType @map("distribution_type")
+  distributionSource String?                @map("distribution_source") @db.VarChar(100) // 发放来源描述
+
+  // 使用信息
+  usedTime DateTime? @map("used_time")
+  orderId  String?   @map("order_id")
+
+  // 审计字段
+  receiveTime DateTime @default(now()) @map("receive_time")
+
+  // 关联
+  template     MktCouponTemplate  @relation(fields: [templateId], references: [id])
+  usageRecords MktCouponUsage[]
+
+  @@index([tenantId, memberId, status])
+  @@index([templateId])
+  @@index([orderId])
+  @@map("mkt_user_coupon")
+}
+
+/// 优惠券使用记录表
+model MktCouponUsage {
+  id           String @id @default(uuid())
+  tenantId     String @map("tenant_id") @db.VarChar(20)
+  userCouponId String @map("user_coupon_id")
+  memberId     String @map("member_id")
+  orderId      String @map("order_id")
+
+  // 使用信息
+  discountAmount Decimal @map("discount_amount") @db.Decimal(10, 2)
+  orderAmount    Decimal @map("order_amount") @db.Decimal(10, 2)
+
+  // 审计字段
+  usedTime DateTime @default(now()) @map("used_time")
+
+  // 关联
+  userCoupon MktUserCoupon @relation(fields: [userCouponId], references: [id])
+
+  @@index([tenantId, memberId])
+  @@index([orderId])
+  @@index([userCouponId])
+  @@map("mkt_coupon_usage")
+}
+
+/// 积分规则配置表
+model MktPointsRule {
+  id       String @id @default(uuid())
+  tenantId String @unique @map("tenant_id") @db.VarChar(20)
+
+  // 消费积分规则
+  orderPointsEnabled Boolean @default(true) @map("order_points_enabled")
+  orderPointsRatio   Decimal @default(1) @map("order_points_ratio") @db.Decimal(10, 2) // 每消费N元获得M积分
+  orderPointsBase    Decimal @default(1) @map("order_points_base") @db.Decimal(10, 2) // N元
+
+  // 签到积分规则
+  signinPointsEnabled Boolean @default(true) @map("signin_points_enabled")
+  signinPointsAmount  Int     @default(10) @map("signin_points_amount")
+
+  // 积分有效期
+  pointsValidityEnabled Boolean @default(false) @map("points_validity_enabled")
+  pointsValidityDays    Int?    @map("points_validity_days") // 积分有效天数，null表示永久有效
+
+  // 积分抵扣规则
+  pointsRedemptionEnabled Boolean @default(true) @map("points_redemption_enabled")
+  pointsRedemptionRatio   Decimal @default(100) @map("points_redemption_ratio") @db.Decimal(10, 2) // 每N积分可抵扣M元
+  pointsRedemptionBase    Decimal @default(1) @map("points_redemption_base") @db.Decimal(10, 2) // M元
+
+  // 积分抵扣限制
+  maxPointsPerOrder       Int? @map("max_points_per_order") // 单笔订单最多可使用积分数量
+  maxDiscountPercentOrder Int? @map("max_discount_percent_order") // 单笔订单最多可抵扣百分比(1-100)
+
+  // 系统开关
+  systemEnabled Boolean @default(true) @map("system_enabled")
+
+  // 审计字段
+  createBy   String   @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+  updateBy   String?  @map("update_by") @db.VarChar(64)
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@map("mkt_points_rule")
+}
+
+/// 积分账户表
+model MktPointsAccount {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+  memberId String @map("member_id")
+
+  // 积分余额
+  totalPoints     Int @default(0) @map("total_points") // 总积分（累计获得）
+  availablePoints Int @default(0) @map("available_points") // 可用积分
+  frozenPoints    Int @default(0) @map("frozen_points") // 冻结积分
+  usedPoints      Int @default(0) @map("used_points") // 已使用积分
+  expiredPoints   Int @default(0) @map("expired_points") // 已过期积分
+
+  // 乐观锁
+  version Int @default(0)
+
+  // 审计字段
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  // 关联
+  transactions MktPointsTransaction[]
+
+  @@unique([tenantId, memberId])
+  @@index([tenantId, availablePoints])
+  @@map("mkt_points_account")
+}
+
+/// 积分交易记录表
+model MktPointsTransaction {
+  id        String @id @default(uuid())
+  tenantId  String @map("tenant_id") @db.VarChar(20)
+  accountId String @map("account_id")
+  memberId  String @map("member_id")
+
+  // 交易信息
+  type          PointsTransactionType
+  amount        Int // 积分变动数量（正数为增加，负数为减少）
+  balanceBefore Int                   @map("balance_before") // 交易前余额
+  balanceAfter  Int                   @map("balance_after") // 交易后余额
+
+  // 关联信息
+  relatedId   String? @map("related_id") // 关联业务ID（订单ID、任务ID等）
+  relatedType String? @map("related_type") @db.VarChar(50) // 关联业务类型
+
+  // 有效期（用于过期扣减）
+  expireTime DateTime? @map("expire_time")
+
+  // 状态
+  status PointsTransactionStatus @default(COMPLETED)
+
+  // 备注
+  remark String? @db.VarChar(500)
+
+  // 审计字段
+  createTime DateTime @default(now()) @map("create_time")
+
+  // 关联
+  account MktPointsAccount @relation(fields: [accountId], references: [id])
+
+  @@index([tenantId, memberId, createTime])
+  @@index([accountId, type])
+  @@index([relatedId])
+  @@index([expireTime])
+  @@map("mkt_points_transaction")
+}
+
+/// 积分任务配置表
+model MktPointsTask {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+
+  // 任务信息
+  taskKey         String  @map("task_key") @db.VarChar(50) // 任务唯一标识（如：COMPLETE_PROFILE）
+  taskName        String  @map("task_name") @db.VarChar(100)
+  taskDescription String? @map("task_description") @db.VarChar(500)
+
+  // 积分奖励
+  pointsReward Int @map("points_reward")
+
+  // 完成条件
+  completionCondition Json @map("completion_condition") // 完成条件配置（JSON格式）
+
+  // 限制
+  isRepeatable   Boolean @default(false) @map("is_repeatable") // 是否可重复完成
+  maxCompletions Int?    @map("max_completions") // 最多完成次数
+
+  // 状态
+  isEnabled Boolean @default(true) @map("is_enabled")
+
+  // 审计字段
+  createBy   String   @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+  updateBy   String?  @map("update_by") @db.VarChar(64)
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@unique([tenantId, taskKey])
+  @@index([tenantId, isEnabled])
+  @@map("mkt_points_task")
+}
+
+/// 用户任务完成记录表
+model MktUserTaskCompletion {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+  memberId String @map("member_id")
+  taskId   String @map("task_id")
+
+  // 完成信息
+  completionTime DateTime @default(now()) @map("completion_time")
+  pointsAwarded  Int      @map("points_awarded")
+  transactionId  String   @map("transaction_id") // 关联的积分交易记录ID
+
+  @@index([tenantId, memberId, taskId])
+  @@map("mkt_user_task_completion")
+}
+
+/// 积分发放失败记录表
+model MktPointsGrantFailure {
+  id       String @id @default(uuid())
+  memberId String @map("member_id")
+
+  // 积分信息
+  amount     Int                   @map("amount")
+  type       PointsTransactionType @map("type")
+  relatedId  String?               @map("related_id")
+  remark     String?               @db.VarChar(500)
+  expireTime DateTime?             @map("expire_time")
+
+  // 失败信息
+  failureReason    String   @map("failure_reason") @db.VarChar(500)
+  failureTime      DateTime @map("failure_time")
+  retryCount       Int      @default(0) @map("retry_count")
+  lastRetryTime    DateTime? @map("last_retry_time")
+  lastErrorMessage String?  @map("last_error_message") @db.VarChar(1000)
+
+  // 状态: PENDING-待重试, COMPLETED-已完成, FAILED-最终失败
+  status String @default("PENDING") @db.VarChar(20)
+
+  // 审计字段
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@index([memberId, status])
+  @@index([relatedId])
+  @@index([failureTime])
+  @@map("mkt_points_grant_failure")
 }

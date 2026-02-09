@@ -309,7 +309,7 @@ export class StoreProductService {
    * });
    */
   async updateProductPrice(tenantId: string, dto: UpdateProductPriceDto) {
-    const { tenantSkuId, price, stock, distRate, distMode } = dto;
+    const { tenantSkuId, price, stock, distRate, distMode, pointsRatio, isPromotionProduct } = dto;
 
     // 1. 获取店铺 SKU (包含当前版本号)
     const tenantSku = await this.prisma.pmsTenantSku.findUnique({
@@ -343,6 +343,8 @@ export class StoreProductService {
         stock: stock !== undefined ? stock : undefined,
         distRate: distRate !== undefined ? new Decimal(distRate) : undefined,
         distMode: distMode !== undefined ? distMode : undefined,
+        pointsRatio: pointsRatio !== undefined ? pointsRatio : undefined,
+        isPromotionProduct: isPromotionProduct !== undefined ? isPromotionProduct : undefined,
         version: { increment: 1 }, // 版本号+1
       },
     });

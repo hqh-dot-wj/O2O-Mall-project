@@ -57,5 +57,11 @@
   },
   "[jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  // 终端编码设置 - 解决中文乱码问题
+  // 注意：PowerShell 的 UTF-8 编码通过 PowerShell 配置文件 ($PROFILE) 设置
+  // 这样可以避免与 PowerShell 扩展的启动参数冲突
+  "terminal.integrated.encoding": "utf8",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "kiroAgent.configureMCP": "Disabled"
 }
