@@ -1,9 +1,25 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { computed, watch } from 'vue';
+import {
+  NAvatar,
+  NButton,
+  NCard,
+  NDataTable,
+  NDescriptions,
+  NDescriptionsItem,
+  NDrawer,
+  NDrawerContent,
+  NGi,
+  NGrid,
+  NTabPane,
+  NTabs
+} from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { fetchGetOrderList } from '@/service/api/order';
 import { fetchGetLedger } from '@/service/api/finance';
+import { fetchGetMemberPointHistory } from '@/service/api/member';
 import { useTable } from '@/hooks/common/table';
+import MemberPointOperateDrawer from './member-point-operate-drawer.vue';
 
 defineOptions({
   name: 'MemberDetailDrawer'
@@ -39,7 +55,6 @@ const {
   data: orderData,
   loading: orderLoading,
   mobilePagination: orderPagination,
-  searchParams: orderParams,
   updateSearchParams: updateOrderParams,
   getData: getOrderData
 } = useTable({
@@ -80,7 +95,6 @@ const {
   data: financeData,
   loading: financeLoading,
   mobilePagination: financePagination,
-  searchParams: financeParams,
   updateSearchParams: updateFinanceParams,
   getData: getFinanceData
 } = useTable<typeof fetchGetLedger>({
@@ -125,18 +139,69 @@ const {
   ]
 });
 
+// Points Table
+const {
+  columns: pointColumns,
+  data: pointData,
+  loading: pointLoading,
+  mobilePagination: pointPagination,
+  updateSearchParams: updatePointParams,
+  getData: getPointData
+} = useTable({
+  apiFn: fetchGetMemberPointHistory,
+  immediate: false,
+  apiParams: {
+    pageNum: 1,
+    pageSize: 10,
+    memberId: ''
+  },
+  columns: () => [
+    {
+      key: 'type',
+      title: '变动场景',
+      align: 'center',
+      render: row => row.typeName || row.type
+    },
+    {
+      key: 'changePoints',
+      title: '变动积分',
+      align: 'center',
+      render: row => (
+        <span class={row.changePoints > 0 ? 'text-success' : 'text-error'}>
+          {row.changePoints > 0 ? `+${row.changePoints}` : row.changePoints}
+        </span>
+      )
+    },
+    {
+      key: 'afterPoints',
+      title: '变后积分',
+      align: 'center'
+    },
+    {
+      key: 'createTime',
+      title: '时间',
+      align: 'center'
+    }
+  ]
+});
+
+const { bool: adjustVisible, setTrue: setAdjustVisible } = useBoolean();
+
 // Watch visible to refresh data
 watch(
   () => props.visible,
   val => {
     if (val && props.rowData) {
+      const { memberId } = props.rowData;
       // Reset params with current memberId
-      updateOrderParams({ memberId: props.rowData.memberId });
-      updateFinanceParams({ memberId: props.rowData.memberId });
+      updateOrderParams({ memberId });
+      updateFinanceParams({ memberId });
+      updatePointParams({ memberId });
 
       // Fetch Data
       getOrderData();
       getFinanceData();
+      getPointData();
     }
   }
 );
@@ -171,6 +236,14 @@ watch(
               <NGi>
                 <NCard title="当前余额" size="small">
                   <span class="text-2xl text-success font-bold">¥{{ rowData.balance }}</span>
+                </NCard>
+              </NGi>
+              <NGi>
+                <NCard title="当前积分" size="small">
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-2xl text-primary font-bold">{{ rowData.points }}</span>
+                    <NButton size="tiny" type="primary" ghost @click="setAdjustVisible">积分操作</NButton>
+                  </div>
                 </NCard>
               </NGi>
             </NGrid>
@@ -212,8 +285,28 @@ watch(
             />
           </div>
         </NTabPane>
+
+        <!-- Points Tab -->
+        <NTabPane name="points" tab="积分记录">
+          <div class="h-full flex flex-col">
+            <NDataTable
+              :columns="pointColumns"
+              :data="pointData"
+              :loading="pointLoading"
+              :pagination="pointPagination"
+              remote
+              class="flex-1-hidden"
+            />
+          </div>
+        </NTabPane>
       </NTabs>
     </NDrawerContent>
+
+    <MemberPointOperateDrawer
+      v-model:visible="adjustVisible"
+      :member-id="rowData?.memberId || ''"
+      @submitted="getPointData"
+    />
   </NDrawer>
 </template>
 

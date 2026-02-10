@@ -20,7 +20,7 @@ describe('积分完整流程集成测试', () => {
   let signinService: PointsSigninService;
   let taskService: PointsTaskService;
 
-  const testTenantId = 'test-tenant-001';
+  const testTenantId = '00000';
   const testMemberId = 'test-member-001';
 
   beforeAll(async () => {

@@ -86,7 +86,7 @@ describe('Commission Flow Test - 完整分佣流程测试', () => {
   const testMemberId = '5268c6ea-f662-4ae5-bc14-5d7f73ab294c';
 
   // 测试数据
-  let tenantId: string = '100006'; // 指定租户ID
+  let tenantId: string = '00000'; // 指定租户ID，测试数据统一
   let productId: string = 'prod-001'; // 指定商品ID
   let productSkuId: string;
   let orderId: string;

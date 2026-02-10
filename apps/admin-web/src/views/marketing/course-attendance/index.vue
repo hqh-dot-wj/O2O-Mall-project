@@ -1,27 +1,27 @@
 <script setup lang="tsx">
-import { ref, onMounted, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   NButton,
   NCard,
+  NCheckbox,
   NDataTable,
-  NTag,
-  NSpace,
-  NModal,
+  NDatePicker,
   NForm,
   NFormItem,
-  NDatePicker,
   NInput,
-  NCheckbox,
-  NSelect
+  NModal,
+  NSelect,
+  NSpace,
+  NTag
 } from 'naive-ui';
 import {
-  fetchCourseAttendances,
-  markAttendance,
-  fetchAttendanceRate,
   type CourseAttendance,
-  type MarkAttendanceRequest
+  type MarkAttendanceRequest,
+  fetchAttendanceRate,
+  fetchCourseAttendances,
+  markAttendance
 } from '@/service/api/course-group-buy';
-import { useRoute } from 'vue-router';
 
 /**
  * 课程考勤管理页面
@@ -84,11 +84,7 @@ const columns = [
     align: 'center' as const,
     width: 100,
     render: (row: CourseAttendance) =>
-      row.attended ? (
-        <NTag type="success">已出勤</NTag>
-      ) : (
-        <NTag type="error">未出勤</NTag>
-      )
+      row.attended ? <NTag type="success">已出勤</NTag> : <NTag type="error">未出勤</NTag>
   },
   {
     key: 'remark',
@@ -113,12 +109,7 @@ const columns = [
     align: 'center' as const,
     width: 120,
     render: (row: CourseAttendance) => (
-      <NButton
-        type="primary"
-        ghost
-        size="small"
-        onClick={() => viewAttendanceRate(row.memberId)}
-      >
+      <NButton type="primary" ghost size="small" onClick={() => viewAttendanceRate(row.memberId)}>
         查看出勤率
       </NButton>
     )
@@ -254,38 +245,38 @@ onMounted(() => {
 
       <div class="h-full flex-col">
         <!-- 统计卡片 -->
-        <div class="mb-4 grid grid-cols-5 gap-4">
+        <div class="grid grid-cols-5 mb-4 gap-4">
           <NCard size="small" :bordered="false" class="bg-blue-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-primary">{{ statistics.total }}</div>
+              <div class="text-2xl text-primary font-bold">{{ statistics.total }}</div>
               <div class="mt-1 text-sm text-gray-600">总考勤记录</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-green-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-success">{{ statistics.attended }}</div>
+              <div class="text-2xl text-success font-bold">{{ statistics.attended }}</div>
               <div class="mt-1 text-sm text-gray-600">已出勤</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-red-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-error">{{ statistics.absent }}</div>
+              <div class="text-2xl text-error font-bold">{{ statistics.absent }}</div>
               <div class="mt-1 text-sm text-gray-600">未出勤</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-purple-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-purple-600">{{ statistics.rate }}%</div>
+              <div class="text-2xl text-purple-600 font-bold">{{ statistics.rate }}%</div>
               <div class="mt-1 text-sm text-gray-600">总出勤率</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-orange-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-warning">{{ statistics.memberCount }}</div>
+              <div class="text-2xl text-warning font-bold">{{ statistics.memberCount }}</div>
               <div class="mt-1 text-sm text-gray-600">学员人数</div>
             </div>
           </NCard>
@@ -330,21 +321,14 @@ onMounted(() => {
         </NFormItem>
 
         <NFormItem label="备注">
-          <NInput
-            v-model:value="markForm.remark"
-            type="textarea"
-            placeholder="请输入备注信息（可选）"
-            :rows="3"
-          />
+          <NInput v-model:value="markForm.remark" type="textarea" placeholder="请输入备注信息（可选）" :rows="3" />
         </NFormItem>
       </NForm>
 
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showMarkModal = false">取消</NButton>
-          <NButton type="primary" :loading="markLoading" @click="submitMarkAttendance">
-            确认标记
-          </NButton>
+          <NButton type="primary" :loading="markLoading" @click="submitMarkAttendance">确认标记</NButton>
         </NSpace>
       </template>
     </NModal>
@@ -357,25 +341,23 @@ onMounted(() => {
 
       <div v-else-if="attendanceRate" class="flex-col gap-4">
         <div class="text-center">
-          <div class="text-sm text-gray-600 mb-2">学员ID</div>
+          <div class="mb-2 text-sm text-gray-600">学员ID</div>
           <div class="text-lg font-bold">{{ selectedMemberId }}</div>
         </div>
 
         <div class="grid grid-cols-3 gap-4">
-          <div class="flex-col items-center p-4 bg-blue-50 rounded">
-            <div class="text-2xl font-bold text-primary">{{ attendanceRate.total }}</div>
+          <div class="flex-col items-center rounded bg-blue-50 p-4">
+            <div class="text-2xl text-primary font-bold">{{ attendanceRate.total }}</div>
             <div class="mt-1 text-sm text-gray-600">总课时</div>
           </div>
 
-          <div class="flex-col items-center p-4 bg-green-50 rounded">
-            <div class="text-2xl font-bold text-success">{{ attendanceRate.attended }}</div>
+          <div class="flex-col items-center rounded bg-green-50 p-4">
+            <div class="text-2xl text-success font-bold">{{ attendanceRate.attended }}</div>
             <div class="mt-1 text-sm text-gray-600">已出勤</div>
           </div>
 
-          <div class="flex-col items-center p-4 bg-purple-50 rounded">
-            <div class="text-2xl font-bold text-purple-600">
-              {{ Math.round(attendanceRate.rate * 100) }}%
-            </div>
+          <div class="flex-col items-center rounded bg-purple-50 p-4">
+            <div class="text-2xl text-purple-600 font-bold">{{ Math.round(attendanceRate.rate * 100) }}%</div>
             <div class="mt-1 text-sm text-gray-600">出勤率</div>
           </div>
         </div>

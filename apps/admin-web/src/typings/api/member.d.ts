@@ -17,11 +17,46 @@ declare namespace Api {
       indirectReferrerName?: string;
       indirectReferrerMobile?: string;
       balance: number;
+      points: number;
       commission: number;
       totalConsumption: number;
       orderCount: number;
       levelId: number;
       levelName: string;
+    }
+
+    /** Member Point History */
+    interface PointHistory {
+      id: string;
+      memberId: string;
+      /** 变动积分 (正数为增加，负数为减少) */
+      changePoints: number;
+      /** 变动后积分 */
+      afterPoints: number;
+      /** 变动原因/场景: SIGN_IN, CONSUMPTION, MANUAL_ADJUST, etc. */
+      type: string;
+      /** 场景描述 */
+      typeName?: string;
+      /** 备注/人工调整原因 */
+      remark?: string;
+      createTime: string;
+    }
+
+    /** Point History Search Params */
+    interface PointHistorySearchParams extends Common.PaginatingCommonParams {
+      memberId?: string;
+    }
+
+    /** Point History List */
+    type PointHistoryList = Common.PaginatingQueryRecord<PointHistory>;
+
+    /** Manual Point Adjustment */
+    interface PointAdjustment {
+      memberId: string;
+      /** 变动量 */
+      amount: number;
+      /** 原因 */
+      remark: string;
     }
 
     /** Search Params */
@@ -32,7 +67,7 @@ declare namespace Api {
     }
 
     /** List Response */
-    interface MemberList extends Common.PaginatingQueryRecord<Member> {}
+    type MemberList = Common.PaginatingQueryRecord<Member>;
 
     /** Update Referrer Params */
     interface UpdateReferrerParams {

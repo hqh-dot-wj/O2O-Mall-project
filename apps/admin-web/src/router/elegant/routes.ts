@@ -69,6 +69,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'finance_distribution-config',
+        path: '/finance/distribution-config',
+        component: 'view.finance_distribution-config',
+        meta: {
+          title: 'finance_distribution-config',
+          i18nKey: 'route.finance_distribution-config'
+        }
+      },
+      {
         name: 'finance_ledger',
         path: '/finance/ledger',
         component: 'view.finance_ledger',
@@ -143,6 +152,25 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'marketing_coupon',
+        path: '/marketing/coupon',
+        meta: {
+          title: 'marketing_coupon',
+          i18nKey: 'route.marketing_coupon'
+        },
+        children: [
+          {
+            name: 'marketing_coupon_template',
+            path: '/marketing/coupon/template',
+            component: 'view.marketing_coupon_template',
+            meta: {
+              title: 'marketing_coupon_template',
+              i18nKey: 'route.marketing_coupon_template'
+            }
+          }
+        ]
+      },
+      {
         name: 'marketing_course-attendance',
         path: '/marketing/course-attendance',
         component: 'view.marketing_course-attendance',
@@ -168,6 +196,71 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'marketing_course-schedule',
           i18nKey: 'route.marketing_course-schedule'
         }
+      },
+      {
+        name: 'marketing_points',
+        path: '/marketing/points',
+        meta: {
+          title: 'marketing_points',
+          i18nKey: 'route.marketing_points'
+        },
+        children: [
+          {
+            name: 'marketing_points_accounts',
+            path: '/marketing/points/accounts',
+            component: 'view.marketing_points_accounts',
+            meta: {
+              title: 'marketing_points_accounts',
+              i18nKey: 'route.marketing_points_accounts'
+            }
+          },
+          {
+            name: 'marketing_points_rules',
+            path: '/marketing/points/rules',
+            component: 'view.marketing_points_rules',
+            meta: {
+              title: 'marketing_points_rules',
+              i18nKey: 'route.marketing_points_rules'
+            }
+          },
+          {
+            name: 'marketing_points_statistics',
+            path: '/marketing/points/statistics',
+            component: 'view.marketing_points_statistics',
+            meta: {
+              title: 'marketing_points_statistics',
+              i18nKey: 'route.marketing_points_statistics'
+            }
+          },
+          {
+            name: 'marketing_points_tasks',
+            path: '/marketing/points/tasks',
+            component: 'view.marketing_points_tasks',
+            meta: {
+              title: 'marketing_points_tasks',
+              i18nKey: 'route.marketing_points_tasks'
+            }
+          }
+        ]
+      },
+      {
+        name: 'marketing_statistics',
+        path: '/marketing/statistics',
+        meta: {
+          title: 'marketing_statistics',
+          i18nKey: 'route.marketing_statistics'
+        },
+        children: [
+          {
+            name: 'marketing_statistics_coupon',
+            path: '/marketing/statistics/coupon',
+            component: 'view.marketing_statistics_coupon',
+            meta: {
+              title: 'marketing_statistics_coupon',
+              i18nKey: 'route.marketing_statistics_coupon'
+            }
+          }
+        ]
       },
       {
         name: 'marketing_template',
@@ -199,6 +292,15 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'member_list',
           i18nKey: 'route.member_list',
           icon: 'material-symbols:list-alt-outline'
+        }
+      },
+      {
+        name: 'member_points-accounts',
+        path: '/member/points-accounts',
+        component: 'view.member_points-accounts',
+        meta: {
+          title: 'member_points-accounts',
+          i18nKey: 'route.member_points-accounts'
         }
       },
       {
@@ -423,6 +525,24 @@ export const generatedRoutes: GeneratedRoute[] = [
             meta: {
               title: 'store_marketing_activity',
               i18nKey: 'route.store_marketing_activity'
+            }
+          },
+          {
+            name: 'store_marketing_coupon-distribution',
+            path: '/store/marketing/coupon-distribution',
+            component: 'view.store_marketing_coupon-distribution',
+            meta: {
+              title: 'store_marketing_coupon-distribution',
+              i18nKey: 'route.store_marketing_coupon-distribution'
+            }
+          },
+          {
+            name: 'store_marketing_coupon-usage',
+            path: '/store/marketing/coupon-usage',
+            component: 'view.store_marketing_coupon-usage',
+            meta: {
+              title: 'store_marketing_coupon-usage',
+              i18nKey: 'route.store_marketing_coupon-usage'
             }
           },
           {

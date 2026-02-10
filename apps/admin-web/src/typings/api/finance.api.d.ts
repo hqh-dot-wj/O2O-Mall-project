@@ -42,6 +42,7 @@ declare namespace Api {
       orderId: string;
       order?: {
         orderSn: string;
+        payAmount?: number;
       };
       beneficiaryId: string;
       beneficiary?: {
@@ -56,6 +57,14 @@ declare namespace Api {
       planSettleTime: string;
       actualSettleTime?: string;
       createTime: string;
+      /** 分佣基数类型 */
+      commissionBaseType?: 'ORIGINAL_PRICE' | 'ACTUAL_PAID' | 'ZERO';
+      /** 优惠券抵扣金额 */
+      couponDiscount?: number;
+      /** 积分抵扣金额 */
+      pointsDiscount?: number;
+      /** 是否触发熔断 */
+      isCapped?: boolean;
     }
 
     /** 佣金列表返回 */

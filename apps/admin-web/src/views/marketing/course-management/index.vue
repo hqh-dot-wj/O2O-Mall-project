@@ -1,7 +1,7 @@
 <script setup lang="tsx">
-import { ref, onMounted } from 'vue';
-import { NCard, NTabs, NTabPane, NButton, NSpace, NAlert } from 'naive-ui';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { NAlert, NButton, NCard, NSpace, NTabPane, NTabs } from 'naive-ui';
 import CourseScheduleTab from './modules/course-schedule-tab.vue';
 import CourseAttendanceTab from './modules/course-attendance-tab.vue';
 
@@ -46,7 +46,7 @@ const courseInfo = ref({
             <icon-mdi-information />
           </template>
           <div>
-            <div class="font-bold mb-1">课程管理说明</div>
+            <div class="mb-1 font-bold">课程管理说明</div>
             <ul class="list-disc list-inside text-sm">
               <li>排课管理：查看课程的排课计划，了解上课时间和课时安排</li>
               <li>考勤管理：记录学员出勤情况，统计出勤率</li>

@@ -17,12 +17,18 @@ export interface PaginationQuery {
   pageSize: number;
 }
 
+/** 深分页限制：offset 超过此值会抛错，大表需用游标/时间分页 */
+const MAX_OFFSET = 5000;
+
 export class PaginationHelper {
   static getPagination(params: PaginationParams = {}): PaginationQuery {
     const pageSize = Number(params.pageSize ?? 10);
     const pageNum = Number(params.pageNum ?? 1);
     const take = pageSize > 0 ? pageSize : 10;
     const skip = take * (pageNum > 0 ? pageNum - 1 : 0);
+    if (skip > MAX_OFFSET) {
+      throw new Error(`分页深度超出限制(offset>${MAX_OFFSET})，请使用游标分页或时间范围筛选`);
+    }
     return { skip, take, pageNum: pageNum > 0 ? pageNum : 1, pageSize: take };
   }
 
@@ -52,6 +58,7 @@ export class PaginationHelper {
     return filter;
   }
 
+  /** 前后模糊 LIKE %value%，大表慎用，建议改用 startsWith 或全文索引 */
   static buildStringFilter(value?: string): Prisma.StringFilter | undefined {
     if (!value) return undefined;
     return { contains: value } as Prisma.StringFilter;

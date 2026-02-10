@@ -5,6 +5,8 @@ alwaysApply: true
 
 这是一个基于 uniapp + Vue3 + TypeScript + Vite5 + UnoCSS 的跨平台开发框架。
 
+> **完整开发规范**：详见 [miniapp-development-standard.mdc](./miniapp-development-standard.mdc)，包含 33 条规则，覆盖条件编译、样式、性能、安全等。
+
 ## 项目特点
 - 支持 H5、小程序、APP 多平台开发
 - 使用最新的前端技术栈

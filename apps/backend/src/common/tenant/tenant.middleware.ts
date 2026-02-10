@@ -1,46 +1,51 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { ClsService } from 'nestjs-cls';
 import { AppConfigService } from 'src/config/app-config.service';
 import { TenantContext } from './tenant.context';
 
 /**
- * 租户中间件 - 从请求中提取租户信息并设置到上下文
+ * 租户中间件 - 从请求中提取租户信息并设置到上下文与 CLS，供积分等依赖租户的逻辑使用
  */
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   private readonly logger = new Logger(TenantMiddleware.name);
 
-  constructor(private config: AppConfigService) {}
+  constructor(
+    private config: AppConfigService,
+    private cls: ClsService,
+  ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
     // 检查是否启用多租户
     const tenantEnabled = this.config.tenant.enabled;
 
-    if (!tenantEnabled) {
-      // 未启用多租户时，使用默认租户ID
-      TenantContext.run({ tenantId: TenantContext.SUPER_TENANT_ID }, () => {
+    const runWithTenant = (tenantId: string) => {
+      TenantContext.run({ tenantId }, () => {
+        try {
+          if (this.cls.isActive()) {
+            this.cls.set('tenantId', tenantId);
+          }
+        } catch {
+          // CLS 上下文不可用时仅依赖 TenantContext，下游用 TenantContext.getTenantId() 即可
+        }
         next();
       });
+    };
+
+    if (!tenantEnabled) {
+      runWithTenant(TenantContext.SUPER_TENANT_ID);
       return;
     }
 
-    // 从请求头获取租户ID（Soybean 前端约定的 header 名称）
     const tenantId = this.extractTenantId(req);
-
     if (!tenantId) {
-      // 未提供租户ID时，使用默认租户ID
-      TenantContext.run({ tenantId: TenantContext.SUPER_TENANT_ID }, () => {
-        next();
-      });
+      runWithTenant(TenantContext.SUPER_TENANT_ID);
       return;
     }
 
     this.logger.debug(`Request tenant: ${tenantId}`);
-
-    // 设置租户上下文并继续处理请求
-    TenantContext.run({ tenantId }, () => {
-      next();
-    });
+    runWithTenant(tenantId);
   }
 
   /**

@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { computed, h, reactive, watch } from 'vue';
+import { h, reactive, watch } from 'vue';
 import {
   NAlert,
   NButton,
@@ -13,13 +13,13 @@ import {
   NSpace,
   NSwitch,
   NTag,
-  useMessage
+  useMessage,
 } from 'naive-ui';
 import { fetchUpdateStoreProductBase, fetchUpdateStoreProductPrice } from '@/service/api/store/product';
 import { useNaiveForm } from '@/hooks/common/form';
 
 defineOptions({
-  name: 'ProductOperateDrawer'
+  name: 'ProductOperateDrawer',
 });
 
 interface Props {
@@ -38,7 +38,7 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const visible = defineModel<boolean>('visible', {
-  default: false
+  default: false,
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -58,7 +58,9 @@ function createDefaultModel(): Api.Store.TenantProduct {
     price: 0,
     customTitle: '',
     overrideRadius: undefined,
-    skus: []
+    pointsRatio: 0,
+    isPromotionProduct: false,
+    skus: [],
   };
 }
 
@@ -103,7 +105,7 @@ async function handleSaveSku(row: Api.Store.TenantSku) {
       price: row.price,
       stock: row.stock,
       distRate: row.distRate,
-      distMode: row.distMode
+      distMode: row.distMode,
     });
     message.success('SKU 配置更新成功');
   } catch (error) {
@@ -121,12 +123,12 @@ const columns = [
   {
     title: '规格项',
     key: 'specValues',
-    render: (row: Api.Store.TenantSku) => specsToString(row.specValues)
+    render: (row: Api.Store.TenantSku) => specsToString(row.specValues),
   },
   {
     title: '总部成本',
     key: 'costPrice',
-    render: (row: Api.Store.TenantSku) => `¥${row.costPrice}`
+    render: (row: Api.Store.TenantSku) => `¥${row.costPrice}`,
   },
   {
     title: '售价',
@@ -134,12 +136,12 @@ const columns = [
     render: (row: Api.Store.TenantSku) =>
       h(NInputNumber, {
         value: row.price,
-        onUpdateValue: v => {
+        onUpdateValue: (v) => {
           row.price = v || 0;
         },
         size: 'small',
-        style: { width: '100px' }
-      })
+        style: { width: '100px' },
+      }),
   },
   {
     title: '库存/日限',
@@ -147,12 +149,12 @@ const columns = [
     render: (row: Api.Store.TenantSku) =>
       h(NInputNumber, {
         value: row.stock,
-        onUpdateValue: v => {
+        onUpdateValue: (v) => {
           row.stock = v || 0;
         },
         size: 'small',
-        style: { width: '80px' }
-      })
+        style: { width: '80px' },
+      }),
   },
   {
     title: '分佣模式/额',
@@ -166,15 +168,15 @@ const columns = [
             h(NTag, { size: 'small' }, { default: () => row.distMode }),
             h(NInputNumber, {
               value: row.distRate,
-              onUpdateValue: v => {
+              onUpdateValue: (v) => {
                 row.distRate = v || 0;
               },
               size: 'small',
-              style: { width: '80px' }
-            })
-          ]
-        }
-      )
+              style: { width: '80px' },
+            }),
+          ],
+        },
+      ),
   },
   {
     title: '利润预估',
@@ -182,7 +184,7 @@ const columns = [
     render: (row: Api.Store.TenantSku) => {
       const profit = calculateProfit(row);
       return h('span', { class: profit < 0 ? 'text-red font-bold' : 'text-green font-bold' }, profit.toFixed(2));
-    }
+    },
   },
   {
     title: '操作',
@@ -194,11 +196,11 @@ const columns = [
           size: 'small',
           ghost: true,
           type: 'primary',
-          onClick: () => handleSaveSku(row)
+          onClick: () => handleSaveSku(row),
         },
-        { default: () => '保存SKU' }
-      )
-  }
+        { default: () => '保存SKU' },
+      ),
+  },
 ];
 
 async function handleSubmit() {
@@ -209,7 +211,9 @@ async function handleSubmit() {
       id: model.id,
       status: model.status,
       customTitle: model.customTitle || undefined,
-      overrideRadius: model.overrideRadius
+      overrideRadius: model.overrideRadius,
+      pointsRatio: model.pointsRatio,
+      isPromotionProduct: model.isPromotionProduct,
     });
     message.success('基础配置更新成功');
     visible.value = false;
@@ -244,6 +248,19 @@ function closeDrawer() {
             <NInput v-model:value="model.customTitle" placeholder="留空则使用总部标题" />
           </NFormItem>
 
+          <NFormItem label="营销商品" path="isPromotionProduct">
+            <NSwitch v-model:value="model.isPromotionProduct">
+              <template #checked>是</template>
+              <template #unchecked>否</template>
+            </NSwitch>
+          </NFormItem>
+
+          <NFormItem label="积分获得比例" path="pointsRatio">
+            <NInputNumber v-model:value="model.pointsRatio" :min="0" :max="200" placeholder="0-200，100为正常">
+              <template #suffix>%</template>
+            </NInputNumber>
+          </NFormItem>
+
           <NFormItem label="上架状态" path="status">
             <NSpace align="center">
               <NSwitch v-model:value="model.status" checked-value="ON_SHELF" unchecked-value="OFF_SHELF" />
@@ -261,7 +278,7 @@ function closeDrawer() {
 
           <div class="mt-4">
             <div class="mb-2 font-bold">SKU 经营详情 (单独保存)</div>
-            <NDataTable :columns="columns" :data="model.skus" :row-key="row => row.id" />
+            <NDataTable :columns="columns" :data="model.skus" :row-key="(row) => row.id" />
           </div>
         </NForm>
       </div>

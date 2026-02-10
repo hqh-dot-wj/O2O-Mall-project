@@ -107,6 +107,42 @@ const {
       render: row => `${row.rateSnapshot}%`
     },
     {
+      key: 'commissionBaseType',
+      title: '分佣基数',
+      align: 'center',
+      minWidth: 100,
+      render: row => {
+        const map: Record<string, string> = {
+          ORIGINAL_PRICE: '原价',
+          ACTUAL_PAID: '实付',
+          ZERO: '不分佣'
+        };
+        const key = row.commissionBaseType;
+        return key !== null && key !== undefined ? (map[key] ?? key) : '-';
+      }
+    },
+    {
+      key: 'couponDiscount',
+      title: '优惠券抵扣',
+      align: 'center',
+      minWidth: 100,
+      render: row => (row.couponDiscount !== null && row.couponDiscount !== undefined ? `¥${row.couponDiscount}` : '-')
+    },
+    {
+      key: 'pointsDiscount',
+      title: '积分抵扣',
+      align: 'center',
+      minWidth: 100,
+      render: row => (row.pointsDiscount !== null && row.pointsDiscount !== undefined ? `¥${row.pointsDiscount}` : '-')
+    },
+    {
+      key: 'isCapped',
+      title: '熔断',
+      align: 'center',
+      minWidth: 80,
+      render: row => (row.isCapped ? '是' : '否')
+    },
+    {
       key: 'status',
       title: '状态',
       align: 'center',

@@ -49,6 +49,8 @@ describe('DistributionService', () => {
 
       expect(result.data.level1Rate).toBe(BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE * 100);
       expect(result.data.enableLV0).toBe(true);
+      expect(result.data.commissionBaseType).toBe('ORIGINAL_PRICE');
+      expect(result.data.maxCommissionRate).toBe(50);
     });
 
     it('should return stored config', async () => {
@@ -65,6 +67,24 @@ describe('DistributionService', () => {
       const result = await service.getConfig('tenant1');
       expect(result.data.level1Rate).toBe(15);
       expect(result.data.level2Rate).toBe(10);
+    });
+
+    it('should return commissionBaseType and maxCommissionRate from stored config', async () => {
+      const mockConfig = {
+        id: 1,
+        tenantId: 'tenant1',
+        level1Rate: 0.2,
+        level2Rate: 0.1,
+        enableLV0: true,
+        commissionBaseType: 'ACTUAL_PAID',
+        maxCommissionRate: 0.3,
+        createTime: new Date(),
+      };
+      mockPrisma.sysDistConfig.findUnique.mockResolvedValue(mockConfig);
+
+      const result = await service.getConfig('tenant1');
+      expect(result.data.commissionBaseType).toBe('ACTUAL_PAID');
+      expect(result.data.maxCommissionRate).toBe(30);
     });
   });
 
@@ -98,6 +118,36 @@ describe('DistributionService', () => {
         }),
       );
       expect(mockPrisma.sysDistConfigLog.create).toHaveBeenCalled();
+    });
+
+    it('should persist maxCommissionRate (circuit breaker) as decimal 0-1', async () => {
+      mockPrisma.sysDistConfig.upsert.mockResolvedValue({});
+      mockPrisma.sysDistConfigLog.create.mockResolvedValue({});
+
+      await service.updateConfig('tenant1', { ...dto, maxCommissionRate: 80 }, 'admin');
+
+      expect(mockPrisma.sysDistConfig.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            maxCommissionRate: 0.8,
+          }),
+        }),
+      );
+    });
+
+    it('should persist commissionBaseType when provided', async () => {
+      mockPrisma.sysDistConfig.upsert.mockResolvedValue({});
+      mockPrisma.sysDistConfigLog.create.mockResolvedValue({});
+
+      await service.updateConfig('tenant1', { ...dto, commissionBaseType: 'ZERO' }, 'admin');
+
+      expect(mockPrisma.sysDistConfig.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            commissionBaseType: 'ZERO',
+          }),
+        }),
+      );
     });
   });
 

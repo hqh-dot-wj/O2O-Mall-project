@@ -8,14 +8,14 @@ Each entity module (e.g., `role`, `user`, `dept`) should follow this director
 
 src/views/system/[entity_name]/
 
-├── index.vue                # Main list view
+├── index.vue # Main list view
 
-└── modules/                 # Sub-components directory
+└── modules/ # Sub-components directory
 
     ├── [entity]-operate-drawer.vue   # Add/Edit form (Drawer/Modal)
-    
+
     ├── [entity]-search.vue           # Search filter component
-    
+
     └── [entity]-[feature]-drawer.vue # Specific feature components (e.g., auth-user, data-scope)
 
 **Example:**
@@ -91,18 +91,21 @@ src/views/system/[entity_name]/
 When starting a new module, choose one of the following standardized layouts based on the data relationship:
 
 ### 6.1 Standard Layout (Search + Table)
+
 - **Use Case**: Simple flat list data (e.g., Brand, Role).
 - **Structure**: `[Entity]Search` at the top, a single `NCard` containing `NDataTable` below.
 - **Hook**: `useTable`.
 
 ### 6.2 Layout A: Side Tree Filter
+
 - **Use Case**: Main data needs to be filtered by a secondary hierarchical dimension (e.g., User list filtered by Department tree).
 - **Structure**: `TableSiderLayout`. Tree on the left, Table on the right. Both manage independent data sources.
 - **Hook**: `useTable` (Table) + `useLoading` (Tree).
 
 ### 6.3 Layout B: Side Tree Navigation (Master-Detail)
+
 - **Use Case**: Strongly hierarchical data where the tree itself is the primary navigation (e.g., Menu management, Category management).
 - **Structure**: `TableSiderLayout`. Tree on the left. Right side contains:
-    1. `NDescriptions` showing the selected node's detail.
-    2. `NDataTable` showing the immediate sub-records (child nodes).
+  1. `NDescriptions` showing the selected node's detail.
+  2. `NDataTable` showing the immediate sub-records (child nodes).
 - **Hook**: `useLoading` (Tree) + `useLoading` (Sub-list).

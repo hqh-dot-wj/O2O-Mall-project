@@ -3,6 +3,7 @@ import { PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
+import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PointsAccountService } from '../account/account.service';
 import { PointsRuleService } from '../rule/rule.service';
@@ -30,7 +31,7 @@ export class PointsSigninService {
    * @returns 签到结果
    */
   async signin(memberId: string) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
 
     // 获取积分规则
     const rulesResult = await this.ruleService.getRules();
@@ -87,7 +88,7 @@ export class PointsSigninService {
    * @returns 签到状态
    */
   async checkSigninStatus(memberId: string) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
 
     // 检查今天是否已签到
     const today = new Date();
@@ -138,7 +139,7 @@ export class PointsSigninService {
    * @returns 连续签到天数
    */
   private async calculateContinuousDays(memberId: string): Promise<number> {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     let continuousDays = 0;
     let checkDate = new Date();
     checkDate.setHours(0, 0, 0, 0);

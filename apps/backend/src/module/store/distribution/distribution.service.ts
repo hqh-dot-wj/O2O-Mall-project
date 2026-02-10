@@ -30,6 +30,8 @@ export class DistributionService {
         enableCrossTenant: false,
         crossTenantRate: BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE * 100, // 100% 无折扣
         crossMaxDaily: BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
+        commissionBaseType: 'ORIGINAL_PRICE',
+        maxCommissionRate: 50,
         createTime: new Date().toISOString(),
       });
     }
@@ -42,6 +44,8 @@ export class DistributionService {
       enableCrossTenant: (config as any).enableCrossTenant ?? false,
       crossTenantRate: Number((config as any).crossTenantRate ?? 1) * 100,
       crossMaxDaily: Number((config as any).crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
+      commissionBaseType: config.commissionBaseType ?? 'ORIGINAL_PRICE',
+      maxCommissionRate: Number((config as any).maxCommissionRate ?? 0.5) * 100,
       createTime: config.createTime.toISOString(),
     });
   }
@@ -61,30 +65,29 @@ export class DistributionService {
     const level1Rate = dto.level1Rate / 100;
     const level2Rate = dto.level2Rate / 100;
     const crossTenantRate = (dto.crossTenantRate ?? 100) / 100;
+    const maxCommissionRate = dto.maxCommissionRate != null ? dto.maxCommissionRate / 100 : 0.5;
 
-    // Upsert 配置
+    const updatePayload = {
+      level1Rate,
+      level2Rate,
+      enableLV0: dto.enableLV0,
+      enableCrossTenant: dto.enableCrossTenant ?? false,
+      crossTenantRate,
+      crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
+      ...(dto.commissionBaseType != null && { commissionBaseType: dto.commissionBaseType }),
+      maxCommissionRate,
+      updateBy: operator,
+    };
+    const createPayload = {
+      tenantId,
+      ...updatePayload,
+      createBy: operator,
+    };
+
     await this.prisma.sysDistConfig.upsert({
       where: { tenantId },
-      update: {
-        level1Rate,
-        level2Rate,
-        enableLV0: dto.enableLV0,
-        enableCrossTenant: dto.enableCrossTenant ?? false,
-        crossTenantRate,
-        crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
-        updateBy: operator,
-      } as any,
-      create: {
-        tenantId,
-        level1Rate,
-        level2Rate,
-        enableLV0: dto.enableLV0,
-        enableCrossTenant: dto.enableCrossTenant ?? false,
-        crossTenantRate,
-        crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
-        createBy: operator,
-        updateBy: operator,
-      } as any,
+      update: updatePayload as any,
+      create: createPayload as any,
     });
 
     // 记录变更日志（审计）

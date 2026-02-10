@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CouponTemplateService } from './template.service';
 import { CreateCouponTemplateDto } from './dto/create-coupon-template.dto';
@@ -55,6 +55,18 @@ export class CouponTemplateController {
   @Api({ summary: '更新优惠券模板', type: CouponTemplateVo })
   async update(@Param('id') id: string, @Body() dto: UpdateCouponTemplateDto) {
     return await this.service.update(id, dto);
+  }
+
+  /**
+   * 更新优惠券模板状态（启用/停用）
+   */
+  @Patch(':id/status')
+  @Api({ summary: '更新优惠券模板状态' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: 'ACTIVE' | 'INACTIVE' },
+  ) {
+    return await this.service.setStatus(id, body.status);
   }
 
   /**

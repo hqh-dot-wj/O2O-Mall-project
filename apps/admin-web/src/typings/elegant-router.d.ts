@@ -27,6 +27,7 @@ declare module "@elegant-router/types" {
     "finance": "/finance";
     "finance_commission": "/finance/commission";
     "finance_dashboard": "/finance/dashboard";
+    "finance_distribution-config": "/finance/distribution-config";
     "finance_ledger": "/finance/ledger";
     "finance_withdrawal": "/finance/withdrawal";
     "home": "/home";
@@ -34,12 +35,22 @@ declare module "@elegant-router/types" {
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
     "marketing": "/marketing";
     "marketing_asset": "/marketing/asset";
+    "marketing_coupon": "/marketing/coupon";
+    "marketing_coupon_template": "/marketing/coupon/template";
     "marketing_course-attendance": "/marketing/course-attendance";
     "marketing_course-management": "/marketing/course-management";
     "marketing_course-schedule": "/marketing/course-schedule";
+    "marketing_points": "/marketing/points";
+    "marketing_points_accounts": "/marketing/points/accounts";
+    "marketing_points_rules": "/marketing/points/rules";
+    "marketing_points_statistics": "/marketing/points/statistics";
+    "marketing_points_tasks": "/marketing/points/tasks";
+    "marketing_statistics": "/marketing/statistics";
+    "marketing_statistics_coupon": "/marketing/statistics/coupon";
     "marketing_template": "/marketing/template";
     "member": "/member";
     "member_list": "/member/list";
+    "member_points-accounts": "/member/points-accounts";
     "member_upgrade": "/member/upgrade";
     "monitor": "/monitor";
     "monitor_cache": "/monitor/cache";
@@ -63,6 +74,8 @@ declare module "@elegant-router/types" {
     "store": "/store";
     "store_marketing": "/store/marketing";
     "store_marketing_activity": "/store/marketing/activity";
+    "store_marketing_coupon-distribution": "/store/marketing/coupon-distribution";
+    "store_marketing_coupon-usage": "/store/marketing/coupon-usage";
     "store_marketing_distribution": "/store/marketing/distribution";
     "store_product": "/store/product";
     "store_product_list": "/store/product/list";
@@ -167,15 +180,23 @@ declare module "@elegant-router/types" {
     | "user-center"
     | "finance_commission"
     | "finance_dashboard"
+    | "finance_distribution-config"
     | "finance_ledger"
     | "finance_withdrawal"
     | "home"
     | "marketing_asset"
+    | "marketing_coupon_template"
     | "marketing_course-attendance"
     | "marketing_course-management"
     | "marketing_course-schedule"
+    | "marketing_points_accounts"
+    | "marketing_points_rules"
+    | "marketing_points_statistics"
+    | "marketing_points_tasks"
+    | "marketing_statistics_coupon"
     | "marketing_template"
     | "member_list"
+    | "member_points-accounts"
     | "member_upgrade"
     | "monitor_cache"
     | "monitor_cache_list"
@@ -193,6 +214,8 @@ declare module "@elegant-router/types" {
     | "pms_global-product-create"
     | "pms_global-product"
     | "store_marketing_activity"
+    | "store_marketing_coupon-distribution"
+    | "store_marketing_coupon-usage"
     | "store_marketing_distribution"
     | "store_marketing"
     | "store_product_list"
@@ -290,7 +313,7 @@ declare module "@elegant-router/types" {
         component: `view.${K}`;
       }
     : never;
-  
+
   /**
    * the center level route
    */
@@ -313,7 +336,7 @@ declare module "@elegant-router/types" {
         children: (CenterLevelRoute<GetChildRouteKey<K>> | LastLevelRoute<GetChildRouteKey<K>>)[];
       }
     : never;
-  
+
   /**
    * the custom first level route
    */

@@ -48,7 +48,7 @@
 1. **入门**: [OPTIMIZATION_README.md](./OPTIMIZATION_README.md) ⭐ **首选**
    - 5分钟快速了解所有优化
 
-2. **清单**: [OPTIMIZATION_CHECKLIST.md](./OPTIMIZATION_CHECKLIST.md)
+2. **清单**: [OPTIMIZATION_CHECKLIST.md](./archive/OPTIMIZATION_CHECKLIST.md)（已归档）
    - 详细验证清单和KPI达成
 
 3. **总结**: [OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)

@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { User } from 'src/common/decorators/user.decorator';
 import { CouponStatisticsService } from '../statistics/statistics.service';
@@ -30,12 +31,7 @@ export class CouponManagementController {
     @Query('pageNum') pageNum?: number,
     @Query('pageSize') pageSize?: number,
   ) {
-    const result = await this.userCouponRepo.findUserCouponsPage(
-      memberId,
-      status as any,
-      pageNum,
-      pageSize,
-    );
+    const result = await this.userCouponRepo.findUserCouponsPage(memberId, status as any, pageNum, pageSize);
     return Result.page(FormatDateFields(result.rows), result.total);
   }
 
@@ -75,22 +71,26 @@ export class CouponManagementController {
   }
 
   /**
-   * 导出优惠券使用记录（管理端）
+   * 导出优惠券使用记录（管理端，返回 xlsx 文件流）
    */
   @Get('admin/marketing/coupon/export')
   @Api({ summary: '导出优惠券使用记录' })
   async exportUsageRecords(
+    @Res() res: Response,
     @Query('memberId') memberId?: string,
     @Query('templateId') templateId?: string,
     @Query('startTime') startTime?: string,
     @Query('endTime') endTime?: string,
-  ) {
-    return await this.statisticsService.exportUsageRecords({
-      memberId,
-      templateId,
-      startTime: startTime ? new Date(startTime) : undefined,
-      endTime: endTime ? new Date(endTime) : undefined,
-    });
+  ): Promise<void> {
+    await this.statisticsService.exportUsageRecords(
+      {
+        memberId,
+        templateId,
+        startTime: startTime ? new Date(startTime) : undefined,
+        endTime: endTime ? new Date(endTime) : undefined,
+      },
+      res,
+    );
   }
 
   /**
@@ -104,12 +104,7 @@ export class CouponManagementController {
     @Query('pageNum') pageNum?: number,
     @Query('pageSize') pageSize?: number,
   ) {
-    const result = await this.userCouponRepo.findUserCouponsPage(
-      memberId,
-      status as any,
-      pageNum,
-      pageSize,
-    );
+    const result = await this.userCouponRepo.findUserCouponsPage(memberId, status as any, pageNum, pageSize);
     return Result.page(FormatDateFields(result.rows), result.total);
   }
 }

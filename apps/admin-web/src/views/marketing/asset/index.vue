@@ -11,57 +11,57 @@ import { useTable } from '@/hooks/common/table';
  * 支持手动模拟核销。
  */
 
-const { data, loading, getData, columns, searchParams, resetSearchParams } = useTable({
+const { data, loading, getData, columns } = useTable({
   apiFn: fetchGetUserAssetList,
   apiParams: {
     pageNum: 1,
     pageSize: 10,
     memberId: null,
-    status: null
+    status: null,
   },
   columns: () => [
     {
       key: 'memberId',
       title: '所属会员',
-      align: 'center'
+      align: 'center',
     },
     {
       key: 'assetName',
       title: '资产名称',
-      align: 'center'
+      align: 'center',
     },
     {
       key: 'balance',
       title: '剩余权益',
       align: 'center',
-      render: row => <span class="text-primary font-bold">{row.balance}</span>
+      render: (row) => <span class="text-primary font-bold">{row.balance}</span>,
     },
     {
       key: 'status',
       title: '状态',
       align: 'center',
-      render: row => {
+      render: (row) => {
         const map: Record<string, { type: NaiveUI.ThemeColor; label: string }> = {
           UNUSED: { type: 'success', label: '未使用' },
           USED: { type: 'default', label: '已用完' },
           EXPIRED: { type: 'error', label: '已过期' },
-          FROZEN: { type: 'warning', label: '已冻结' }
+          FROZEN: { type: 'warning', label: '已冻结' },
         };
         const item = map[row.status] || { type: 'default', label: row.status };
         return <NTag type={item.type}>{item.label}</NTag>;
-      }
+      },
     },
     {
       key: 'expireTime',
       title: '有效期至',
       align: 'center',
-      render: row => row.expireTime || '永久有效'
+      render: (row) => row.expireTime || '永久有效',
     },
     {
       key: 'operate',
       title: '操作',
       align: 'center',
-      render: row => (
+      render: (row) => (
         <NPopconfirm onPositiveClick={() => handleConsume(row.id)}>
           {{
             default: () => '确定要核销 1 个单位的权益吗？',
@@ -69,12 +69,12 @@ const { data, loading, getData, columns, searchParams, resetSearchParams } = use
               <NButton type="primary" size="small" ghost disabled={row.status !== 'UNUSED'}>
                 去核销
               </NButton>
-            )
+            ),
           }}
         </NPopconfirm>
-      )
-    }
-  ]
+      ),
+    },
+  ],
 });
 
 async function handleConsume(id: string) {

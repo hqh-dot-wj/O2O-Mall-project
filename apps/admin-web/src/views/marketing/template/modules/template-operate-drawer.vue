@@ -222,10 +222,8 @@ async function handleSubmit() {
 
         <!-- 商品/规格选择卡片 -->
         <NCard title="关联商品/规格" class="mb-4" size="small">
-          <div class="mb-2 text-xs text-gray-500">
-            选择此玩法模板关联的商品或服务规格（可选）
-          </div>
-          
+          <div class="mb-2 text-xs text-gray-500">选择此玩法模板关联的商品或服务规格（可选）</div>
+
           <NSpace vertical>
             <NButton type="primary" ghost @click="openProductModal">
               <template #icon>
@@ -233,18 +231,11 @@ async function handleSubmit() {
               </template>
               选择商品/规格
             </NButton>
-            
-            <div v-if="selectedProduct" class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+
+            <div v-if="selectedProduct" class="flex items-center gap-2 rounded bg-gray-50 p-2">
               <NTag type="success" size="small">已选择</NTag>
               <span class="text-sm">{{ selectedProduct.name }}</span>
-              <NButton
-                text
-                type="error"
-                size="tiny"
-                @click="selectedProduct = null"
-              >
-                移除
-              </NButton>
+              <NButton text type="error" size="tiny" @click="selectedProduct = null">移除</NButton>
             </div>
           </NSpace>
         </NCard>
@@ -282,9 +273,6 @@ async function handleSubmit() {
     </NDrawerContent>
 
     <!-- 商品选择模态框 -->
-    <ProductSelectModal
-      v-model:visible="productModalVisible"
-      @select="handleProductSelect"
-    />
+    <ProductSelectModal v-model:visible="productModalVisible" @select="handleProductSelect" />
   </NDrawer>
 </template>

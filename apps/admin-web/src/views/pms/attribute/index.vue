@@ -114,12 +114,7 @@ async function handleBatchDelete() {
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <AttributeSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getDataByPage" />
-    <NCard
-      :title="$t('page.pms.attribute.title')"
-      :bordered="false"
-      size="small"
-      class="card-wrapper sm:flex-1-hidden"
-    >
+    <NCard :title="$t('page.pms.attribute.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
         <TableHeaderOperation
           v-model:columns="columnChecks"

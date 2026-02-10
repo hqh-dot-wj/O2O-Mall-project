@@ -1,26 +1,26 @@
 <script setup lang="tsx">
-import { ref, onMounted, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import {
   NButton,
   NCard,
   NDataTable,
-  NTag,
-  NSpace,
-  NModal,
+  NDatePicker,
   NForm,
   NFormItem,
-  NDatePicker,
   NInput,
+  NModal,
+  NProgress,
   NSelect,
+  NSpace,
   NSpin,
-  NProgress
+  NTag
 } from 'naive-ui';
 import {
-  fetchCourseAttendances,
-  markAttendance,
-  fetchAttendanceRate,
   type CourseAttendance,
-  type MarkAttendanceRequest
+  type MarkAttendanceRequest,
+  fetchAttendanceRate,
+  fetchCourseAttendances,
+  markAttendance
 } from '@/service/api/course-group-buy';
 
 interface Props {
@@ -135,12 +135,7 @@ const columns = [
     align: 'center' as const,
     width: 120,
     render: (row: CourseAttendance) => (
-      <NButton
-        type="primary"
-        ghost
-        size="small"
-        onClick={() => viewAttendanceRate(row.memberId)}
-      >
+      <NButton type="primary" ghost size="small" onClick={() => viewAttendanceRate(row.memberId)}>
         <template #icon>
           <icon-mdi-chart-line />
         </template>
@@ -261,51 +256,51 @@ onMounted(() => {
 <template>
   <div class="h-full flex-col">
     <!-- 统计卡片 -->
-    <div class="mb-4 grid grid-cols-5 gap-4">
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+    <div class="grid grid-cols-5 mb-4 gap-4">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-primary">{{ statistics.total }}</div>
+            <div class="text-2xl text-primary font-bold">{{ statistics.total }}</div>
             <div class="mt-1 text-sm text-gray-600">总考勤记录</div>
           </div>
           <icon-mdi-clipboard-list class="text-4xl text-primary opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-success">{{ statistics.attended }}</div>
+            <div class="text-2xl text-success font-bold">{{ statistics.attended }}</div>
             <div class="mt-1 text-sm text-gray-600">已出勤</div>
           </div>
           <icon-mdi-check-circle class="text-4xl text-success opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-error">{{ statistics.absent }}</div>
+            <div class="text-2xl text-error font-bold">{{ statistics.absent }}</div>
             <div class="mt-1 text-sm text-gray-600">未出勤</div>
           </div>
           <icon-mdi-close-circle class="text-4xl text-error opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-purple-600">{{ statistics.rate }}%</div>
+            <div class="text-2xl text-purple-600 font-bold">{{ statistics.rate }}%</div>
             <div class="mt-1 text-sm text-gray-600">总出勤率</div>
           </div>
           <icon-mdi-chart-line class="text-4xl text-purple-600 opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-warning">{{ statistics.memberCount }}</div>
+            <div class="text-2xl text-warning font-bold">{{ statistics.memberCount }}</div>
             <div class="mt-1 text-sm text-gray-600">学员人数</div>
           </div>
           <icon-mdi-account-group class="text-4xl text-warning opacity-20" />
@@ -383,9 +378,7 @@ onMounted(() => {
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showMarkModal = false">取消</NButton>
-          <NButton type="primary" :loading="markLoading" @click="submitMarkAttendance">
-            确认标记
-          </NButton>
+          <NButton type="primary" :loading="markLoading" @click="submitMarkAttendance">确认标记</NButton>
         </NSpace>
       </template>
     </NModal>
@@ -398,17 +391,17 @@ onMounted(() => {
 
       <div v-else-if="attendanceRate" class="flex-col gap-6">
         <!-- 学员信息 -->
-        <div class="text-center p-4 bg-gray-50 rounded">
-          <div class="text-sm text-gray-600 mb-2">学员ID</div>
-          <div class="text-xl font-bold flex items-center justify-center gap-2">
+        <div class="rounded bg-gray-50 p-4 text-center">
+          <div class="mb-2 text-sm text-gray-600">学员ID</div>
+          <div class="flex items-center justify-center gap-2 text-xl font-bold">
             <icon-mdi-account class="text-primary" />
             <span>{{ selectedMemberId }}</span>
           </div>
         </div>
 
         <!-- 出勤率进度条 -->
-        <div class="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded">
-          <div class="text-sm text-gray-600 mb-2">出勤率</div>
+        <div class="rounded from-purple-50 to-blue-50 bg-gradient-to-r p-4">
+          <div class="mb-2 text-sm text-gray-600">出勤率</div>
           <NProgress
             type="line"
             :percentage="Math.round(attendanceRate.rate * 100)"
@@ -421,21 +414,21 @@ onMounted(() => {
 
         <!-- 统计数据 -->
         <div class="grid grid-cols-3 gap-4">
-          <div class="flex-col items-center p-4 bg-blue-50 rounded-lg">
-            <icon-mdi-clipboard-list class="text-3xl text-primary mb-2" />
-            <div class="text-2xl font-bold text-primary">{{ attendanceRate.total }}</div>
+          <div class="flex-col items-center rounded-lg bg-blue-50 p-4">
+            <icon-mdi-clipboard-list class="mb-2 text-3xl text-primary" />
+            <div class="text-2xl text-primary font-bold">{{ attendanceRate.total }}</div>
             <div class="mt-1 text-sm text-gray-600">总课时</div>
           </div>
 
-          <div class="flex-col items-center p-4 bg-green-50 rounded-lg">
-            <icon-mdi-check-circle class="text-3xl text-success mb-2" />
-            <div class="text-2xl font-bold text-success">{{ attendanceRate.attended }}</div>
+          <div class="flex-col items-center rounded-lg bg-green-50 p-4">
+            <icon-mdi-check-circle class="mb-2 text-3xl text-success" />
+            <div class="text-2xl text-success font-bold">{{ attendanceRate.attended }}</div>
             <div class="mt-1 text-sm text-gray-600">已出勤</div>
           </div>
 
-          <div class="flex-col items-center p-4 bg-red-50 rounded-lg">
-            <icon-mdi-close-circle class="text-3xl text-error mb-2" />
-            <div class="text-2xl font-bold text-error">
+          <div class="flex-col items-center rounded-lg bg-red-50 p-4">
+            <icon-mdi-close-circle class="mb-2 text-3xl text-error" />
+            <div class="text-2xl text-error font-bold">
               {{ attendanceRate.total - attendanceRate.attended }}
             </div>
             <div class="mt-1 text-sm text-gray-600">未出勤</div>

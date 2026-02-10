@@ -5,8 +5,10 @@ import { MemberRepository } from './member.repository';
 import { ReferralCodeRepository } from './referral-code.repository';
 import { MemberStatsService } from './services/member-stats.service';
 import { MemberReferralService } from './services/member-referral.service';
+import { PointsAccountModule } from 'src/module/marketing/points/account/account.module';
 
 @Module({
+  imports: [PointsAccountModule],
   controllers: [MemberController],
   providers: [MemberService, MemberRepository, ReferralCodeRepository, MemberStatsService, MemberReferralService],
   exports: [MemberService, MemberRepository, ReferralCodeRepository],

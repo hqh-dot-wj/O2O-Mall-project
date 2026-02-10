@@ -51,17 +51,17 @@
 
 ### 📖 详细报告
 
-1. [**OPTIMIZATION_SUMMARY.md**](./OPTIMIZATION_SUMMARY.md)  
-   → 完整优化总结报告（推荐首先阅读）
+1. [**OPTIMIZATION_SUMMARY.md**](./archive/OPTIMIZATION_SUMMARY.md)  
+   → 完整优化总结报告（已归档，推荐首先阅读）
 
-2. [**OPTIMIZATION_CHECKLIST.md**](./OPTIMIZATION_CHECKLIST.md)  
-   → 详细验证清单和KPI达成情况
+2. [**OPTIMIZATION_CHECKLIST.md**](./archive/OPTIMIZATION_CHECKLIST.md)  
+   → 详细验证清单和KPI达成情况（已归档）
 
-3. [**P0_OPTIMIZATION_FINAL_REPORT.md**](./P0_OPTIMIZATION_FINAL_REPORT.md)  
-   → P0级（安全/稳定性）详细报告
+3. [**P0_OPTIMIZATION_FINAL_REPORT.md**](./archive/P0_OPTIMIZATION_FINAL_REPORT.md)  
+   → P0级（安全/稳定性）详细报告（已归档）
 
-4. [**P1_OPTIMIZATION_COMPLETE.md**](./P1_OPTIMIZATION_COMPLETE.md)  
-   → P1级（性能/可维护性）详细报告
+4. [**P1_OPTIMIZATION_COMPLETE.md**](./archive/P1_OPTIMIZATION_COMPLETE.md)  
+   → P1级（性能/可维护性）详细报告（已归档）
 
 ### 🧪 验证脚本
 

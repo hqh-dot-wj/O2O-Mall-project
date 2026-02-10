@@ -69,7 +69,7 @@ describe('CouponTemplateService', () => {
       const mockTemplate = {
         id: 'template-001',
         ...dto,
-        tenantId: 'test-tenant-001',
+        tenantId: '00000',
         remainingStock: 1000,
         claimedCount: 0,
       };

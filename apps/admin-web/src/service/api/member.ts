@@ -45,3 +45,21 @@ export function fetchUpdateMemberLevel(data: { memberId: string; levelId: number
     data
   });
 }
+
+/** Get member point history */
+export function fetchGetMemberPointHistory(params: Api.Member.PointHistorySearchParams) {
+  return request<Api.Member.PointHistoryList>({
+    url: '/admin/member/point/history',
+    method: 'get',
+    params
+  });
+}
+
+/** Adjust member points */
+export function fetchAdjustMemberPoints(data: Api.Member.PointAdjustment) {
+  return request<any>({
+    url: '/admin/member/point/adjust',
+    method: 'post',
+    data
+  });
+}

@@ -26554,6 +26554,390 @@
         ]
       }
     },
+    "/api/admin/member/point/history": {
+      "get": {
+        "operationId": "MemberController_getPointHistory",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "查询会员积分变动记录",
+        "tags": [
+          "会员管理"
+        ]
+      }
+    },
+    "/api/admin/member/point/adjust": {
+      "post": {
+        "operationId": "MemberController_adjustMemberPoints",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "调整会员积分",
+        "tags": [
+          "会员管理"
+        ]
+      }
+    },
+    "/api/client/marketing/points/balance": {
+      "get": {
+        "operationId": "PointsAccountClientController_getBalance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分余额",
+        "tags": [
+          "积分账户"
+        ]
+      }
+    },
+    "/api/client/marketing/points/transactions": {
+      "get": {
+        "operationId": "PointsAccountClientController_getTransactions",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": false,
+            "in": "query",
+            "description": "会员ID（管理端筛选）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "交易类型",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EARN_ORDER",
+                "EARN_SIGNIN",
+                "EARN_TASK",
+                "EARN_ADMIN",
+                "USE_ORDER",
+                "USE_COUPON",
+                "USE_PRODUCT",
+                "FREEZE",
+                "UNFREEZE",
+                "EXPIRE",
+                "REFUND",
+                "DEDUCT_ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "startTime",
+            "required": false,
+            "in": "query",
+            "description": "开始时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": false,
+            "in": "query",
+            "description": "结束时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "minimum": 1,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分明细",
+        "tags": [
+          "积分账户"
+        ]
+      }
+    },
+    "/api/client/marketing/points/expiring": {
+      "get": {
+        "operationId": "PointsAccountClientController_getExpiringPoints",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询即将过期的积分",
+        "tags": [
+          "积分账户"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/adjust": {
+      "post": {
+        "operationId": "PointsAccountAdminController_adjustPoints",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddPointsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "调整用户积分",
+        "tags": [
+          "积分账户管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/accounts": {
+      "get": {
+        "operationId": "PointsAccountAdminController_getAccounts",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分账户列表",
+        "tags": [
+          "积分账户管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/transactions": {
+      "get": {
+        "operationId": "PointsAccountAdminController_getTransactions",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": false,
+            "in": "query",
+            "description": "会员ID（管理端筛选）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "交易类型",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EARN_ORDER",
+                "EARN_SIGNIN",
+                "EARN_TASK",
+                "EARN_ADMIN",
+                "USE_ORDER",
+                "USE_COUPON",
+                "USE_PRODUCT",
+                "FREEZE",
+                "UNFREEZE",
+                "EXPIRE",
+                "REFUND",
+                "DEDUCT_ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "startTime",
+            "required": false,
+            "in": "query",
+            "description": "开始时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": false,
+            "in": "query",
+            "description": "结束时间",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "minimum": 1,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "查询积分交易记录",
+        "tags": [
+          "积分账户管理"
+        ]
+      }
+    },
+    "/api/admin/marketing/points/rules": {
+      "get": {
+        "operationId": "PointsRuleController_getRules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取积分规则配置",
+        "tags": [
+          "积分规则"
+        ]
+      },
+      "put": {
+        "operationId": "PointsRuleController_updateRules",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePointsRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新积分规则配置",
+        "tags": [
+          "积分规则"
+        ]
+      }
+    },
     "/api/admin/upgrade/list": {
       "get": {
         "operationId": "AdminUpgradeController_list",
@@ -33813,6 +34197,124 @@
         ]
       }
     },
+    "/api/admin/marketing/coupon/templates/{id}/status": {
+      "patch": {
+        "operationId": "CouponTemplateController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "更新优惠券模板状态（启用/停用）",
+        "tags": [
+          "营销-优惠券模板"
+        ]
+      }
+    },
     "/api/admin/marketing/coupon/distribute/manual": {
       "post": {
         "operationId": "CouponDistributionController_distributeManually",
@@ -34719,7 +35221,7 @@
             }
           }
         },
-        "summary": "导出优惠券使用记录（管理端）",
+        "summary": "导出优惠券使用记录（管理端，返回 xlsx 文件流）",
         "tags": [
           "营销-优惠券管理"
         ]
@@ -34856,285 +35358,6 @@
         "summary": "查询我的优惠券（C端）",
         "tags": [
           "营销-优惠券管理"
-        ]
-      }
-    },
-    "/api/admin/marketing/points/rules": {
-      "get": {
-        "operationId": "PointsRuleController_getRules",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "获取积分规则配置",
-        "tags": [
-          "积分规则"
-        ]
-      },
-      "put": {
-        "operationId": "PointsRuleController_updateRules",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePointsRuleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "更新积分规则配置",
-        "tags": [
-          "积分规则"
-        ]
-      }
-    },
-    "/api/client/marketing/points/balance": {
-      "get": {
-        "operationId": "PointsAccountClientController_getBalance",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "查询积分余额",
-        "tags": [
-          "积分账户"
-        ]
-      }
-    },
-    "/api/client/marketing/points/transactions": {
-      "get": {
-        "operationId": "PointsAccountClientController_getTransactions",
-        "parameters": [
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "交易类型",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "EARN_ORDER",
-                "EARN_SIGNIN",
-                "EARN_TASK",
-                "EARN_ADMIN",
-                "USE_ORDER",
-                "USE_COUPON",
-                "USE_PRODUCT",
-                "FREEZE",
-                "UNFREEZE",
-                "EXPIRE",
-                "REFUND",
-                "DEDUCT_ADMIN"
-              ]
-            }
-          },
-          {
-            "name": "startTime",
-            "required": false,
-            "in": "query",
-            "description": "开始时间",
-            "schema": {
-              "format": "date-time",
-              "type": "string"
-            }
-          },
-          {
-            "name": "endTime",
-            "required": false,
-            "in": "query",
-            "description": "结束时间",
-            "schema": {
-              "format": "date-time",
-              "type": "string"
-            }
-          },
-          {
-            "name": "pageNum",
-            "required": false,
-            "in": "query",
-            "description": "页码",
-            "schema": {
-              "minimum": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "每页数量",
-            "schema": {
-              "minimum": 1,
-              "example": 10,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "查询积分明细",
-        "tags": [
-          "积分账户"
-        ]
-      }
-    },
-    "/api/client/marketing/points/expiring": {
-      "get": {
-        "operationId": "PointsAccountClientController_getExpiringPoints",
-        "parameters": [
-          {
-            "name": "days",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "查询即将过期的积分",
-        "tags": [
-          "积分账户"
-        ]
-      }
-    },
-    "/api/admin/marketing/points/adjust": {
-      "post": {
-        "operationId": "PointsAccountAdminController_adjustPoints",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddPointsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "summary": "调整用户积分",
-        "tags": [
-          "积分账户管理"
-        ]
-      }
-    },
-    "/api/admin/marketing/points/accounts": {
-      "get": {
-        "operationId": "PointsAccountAdminController_getAccounts",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "查询积分账户列表",
-        "tags": [
-          "积分账户管理"
-        ]
-      }
-    },
-    "/api/admin/marketing/points/transactions": {
-      "get": {
-        "operationId": "PointsAccountAdminController_getTransactions",
-        "parameters": [
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "交易类型",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "EARN_ORDER",
-                "EARN_SIGNIN",
-                "EARN_TASK",
-                "EARN_ADMIN",
-                "USE_ORDER",
-                "USE_COUPON",
-                "USE_PRODUCT",
-                "FREEZE",
-                "UNFREEZE",
-                "EXPIRE",
-                "REFUND",
-                "DEDUCT_ADMIN"
-              ]
-            }
-          },
-          {
-            "name": "startTime",
-            "required": false,
-            "in": "query",
-            "description": "开始时间",
-            "schema": {
-              "format": "date-time",
-              "type": "string"
-            }
-          },
-          {
-            "name": "endTime",
-            "required": false,
-            "in": "query",
-            "description": "结束时间",
-            "schema": {
-              "format": "date-time",
-              "type": "string"
-            }
-          },
-          {
-            "name": "pageNum",
-            "required": false,
-            "in": "query",
-            "description": "页码",
-            "schema": {
-              "minimum": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "每页数量",
-            "schema": {
-              "minimum": 1,
-              "example": 10,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "查询积分交易记录",
-        "tags": [
-          "积分账户管理"
         ]
       }
     },
@@ -45608,6 +45831,136 @@
           "levelId"
         ]
       },
+      "AddPointsDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "用户ID"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 1,
+            "description": "积分数量",
+            "example": 100
+          },
+          "type": {
+            "type": "string",
+            "description": "交易类型",
+            "enum": [
+              "EARN_ORDER",
+              "EARN_SIGNIN",
+              "EARN_TASK",
+              "EARN_ADMIN",
+              "USE_ORDER",
+              "USE_COUPON",
+              "USE_PRODUCT",
+              "FREEZE",
+              "UNFREEZE",
+              "EXPIRE",
+              "REFUND",
+              "DEDUCT_ADMIN"
+            ]
+          },
+          "relatedId": {
+            "type": "string",
+            "description": "关联ID（订单ID、任务ID等）"
+          },
+          "remark": {
+            "type": "string",
+            "description": "备注"
+          },
+          "expireTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "过期时间（null表示永久有效）"
+          }
+        },
+        "required": [
+          "memberId",
+          "amount",
+          "type"
+        ]
+      },
+      "UpdatePointsRuleDto": {
+        "type": "object",
+        "properties": {
+          "orderPointsEnabled": {
+            "type": "boolean",
+            "description": "是否启用消费积分",
+            "example": true
+          },
+          "orderPointsRatio": {
+            "type": "number",
+            "minimum": 0,
+            "description": "消费积分比例（每消费N元获得M积分）",
+            "example": 1
+          },
+          "orderPointsBase": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "消费积分基数（N元）",
+            "example": 1
+          },
+          "signinPointsEnabled": {
+            "type": "boolean",
+            "description": "是否启用签到积分",
+            "example": true
+          },
+          "signinPointsAmount": {
+            "type": "number",
+            "minimum": 1,
+            "description": "签到积分数量",
+            "example": 10
+          },
+          "pointsValidityEnabled": {
+            "type": "boolean",
+            "description": "是否启用积分有效期",
+            "example": false
+          },
+          "pointsValidityDays": {
+            "type": "number",
+            "minimum": 1,
+            "description": "积分有效天数（null表示永久有效）",
+            "example": 365
+          },
+          "pointsRedemptionEnabled": {
+            "type": "boolean",
+            "description": "是否启用积分抵扣",
+            "example": true
+          },
+          "pointsRedemptionRatio": {
+            "type": "number",
+            "minimum": 0,
+            "description": "积分抵扣比例（N积分抵扣M元）",
+            "example": 100
+          },
+          "pointsRedemptionBase": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "积分抵扣基数（M元）",
+            "example": 1
+          },
+          "maxPointsPerOrder": {
+            "type": "number",
+            "minimum": 0,
+            "description": "单笔订单最多可使用积分数量",
+            "example": 10000
+          },
+          "maxDiscountPercentOrder": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "单笔订单最多可抵扣百分比（1-100）",
+            "example": 50
+          },
+          "systemEnabled": {
+            "type": "boolean",
+            "description": "系统开关",
+            "example": true
+          }
+        }
+      },
       "ApproveUpgradeDto": {
         "type": "object",
         "properties": {
@@ -47569,12 +47922,12 @@
         "properties": {
           "tenantId": {
             "type": "string",
-            "description": "租户ID",
+            "description": "租户ID（不传则从请求上下文注入）",
             "example": "000000"
           },
           "createBy": {
             "type": "string",
-            "description": "创建人",
+            "description": "创建人（不传则从请求上下文注入）",
             "example": "admin"
           },
           "name": {
@@ -47697,8 +48050,6 @@
           }
         },
         "required": [
-          "tenantId",
-          "createBy",
           "name",
           "type",
           "validityType",
@@ -47710,12 +48061,12 @@
         "properties": {
           "tenantId": {
             "type": "string",
-            "description": "租户ID",
+            "description": "租户ID（不传则从请求上下文注入）",
             "example": "000000"
           },
           "createBy": {
             "type": "string",
-            "description": "创建人",
+            "description": "创建人（不传则从请求上下文注入）",
             "example": "admin"
           },
           "name": {
@@ -47857,136 +48208,6 @@
         "required": [
           "templateId",
           "memberIds"
-        ]
-      },
-      "UpdatePointsRuleDto": {
-        "type": "object",
-        "properties": {
-          "orderPointsEnabled": {
-            "type": "boolean",
-            "description": "是否启用消费积分",
-            "example": true
-          },
-          "orderPointsRatio": {
-            "type": "number",
-            "minimum": 0,
-            "description": "消费积分比例（每消费N元获得M积分）",
-            "example": 1
-          },
-          "orderPointsBase": {
-            "type": "number",
-            "minimum": 0.01,
-            "description": "消费积分基数（N元）",
-            "example": 1
-          },
-          "signinPointsEnabled": {
-            "type": "boolean",
-            "description": "是否启用签到积分",
-            "example": true
-          },
-          "signinPointsAmount": {
-            "type": "number",
-            "minimum": 1,
-            "description": "签到积分数量",
-            "example": 10
-          },
-          "pointsValidityEnabled": {
-            "type": "boolean",
-            "description": "是否启用积分有效期",
-            "example": false
-          },
-          "pointsValidityDays": {
-            "type": "number",
-            "minimum": 1,
-            "description": "积分有效天数（null表示永久有效）",
-            "example": 365
-          },
-          "pointsRedemptionEnabled": {
-            "type": "boolean",
-            "description": "是否启用积分抵扣",
-            "example": true
-          },
-          "pointsRedemptionRatio": {
-            "type": "number",
-            "minimum": 0,
-            "description": "积分抵扣比例（N积分抵扣M元）",
-            "example": 100
-          },
-          "pointsRedemptionBase": {
-            "type": "number",
-            "minimum": 0.01,
-            "description": "积分抵扣基数（M元）",
-            "example": 1
-          },
-          "maxPointsPerOrder": {
-            "type": "number",
-            "minimum": 0,
-            "description": "单笔订单最多可使用积分数量",
-            "example": 10000
-          },
-          "maxDiscountPercentOrder": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 100,
-            "description": "单笔订单最多可抵扣百分比（1-100）",
-            "example": 50
-          },
-          "systemEnabled": {
-            "type": "boolean",
-            "description": "系统开关",
-            "example": true
-          }
-        }
-      },
-      "AddPointsDto": {
-        "type": "object",
-        "properties": {
-          "memberId": {
-            "type": "string",
-            "description": "用户ID"
-          },
-          "amount": {
-            "type": "number",
-            "minimum": 1,
-            "description": "积分数量",
-            "example": 100
-          },
-          "type": {
-            "type": "string",
-            "description": "交易类型",
-            "enum": [
-              "EARN_ORDER",
-              "EARN_SIGNIN",
-              "EARN_TASK",
-              "EARN_ADMIN",
-              "USE_ORDER",
-              "USE_COUPON",
-              "USE_PRODUCT",
-              "FREEZE",
-              "UNFREEZE",
-              "EXPIRE",
-              "REFUND",
-              "DEDUCT_ADMIN"
-            ]
-          },
-          "relatedId": {
-            "type": "string",
-            "description": "关联ID（订单ID、任务ID等）"
-          },
-          "remark": {
-            "type": "string",
-            "description": "备注"
-          },
-          "expireTime": {
-            "format": "date-time",
-            "type": "string",
-            "description": "过期时间（null表示永久有效）"
-          }
-        },
-        "required": [
-          "memberId",
-          "amount",
-          "type"
         ]
       },
       "CreatePointsTaskDto": {
@@ -49181,6 +49402,14 @@
             "type": "number",
             "description": "跨店佣金日限额 (元)"
           },
+          "commissionBaseType": {
+            "type": "string",
+            "description": "分佣基数类型"
+          },
+          "maxCommissionRate": {
+            "type": "number",
+            "description": "熔断保护比例 (0-100)"
+          },
           "createTime": {
             "type": "string",
             "description": "创建时间"
@@ -49236,6 +49465,22 @@
             "minimum": 0,
             "description": "跨店佣金日限额 (元)",
             "example": 500
+          },
+          "commissionBaseType": {
+            "type": "string",
+            "description": "分佣基数类型",
+            "enum": [
+              "ORIGINAL_PRICE",
+              "ACTUAL_PAID",
+              "ZERO"
+            ]
+          },
+          "maxCommissionRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "熔断保护比例 (0-100，如50表示50%)",
+            "example": 50
           }
         },
         "required": [

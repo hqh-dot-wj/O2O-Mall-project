@@ -317,8 +317,8 @@ npm test -- --watch
 - [需求文档](../../.kiro/specs/maas-architecture-improvement/requirements.md)
 - [设计文档](../../.kiro/specs/maas-architecture-improvement/design.md)
 - [任务文档](../../.kiro/specs/maas-architecture-improvement/tasks.md)
-- [P0 实施总结](./P0_IMPLEMENTATION_SUMMARY.md)
-- [P1 实施总结](./P1_IMPLEMENTATION_SUMMARY.md)
+- [P0 实施总结](./archive/P0_IMPLEMENTATION_SUMMARY.md)
+- [P1 实施总结](./archive/P1_IMPLEMENTATION_SUMMARY.md)
 
 ---
 

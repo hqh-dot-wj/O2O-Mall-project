@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
+import { fetchGetDashboardStats } from '@/service/api/main';
 import { useThemeStore } from '@/store/modules/theme';
 import { $t } from '@/locales';
-import { fetchGetDashboardStats } from '@/service/api/main';
 
 defineOptions({
   name: 'CardData'
@@ -213,7 +213,7 @@ function getGradientColor(color: CardData['color']) {
     <template #header>
       <div class="flex items-center justify-between">
         <span class="font-semibold">数据概览</span>
-        <NButton text @click="loadStats" :loading="loading">
+        <NButton text :loading="loading" @click="loadStats">
           <template #icon>
             <icon-mdi-refresh class="text-icon" />
           </template>

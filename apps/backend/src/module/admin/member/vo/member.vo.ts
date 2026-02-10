@@ -73,3 +73,32 @@ export class MemberVo {
   @ApiProperty({ description: 'Level Name' })
   levelName?: string;
 }
+
+/**
+ * 会员积分变动记录 VO（管理端列表）
+ */
+export class PointHistoryVo {
+  @ApiProperty({ description: '记录 ID' })
+  id: string;
+
+  @ApiProperty({ description: '会员 ID' })
+  memberId: string;
+
+  @ApiProperty({ description: '变动积分（正增负减）' })
+  changePoints: number;
+
+  @ApiProperty({ description: '变动后积分' })
+  afterPoints: number;
+
+  @ApiProperty({ description: '变动类型' })
+  type: string;
+
+  @ApiPropertyOptional({ description: '类型描述' })
+  typeName?: string;
+
+  @ApiPropertyOptional({ description: '备注' })
+  remark?: string;
+
+  @ApiProperty({ description: '创建时间' })
+  createTime: Date;
+}

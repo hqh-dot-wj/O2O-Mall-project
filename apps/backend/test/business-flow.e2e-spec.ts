@@ -61,10 +61,19 @@ describe('Business Flow Integration Test (Order -> Commission)', () => {
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     commissionService = moduleFixture.get<CommissionService>(CommissionService);
 
-    // Get a valid Tenant (Use the first available one or create one)
-    const tenant = await prismaService.sysTenant.findFirst();
-    if (!tenant) throw new Error('No tenant found in DB, please seed data first');
-    tenantId = tenant.tenantId;
+    // 测试数据统一使用租户 00000
+    const TEST_TENANT_ID = '00000';
+    await prismaService.sysTenant.upsert({
+      where: { tenantId: TEST_TENANT_ID },
+      create: {
+        tenantId: TEST_TENANT_ID,
+        companyName: 'E2E Test Tenant',
+        status: 'NORMAL',
+        delFlag: 'NORMAL',
+      },
+      update: {},
+    });
+    tenantId = TEST_TENANT_ID;
   });
 
   afterAll(async () => {

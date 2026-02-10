@@ -1,0 +1,322 @@
+---
+inclusion: fileMatch
+fileMatchPattern: 'apps/miniapp-client/**/*'
+---
+
+# miniapp-client 开发规范（小程序 + H5）
+
+本规范融合项目既有规则，并参考微信官方、uni-app 官方及大厂实践，适用于 **小程序 + H5** 跨平台开发。
+
+---
+
+## 一、项目概览与结构
+
+- 基于 **uniapp + Vue3 + TypeScript + Vite5 + UnoCSS**，模板为 unibest
+- 主要目标平台：**H5**、**微信小程序**（后续可扩展支付宝等）
+- 核心配置：`vite.config.ts`、`pages.config.ts`、`manifest.config.ts`、`uno.config.ts`
+
+### 目录结构
+
+| 目录 | 用途 |
+|------|------|
+| `src/pages/` | 页面 |
+| `src/components/` | 全局组件 |
+| `src/pages/xx/components/` | 页面级组件 |
+| `src/api/` | API 接口定义 |
+| `src/http/` | HTTP 封装、拦截器 |
+| `src/store/` | Pinia 状态 |
+| `src/tabbar/` | 自定义 tabbar |
+| `src/utils/` | 工具函数 |
+| `src/style/` | 全局样式 |
+
+---
+
+## 二、条件编译规范（核心）
+
+### 1. 必须使用条件编译处理平台差异
+
+**任何仅在部分平台可用的 API、组件、样式，必须用条件编译隔离**，不得用运行时 `if (uni.getSystemInfoSync().platform)` 等方式替代（会增大包体并降低性能）。
+
+```vue
+<script setup lang="ts">
+// #ifdef H5
+import { h5Api } from '@/utils/h5'
+// #endif
+
+// #ifdef MP-WEIXIN
+import { mpApi } from '@/utils/mp'
+// #endif
+</script>
+
+<template>
+  <view class="page">
+    <!-- #ifdef H5 -->
+    <view>H5 特有内容</view>
+    <!-- #endif -->
+    <!-- #ifdef MP-WEIXIN -->
+    <view>小程序特有内容</view>
+    <!-- #endif -->
+  </view>
+</template>
+```
+
+### 2. 平台标识符
+
+| 平台 | 标识符 |
+|------|--------|
+| H5 | `H5` 或 `WEB` |
+| 微信小程序 | `MP-WEIXIN` |
+| 支付宝小程序 | `MP-ALIPAY` |
+| 所有小程序 | `MP` |
+
+### 3. 条件编译语法
+
+- JS/TS：`// #ifdef H5` ... `// #endif`
+- CSS/SCSS：`/* #ifdef H5 */` ... `/* #endif */`
+- 模板：`<!-- #ifdef H5 -->` ... `<!-- #endif -->`
+- 支持 `||` 组合，不支持 `&&`：`// #ifdef H5 || MP-WEIXIN`
+
+### 4. 优先使用 uni.xxx 统一 API
+
+能通过 `uni.xxx` 实现的，不要写条件编译；仅在确实存在平台差异时再使用条件编译。
+
+---
+
+## 三、样式规范（跨平台适配）
+
+### 5. 布局单位
+
+- **优先 rpx**：小程序和 H5 均支持，适配不同屏幕
+- **避免 px**：仅在需要 1px 边框等固定物理像素时使用
+- **安全区**：使用 `env(safe-area-inset-*)` 或 UnoCSS 的 `p-safe`、`pt-safe`、`pb-safe`
+
+### 6. UnoCSS 原子化
+
+- 配置在 `uno.config.ts`，优先使用原子类
+- 颜色：`text-primary`、`bg-gray-100` 等，主题色使用 `var(--wot-color-theme)`
+- 字体：`text-2xs`、`text-3xs` 适配小屏
+
+### 7. SCSS 与 scoped
+
+- 需自定义样式时：`<style lang="scss" scoped>`
+- 遵循 BEM 或 kebab-case 命名
+- 跨平台差异样式用条件编译：
+
+```scss
+/* #ifdef MP-WEIXIN */
+.xxx { /* 小程序特有 */ }
+/* #endif */
+
+/* #ifdef H5 */
+.xxx { /* H5 特有 */ }
+/* #endif */
+```
+
+### 8. 颜色与兼容性
+
+- 避免 `oklch`、`rgb(255 0 0)` 等新语法，低端安卓可能不兼容
+- 使用 `presetLegacyCompat` 已开启 `commaStyleColorFunction`、`legacyColorSpace`
+
+---
+
+## 四、Vue3 + TypeScript 规范
+
+### 9. 组件结构
+
+- 使用 Composition API 和 `<script setup lang="ts">`
+- 标签顺序：`<script setup>` → `<template>` → `<style>`
+- 组件名：PascalCase；文件：kebab-case
+
+### 10. TypeScript
+
+- 禁止 `any`，使用 `interface`/`type`
+- API 请求/响应必须定义类型
+- 导入类型用 `import type`
+
+### 11. 页面与 definePage
+
+- 页面配置用 `definePage`，顺序在文件最上方
+- 路由为约定式，文件名即路径
+
+---
+
+## 五、API 与 HTTP 规范
+
+### 12. 请求封装
+
+- 支持 `简单http`、`alova`、`@tanstack/vue-query`
+- 配置与拦截器在 `src/http/`，统一错误处理、token 刷新
+
+### 13. 接口定义
+
+- 按模块组织在 `src/api/`
+- 请求/响应类型用 TypeScript 定义
+
+---
+
+## 六、小程序包体积与性能（参考微信最佳实践）
+
+### 14. 包体积
+
+- 主包建议 < 1.5M，单包 ≤ 2M
+- 超 1.5M 使用分包；静态资源 > 200K 放 CDN
+
+### 15. 分包策略
+
+- 非核心页面、按需加载页面放分包
+- 在 `pages.config.ts` 中配置 `subPackages`
+
+### 16. 组件与资源
+
+- 启用组件按需注入
+- 移除未使用组件、插件、静态资源
+
+---
+
+## 七、安全规范（参考微信安全指引）
+
+### 17. 数据与权限
+
+- 互不信任：不信任用户或第三方提交数据，必须校验
+- 最小权限：只申请必要权限
+- 敏感数据禁止明文存储，重要逻辑放后端
+
+### 18. 隐私声明
+
+- 使用位置、相册等需在 `manifest.config.ts` 中声明
+- 微信小程序需配置 `requiredPrivateInfos`、`permission`
+
+---
+
+## 八、命名与文件规范
+
+### 19. 命名约定
+
+- 目录/文件：kebab-case
+- 组件名：PascalCase
+- 变量/方法：camelCase；常量：UPPER_SNAKE_CASE
+- 自定义组件：`fg-*`（easycom 已配置）
+
+### 20. 页面级组件
+
+- 页面专属组件放在 `src/pages/xx/components/`
+- 全局组件放在 `src/components/`
+
+---
+
+## 九、性能与体验
+
+### 21. 列表与虚拟滚动
+
+- 长列表使用 `z-paging` 或虚拟列表，避免一次性渲染大量 DOM
+
+### 22. 图片规范
+
+- 控制尺寸，优先懒加载
+- 大图放 CDN，不在包内
+
+### 23. 防抖/节流
+
+- 搜索输入、滚动、resize 等高频逻辑需防抖或节流
+
+### 24. 生命周期
+
+- 页面用 uni 生命周期：`onLoad`、`onShow`、`onReady`、`onHide`、`onUnload`
+- 组件用 Vue3 生命周期
+
+---
+
+## 十、调试与构建
+
+### 25. 开发命令
+
+- H5：`pnpm dev` / `pnpm dev:h5`
+- 微信小程序：`pnpm dev:mp` / `pnpm dev:mp-weixin`
+- 构建：`pnpm build:h5`、`pnpm build:mp`
+
+### 26. 代码质量
+
+- `pnpm lint`、`pnpm lint:fix`
+- `pnpm type-check` 类型检查
+
+### 27. 调试
+
+- H5：浏览器 DevTools、Vue DevTools
+- 小程序：微信开发者工具、网络面板、平台差异测试
+
+---
+
+## 十一、设计与可访问性
+
+### 28. 设计原则（参考微信设计指南）
+
+- 友好礼貌、重点突出、流程清晰
+- 即时反馈、减少误操作
+- 视觉统一：字体、列表、表单、按钮规范一致
+
+### 29. 可访问性
+
+- 按钮/图标配合文案或 `aria-label`
+- 表单控件关联 `label`
+
+### 30. 错误与空态
+
+- 网络错误、空数据有明确提示
+- 使用 `uni.showToast`、`uni.showModal` 等统一反馈
+
+---
+
+## 十二、扩展规范
+
+### 31. 第三方组件库
+
+- 支持 wot-design-uni、uview-plus、uv-ui、sard-ui、z-paging 等
+- 引入时注意按需加载和包体积
+
+### 32. 国际化
+
+- 使用 `vue-i18n`，文案通过 `$t()` 管理
+
+### 33. 环境变量
+
+- 环境变量放在 `env/`，通过 `VITE_` 前缀暴露
+
+---
+
+## 速查表（33 条核心规则）
+
+| # | 规则 | 简要说明 |
+|---|------|----------|
+| 1 | 条件编译 | 平台差异必须用 `#ifdef`/`#endif` |
+| 2 | 平台标识 | H5、MP-WEIXIN、MP 等 |
+| 3 | 条件编译语法 | JS用 `//`，CSS用 `/* */`，模板用 `<!-- -->` |
+| 4 | 优先 uni API | 能用 uni.xxx 就不用条件编译 |
+| 5 | 布局单位 | 优先 rpx，注意安全区 |
+| 6 | UnoCSS | 优先原子类，少写自定义 CSS |
+| 7 | SCSS scoped | 自定义样式用 scoped，平台差异用条件编译 |
+| 8 | 颜色兼容 | 避免 oklch、空格分隔 rgb |
+| 9 | 组件结构 | script setup → template → style |
+| 10 | 禁止 any | 使用 interface/type |
+| 11 | definePage | 页面配置写在最上方 |
+| 12 | 请求封装 | 使用 src/http 统一封装 |
+| 13 | 接口类型 | API 请求/响应定义类型 |
+| 14 | 包体积 | 主包 < 1.5M，单包 ≤ 2M |
+| 15 | 分包 | 非核心页面分包 |
+| 16 | 资源优化 | 移除未使用组件/资源，大图 CDN |
+| 17 | 安全 | 不信任用户输入，最小权限 |
+| 18 | 隐私 | manifest 中声明敏感接口 |
+| 19 | 命名 | kebab-case 文件，PascalCase 组件 |
+| 20 | 组件位置 | 页面组件在 pages/xx/components/ |
+| 21 | 长列表 | 虚拟滚动或 z-paging |
+| 22 | 图片 | 控制尺寸、懒加载、大图 CDN |
+| 23 | 防抖节流 | 搜索、滚动等高频逻辑 |
+| 24 | 生命周期 | 页面用 uni，组件用 Vue3 |
+| 25 | 开发命令 | dev/dev:mp/build 等 |
+| 26 | Lint | lint、lint:fix、type-check |
+| 27 | 调试 | DevTools、微信开发者工具 |
+| 28 | 设计 | 友好、即时反馈、视觉统一 |
+| 29 | 可访问性 | 按钮/图标有文案或 aria-label |
+| 30 | 错误态 | 网络/空数据有明确提示 |
+| 31 | 组件库 | 按需引入，注意包体积 |
+| 32 | 国际化 | vue-i18n + $t() |
+| 33 | 环境变量 | env/ 下 VITE_ 前缀 |

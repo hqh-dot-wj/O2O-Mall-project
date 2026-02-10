@@ -166,7 +166,7 @@ describe('Upgrade & Commission (e2e) - Inline', () => {
         levelId,
         parentId,
         indirectParentId,
-        tenantId: '000000',
+        tenantId: '00000',
         status: MemberStatus.NORMAL,
         nickname: username,
         avatar: '',

@@ -34,7 +34,7 @@ const prisma = new PrismaClient();
  */
 
 // 测试数据
-const TENANT_ID = '000000';
+const TENANT_ID = '00000';
 const COURSE_PRODUCT_ID = 'course-vocal-001'; // 声乐课
 const COURSE_SKU_ID = 'course-vocal-001-68'; // 小班(6-8人) → 移除特殊字符后
 

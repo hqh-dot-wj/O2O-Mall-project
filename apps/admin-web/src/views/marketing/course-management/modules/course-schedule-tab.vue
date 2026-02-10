@@ -201,12 +201,7 @@ onMounted(() => {
 
     <!-- 操作栏 -->
     <NSpace class="mb-4" justify="space-between">
-      <NSelect
-        v-model:value="statusFilter"
-        :options="statusOptions"
-        placeholder="筛选状态"
-        style="width: 150px"
-      />
+      <NSelect v-model:value="statusFilter" :options="statusOptions" placeholder="筛选状态" style="width: 150px" />
 
       <NButton @click="loadSchedules">
         <template #icon>

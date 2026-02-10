@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import {
@@ -7,10 +7,14 @@ import {
   UpdateMemberLevelDto,
   UpdateReferrerDto,
   UpdateMemberTenantDto,
+  PointHistoryQueryDto,
+  AdjustMemberPointsDto,
 } from './dto';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
+import { Api } from 'src/common/decorators/api.decorator';
+import { PointHistoryVo } from './vo/member.vo';
 
 /**
  * 会员管理控制器 (Member Controller)
@@ -73,5 +77,26 @@ export class MemberController {
   @Put('level')
   async updateLevel(@Body() dto: UpdateMemberLevelDto) {
     return this.memberService.updateLevel(dto);
+  }
+
+  /**
+   * 查询会员积分变动记录（分页）
+   */
+  @Api({ summary: '查询会员积分变动记录', type: PointHistoryVo, isArray: true, isPager: true })
+  @RequirePermission('admin:member:list')
+  @Get('point/history')
+  async getPointHistory(@Query() query: PointHistoryQueryDto) {
+    return this.memberService.getPointHistory(query);
+  }
+
+  /**
+   * 管理员调整会员积分（增加或扣减）
+   */
+  @Api({ summary: '调整会员积分', body: AdjustMemberPointsDto })
+  @RequirePermission('admin:member:list')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  @Post('point/adjust')
+  async adjustMemberPoints(@Body() dto: AdjustMemberPointsDto) {
+    return this.memberService.adjustMemberPoints(dto);
   }
 }

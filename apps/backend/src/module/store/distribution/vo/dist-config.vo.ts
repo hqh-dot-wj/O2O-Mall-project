@@ -23,6 +23,12 @@ export class DistConfigVo {
   @ApiProperty({ description: '跨店佣金日限额 (元)' })
   crossMaxDaily: number;
 
+  @ApiProperty({ description: '分佣基数类型' })
+  commissionBaseType?: string;
+
+  @ApiProperty({ description: '熔断保护比例 (0-100)' })
+  maxCommissionRate?: number;
+
   @ApiProperty({ description: '创建时间' })
   createTime: string;
 }

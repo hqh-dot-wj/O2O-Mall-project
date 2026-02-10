@@ -7,14 +7,16 @@
 ## 预览模式
 
 ### 1. 卡片预览（默认）
+
 - **用途**: 查看营销活动卡片的独立展示效果
 - **页面**: `apps/miniapp-client/src/pages/preview/card.vue`
-- **适用场景**: 
+- **适用场景**:
   - 快速预览活动配置
   - 查看活动标签、价格、特性等基础信息
   - 验证活动规则配置是否正确
 
 ### 2. 商品详情预览（新增）
+
 - **用途**: 查看营销活动在真实商品详情页的展示效果
 - **页面**: `apps/miniapp-client/src/pages/preview/product-detail.vue`
 - **适用场景**:
@@ -59,10 +61,10 @@
 
 ```typescript
 // Admin 端发送
-syncForm(model) // 通过 usePreview Hook
+syncForm(model); // 通过 usePreview Hook
 
 // 小程序端接收
-window.addEventListener('message', handleMessage)
+window.addEventListener('message', handleMessage);
 ```
 
 ### 数据流

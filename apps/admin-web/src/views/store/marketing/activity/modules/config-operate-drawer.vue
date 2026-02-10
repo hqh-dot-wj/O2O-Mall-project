@@ -24,9 +24,9 @@ import {
 } from 'naive-ui';
 import { fetchCreateStoreConfig, fetchUpdateStoreConfig } from '@/service/api/marketing-config';
 import { fetchGetTemplateList } from '@/service/api/marketing';
+import { useAuthStore } from '@/store/modules/auth';
 import { useNaiveForm } from '@/hooks/common/form';
 import { usePreview } from '@/hooks/business/usePreview';
-import { useAuthStore } from '@/store/modules/auth';
 import MapPointPicker from '@/components/custom/MapPointPicker.vue';
 
 // --- 选品弹窗逻辑 ---
@@ -248,7 +248,7 @@ async function handleInit() {
   restoreValidation();
   if (props.operateType === 'edit' && props.rowData) {
     Object.assign(model, props.rowData);
-    
+
     // 如果是编辑模式，需要加载商品信息用于预览
     if (model.serviceId) {
       try {
@@ -392,11 +392,7 @@ async function handleSubmit() {
         <div class="w-1/2 flex flex-col items-center rounded-lg bg-gray-50 py-4">
           <!-- 预览模式切换 -->
           <div class="mb-4 flex gap-2">
-            <NButton
-              :type="previewMode === 'card' ? 'primary' : 'default'"
-              size="small"
-              @click="previewMode = 'card'"
-            >
+            <NButton :type="previewMode === 'card' ? 'primary' : 'default'" size="small" @click="previewMode = 'card'">
               卡片预览
             </NButton>
             <NButton

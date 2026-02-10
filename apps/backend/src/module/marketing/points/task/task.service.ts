@@ -3,6 +3,7 @@ import { PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
+import { TenantContext } from 'src/common/tenant/tenant.context';
 import { FormatDateFields } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PointsAccountService } from '../account/account.service';
@@ -36,7 +37,7 @@ export class PointsTaskService {
    * @returns 任务
    */
   async createTask(dto: CreatePointsTaskDto) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     const userId = this.cls.get('userId') || 'system';
 
     // 检查任务标识是否已存在
@@ -132,7 +133,7 @@ export class PointsTaskService {
    * @returns 完成结果
    */
   async completeTask(memberId: string, taskKey: string) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
 
     // 1. 查询任务
     const task = await this.taskRepo.findByTaskKey(taskKey);

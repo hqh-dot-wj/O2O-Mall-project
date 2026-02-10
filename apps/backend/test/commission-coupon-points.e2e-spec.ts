@@ -20,7 +20,7 @@ describe('Commission with Coupon & Points (e2e)', () => {
   let authToken: string;
 
   // 测试数据
-  const testTenantId = 'test_tenant_001';
+  const testTenantId = '00000';
   const testMember1 = 'test_member_001'; // 下单人
   const testMember2 = 'test_member_002'; // L1推荐人（C1）
   const testMember3 = 'test_member_003'; // L2推荐人（C2）

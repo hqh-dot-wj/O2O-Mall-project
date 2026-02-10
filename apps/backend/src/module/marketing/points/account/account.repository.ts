@@ -6,7 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
  * 积分账户仓储
- * 
+ *
  * @description 继承 BaseRepository，自动处理租户隔离
  */
 @Injectable()
@@ -21,21 +21,17 @@ export class PointsAccountRepository extends BaseRepository<
 
   /**
    * 根据用户ID查询积分账户
-   * 
+   *
    * @param memberId 用户ID
    * @returns 积分账户
    */
   async findByMemberId(memberId: string): Promise<MktPointsAccount | null> {
-    return this.findOne({
-      where: {
-        memberId,
-      },
-    });
+    return this.findOne({ memberId });
   }
 
   /**
    * 使用乐观锁更新账户余额
-   * 
+   *
    * @param accountId 账户ID
    * @param version 当前版本号
    * @param data 更新数据

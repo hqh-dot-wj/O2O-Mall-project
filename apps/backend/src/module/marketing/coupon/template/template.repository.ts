@@ -1,30 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { MktCouponTemplate, Prisma } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
-import { SoftDeleteRepository } from 'src/common/repository/base.repository';
+import { BaseRepository } from 'src/common/repository/base.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ListCouponTemplateDto } from './dto';
 
 /**
  * 优惠券模板仓储
- * 
- * @description 继承 SoftDeleteRepository，自动处理软删除和租户隔离
+ *
+ * @description MktCouponTemplate 无 delFlag 字段，继承 BaseRepository 仅做租户隔离，不做软删除
  */
 @Injectable()
-export class CouponTemplateRepository extends SoftDeleteRepository<
+export class CouponTemplateRepository extends BaseRepository<
   MktCouponTemplate,
   Prisma.MktCouponTemplateCreateInput,
   Prisma.MktCouponTemplateUpdateInput
 > {
   constructor(prisma: PrismaService, cls: ClsService) {
-    // 注意：MktCouponTemplate 没有 delFlag 字段，所以不使用软删除
-    // 但我们仍然继承 SoftDeleteRepository 以保持一致性，实际上会使用物理删除
     super(prisma, cls, 'mktCouponTemplate', 'id', 'tenantId');
   }
 
   /**
    * 分页查询优惠券模板列表
-   * 
+   *
    * @param query 查询条件
    * @returns 分页结果
    */
@@ -64,7 +62,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 根据ID查询优惠券模板（包含用户优惠券关联）
-   * 
+   *
    * @param id 模板ID
    * @returns 模板详情
    */
@@ -83,7 +81,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 扣减优惠券库存（原子操作）
-   * 
+   *
    * @param templateId 模板ID
    * @param amount 扣减数量
    * @returns 更新结果
@@ -102,7 +100,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 增加优惠券库存（退款时使用）
-   * 
+   *
    * @param templateId 模板ID
    * @param amount 增加数量
    * @returns 更新结果
@@ -120,7 +118,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 统计已发放的优惠券数量
-   * 
+   *
    * @param templateId 模板ID
    * @returns 已发放数量
    */
@@ -132,7 +130,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 统计已使用的优惠券数量
-   * 
+   *
    * @param templateId 模板ID
    * @returns 已使用数量
    */
@@ -147,7 +145,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 批量查询模板的统计信息
-   * 
+   *
    * @param templateIds 模板ID列表
    * @returns 统计信息映射
    */
@@ -200,7 +198,7 @@ export class CouponTemplateRepository extends SoftDeleteRepository<
 
   /**
    * 检查模板是否已开始发放
-   * 
+   *
    * @param templateId 模板ID
    * @returns 是否已发放
    */

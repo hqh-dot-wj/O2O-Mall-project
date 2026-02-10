@@ -11,6 +11,10 @@ declare namespace Api {
       price: number;
       customTitle?: string;
       overrideRadius?: number;
+      /** 积分获得比例 (0-200) */
+      pointsRatio?: number;
+      /** 是否营销活动商品 */
+      isPromotionProduct?: boolean;
       skus: TenantSku[];
     }
 
@@ -62,6 +66,8 @@ declare namespace Api {
       status: Pms.PublishStatus;
       customTitle?: string;
       overrideRadius?: number;
+      pointsRatio?: number;
+      isPromotionProduct?: boolean;
     }
 
     /** Market Product (Global Product with Import Status) */
@@ -90,6 +96,10 @@ declare namespace Api {
       enableCrossTenant?: boolean;
       crossTenantRate?: number;
       crossMaxDaily?: number;
+      /** 分佣基数类型: ORIGINAL_PRICE | ACTUAL_PAID | ZERO */
+      commissionBaseType?: string;
+      /** 熔断保护比例 (0-100) */
+      maxCommissionRate?: number;
     }
 
     interface DistributionConfigUpdateParams {
@@ -99,6 +109,8 @@ declare namespace Api {
       enableCrossTenant?: boolean;
       crossTenantRate?: number;
       crossMaxDaily?: number;
+      commissionBaseType?: 'ORIGINAL_PRICE' | 'ACTUAL_PAID' | 'ZERO';
+      maxCommissionRate?: number;
     }
 
     interface DistributionConfigLog {

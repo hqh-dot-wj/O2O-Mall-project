@@ -1,5 +1,6 @@
 import StreamSaver from 'streamsaver';
 import { errorCodeRecord } from '@/constants/common';
+import { useAuthStore } from '@/store/modules/auth';
 import { localStg } from '@/utils/storage';
 import { getServiceBaseURL } from '@/utils/service';
 import { transformToURLSearchParams } from '@/utils/common';
@@ -23,11 +24,18 @@ export function useDownload() {
   };
 
   /** 获取通用请求头 */
-  const getCommonHeaders = (contentType = 'application/octet-stream') => ({
-    Authorization: `Bearer ${localStg.get('token')}`,
-    Clientid: import.meta.env.VITE_APP_CLIENT_ID!,
-    'Content-Type': contentType
-  });
+  const getCommonHeaders = (contentType = 'application/octet-stream') => {
+    const authStore = useAuthStore();
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${localStg.get('token')}`,
+      Clientid: import.meta.env.VITE_APP_CLIENT_ID!,
+      'Content-Type': contentType,
+    };
+    if (authStore.userInfo.user?.tenantId) {
+      headers['tenant-id'] = authStore.userInfo.user.tenantId;
+    }
+    return headers;
+  };
 
   /** 通用下载方法 */
   function downloadByData(data: BlobPart, filename: string, type = 'application/octet-stream') {
@@ -37,7 +45,7 @@ export function useDownload() {
     const tempLink = Object.assign(document.createElement('a'), {
       style: { display: 'none' },
       href: blobURL,
-      download: filename
+      download: filename,
     });
 
     if (typeof tempLink.download === 'undefined') {
@@ -54,7 +62,7 @@ export function useDownload() {
   async function downloadByStream(
     readableStream: ReadableStream<Uint8Array>,
     filename: string,
-    contentLength?: number
+    contentLength?: number,
   ): Promise<void> {
     window.$loading?.endLoading();
     StreamSaver.mitm = '/streamsaver/mitm.html?version=2.0.0';
@@ -93,21 +101,31 @@ export function useDownload() {
   async function executeDownload(config: RequestConfig): Promise<void> {
     const { method, url, params, filename, contentType } = config;
     const timestamp = Date.now();
-    const fullUrl = `${baseURL}${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+    const sep = url.includes('?') ? '&' : '?';
+    let fullUrl = `${baseURL}${url}`;
+    if (method === 'GET' && params && Object.keys(params).length > 0) {
+      const query = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') query.set(k, String(v));
+      });
+      const qs = query.toString();
+      if (qs) fullUrl += `${sep}${qs}`;
+    }
+    fullUrl += `${sep}t=${timestamp}`;
 
     window.$loading?.startLoading('正在下载数据，请稍候...');
 
     try {
       const requestOptions: RequestInit = {
         method,
-        headers: getCommonHeaders(contentType)
+        headers: getCommonHeaders(contentType),
       };
 
       if (method === 'POST' && params) {
         requestOptions.body = transformToURLSearchParams(params);
         requestOptions.headers = {
           ...requestOptions.headers,
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
         };
       }
 
@@ -139,15 +157,19 @@ export function useDownload() {
     }
   }
 
-  /** 公共下载接口 */
+  /** 公共下载接口（POST） */
   const download = (url: string, params: Record<string, any>, filename: string) =>
     executeDownload({ method: 'POST', url, params, filename });
+
+  /** GET 下载（用于导出等返回文件流的接口） */
+  const getDownload = (url: string, params: Record<string, any>, filename: string) =>
+    executeDownload({ method: 'GET', url, params, filename });
 
   /** OSS文件下载 */
   const oss = (ossId: CommonType.IdType) =>
     executeDownload({
       method: 'GET',
-      url: `/resource/oss/download/${ossId}`
+      url: `/resource/oss/download/${ossId}`,
     });
 
   /** ZIP文件下载 */
@@ -156,12 +178,13 @@ export function useDownload() {
       method: 'GET',
       url,
       filename,
-      contentType: 'application/octet-stream'
+      contentType: 'application/octet-stream',
     });
 
   return {
     oss,
     zip,
-    download
+    download,
+    getDownload,
   };
 }

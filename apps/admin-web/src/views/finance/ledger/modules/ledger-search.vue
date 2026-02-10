@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { NButton, NCollapse, NCollapseItem, NForm, NFormItem, NGrid, NGridItem, NSelect, NInput, NInputNumber, NDatePicker } from 'naive-ui';
+import {
+  NButton,
+  NCollapse,
+  NCollapseItem,
+  NDatePicker,
+  NForm,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NInput,
+  NInputNumber,
+  NSelect
+} from 'naive-ui';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -66,12 +78,26 @@ function handleSearch() {
             </NGridItem>
             <NGridItem span="24 s:12 m:8 l:6">
               <NFormItem label="最小金额" path="minAmount">
-                <NInputNumber v-model:value="model.minAmount" placeholder="最小金额" :min="0" :precision="2" clearable class="w-full" />
+                <NInputNumber
+                  v-model:value="model.minAmount"
+                  placeholder="最小金额"
+                  :min="0"
+                  :precision="2"
+                  clearable
+                  class="w-full"
+                />
               </NFormItem>
             </NGridItem>
             <NGridItem span="24 s:12 m:8 l:6">
               <NFormItem label="最大金额" path="maxAmount">
-                <NInputNumber v-model:value="model.maxAmount" placeholder="最大金额" :min="0" :precision="2" clearable class="w-full" />
+                <NInputNumber
+                  v-model:value="model.maxAmount"
+                  placeholder="最大金额"
+                  :min="0"
+                  :precision="2"
+                  clearable
+                  class="w-full"
+                />
               </NFormItem>
             </NGridItem>
             <NGridItem span="24 s:24 m:16 l:12">

@@ -11,6 +11,7 @@ import {
   NGrid,
   NGridItem,
   NInputNumber,
+  NSelect,
   NSpace,
   NSwitch
 } from 'naive-ui';
@@ -30,8 +31,16 @@ const model = reactive<Api.Store.DistributionConfigUpdateParams>({
   enableLV0: true,
   enableCrossTenant: false,
   crossTenantRate: 1,
-  crossMaxDaily: 500
+  crossMaxDaily: 500,
+  commissionBaseType: 'ORIGINAL_PRICE',
+  maxCommissionRate: 50
 });
+
+const commissionBaseTypeOptions = [
+  { label: '原价（优惠由平台承担）', value: 'ORIGINAL_PRICE' },
+  { label: '实付（优惠由推广者承担）', value: 'ACTUAL_PAID' },
+  { label: '不分佣', value: 'ZERO' }
+];
 
 const history = ref<Api.Store.DistributionConfigLog[]>([]);
 
@@ -66,6 +75,8 @@ async function init() {
       model.enableCrossTenant = data.enableCrossTenant ?? false;
       model.crossTenantRate = data.crossTenantRate ?? 1;
       model.crossMaxDaily = data.crossMaxDaily ?? 500;
+      model.commissionBaseType = (data.commissionBaseType as any) ?? 'ORIGINAL_PRICE';
+      model.maxCommissionRate = data.maxCommissionRate ?? 50;
     }
     const { data: logs } = await fetchGetDistConfigLogs();
     if (logs) {
@@ -116,6 +127,22 @@ onMounted(() => {
 
             <NFormItemGridItem :span="24" :label="$t('page.store_distribution.enableLV0')" path="enableLV0">
               <NSwitch v-model:value="model.enableLV0" />
+            </NFormItemGridItem>
+
+            <NFormItemGridItem :span="24" label="分佣基数类型" path="commissionBaseType">
+              <NSelect
+                v-model:value="model.commissionBaseType"
+                :options="commissionBaseTypeOptions"
+                placeholder="选择分佣基数"
+                class="w-full"
+              />
+            </NFormItemGridItem>
+
+            <NFormItemGridItem :span="24" label="熔断保护比例" path="maxCommissionRate">
+              <NInputNumber v-model:value="model.maxCommissionRate" :min="0" :max="100" class="w-full">
+                <template #suffix>%</template>
+              </NInputNumber>
+              <div class="ml-8px text-12px text-gray-400">佣金总额超过实付金额此比例时按比例缩减</div>
             </NFormItemGridItem>
 
             <NFormItemGridItem :span="24">

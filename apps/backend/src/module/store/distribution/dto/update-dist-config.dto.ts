@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsBoolean, Min, Max, IsOptional } from 'class-validator';
+import { IsNumber, IsBoolean, Min, Max, IsOptional, IsEnum } from 'class-validator';
+import { CommissionBaseType } from '@prisma/client';
 
 export class UpdateDistConfigDto {
   @ApiProperty({ description: '一级分佣比例 (0-100)', example: 60 })
@@ -36,4 +37,16 @@ export class UpdateDistConfigDto {
   @IsNumber()
   @Min(0)
   crossMaxDaily?: number;
+
+  @ApiProperty({ description: '分佣基数类型', enum: CommissionBaseType, required: false })
+  @IsOptional()
+  @IsEnum(CommissionBaseType)
+  commissionBaseType?: CommissionBaseType;
+
+  @ApiProperty({ description: '熔断保护比例 (0-100，如50表示50%)', example: 50, required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  maxCommissionRate?: number;
 }

@@ -188,7 +188,13 @@ onMounted(() => {
                   </td>
                 </tr>
                 <!-- 佣金扣除总计行 -->
-                <tr v-if="orderData.commissions && orderData.commissions.length > 0 && orderData.business?.totalCommissionAmount">
+                <tr
+                  v-if="
+                    orderData.commissions &&
+                    orderData.commissions.length > 0 &&
+                    orderData.business?.totalCommissionAmount
+                  "
+                >
                   <td colspan="3" class="text-right font-bold">佣金扣除总计</td>
                   <td class="text-error font-bold">-¥{{ orderData.business.totalCommissionAmount }}</td>
                   <td>-</td>

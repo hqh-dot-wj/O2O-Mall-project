@@ -6,7 +6,9 @@ import { TenantContext } from 'src/common/tenant/tenant.context';
 import { Prisma } from '@prisma/client';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { BusinessException } from 'src/common/exceptions';
+import { ResponseCode } from 'src/common/response/response.interface';
 import { FormatDateFields } from 'src/common/utils';
+import { PointsAccountService } from 'src/module/marketing/points/account/account.service';
 import { MemberRepository } from './member.repository';
 import { MemberStatsService } from './services/member-stats.service';
 import { MemberReferralService } from './services/member-referral.service';
@@ -16,6 +18,8 @@ import {
   UpdateMemberLevelDto,
   UpdateReferrerDto,
   UpdateMemberTenantDto,
+  PointHistoryQueryDto,
+  AdjustMemberPointsDto,
 } from './dto';
 import { MemberLevel, MemberLevelNameMap, MemberStatus, MemberStatusMap } from './member.constant';
 
@@ -30,6 +34,7 @@ export class MemberService {
     private readonly memberRepo: MemberRepository,
     private readonly memberStatsService: MemberStatsService,
     private readonly memberReferralService: MemberReferralService,
+    private readonly pointsAccountService: PointsAccountService,
   ) {}
 
   /**
@@ -187,5 +192,54 @@ export class MemberService {
 
     await this.memberRepo.update(memberId, { status: dbStatus });
     return Result.ok(null, '状态更新成功');
+  }
+
+  /**
+   * 分页查询会员积分变动记录（管理端）
+   */
+  async getPointHistory(query: PointHistoryQueryDto) {
+    const result = await this.pointsAccountService.getTransactionsForAdmin({
+      memberId: query.memberId,
+      pageNum: query.pageNum ?? 1,
+      pageSize: query.pageSize ?? 10,
+    });
+    if (!result.data?.rows) return result;
+    const total = result.data.total;
+    const pageNumRes = result.data.pageNum ?? 1;
+    const pageSizeRes = result.data.pageSize ?? 10;
+    const rows = (result.data.rows as any[]).map((row) => ({
+      id: row.id,
+      memberId: row.memberId,
+      changePoints: row.amount,
+      afterPoints: row.balanceAfter,
+      type: row.type,
+      typeName: row.type,
+      remark: row.remark,
+      createTime: row.createTime,
+    }));
+    return Result.page(FormatDateFields(rows), total, pageNumRes, pageSizeRes);
+  }
+
+  /**
+   * 管理员调整会员积分（增加或扣减）
+   */
+  async adjustMemberPoints(dto: AdjustMemberPointsDto) {
+    const { memberId, amount, remark } = dto;
+    BusinessException.throwIf(amount === 0, '变动积分不能为 0', ResponseCode.PARAM_INVALID);
+
+    if (amount > 0) {
+      return this.pointsAccountService.addPoints({
+        memberId,
+        amount,
+        type: 'EARN_ADMIN',
+        remark: remark ?? '管理员调整',
+      });
+    }
+    return this.pointsAccountService.deductPoints({
+      memberId,
+      amount: Math.abs(amount),
+      type: 'DEDUCT_ADMIN',
+      remark: remark ?? '管理员调整',
+    });
   }
 }

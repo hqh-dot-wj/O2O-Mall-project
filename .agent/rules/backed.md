@@ -7,8 +7,6 @@ trigger: always_on
 ### Result<T> - 通用响应
 
 ```typescript
-
-
 // ✅ 成功响应
 return Result.ok(data);
 return Result.ok(user, '查询成功');
@@ -22,19 +20,10 @@ return Result.page(list, total);
 return Result.page(list, total, pageNum, pageSize);
 
 // ✅ 条件响应
-return Result.when(
-  user !== null,
-  user,
-  ResponseCode.USER_NOT_FOUND,
-  '用户不存在'
-);
+return Result.when(user !== null, user, ResponseCode.USER_NOT_FOUND, '用户不存在');
 
 // ✅ Promise 响应
-return Result.fromPromise(
-  this.userService.findById(id),
-  ResponseCode.USER_NOT_FOUND,
-  '用户不存在'
-);
+return Result.fromPromise(this.userService.findById(id), ResponseCode.USER_NOT_FOUND, '用户不存在');
 ```
 
 ### ResponseCode - 统一错误码
@@ -126,20 +115,20 @@ export class ListUserDto extends PageQueryDto {
 
 ```typescript
 class PageQueryDto {
-  pageNum: number = 1;      // 当前页码
-  pageSize: number = 10;    // 每页条数
-  orderByColumn?: string;   // 排序字段
-  isAsc?: 'asc' | 'desc';   // 排序方式
-  beginTime?: string;       // 开始时间
-  endTime?: string;         // 结束时间
+  pageNum: number = 1; // 当前页码
+  pageSize: number = 10; // 每页条数
+  orderByColumn?: string; // 排序字段
+  isAsc?: 'asc' | 'desc'; // 排序方式
+  beginTime?: string; // 开始时间
+  endTime?: string; // 结束时间
 
   // 计算属性
-  get skip(): number;       // 跳过记录数
-  get take(): number;       // 获取记录数
+  get skip(): number; // 跳过记录数
+  get take(): number; // 获取记录数
 
   // 便捷方法
   getOrderBy(defaultField?: string): Prisma.OrderByInput | undefined;
-  getDateRange(field: string): { [field]: { gte, lte } } | undefined;
+  getDateRange(field: string): { [field]: { gte; lte } } | undefined;
 }
 ```
 
@@ -300,8 +289,6 @@ async updateUserAndLog(userId: string, data: UpdateUserDto) {
 ## 🎨 6. Controller 最佳实践
 
 ```typescript
-
-
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -323,10 +310,7 @@ export class UserController {
   @Post()
   @Api({ summary: '创建用户', type: UserVo })
   @RequirePermission('system:user:add')
-  async create(
-    @Body() dto: CreateUserDto,
-    @User() currentUser: UserInfo,
-  ) {
+  async create(@Body() dto: CreateUserDto, @User() currentUser: UserInfo) {
     return await this.userService.create(dto);
   }
 }
@@ -469,7 +453,6 @@ export class UserService {
 ```typescript
 // user.controller.ts
 
-
 @ApiTags('用户管理')
 @Controller('system/user')
 export class UserController {
@@ -500,13 +483,20 @@ export class UserController {
   @Api({ summary: '更新用户', type: UserVo })
   @RequirePermission('system:user:edit')
   async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return await this.userServi
+    return await this.userService.update(id, dto);
+  }
+}
+```
 
-| **维度** | **坏习惯 (Bad Smell)** | **最佳实践 (Best Practice)**   |
-| ------ | ------------------- | -------------------------- |
-| **逻辑** | 层层嵌套 if-else        | 卫语句、策略模式、状态模式              |
-| **代码** | 魔法值 `if type==1`    | 枚举 `if type==Type.PAYMENT` |
-| **并发** | 直接 Update 库存        | 乐观锁、Redis Lua 脚本           |
-| **事务** | 事务里调 RPC/HTTP       | 事务仅包裹 DB 操作                |
-| **DB** | 循环里查库 (N+1)         | `Where IN` 批量查询，内存组装       |
-| **日志** | 仅打印“出错啦”            | 打印关键 ID、参数和堆栈              |
+---
+
+## 📊 8. 最佳实践对照表
+
+| **维度** | **坏习惯 (Bad Smell)** | **最佳实践 (Best Practice)**  |
+| -------- | ---------------------- | ----------------------------- |
+| **逻辑** | 层层嵌套 if-else       | 卫语句、策略模式、状态模式    |
+| **代码** | 魔法值 `if type==1`    | 枚举 `if type==Type.PAYMENT`  |
+| **并发** | 直接 Update 库存       | 乐观锁、Redis Lua 脚本        |
+| **事务** | 事务里调 RPC/HTTP      | 事务仅包裹 DB 操作            |
+| **DB**   | 循环里查库 (N+1)       | `Where IN` 批量查询，内存组装 |
+| **日志** | 仅打印“出错啦”         | 打印关键 ID、参数和堆栈       |

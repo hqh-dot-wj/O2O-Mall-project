@@ -2,6 +2,8 @@
 
 本目录包含后端项目的所有文档。
 
+> **事实来源**：本索引与代码/OpenAPI 的核对日期 **2026-02-10**。部分历史报告已移至 [archive/](./archive/) 仅作参考，可能与当前实现不一致。
+
 ## 📁 文档分类
 
 ### 🧪 测试文档
@@ -37,29 +39,22 @@
 - **[QUICK_START_MARKETING.md](./QUICK_START_MARKETING.md)** - 营销功能快速开始
 - **[DEPLOYMENT_SEED.md](./DEPLOYMENT_SEED.md)** - 部署种子数据
 
-### 🔧 优化与重构
+### 🔧 优化与重构（当前有效）
 - **[OPTIMIZATION_README.md](./OPTIMIZATION_README.md)** - 优化总览
 - **[OPTIMIZATION_QUICK_START.md](./OPTIMIZATION_QUICK_START.md)** - 优化快速开始
-- **[OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)** - 优化总结
-- **[P0_OPTIMIZATION_FINAL_REPORT.md](./P0_OPTIMIZATION_FINAL_REPORT.md)** - P0 优化最终报告
-- **[P1_OPTIMIZATION_COMPLETE.md](./P1_OPTIMIZATION_COMPLETE.md)** - P1 优化完成报告
 - **[PERFORMANCE_OPTIMIZATION_SUMMARY.md](./PERFORMANCE_OPTIMIZATION_SUMMARY.md)** - 性能优化总结
 - **[DATABASE_OPTIMIZATION.md](./DATABASE_OPTIMIZATION.md)** - 数据库优化
 - **[STRONG_TYPE_OPTIMIZATION.md](./STRONG_TYPE_OPTIMIZATION.md)** - 强类型优化
 
 ### 📝 开发规范
 - **[COMMIT_MESSAGE.md](./COMMIT_MESSAGE.md)** - 提交信息规范
-- **[CODE_OPTIMIZATION_ANALYSIS.md](./CODE_OPTIMIZATION_ANALYSIS.md)** - 代码优化分析
-- **[BUSINESS_CODE_OPTIMIZATION.md](./BUSINESS_CODE_OPTIMIZATION.md)** - 业务代码优化
 
 ### 🐛 问题修复
 - **[LOCAL_DEVELOPMENT_LOGGING.md](./LOCAL_DEVELOPMENT_LOGGING.md)** - 本地开发日志
 - **[TEST_IMPLEMENTATION_SUMMARY.md](./TEST_IMPLEMENTATION_SUMMARY.md)** - 测试实现总结
 
-### 📊 报告与分析
-- **[REFACTORING_REPORT.md](./REFACTORING_REPORT.md)** - 重构报告
-- **[OPTIMIZATION_CHECKLIST.md](./OPTIMIZATION_CHECKLIST.md)** - 优化检查清单
-- **[OPTIMIZATION_IMPLEMENTATION_REPORT.md](./OPTIMIZATION_IMPLEMENTATION_REPORT.md)** - 优化实现报告
+### 📦 归档文档（仅作历史参考）
+- **[archive/](./archive/)** - 历史报告与阶段性总结（重构、P0/P1、佣金报告、完成总结等），可能与当前实现不一致，详见 [archive/README.md](./archive/README.md)。
 
 ## 🔗 外部资源
 
@@ -119,5 +114,5 @@
 
 ---
 
-**维护者**: 开发团队
-**最后更新**: 2026-02-08
+**维护者**: 开发团队  
+**最后更新**: 2026-02-10（增加事实来源说明、归档目录 archive/）

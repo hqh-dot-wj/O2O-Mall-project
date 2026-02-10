@@ -18,7 +18,7 @@ describe('优惠券完整流程集成测试', () => {
   let distributionService: CouponDistributionService;
   let usageService: CouponUsageService;
 
-  const testTenantId = 'test-tenant-001';
+  const testTenantId = '00000';
   const testMemberId = 'test-member-001';
   const testOrderId = 'test-order-001';
 

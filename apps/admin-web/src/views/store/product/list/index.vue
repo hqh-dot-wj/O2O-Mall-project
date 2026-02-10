@@ -105,6 +105,24 @@ const {
       }
     },
     {
+      key: 'marketing',
+      title: '营销配置',
+      align: 'center',
+      width: 120,
+      render: row => (
+        <div class="flex-col-center gap-1">
+          {row.isPromotionProduct && (
+            <NTag type="warning" size="small" bordered={false}>
+              营销商品
+            </NTag>
+          )}
+          {typeof row.pointsRatio === 'number' && row.pointsRatio > 0 && (
+            <span class="text-xs text-primary">积分: {row.pointsRatio}%</span>
+          )}
+        </div>
+      )
+    },
+    {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
@@ -120,7 +138,10 @@ const {
   ]
 });
 
-const { drawerVisible, operateType, editingData, edit, checkedRowKeys } = useTableOperate<Api.Store.TenantProduct>(data, getData);
+const { drawerVisible, operateType, editingData, edit, checkedRowKeys } = useTableOperate<Api.Store.TenantProduct>(
+  data,
+  getData
+);
 </script>
 
 <template>

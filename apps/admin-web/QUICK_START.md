@@ -75,7 +75,7 @@ const router = useRouter();
 function gotoCourseManagement(instanceId: string) {
   router.push({
     path: '/marketing/course-management',
-    query: { instanceId }
+    query: { instanceId },
   });
 }
 </script>
@@ -84,12 +84,14 @@ function gotoCourseManagement(instanceId: string) {
 ### 步骤5: 测试功能
 
 1. 启动开发服务器：
+
 ```bash
 cd apps/admin-web
 npm run dev
 ```
 
 2. 访问页面：
+
 ```
 http://localhost:5173/marketing/course-management?instanceId=xxx
 ```
@@ -132,6 +134,7 @@ http://localhost:5173/marketing/course-management?instanceId=xxx
 ## 📝 API接口说明
 
 ### 1. 获取排课信息
+
 ```typescript
 GET /api/marketing/play/course/:instanceId/schedules
 
@@ -150,6 +153,7 @@ Response:
 ```
 
 ### 2. 获取考勤信息
+
 ```typescript
 GET /api/marketing/play/course/:instanceId/attendances
 
@@ -166,6 +170,7 @@ Response:
 ```
 
 ### 3. 标记出勤
+
 ```typescript
 POST /api/marketing/play/course/:instanceId/attendance
 
@@ -187,6 +192,7 @@ Response:
 ```
 
 ### 4. 获取出勤率
+
 ```typescript
 GET /api/marketing/play/course/:instanceId/attendance-rate?memberId=member_456
 
@@ -201,6 +207,7 @@ Response:
 ## 🎨 UI预览
 
 ### 排课管理页面
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ 课程管理                                    [刷新]       │
@@ -225,6 +232,7 @@ Response:
 ```
 
 ### 考勤管理页面
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ [排课管理] [考勤管理]                                    │
@@ -245,27 +253,35 @@ Response:
 ## 🔧 常见问题
 
 ### Q1: 页面显示空白？
+
 **A**: 检查instanceId参数是否正确传递：
+
 ```typescript
 // 确保URL包含instanceId参数
 /marketing/course-management?instanceId=xxx
 ```
 
 ### Q2: API请求失败？
+
 **A**: 检查后端服务是否正常运行：
+
 ```bash
 # 检查后端服务
 curl http://localhost:3000/api/marketing/play/course/xxx/schedules
 ```
 
 ### Q3: 图标不显示？
+
 **A**: 确保已安装图标库：
+
 ```bash
 npm install @iconify/vue
 ```
 
 ### Q4: 样式不正确？
+
 **A**: 确保已安装UnoCSS：
+
 ```bash
 npm install -D unocss
 ```

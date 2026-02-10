@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { Result } from 'src/common/response/result';
+import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
@@ -28,7 +29,7 @@ export class PointsStatisticsService {
     startTime?: Date;
     endTime?: Date;
   }) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     const where: any = {
       tenantId,
       type: {
@@ -97,7 +98,7 @@ export class PointsStatisticsService {
     startTime?: Date;
     endTime?: Date;
   }) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     const where: any = {
       tenantId,
       type: {
@@ -161,7 +162,7 @@ export class PointsStatisticsService {
    * @returns 余额统计
    */
   async getBalanceStatistics() {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
 
     const result = await this.prisma.mktPointsAccount.aggregate({
       where: {
@@ -199,7 +200,7 @@ export class PointsStatisticsService {
     startTime?: Date;
     endTime?: Date;
   }) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     const where: any = {
       tenantId,
       type: PointsTransactionType.EXPIRE,
@@ -238,7 +239,7 @@ export class PointsStatisticsService {
    * @returns 排行榜
    */
   async getRanking(limit: number = 10) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
 
     const accounts = await this.prisma.mktPointsAccount.findMany({
       where: {
@@ -272,7 +273,7 @@ export class PointsStatisticsService {
     startTime?: Date;
     endTime?: Date;
   }) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     const where: any = {
       tenantId,
     };

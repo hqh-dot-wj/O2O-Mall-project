@@ -19,15 +19,15 @@ import { CouponType, CouponValidityType } from '@prisma/client';
  * 创建优惠券模板 DTO
  */
 export class CreateCouponTemplateDto {
-  @ApiProperty({ description: '租户ID', example: '000000' })
+  @ApiPropertyOptional({ description: '租户ID（不传则从请求上下文注入）', example: '000000' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: '租户ID不能为空' })
-  tenantId: string;
+  tenantId?: string;
 
-  @ApiProperty({ description: '创建人', example: 'admin' })
+  @ApiPropertyOptional({ description: '创建人（不传则从请求上下文注入）', example: 'admin' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: '创建人不能为空' })
-  createBy: string;
+  createBy?: string;
 
   @ApiProperty({ description: '优惠券名称', example: '满100减20优惠券' })
   @IsString()

@@ -64,6 +64,34 @@ export class PointsTransactionRepository extends BaseRepository<
   }
 
   /**
+   * 管理端：分页查询积分交易记录（支持按会员、类型、时间筛选）
+   */
+  async findTransactionsAdmin(query: {
+    memberId?: string;
+    type?: PointsTransactionType;
+    startTime?: Date;
+    endTime?: Date;
+    pageNum?: number;
+    pageSize?: number;
+  }) {
+    const where: any = {};
+    if (query.memberId) where.memberId = query.memberId;
+    if (query.type) where.type = query.type;
+    if (query.startTime || query.endTime) {
+      where.createTime = {};
+      if (query.startTime) where.createTime.gte = query.startTime;
+      if (query.endTime) where.createTime.lte = query.endTime;
+    }
+    return this.findPage({
+      pageNum: query.pageNum || 1,
+      pageSize: query.pageSize || 10,
+      where,
+      orderBy: 'createTime',
+      order: 'desc',
+    });
+  }
+
+  /**
    * 查询即将过期的积分
    * 
    * @param memberId 用户ID

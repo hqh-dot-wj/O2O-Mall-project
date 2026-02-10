@@ -32,21 +32,25 @@ apps/admin-web/
 提供4个API接口的封装：
 
 #### 1.1 获取课程排课信息
+
 ```typescript
 fetchCourseSchedules(instanceId: string): Promise<CourseSchedule[]>
 ```
 
 #### 1.2 获取课程考勤信息
+
 ```typescript
 fetchCourseAttendances(instanceId: string): Promise<CourseAttendance[]>
 ```
 
 #### 1.3 标记学员出勤
+
 ```typescript
 markAttendance(instanceId: string, data: MarkAttendanceRequest): Promise<CourseAttendance>
 ```
 
 #### 1.4 获取学员出勤率
+
 ```typescript
 fetchAttendanceRate(instanceId: string, memberId: string): Promise<AttendanceRate>
 ```
@@ -54,6 +58,7 @@ fetchAttendanceRate(instanceId: string, memberId: string): Promise<AttendanceRat
 ### 2. 排课管理模块
 
 #### 功能特性
+
 - ✅ 展示课程排课列表
 - ✅ 按状态筛选（已排课/已完成/已取消）
 - ✅ 统计卡片展示（总排课数、已完成、待上课、课时进度）
@@ -62,20 +67,22 @@ fetchAttendanceRate(instanceId: string, memberId: string): Promise<AttendanceRat
 - ✅ 响应式设计
 
 #### 数据字段
+
 ```typescript
 interface CourseSchedule {
-  id: string;              // 排课ID
-  date: string;            // 上课日期
-  startTime: string;       // 开始时间 "09:00"
-  endTime: string;         // 结束时间 "17:00"
-  lessons: number;         // 课时数
-  status: string;          // 状态：SCHEDULED/COMPLETED/CANCELLED
-  remark?: string;         // 备注
-  createTime: string;      // 创建时间
+  id: string; // 排课ID
+  date: string; // 上课日期
+  startTime: string; // 开始时间 "09:00"
+  endTime: string; // 结束时间 "17:00"
+  lessons: number; // 课时数
+  status: string; // 状态：SCHEDULED/COMPLETED/CANCELLED
+  remark?: string; // 备注
+  createTime: string; // 创建时间
 }
 ```
 
 #### 统计指标
+
 - 总排课数
 - 已完成数量
 - 待上课数量
@@ -84,6 +91,7 @@ interface CourseSchedule {
 ### 3. 考勤管理模块
 
 #### 功能特性
+
 - ✅ 展示学员考勤列表
 - ✅ 按出勤状态筛选（全部/已出勤/未出勤）
 - ✅ 标记学员出勤（弹窗表单）
@@ -92,18 +100,20 @@ interface CourseSchedule {
 - ✅ 响应式设计
 
 #### 数据字段
+
 ```typescript
 interface CourseAttendance {
-  id: string;              // 考勤ID
-  memberId: string;        // 学员ID
-  date: string;            // 考勤日期
-  attended: boolean;       // 是否出勤
-  remark?: string;         // 备注
-  createTime: string;      // 记录时间
+  id: string; // 考勤ID
+  memberId: string; // 学员ID
+  date: string; // 考勤日期
+  attended: boolean; // 是否出勤
+  remark?: string; // 备注
+  createTime: string; // 记录时间
 }
 ```
 
 #### 统计指标
+
 - 总考勤记录数
 - 已出勤数量
 - 未出勤数量
@@ -113,18 +123,22 @@ interface CourseAttendance {
 ### 4. 综合管理页面（推荐使用）
 
 #### 特点
+
 - 🎯 统一入口，Tab切换
 - 📊 信息提示卡片
 - 🎨 美观的UI设计
 - 📱 响应式布局
 
 #### 使用方式
+
 ```vue
 <!-- 路由跳转 -->
-<router-link :to="{ 
-  path: '/marketing/course-management', 
-  query: { instanceId: 'xxx' } 
-}">
+<router-link
+  :to="{
+    path: '/marketing/course-management',
+    query: { instanceId: 'xxx' },
+  }"
+>
   课程管理
 </router-link>
 ```
@@ -167,10 +181,10 @@ interface CourseAttendance {
 
 ```vue
 <template>
-  <NButton 
+  <NButton
     v-if="row.templateCode === 'COURSE_GROUP_BUY'"
-    type="primary" 
-    ghost 
+    type="primary"
+    ghost
     size="small"
     @click="gotoCourseManagement(row.id)"
   >
@@ -214,6 +228,7 @@ function gotoCourseManagement(instanceId: string) {
 ### 3. 卡片设计
 
 统计卡片采用渐变背景和阴影效果：
+
 - 悬停时阴影加深（hover:shadow-md）
 - 图标使用半透明大图标作为背景装饰
 - 数字使用大字号粗体突出显示
@@ -252,12 +267,11 @@ function gotoCourseManagement(instanceId: string) {
 ### 1. 批量操作
 
 可以添加批量标记出勤功能：
+
 ```typescript
 // 批量标记出勤
 async function batchMarkAttendance(records: MarkAttendanceRequest[]) {
-  const promises = records.map(record => 
-    markAttendance(instanceId.value, record)
-  );
+  const promises = records.map((record) => markAttendance(instanceId.value, record));
   await Promise.all(promises);
 }
 ```
@@ -265,6 +279,7 @@ async function batchMarkAttendance(records: MarkAttendanceRequest[]) {
 ### 2. 导出功能
 
 可以添加导出考勤记录为Excel功能：
+
 ```typescript
 import { utils, writeFile } from 'xlsx';
 
@@ -279,6 +294,7 @@ function exportAttendances() {
 ### 3. 图表展示
 
 可以使用ECharts添加出勤率趋势图：
+
 ```vue
 <template>
   <div ref="chartRef" style="width: 100%; height: 300px"></div>
@@ -299,6 +315,7 @@ function renderChart() {
 ### 4. 实时通知
 
 可以集成WebSocket实现实时通知：
+
 ```typescript
 // 监听考勤更新
 socket.on('attendance:updated', (data) => {
@@ -312,6 +329,7 @@ socket.on('attendance:updated', (data) => {
 ### 1. 单元测试
 
 使用Vitest测试组件逻辑：
+
 ```typescript
 import { mount } from '@vue/test-utils';
 import CourseScheduleTab from './course-schedule-tab.vue';
@@ -319,7 +337,7 @@ import CourseScheduleTab from './course-schedule-tab.vue';
 describe('CourseScheduleTab', () => {
   it('should load schedules on mount', async () => {
     const wrapper = mount(CourseScheduleTab, {
-      props: { instanceId: 'test-id' }
+      props: { instanceId: 'test-id' },
     });
     // 断言...
   });
@@ -329,6 +347,7 @@ describe('CourseScheduleTab', () => {
 ### 2. E2E测试
 
 使用Playwright测试完整流程：
+
 ```typescript
 test('mark attendance flow', async ({ page }) => {
   await page.goto('/marketing/course-management?instanceId=xxx');
@@ -345,6 +364,7 @@ test('mark attendance flow', async ({ page }) => {
 ### Q1: 页面加载慢怎么办？
 
 A: 可以添加骨架屏或优化数据加载策略：
+
 ```vue
 <template>
   <NSkeleton v-if="loading" :repeat="5" />
@@ -355,17 +375,15 @@ A: 可以添加骨架屏或优化数据加载策略：
 ### Q2: 如何处理大量数据？
 
 A: 可以添加分页或虚拟滚动：
+
 ```vue
-<NDataTable 
-  :data="data" 
-  :pagination="{ pageSize: 20 }"
-  virtual-scroll
-/>
+<NDataTable :data="data" :pagination="{ pageSize: 20 }" virtual-scroll />
 ```
 
 ### Q3: 如何自定义样式？
 
 A: 使用scoped样式或UnoCSS工具类：
+
 ```vue
 <style scoped>
 .custom-card {
@@ -377,6 +395,7 @@ A: 使用scoped样式或UnoCSS工具类：
 ## 总结
 
 课程拼团管理前端已完整实现，包括：
+
 - ✅ 完整的API服务层
 - ✅ 排课管理页面
 - ✅ 考勤管理页面

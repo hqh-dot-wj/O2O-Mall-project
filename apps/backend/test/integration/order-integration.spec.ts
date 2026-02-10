@@ -20,7 +20,7 @@ describe('订单集成测试', () => {
   let distributionService: CouponDistributionService;
   let accountService: PointsAccountService;
 
-  const testTenantId = 'test-tenant-001';
+  const testTenantId = '00000';
   const testMemberId = 'test-member-001';
 
   beforeAll(async () => {

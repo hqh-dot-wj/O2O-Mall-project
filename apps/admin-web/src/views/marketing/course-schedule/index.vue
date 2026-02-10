@@ -1,8 +1,8 @@
 <script setup lang="tsx">
-import { ref, onMounted } from 'vue';
-import { NButton, NCard, NDataTable, NTag, NSpace, NDatePicker, NInput, NSelect } from 'naive-ui';
-import { fetchCourseSchedules, type CourseSchedule } from '@/service/api/course-group-buy';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { NButton, NCard, NDataTable, NDatePicker, NInput, NSelect, NSpace, NTag } from 'naive-ui';
+import { type CourseSchedule, fetchCourseSchedules } from '@/service/api/course-group-buy';
 
 /**
  * 课程排课管理页面
@@ -51,9 +51,7 @@ const columns = [
     title: '课时数',
     align: 'center' as const,
     width: 100,
-    render: (row: CourseSchedule) => (
-      <span class="text-primary font-bold">{row.lessons} 节</span>
-    )
+    render: (row: CourseSchedule) => <span class="text-primary font-bold">{row.lessons} 节</span>
   },
   {
     key: 'status',
@@ -123,9 +121,7 @@ const statistics = computed(() => {
   const completed = schedules.value.filter(s => s.status === 'COMPLETED').length;
   const cancelled = schedules.value.filter(s => s.status === 'CANCELLED').length;
   const totalLessons = schedules.value.reduce((sum, s) => sum + s.lessons, 0);
-  const completedLessons = schedules.value
-    .filter(s => s.status === 'COMPLETED')
-    .reduce((sum, s) => sum + s.lessons, 0);
+  const completedLessons = schedules.value.filter(s => s.status === 'COMPLETED').reduce((sum, s) => sum + s.lessons, 0);
 
   return {
     total,
@@ -157,31 +153,31 @@ onMounted(() => {
 
       <div class="h-full flex-col">
         <!-- 统计卡片 -->
-        <div class="mb-4 grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-4 mb-4 gap-4">
           <NCard size="small" :bordered="false" class="bg-blue-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-primary">{{ statistics.total }}</div>
+              <div class="text-2xl text-primary font-bold">{{ statistics.total }}</div>
               <div class="mt-1 text-sm text-gray-600">总排课数</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-green-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-success">{{ statistics.completed }}</div>
+              <div class="text-2xl text-success font-bold">{{ statistics.completed }}</div>
               <div class="mt-1 text-sm text-gray-600">已完成</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-orange-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-warning">{{ statistics.scheduled }}</div>
+              <div class="text-2xl text-warning font-bold">{{ statistics.scheduled }}</div>
               <div class="mt-1 text-sm text-gray-600">待上课</div>
             </div>
           </NCard>
 
           <NCard size="small" :bordered="false" class="bg-purple-50">
             <div class="flex-col items-center">
-              <div class="text-2xl font-bold text-purple-600">
+              <div class="text-2xl text-purple-600 font-bold">
                 {{ statistics.completedLessons }} / {{ statistics.totalLessons }}
               </div>
               <div class="mt-1 text-sm text-gray-600">课时进度</div>
@@ -191,22 +187,11 @@ onMounted(() => {
 
         <!-- 筛选栏 -->
         <NSpace class="mb-4">
-          <NSelect
-            v-model:value="statusFilter"
-            :options="statusOptions"
-            placeholder="筛选状态"
-            style="width: 150px"
-          />
+          <NSelect v-model:value="statusFilter" :options="statusOptions" placeholder="筛选状态" style="width: 150px" />
         </NSpace>
 
         <!-- 表格 -->
-        <NDataTable
-          :columns="columns"
-          :data="filteredSchedules"
-          :loading="loading"
-          flex-height
-          class="flex-1-hidden"
-        />
+        <NDataTable :columns="columns" :data="filteredSchedules" :loading="loading" flex-height class="flex-1-hidden" />
       </div>
     </NCard>
   </div>

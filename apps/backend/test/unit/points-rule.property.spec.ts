@@ -30,7 +30,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           provide: ClsService,
           useValue: {
             get: jest.fn((key: string) => {
-              if (key === 'tenantId') return 'test-tenant-001';
+              if (key === 'tenantId') return '00000';
               if (key === 'userId') return 'test-user-001';
               return null;
             }),
@@ -69,7 +69,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           async ({ orderAmount, orderPointsBase, orderPointsRatio }) => {
             // 模拟积分规则
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               orderPointsEnabled: true,
               systemEnabled: true,
               orderPointsBase: new Decimal(orderPointsBase),
@@ -104,7 +104,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           async ({ orderAmount, orderPointsBase, orderPointsRatio }) => {
             // 模拟积分规则（消费积分功能已禁用）
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               orderPointsEnabled: false,
               systemEnabled: true,
               orderPointsBase: new Decimal(orderPointsBase),
@@ -135,7 +135,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           async ({ orderAmount, orderPointsBase, orderPointsRatio }) => {
             // 模拟积分规则（系统已禁用）
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               orderPointsEnabled: true,
               systemEnabled: false,
               orderPointsBase: new Decimal(orderPointsBase),
@@ -164,7 +164,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           }),
           async ({ orderPointsBase, orderPointsRatio }) => {
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               orderPointsEnabled: true,
               systemEnabled: true,
               orderPointsBase: new Decimal(orderPointsBase),
@@ -206,7 +206,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           async ({ points, pointsRedemptionRatio, pointsRedemptionBase }) => {
             // 模拟积分规则
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               pointsRedemptionRatio: new Decimal(pointsRedemptionRatio),
@@ -241,7 +241,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           async ({ points, pointsRedemptionRatio, pointsRedemptionBase }) => {
             // 模拟积分规则（抵扣功能已禁用）
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: false,
               systemEnabled: true,
               pointsRedemptionRatio: new Decimal(pointsRedemptionRatio),
@@ -272,7 +272,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           async ({ points, pointsRedemptionRatio, pointsRedemptionBase }) => {
             // 模拟积分规则（系统已禁用）
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: false,
               pointsRedemptionRatio: new Decimal(pointsRedemptionRatio),
@@ -301,7 +301,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           }),
           async ({ pointsRedemptionRatio, pointsRedemptionBase }) => {
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               pointsRedemptionRatio: new Decimal(pointsRedemptionRatio),
@@ -334,7 +334,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
             fc.pre(points < pointsRedemptionRatio);
 
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               pointsRedemptionRatio: new Decimal(pointsRedemptionRatio),
@@ -377,7 +377,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
             fc.pre(points > maxPointsPerOrder);
 
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               maxPointsPerOrder,
@@ -411,7 +411,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
             fc.pre(points <= maxPointsPerOrder);
 
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               maxPointsPerOrder,
@@ -443,7 +443,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           }),
           async ({ maxDiscountPercent, orderAmount, pointsRedemptionRatio, pointsRedemptionBase }) => {
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               maxPointsPerOrder: null as number | null,
@@ -481,7 +481,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           }),
           async ({ maxDiscountPercent, orderAmount, pointsRedemptionRatio, pointsRedemptionBase }) => {
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: true,
               maxPointsPerOrder: null as number | null,
@@ -516,7 +516,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           }),
           async ({ points, orderAmount }) => {
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: false,
               systemEnabled: true,
               maxPointsPerOrder: null as number | null,
@@ -546,7 +546,7 @@ describe('PointsRuleService - Property-Based Tests', () => {
           }),
           async ({ points, orderAmount }) => {
             const mockRule = {
-              tenantId: 'test-tenant-001',
+              tenantId: '00000',
               pointsRedemptionEnabled: true,
               systemEnabled: false,
               maxPointsPerOrder: null as number | null,

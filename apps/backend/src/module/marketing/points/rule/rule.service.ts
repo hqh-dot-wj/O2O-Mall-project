@@ -4,12 +4,13 @@ import { ClsService } from 'nestjs-cls';
 import { Result } from 'src/common/response/result';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { FormatDateFields } from 'src/common/utils';
+import { TenantContext } from 'src/common/tenant';
 import { PointsRuleRepository } from './rule.repository';
 import { UpdatePointsRuleDto } from './dto/update-points-rule.dto';
 
 /**
  * 积分规则服务
- * 
+ *
  * @description 提供积分规则的配置管理、积分计算、验证等功能
  */
 @Injectable()
@@ -23,16 +24,17 @@ export class PointsRuleService {
 
   /**
    * 获取租户积分规则配置
-   * 
+   *
    * @returns 积分规则
    */
   async getRules() {
-    const tenantId = this.cls.get('tenantId');
+    // 租户ID 由 TenantMiddleware 从 header 'tenant-id' 提取，未提供时使用 SUPER_TENANT_ID
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     let rules = await this.repo.findByTenantId(tenantId);
 
     // 如果不存在，创建默认规则
     if (!rules) {
-      const userId = this.cls.get('userId') || 'system';
+      const userId = this.cls.get('user')?.userId ?? this.cls.get('userId') ?? 'system';
       rules = await this.repo.create({
         tenantId,
         orderPointsEnabled: true,
@@ -57,13 +59,13 @@ export class PointsRuleService {
 
   /**
    * 更新积分规则配置
-   * 
+   *
    * @param dto 更新数据
    * @returns 更新后的规则
    */
   async updateRules(dto: UpdatePointsRuleDto) {
-    const tenantId = this.cls.get('tenantId');
-    const userId = this.cls.get('userId') || 'system';
+    const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
+    const userId = this.cls.get('user')?.userId ?? this.cls.get('userId') ?? 'system';
 
     // 验证配置
     this.validateRuleConfig(dto);
@@ -77,12 +79,12 @@ export class PointsRuleService {
 
   /**
    * 计算消费积分
-   * 
+   *
    * @param orderAmount 订单金额
    * @returns 应获得的积分数
    */
   async calculateOrderPoints(orderAmount: Decimal): Promise<number> {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId();
     const rules = await this.repo.findByTenantId(tenantId);
 
     if (!rules || !rules.orderPointsEnabled || !rules.systemEnabled) {
@@ -90,16 +92,14 @@ export class PointsRuleService {
     }
 
     // 计算公式: floor(orderAmount / orderPointsBase) * orderPointsRatio
-    const points = Math.floor(
-      Number(orderAmount) / Number(rules.orderPointsBase),
-    ) * Number(rules.orderPointsRatio);
+    const points = Math.floor(Number(orderAmount) / Number(rules.orderPointsBase)) * Number(rules.orderPointsRatio);
 
     return Math.max(0, points);
   }
 
   /**
    * 按商品明细计算消费积分（新方法，防止积分套利）
-   * 
+   *
    * @param items 订单商品明细
    * @param baseAmount 积分计算基数（原价 - 优惠券抵扣，不包括积分抵扣）
    * @param totalAmount 订单原价
@@ -115,16 +115,16 @@ export class PointsRuleService {
     baseAmount: Decimal,
     totalAmount: Decimal,
   ): Promise<Array<{ skuId: string; earnedPoints: number }>> {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId();
     const rules = await this.repo.findByTenantId(tenantId);
 
     if (!rules || !rules.orderPointsEnabled || !rules.systemEnabled) {
-      return items.map(item => ({ skuId: item.skuId, earnedPoints: 0 }));
+      return items.map((item) => ({ skuId: item.skuId, earnedPoints: 0 }));
     }
 
     // 如果基数金额为0或负数，不产生积分
     if (Number(baseAmount) <= 0) {
-      return items.map(item => ({ skuId: item.skuId, earnedPoints: 0 }));
+      return items.map((item) => ({ skuId: item.skuId, earnedPoints: 0 }));
     }
 
     const result: Array<{ skuId: string; earnedPoints: number }> = [];
@@ -138,9 +138,7 @@ export class PointsRuleService {
       const itemBaseAmount = Number(baseAmount) * itemRatio;
 
       // 计算该商品的基础积分
-      const basePoints = Math.floor(
-        itemBaseAmount / Number(rules.orderPointsBase),
-      ) * Number(rules.orderPointsRatio);
+      const basePoints = Math.floor(itemBaseAmount / Number(rules.orderPointsBase)) * Number(rules.orderPointsRatio);
 
       // 应用商品的积分比例（0-100）
       const earnedPoints = Math.floor(basePoints * (item.pointsRatio / 100));
@@ -156,12 +154,12 @@ export class PointsRuleService {
 
   /**
    * 计算积分抵扣金额
-   * 
+   *
    * @param points 使用的积分数
    * @returns 抵扣金额
    */
   async calculatePointsDiscount(points: number): Promise<Decimal> {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId();
     const rules = await this.repo.findByTenantId(tenantId);
 
     if (!rules || !rules.pointsRedemptionEnabled || !rules.systemEnabled) {
@@ -169,22 +167,20 @@ export class PointsRuleService {
     }
 
     // 计算公式: floor(points / pointsRedemptionRatio) * pointsRedemptionBase
-    const discount =
-      Math.floor(points / Number(rules.pointsRedemptionRatio)) *
-      Number(rules.pointsRedemptionBase);
+    const discount = Math.floor(points / Number(rules.pointsRedemptionRatio)) * Number(rules.pointsRedemptionBase);
 
     return new Decimal(Math.max(0, discount));
   }
 
   /**
    * 验证积分使用是否合法
-   * 
+   *
    * @param points 使用的积分数
    * @param orderAmount 订单金额
    * @throws BusinessException 如果验证失败
    */
   async validatePointsUsage(points: number, orderAmount: Decimal) {
-    const tenantId = this.cls.get('tenantId');
+    const tenantId = TenantContext.getTenantId();
     const rules = await this.repo.findByTenantId(tenantId);
 
     if (!rules || !rules.pointsRedemptionEnabled || !rules.systemEnabled) {
@@ -193,30 +189,23 @@ export class PointsRuleService {
 
     // 验证单笔订单最多可使用积分数量
     if (rules.maxPointsPerOrder && points > rules.maxPointsPerOrder) {
-      BusinessException.throw(
-        400,
-        `单笔订单最多使用 ${rules.maxPointsPerOrder} 积分`,
-      );
+      BusinessException.throw(400, `单笔订单最多使用 ${rules.maxPointsPerOrder} 积分`);
     }
 
     // 验证最大抵扣比例
     if (rules.maxDiscountPercentOrder) {
       const discount = await this.calculatePointsDiscount(points);
-      const maxDiscount =
-        Number(orderAmount) * (rules.maxDiscountPercentOrder / 100);
+      const maxDiscount = Number(orderAmount) * (rules.maxDiscountPercentOrder / 100);
 
       if (Number(discount) > maxDiscount) {
-        BusinessException.throw(
-          400,
-          `积分抵扣金额不能超过订单金额的 ${rules.maxDiscountPercentOrder}%`,
-        );
+        BusinessException.throw(400, `积分抵扣金额不能超过订单金额的 ${rules.maxDiscountPercentOrder}%`);
       }
     }
   }
 
   /**
    * 验证规则配置的合法性
-   * 
+   *
    * @param dto 规则配置
    * @throws BusinessException 如果配置不合法
    */
@@ -247,22 +236,13 @@ export class PointsRuleService {
 
     // 验证积分抵扣配置
     if (dto.pointsRedemptionEnabled) {
-      if (
-        dto.pointsRedemptionBase !== undefined &&
-        dto.pointsRedemptionBase <= 0
-      ) {
+      if (dto.pointsRedemptionBase !== undefined && dto.pointsRedemptionBase <= 0) {
         BusinessException.throw(400, '积分抵扣基数必须大于0');
       }
-      if (
-        dto.pointsRedemptionRatio !== undefined &&
-        dto.pointsRedemptionRatio < 0
-      ) {
+      if (dto.pointsRedemptionRatio !== undefined && dto.pointsRedemptionRatio < 0) {
         BusinessException.throw(400, '积分抵扣比例不能为负数');
       }
-      if (
-        dto.maxPointsPerOrder !== undefined &&
-        dto.maxPointsPerOrder < 0
-      ) {
+      if (dto.maxPointsPerOrder !== undefined && dto.maxPointsPerOrder < 0) {
         BusinessException.throw(400, '单笔订单最多可使用积分数量不能为负数');
       }
       if (

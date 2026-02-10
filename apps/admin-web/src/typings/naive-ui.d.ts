@@ -16,7 +16,7 @@ declare namespace NaiveUI {
    *
    * if you want to add a custom column, you should add a key to this type
    */
-  type CustomColumnKey = 'operate' | 'config';
+  type CustomColumnKey = 'operate' | 'config' | 'marketing' | 'count' | 'validity';
 
   type SetTableColumnKey<C, T> = Omit<C, 'key'> & { key: (keyof T & (string | number)) | CustomColumnKey };
 

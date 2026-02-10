@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Min, IsString } from 'class-validator';
 import { PointsTransactionType } from '@prisma/client';
 
 /**
@@ -8,6 +8,11 @@ import { PointsTransactionType } from '@prisma/client';
  * @description 用于查询积分交易记录
  */
 export class TransactionQueryDto {
+  @ApiProperty({ description: '会员ID（管理端筛选）', required: false })
+  @IsOptional()
+  @IsString()
+  memberId?: string;
+
   @ApiProperty({ description: '交易类型', enum: PointsTransactionType, required: false })
   @IsOptional()
   @IsEnum(PointsTransactionType)
