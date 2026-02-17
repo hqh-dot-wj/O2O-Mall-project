@@ -1,26 +1,19 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "lib": ["DOM", "ESNext"],
     "baseUrl": ".",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "noUnusedLocals": false,
     "paths": {
       "@/*": ["./src/*"],
-      "~/*": ["./*"],
-      "@common/*": ["../../libs/common-types/src/*"]
+      "~/*": ["./*"]
     },
-    "resolveJsonModule": true,
-    "types": ["vite/client", "node", "unplugin-icons/types/vue", "naive-ui/volar"],
-    "strict": true,
-    "strictNullChecks": true,
-    "noUnusedLocals": false,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true
+    "types": ["vite/client", "node", "unplugin-icons/types/vue", "naive-ui/volar"]
   },
   "include": ["./**/*.ts", "./**/*.tsx", "./**/*.vue"],
   "exclude": ["node_modules", "dist"]

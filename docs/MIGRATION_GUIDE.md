@@ -3,13 +3,15 @@
 ## 修改内容
 
 为 `PlayTemplate` 模型添加了商品/规格关联字段：
+
 - `productId` - 关联的商品ID
-- `skuId` - 关联的规格ID  
+- `skuId` - 关联的规格ID
 - `productName` - 商品名称（用于显示）
 
 ## 遇到的问题
 
 如果执行 `npm run prisma:migrate` 时遇到以下错误：
+
 ```
 Error: P3006
 Migration `20260128104031_add_performance_indexes` failed to apply cleanly to the shadow database.
@@ -31,11 +33,13 @@ npx prisma db push
 ```
 
 优点：
+
 - 快速，不需要处理迁移历史
 - 适合开发环境
 - 会自动添加缺失的字段
 
 缺点：
+
 - 不会生成迁移文件
 - 不适合生产环境
 
@@ -107,16 +111,19 @@ npm run start:dev
 ### 1. 检查数据库表结构
 
 连接到 PostgreSQL 数据库：
+
 ```bash
 psql -h 127.0.0.1 -p 5432 -U postgres -d nest-admin-soybean
 ```
 
 查看表结构：
+
 ```sql
 \d mkt_play_template
 ```
 
 应该能看到新增的字段：
+
 - product_id
 - sku_id
 - product_name
@@ -138,11 +145,13 @@ npm run start:dev
 ## 已修改的文件
 
 ### 后端
+
 - `apps/backend/prisma/schema.prisma` - 数据库模型
 - `apps/backend/src/module/marketing/template/vo/template.vo.ts` - 响应VO
 - `apps/backend/src/module/marketing/template/dto/template.dto.ts` - 请求DTO
 
 ### 前端
+
 - `apps/admin-web/src/typings/api/marketing.api.d.ts` - TypeScript类型定义
 - `apps/admin-web/src/views/marketing/template/modules/template-operate-drawer.vue` - 抽屉组件
 
@@ -152,4 +161,3 @@ npm run start:dev
 2. 如果是生产环境，建议先在测试环境验证
 3. 迁移前建议备份数据库
 4. `db push` 适合开发环境快速迭代，生产环境应使用 `migrate deploy`
-

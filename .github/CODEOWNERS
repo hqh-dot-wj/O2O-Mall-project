@@ -1,0 +1,21 @@
+# 默认审查者
+* @linlingqin77
+
+# 后端
+/apps/backend/ @linlingqin77
+/prisma/ @linlingqin77
+
+# 前端管理后台
+/apps/admin-web/ @linlingqin77
+
+# 小程序
+/apps/miniapp-client/ @linlingqin77
+
+# 共享库
+/libs/ @linlingqin77
+
+# 基础设施（需要更谨慎的审查）
+turbo.json @linlingqin77
+pnpm-workspace.yaml @linlingqin77
+tsconfig.base.json @linlingqin77
+.github/ @linlingqin77

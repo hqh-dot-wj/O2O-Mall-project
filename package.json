@@ -3,13 +3,48 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev:backend": "pnpm --filter @apps/backend run start:dev",
-    "build:backend": "pnpm --filter @apps/backend run build:dev",
-    "dev:admin": "pnpm --filter @apps/admin-web run dev",
-    "build:admin": "pnpm --filter @apps/admin-web run build",
-    "dev:mp": "pnpm --filter @apps/miniapp-client run dev:mp"
+    "dev": "turbo run dev",
+    "dev:backend": "turbo run dev --filter=@apps/backend",
+    "dev:admin": "turbo run dev --filter=@apps/admin-web",
+    "dev:mp": "turbo run dev --filter=@apps/miniapp-client",
+    "build": "turbo run build",
+    "build:backend": "turbo run build --filter=@apps/backend",
+    "build:admin": "turbo run build --filter=@apps/admin-web",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "verify-monorepo": "node scripts/verify-monorepo.mjs",
+    "prepare": "simple-git-hooks",
+    "commitlint": "commitlint"
   },
-  "devDependencies": {},
+  "simple-git-hooks": {
+    "commit-msg": "pnpm commitlint --edit $1",
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "apps/backend/**/*.ts": [
+      "eslint --fix"
+    ],
+    "apps/admin-web/**/*.{ts,tsx,vue}": [
+      "eslint --fix"
+    ],
+    "apps/miniapp-client/**/*.{ts,tsx,vue}": [
+      "eslint --fix"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "catalog:",
+    "@commitlint/config-conventional": "catalog:",
+    "@eslint/js": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "lint-staged": "catalog:",
+    "simple-git-hooks": "catalog:",
+    "turbo": "^2.3.0",
+    "typescript-eslint": "^8.15.0"
+  },
   "pnpm": {
     "overrides": {
       "unconfig": "7.4.2",

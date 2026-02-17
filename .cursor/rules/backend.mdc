@@ -1,5 +1,5 @@
 ---
-description: NestJS 后端开发规范（响应、异常、DTO、Repository、事务、Controller、测试、性能、安全、稳定性）
+description: NestJS 后端开发规范（响应、异常、DTO、Repository、事务、Controller、测试、性能、安全、多租户与接口分类）
 globs: apps/backend/**/*.ts
 alwaysApply: false
 ---
@@ -221,3 +221,42 @@ orderBy、where 条件白名单，禁止前端随意传入任意字段。防注�
 ### 11.10 可观测性（P3）
 
 核心接口监控：QPS、P95 耗时、错误率。日志含 traceId、userId、关键参数（脱敏）。
+
+---
+
+## 🏢 12. 多租户与接口分类
+
+Backend 同时服务 **Admin 后台**（system/*）与 **Miniapp 小程序**（client/*）。接口分为「按租户隔离」与「不按租户隔离」两类，新增/修改接口时必须先区分并标明。
+
+### 12.1 三种接口类型
+
+| 类型 | 说明 | 示例 |
+|------|------|------|
+| **TenantScoped** | 数据按当前租户隔离；租户来自请求头 `tenant-id` 或登录态；Repository 用 BaseRepository/SoftDeleteRepository 自动过滤。 | 用户/角色/部门列表；小程序的订单、购物车、商品、钱包。 |
+| **PlatformOnly** | 不按租户隔离，仅平台或超管可调；必须配 `RequirePermission` 或角色校验。 | 租户管理、租户套餐、同步字典、监控。 |
+| **TenantAgnostic** | 不依赖当前登录租户；租户由参数或返回值决定。 | `client/location/match-tenant`、`nearby-tenants`。 |
+
+### 12.2 路径与调用方约定
+
+- **system/tenant、system/tenant-package** → 一律 **PlatformOnly**。
+- **client/location** 下「根据坐标/位置解析或列出租户」的接口 → **TenantAgnostic**。
+- **client/** 下订单、购物车、商品、钱包等 → **TenantScoped**（租户来自 header 或 body，与前端约定一致）。
+- **system/** 下其余业务（用户、角色、部门等）→ **TenantScoped**。
+
+### 12.3 标明方式（必做）
+
+- 在 Controller 类或方法上用 JSDoc 标明：`/** @tenantScope TenantScoped */` 或 `PlatformOnly` 或 `TenantAgnostic`。
+- 与路径约定不一致时必须在类或方法上显式注释。
+
+### 12.4 新增接口前自检
+
+1. 主要调用方：admin / miniapp / both？
+2. 是否按租户隔离？→ 是则 TenantScoped，否则 PlatformOnly 或 TenantAgnostic。
+3. PlatformOnly 是否已加权限？
+4. Miniapp 且 TenantScoped 时，租户来源是 header 还是 body/query？在注释或文档写明。
+
+### 12.5 数据层要求
+
+- 租户内接口：访问租户隔离表必须通过继承 BaseRepository/SoftDeleteRepository 的 Repository；禁止手写 `prisma.xxx.findMany()` 且不加租户条件（除非显式跨租户且已加权限）。
+- 创建租户隔离数据：禁止由前端传入 `tenantId` 落库；从 `TenantContext.getTenantId()` 或 `this.cls.get('tenantId')` 取。
+- 跨租户/平台查询：用项目约定的忽略租户机制（如 TenantContext.run + setIgnoreTenant），并做权限校验。

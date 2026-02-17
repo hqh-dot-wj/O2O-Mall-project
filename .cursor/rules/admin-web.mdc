@@ -65,6 +65,8 @@ src/views/[module]/[entity_name]/
 - **API**：优先 `@/service/api/[module]/[entity]`；多实体时可从 `@/service/api/[module]` 的 index 导入。
 - **API 命名**：`fetchGet[Entity]List`、`fetchCreate[Entity]`、`fetchUpdate[Entity]`、`fetchDelete[Entity]`。
 
+**多租户**：本端为后台管理系统，租户由当前登录用户决定。请求拦截器已从 `authStore.userInfo.user?.tenantId` 注入请求头 `tenant-id`，业务代码无需再设。平台级接口（如租户管理）仅对具备权限的角色开放；下载/导出需带 `tenant-id`（使用现有 download hook 或显式传头）。
+
 ## 5. 代码风格与模板约定
 
 - **模板**：指令缩写（`:value`、`@click`）；`v-for` 必须 `key` 且稳定唯一；频繁切换用 `v-show`，否则 `v-if`。

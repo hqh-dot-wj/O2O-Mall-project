@@ -6,13 +6,13 @@
 declare namespace Api {
   namespace System {
     /** config */
-    type Config = import('@common/api').components['schemas']['ConfigVo'];
+    type Config = import('@libs/common-types').components['schemas']['ConfigVo'];
 
     /** data scope */
     type DataScope = '1' | '2' | '3' | '4' | '5' | '6';
 
     /** role */
-    type Role = import('@common/api').components['schemas']['RoleVo'];
+    type Role = import('@libs/common-types').components['schemas']['RoleVo'];
 
     /** role search params */
     type RoleSearchParams = CommonType.RecordNullable<
@@ -66,7 +66,7 @@ declare namespace Api {
     type UserGender = '1' | '2';
 
     /** user */
-    type User = import('@common/api').components['schemas']['SysUserVo'];
+    type User = import('@libs/common-types').components['schemas']['SysUserVo'];
 
     /** user search params */
     type UserSearchParams = CommonType.RecordNullable<

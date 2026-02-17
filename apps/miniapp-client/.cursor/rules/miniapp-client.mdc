@@ -153,21 +153,28 @@ import { mpApi } from '@/utils/mp'
 - 按模块组织在 `src/api/`
 - 请求/响应类型用 TypeScript 定义
 
+### 14. 多租户约定
+
+- 后端同时服务 Admin 与 Miniapp：部分接口按**当前租户**隔离（订单、购物车、商品、钱包等），部分不依赖当前租户（如 `client/location/match-tenant`、`nearby-tenants`）。
+- **需要租户的接口**：租户来源以接口文档为准（请求头 `tenant-id` 或 body/query 的 `tenantId`）；与 location 的 `currentTenantId` 一致并按要求传递。
+- **不需要当前租户的接口**：如根据坐标匹配租户、附近租户列表、登录前接口，调用时不带当前租户。
+- 新增或对接新接口时，先确认是否需传租户及传递方式（header/body/query），与后端约定一致。
+
 ---
 
 ## 六、小程序包体积与性能（参考微信最佳实践）
 
-### 14. 包体积
+### 15. 包体积
 
 - 主包建议 < 1.5M，单包 ≤ 2M
 - 超 1.5M 使用分包；静态资源 > 200K 放 CDN
 
-### 15. 分包策略
+### 16. 分包策略
 
 - 非核心页面、按需加载页面放分包
 - 在 `pages.config.ts` 中配置 `subPackages`
 
-### 16. 组件与资源
+### 17. 组件与资源
 
 - 启用组件按需注入
 - 移除未使用组件、插件、静态资源
@@ -176,13 +183,13 @@ import { mpApi } from '@/utils/mp'
 
 ## 七、安全规范（参考微信安全指引）
 
-### 17. 数据与权限
+### 18. 数据与权限
 
 - 互不信任：不信任用户或第三方提交数据，必须校验
 - 最小权限：只申请必要权限
 - 敏感数据禁止明文存储，重要逻辑放后端
 
-### 18. 隐私声明
+### 19. 隐私声明
 
 - 使用位置、相册等需在 `manifest.config.ts` 中声明
 - 微信小程序需配置 `requiredPrivateInfos`、`permission`
@@ -191,14 +198,14 @@ import { mpApi } from '@/utils/mp'
 
 ## 八、命名与文件规范
 
-### 19. 命名约定
+### 20. 命名约定
 
 - 目录/文件：kebab-case
 - 组件名：PascalCase
 - 变量/方法：camelCase；常量：UPPER_SNAKE_CASE
 - 自定义组件：`fg-*`（easycom 已配置）
 
-### 20. 页面级组件
+### 21. 页面级组件
 
 - 页面专属组件放在 `src/pages/xx/components/`
 - 全局组件放在 `src/components/`
@@ -207,20 +214,20 @@ import { mpApi } from '@/utils/mp'
 
 ## 九、性能与体验
 
-### 21. 列表与虚拟滚动
+### 22. 列表与虚拟滚动
 
 - 长列表使用 `z-paging` 或虚拟列表，避免一次性渲染大量 DOM
 
-### 22. 图片规范
+### 23. 图片规范
 
 - 控制尺寸，优先懒加载
 - 大图放 CDN，不在包内
 
-### 23. 防抖/节流
+### 24. 防抖/节流
 
 - 搜索输入、滚动、resize 等高频逻辑需防抖或节流
 
-### 24. 生命周期
+### 25. 生命周期
 
 - 页面用 uni 生命周期：`onLoad`、`onShow`、`onReady`、`onHide`、`onUnload`
 - 组件用 Vue3 生命周期
@@ -229,18 +236,18 @@ import { mpApi } from '@/utils/mp'
 
 ## 十、调试与构建
 
-### 25. 开发命令
+### 26. 开发命令
 
 - H5：`pnpm dev` / `pnpm dev:h5`
 - 微信小程序：`pnpm dev:mp` / `pnpm dev:mp-weixin`
 - 构建：`pnpm build:h5`、`pnpm build:mp`
 
-### 26. 代码质量
+### 27. 代码质量
 
 - `pnpm lint`、`pnpm lint:fix`
 - `pnpm type-check` 类型检查
 
-### 27. 调试
+### 28. 调试
 
 - H5：浏览器 DevTools、Vue DevTools
 - 小程序：微信开发者工具、网络面板、平台差异测试
@@ -249,18 +256,18 @@ import { mpApi } from '@/utils/mp'
 
 ## 十一、设计与可访问性
 
-### 28. 设计原则（参考微信设计指南）
+### 29. 设计原则（参考微信设计指南）
 
 - 友好礼貌、重点突出、流程清晰
 - 即时反馈、减少误操作
 - 视觉统一：字体、列表、表单、按钮规范一致
 
-### 29. 可访问性
+### 30. 可访问性
 
 - 按钮/图标配合文案或 `aria-label`
 - 表单控件关联 `label`
 
-### 30. 错误与空态
+### 31. 错误与空态
 
 - 网络错误、空数据有明确提示
 - 使用 `uni.showToast`、`uni.showModal` 等统一反馈
@@ -269,16 +276,16 @@ import { mpApi } from '@/utils/mp'
 
 ## 十二、扩展规范
 
-### 31. 第三方组件库
+### 32. 第三方组件库
 
 - 支持 wot-design-uni、uview-plus、uv-ui、sard-ui、z-paging 等
 - 引入时注意按需加载和包体积
 
-### 32. 国际化
+### 33. 国际化
 
 - 使用 `vue-i18n`，文案通过 `$t()` 管理
 
-### 33. 环境变量
+### 34. 环境变量
 
 - 环境变量放在 `env/`，通过 `VITE_` 前缀暴露
 
@@ -301,23 +308,24 @@ import { mpApi } from '@/utils/mp'
 | 11 | definePage | 页面配置写在最上方 |
 | 12 | 请求封装 | 使用 src/http 统一封装 |
 | 13 | 接口类型 | API 请求/响应定义类型 |
-| 14 | 包体积 | 主包 < 1.5M，单包 ≤ 2M |
-| 15 | 分包 | 非核心页面分包 |
-| 16 | 资源优化 | 移除未使用组件/资源，大图 CDN |
-| 17 | 安全 | 不信任用户输入，最小权限 |
-| 18 | 隐私 | manifest 中声明敏感接口 |
-| 19 | 命名 | kebab-case 文件，PascalCase 组件 |
-| 20 | 组件位置 | 页面组件在 pages/xx/components/ |
-| 21 | 长列表 | 虚拟滚动或 z-paging |
-| 22 | 图片 | 控制尺寸、懒加载、大图 CDN |
-| 23 | 防抖节流 | 搜索、滚动等高频逻辑 |
-| 24 | 生命周期 | 页面用 uni，组件用 Vue3 |
-| 25 | 开发命令 | dev/dev:mp/build 等 |
-| 26 | Lint | lint、lint:fix、type-check |
-| 27 | 调试 | DevTools、微信开发者工具 |
-| 28 | 设计 | 友好、即时反馈、视觉统一 |
-| 29 | 可访问性 | 按钮/图标有文案或 aria-label |
-| 30 | 错误态 | 网络/空数据有明确提示 |
-| 31 | 组件库 | 按需引入，注意包体积 |
-| 32 | 国际化 | vue-i18n + $t() |
-| 33 | 环境变量 | env/ 下 VITE_ 前缀 |
+| 14 | 多租户 | 需租户的接口带 tenant-id/tenantId；不需的（如 match-tenant）不带 |
+| 15 | 包体积 | 主包 < 1.5M，单包 ≤ 2M |
+| 16 | 分包 | 非核心页面分包 |
+| 17 | 资源优化 | 移除未使用组件/资源，大图 CDN |
+| 18 | 安全 | 不信任用户输入，最小权限 |
+| 19 | 隐私 | manifest 中声明敏感接口 |
+| 20 | 命名 | kebab-case 文件，PascalCase 组件 |
+| 21 | 组件位置 | 页面组件在 pages/xx/components/ |
+| 22 | 长列表 | 虚拟滚动或 z-paging |
+| 23 | 图片 | 控制尺寸、懒加载、大图 CDN |
+| 24 | 防抖节流 | 搜索、滚动等高频逻辑 |
+| 25 | 生命周期 | 页面用 uni，组件用 Vue3 |
+| 26 | 开发命令 | dev/dev:mp/build 等 |
+| 27 | Lint | lint、lint:fix、type-check |
+| 28 | 调试 | DevTools、微信开发者工具 |
+| 29 | 设计 | 友好、即时反馈、视觉统一 |
+| 30 | 可访问性 | 按钮/图标有文案或 aria-label |
+| 31 | 错误态 | 网络/空数据有明确提示 |
+| 32 | 组件库 | 按需引入，注意包体积 |
+| 33 | 国际化 | vue-i18n + $t() |
+| 34 | 环境变量 | env/ 下 VITE_ 前缀 |

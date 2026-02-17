@@ -1,25 +1,18 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "lib": [
-      "esnext",
-      "dom"
-    ],
-    "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "lib": ["esnext", "dom"],
+    "baseUrl": ".",
+    "outDir": "dist",
+    "allowJs": true,
+    "noImplicitThis": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@img/*": [
-        "./src/static/*"
-      ],
-      "@common/*": [
-        "../../libs/common-types/src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@img/*": ["./src/static/*"]
     },
-    "resolveJsonModule": true,
     "types": [
       "@dcloudio/types",
       "@uni-helper/uni-types",
@@ -30,18 +23,10 @@
       "./src/types/async-import.d.ts",
       "./src/typings.d.ts",
       "wot-design-uni/global.d.ts"
-    ],
-    "allowJs": true,
-    "noImplicitThis": true,
-    "outDir": "dist",
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    ]
   },
   "vueCompilerOptions": {
-    "plugins": [
-      "@uni-helper/uni-types/volar-plugin"
-    ]
+    "plugins": ["@uni-helper/uni-types/volar-plugin"]
   },
   "include": [
     "package.json",
@@ -53,8 +38,5 @@
     "src/**/*.vue",
     "src/**/*.json"
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

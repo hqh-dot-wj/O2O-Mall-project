@@ -47,7 +47,7 @@ export default defineConfig(({ command, mode }) => {
   const { UNI_PLATFORM } = process.env
   console.log('UNI_PLATFORM -> ', UNI_PLATFORM) // 得到 mp-weixin, h5, app 等
 
-  const env = loadEnv(mode, path.resolve(process.cwd(), 'env'))
+  const env = loadEnv(mode, process.cwd())
   const {
     VITE_APP_PORT,
     VITE_SERVER_BASEURL,
@@ -61,7 +61,6 @@ export default defineConfig(({ command, mode }) => {
   console.log('环境变量 env -> ', env)
 
   return defineConfig({
-    envDir: './env', // 自定义env目录
     base: VITE_APP_PUBLIC_BASE,
     plugins: [
       // UniXXX 需要在 Uni 之前引入
