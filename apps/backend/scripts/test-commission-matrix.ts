@@ -121,7 +121,7 @@ class TestCommissionLogic {
             if (await this.checkCircular(l2Id, order.memberId)) {
                 results.push({ level: 2, status: 'CIRCULAR_DETECTED' });
             } else {
-                let rate = new Decimal(config.level2Rate);
+                const rate = new Decimal(config.level2Rate);
                 results.push({ level: 2, beneficiaryId: l2Id, amount: totalBase.mul(rate) });
             }
         }

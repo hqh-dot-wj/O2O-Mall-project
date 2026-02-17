@@ -10,15 +10,9 @@ import * as path from 'path';
 
 /**
  * 模拟完整的下单 -> 分佣流程 (15个场景)
- * Enhanced with data display
  */
 async function bootstrap() {
-    console.log('🚀 Starting Comprehensive Simulation (Full Flow)...');
-    try {
-        console.log('--- DEBUG: Reading order.service.ts ---');
-        console.log(fs.readFileSync(path.resolve(__dirname, '../src/module/client/order/order.service.ts'), 'utf8').substring(10000, 15000));
-        console.log('--- DEBUG END ---');
-    } catch (e) { console.error('Debug read failed', e); }
+    console.log('🚀 Starting Comprehensive Simulation...');
 
     // Silence NestJS logs
     const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
@@ -27,18 +21,11 @@ async function bootstrap() {
     const commissionService = app.get(CommissionService);
 
     const reportLines: string[] = [];
-    const logCheck = (name: string, passed: boolean, msg?: string, data?: any) => {
+    const logCheck = (name: string, passed: boolean, msg?: string) => {
         const status = passed ? '✅ PASSED' : '❌ FAILED';
         const line = `[${status}] ${name} ${msg ? '- ' + msg : ''}`;
         console.log(line);
         reportLines.push(line);
-        if (passed && data) {
-            console.log('   📊 Data View:');
-            console.dir(data, { depth: null, colors: true });
-            reportLines.push(JSON.stringify(data, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value
-                , 2));
-        }
     };
 
     reportLines.push(`Simulation Report - ${new Date().toISOString()}`);
@@ -145,8 +132,6 @@ async function bootstrap() {
         const m_NoRef = await createMember('NoRef', tenantA);
         const m_Self = await createMember('Self', tenantA); // Will try to ref himself
 
-        console.log('User Chain Created:', { m_L2, m_L1, m_Buyer });
-
         // Products in Tenant A
         const prod_Ratio = await createProduct(tenantA, 'Ratio', 100, 'RATIO', 0.1); // Base 10
         const prod_Fixed = await createProduct(tenantA, 'Fixed', 100, 'FIXED', 5);   // Base 5
@@ -188,6 +173,11 @@ async function bootstrap() {
         }
 
         // 4. Cross-Tenant Purchase (Buyer A buys from Tenant B)
+        // Note: m_Buyer is in Tenant A, but buys from Tenant B.
+        // Referrer L1 is in Tenant A.
+        // Commission should be generated for L1 (System is global or tenant-agnostic for user relations?
+        // User relation `referrerId` is on UmsMember, which has tenantId.
+        // Let's see if Logic allows it.
         let orderId_Cross = '';
         try {
             const res = await orderService.createOrder(m_Buyer, {
@@ -195,15 +185,14 @@ async function bootstrap() {
                 receiverLat: 30.0, receiverLng: 120.0
             } as any);
             orderId_Cross = res.data.orderId;
-            const commissionData = await verifyCommission(orderId_Cross, tenantB, commissionService, prisma, [
+            logCheck('4. Cross-Tenant Order', true, `Order: ${orderId_Cross}`);
+
+            await verifyCommission(orderId_Cross, tenantB, commissionService, prisma, [
+                // Tenant B Config: (Default) L1=60% of Base.
+                // Product Base = 200 * 0.1 = 20.
+                // L1 = 12.00.
                 { beneficiaryId: m_L1, amount: 12.00 }
             ]);
-            logCheck('4. Cross-Tenant Order', true, `Order: ${orderId_Cross}`, {
-                orderId: orderId_Cross,
-                buyer: m_Buyer,
-                tenant: tenantB,
-                commissions: commissionData
-            });
         } catch (e: any) {
             logCheck('4. Cross-Tenant Order', false, getErrorMsg(e));
         }
@@ -214,20 +203,21 @@ async function bootstrap() {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }],
                 shareUserId: m_Buyer // Buying via own link
             } as any);
+            logCheck('5. Self-Purchase (Link)', true, 'Order created');
             await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [], true); // Expect NO commission
-            logCheck('5. Self-Purchase (Link)', true, 'Order created (No Commission)', { orderId: res.data.orderId });
         } catch (e: any) {
             logCheck('5. Self-Purchase (Link)', false, getErrorMsg(e));
         }
 
         // 6. Self-Purchase (Referrer is Self)
+        // Hack: Update m_Self referrer to self
         await prisma.umsMember.update({ where: { memberId: m_Self }, data: { referrerId: m_Self } });
         try {
             const res = await orderService.createOrder(m_Self, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
+            logCheck('6. Self-Purchase (Referrer)', true, 'Ref=Self Order created');
             await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [], true);
-            logCheck('6. Self-Purchase (Referrer)', true, 'Ref=Self Order created (No Commission)', { orderId: res.data.orderId });
         } catch (e: any) {
             logCheck('6. Self-Purchase (Referrer)', false, getErrorMsg(e));
         }
@@ -237,27 +227,25 @@ async function bootstrap() {
             const res = await orderService.createOrder(m_NoRef, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
+            logCheck('7. No Referrer', true, 'Order created');
             await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [], true);
-            logCheck('7. No Referrer', true, 'Order created (No Commission)', { orderId: res.data.orderId });
         } catch (e: any) {
             logCheck('7. No Referrer', false, getErrorMsg(e));
         }
 
         // 8. Only L1 Referrer
-        const m_L1Only = await createMember('L1Only', tenantA, m_L2);
+        const m_L1Only = await createMember('L1Only', tenantA, m_L2); // L2 has no referrer? Wait, L2 was top.
+        // Actually L2 -> nowhere. So L1Only -> L2. 
+        // L2 is the L1 referrer.
         try {
             const res = await orderService.createOrder(m_L1Only, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
-            const comms = await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
-                { beneficiaryId: m_L2, amount: 6.00 }
+            logCheck('8. Only L1 Referrer', true, 'Order created');
+            await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
+                { beneficiaryId: m_L2, amount: 6.00 } // Base 10 * 0.6
+                // No L2
             ]);
-            logCheck('8. Only L1 Referrer', true, 'Order created', {
-                orderId: res.data.orderId,
-                user: m_L1Only,
-                referrer: m_L2,
-                commissions: comms
-            });
         } catch (e: any) {
             logCheck('8. Only L1 Referrer', false, getErrorMsg(e));
         }
@@ -267,14 +255,11 @@ async function bootstrap() {
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
-            const comms = await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
+            logCheck('9. Full Chain', true, 'Order created');
+            await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
                 { beneficiaryId: m_L1, amount: 6.00 },
                 { beneficiaryId: m_L2, amount: 4.00 }
             ]);
-            logCheck('9. Full Chain', true, 'Order created with Multi-Level Commission', {
-                orderId: res.data.orderId,
-                commissions: comms
-            });
         } catch (e: any) {
             logCheck('9. Full Chain', false, getErrorMsg(e));
         }
@@ -284,11 +269,13 @@ async function bootstrap() {
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_Fixed.skuId, quantity: 2 }] // Qty 2
             } as any);
-            const comms = await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
+            logCheck('10. FIXED Mode', true, 'Order created');
+            // Base = 5.00 * 2 = 10.00
+            // L1 = 6.00, L2 = 4.00
+            await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
                 { beneficiaryId: m_L1, amount: 6.00 },
                 { beneficiaryId: m_L2, amount: 4.00 }
             ]);
-            logCheck('10. FIXED Mode', true, 'Order created', { commissions: comms });
         } catch (e: any) {
             logCheck('10. FIXED Mode', false, getErrorMsg(e));
         }
@@ -298,78 +285,102 @@ async function bootstrap() {
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_None.skuId, quantity: 1 }]
             } as any);
+            logCheck('11. NONE Mode', true, 'Order created');
             await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [], true);
-            logCheck('11. NONE Mode', true, 'Order created (No Commission)');
         } catch (e: any) {
             logCheck('11. NONE Mode', false, getErrorMsg(e));
         }
 
         // 12. Commission Threshold (< 0.01)
+        // create low price product
         const prod_Low = await createProduct(tenantA, 'Low', 0.01, 'RATIO', 0.01); // Base 0.0001
         try {
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_Low.skuId, quantity: 1 }]
             } as any);
+            logCheck('12. Threshold', true, 'Order created');
             await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [], true);
-            logCheck('12. Threshold', true, 'Ignored due to threshold');
         } catch (e: any) {
             logCheck('12. Threshold', false, getErrorMsg(e));
         }
 
         // 13. Refund - Frozen
         try {
+            // Create fresh order
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
             const oid = res.data.orderId;
+
+            // Gen Commission (Frozen)
             await mockPayAndCalc(oid, tenantA, prisma, commissionService);
+
+            // Refund
             await commissionService.cancelCommissions(oid);
+
+            // Verify
             const comms = await prisma.finCommission.findMany({ where: { orderId: oid } });
-            logCheck('13. Refund Frozen', comms.every(c => c.status === 'CANCELLED') && comms.length > 0, 'All Cancelled', { commissions: comms });
+            logCheck('13. Refund Frozen', comms.every(c => c.status === 'CANCELLED') && comms.length > 0, 'All Cancelled');
         } catch (e: any) {
             logCheck('13. Refund Frozen', false, getErrorMsg(e));
         }
 
         // 14. Refund - Settled
         try {
+            // Create fresh order
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
             const oid = res.data.orderId;
+
+            // Gen Commission
             await mockPayAndCalc(oid, tenantA, prisma, commissionService);
+
+            // Mock Settle (Change status and Add Wallet Balance)
             await prisma.finCommission.updateMany({ where: { orderId: oid }, data: { status: 'SETTLED' } });
+            //  Mock Wallet for L1 L2
             await prisma.finWallet.upsert({ where: { memberId: m_L1 }, create: { memberId: m_L1, tenantId: tenantA, balance: 100 }, update: { balance: 100 } });
             await prisma.finWallet.upsert({ where: { memberId: m_L2 }, create: { memberId: m_L2, tenantId: tenantA, balance: 100 }, update: { balance: 100 } });
+
+            // Refund (Trigger Rollback)
             await commissionService.cancelCommissions(oid);
+
+            // Verify
             const comms = await prisma.finCommission.findMany({ where: { orderId: oid } });
+            const cancelled = comms.every(c => c.status === 'CANCELLED');
+
             const wL1 = await prisma.finWallet.findUnique({ where: { memberId: m_L1 } });
-            logCheck('14. Refund Settled', comms.every(c => c.status === 'CANCELLED') && wL1?.balance.toNumber() === 94, 'Commission Cancelled & Wallet Deducted', {
-                walletL1: wL1?.balance?.toNumber(),
-                commissions: comms
-            });
+            // Balance 100 - 6 = 94.
+            const deducted = wL1?.balance.toNumber() === 94;
+
+            logCheck('14. Refund Settled', cancelled && deducted, `Cancelled: ${cancelled}, Wallet: ${wL1?.balance}`);
         } catch (e: any) {
             logCheck('14. Refund Settled', false, getErrorMsg(e));
         }
 
         // 15. Referrer Status Abnormal
         try {
+            // Disable L1
             await prisma.umsMember.update({ where: { memberId: m_L1 }, data: { status: 'DISABLED' as any } });
+
             const res = await orderService.createOrder(m_Buyer, {
                 tenantId: tenantA, items: [{ skuId: prod_Ratio.skuId, quantity: 1 }]
             } as any);
-            const comms = await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
+            logCheck('15. Abnormal Referrer', true, 'Order created');
+            // Current logic does NOT check status, so commission expected.
+            await verifyCommission(res.data.orderId, tenantA, commissionService, prisma, [
                 { beneficiaryId: m_L1, amount: 6.00 }
             ]);
-            logCheck('15. Abnormal Referrer', true, 'Order created (Commission Generated despite Disabled status)', { commissions: comms });
         } catch (e: any) {
             logCheck('15. Abnormal Referrer', false, getErrorMsg(e));
         }
+
 
     } catch (e) {
         console.error(e);
         reportLines.push(`CRITICAL ERROR: ${getErrorMsg(e)}`);
     } finally {
-        fs.writeFileSync(path.resolve(__dirname, 'simulation_report.txt'), reportLines.join('\n'));
+        fs.writeFileSync(path.resolve(__dirname, 'simulation-report.txt'), reportLines.join('\n'));
         console.log('Report saved.');
         await app.close();
     }
@@ -402,7 +413,7 @@ async function verifyCommission(
     const comms = await prisma.finCommission.findMany({ where: { orderId } });
 
     if (expectEmpty) {
-        if (comms.length === 0) return [];
+        if (comms.length === 0) return true;
         throw new Error(`Expected 0 commissions, got ${comms.length}`);
     }
 
@@ -415,7 +426,6 @@ async function verifyCommission(
         if (!found) throw new Error(`Beneficiary ${exp.beneficiaryId} missing`);
         if (Number(found.amount) !== exp.amount) throw new Error(`Beneficiary ${exp.beneficiaryId} expected ${exp.amount}, got ${found.amount}`);
     }
-    return comms;
 }
 
 bootstrap();

@@ -157,7 +157,7 @@ async function deploy() {
     'dist',
     'prisma',
     'package.json',
-    'scripts/ecosystem.config.cjs',
+    'scripts/ecosystem-config.cjs',
     'public'
   ];
 
@@ -195,7 +195,7 @@ async function deploy() {
     execSync(`cp -r public ${tempDir}/`, { cwd: projectRoot });
     execSync(`cp package.json ${tempDir}/`, { cwd: projectRoot });
     execSync(`cp pnpm-lock.yaml ${tempDir}/`, { cwd: projectRoot, stdio: 'ignore' });
-    execSync(`cp scripts/ecosystem.config.cjs ${tempDir}/`, { cwd: projectRoot });
+    execSync(`cp scripts/ecosystem-config.cjs ${tempDir}/`, { cwd: projectRoot });
 
     // 如果配置了复制 .env 文件，根据环境选择对应的 .env 文件
     if (config.includeEnvFile) {
@@ -444,7 +444,7 @@ async function deploy() {
 
         try {
           // 尝试重启，如果失败则启动新的
-          const pm2Cmd = `cd ${config.remotePath} && pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production`;
+          const pm2Cmd = `cd ${config.remotePath} && pm2 reload ecosystem-config.cjs --env production || pm2 start ecosystem-config.cjs --env production`;
           await execRemoteCommand(pm2Cmd);
 
           // 保存 PM2 配置

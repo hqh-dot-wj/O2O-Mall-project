@@ -40,7 +40,7 @@ module.exports = {
     runMigration: false,                  // 是否运行数据库迁移（谨慎使用）
 
     // ========== PM2 配置 ==========
-    pm2AppName: 'nest_admin_soybean_server',      // PM2 应用名称（需与 ecosystem.config.cjs 一致）
+    pm2AppName: 'nest_admin_soybean_server',      // PM2 应用名称（需与 ecosystem-config.cjs 一致）
 
     // ========== 健康检查 ==========
     healthCheckUrl: 'http://localhost:8080/api/health',  // 健康检查 URL（可选）

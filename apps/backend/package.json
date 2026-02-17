@@ -73,7 +73,7 @@
     "@willsoto/nestjs-prometheus": "^6.0.2",
     "@xobj/core": "^1.3.2",
     "archiver": "^7.0.1",
-    "axios": "^1.6.7",
+    "axios": "catalog:",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
     "class-transformer": "^0.5.1",
