@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 类型安全的配置加载器
  * 使用强类型配置类和验证装饰器确保配置正确性
  *
@@ -13,6 +13,7 @@
 
 import { ConfigTransformer } from './config.transformer';
 import { Logger } from '@nestjs/common';
+import { getErrorMessage } from 'src/common/utils/error';
 
 const logger = new Logger('Configuration');
 const env = process.env.NODE_ENV || 'development';
@@ -187,7 +188,7 @@ export default () => {
 
     return validatedConfig;
   } catch (error) {
-    logger.error('Configuration validation failed:', error.message);
+    logger.error('Configuration validation failed:', getErrorMessage(error));
     // 配置验证失败时抛出异常，阻止应用启动
     throw error;
   }

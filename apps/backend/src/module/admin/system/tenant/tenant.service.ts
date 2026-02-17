@@ -10,6 +10,7 @@ import { Response } from 'express';
 import { CreateTenantDto, UpdateTenantDto, ListTenantDto, SyncTenantPackageDto } from './dto/index';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { IgnoreTenant } from 'src/common/tenant/tenant.decorator';
+import { getErrorMessage } from 'src/common/utils/error';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { RedisService } from 'src/module/common/redis/redis.service';
@@ -466,7 +467,7 @@ export class TenantService {
                   skipDuplicates: true, // 跳过重复记录
                 });
               } catch (dataError) {
-                this.logger.warn(`为租户 ${tenant.tenantId} 同步字典数据时出错: ${dataError.message}`);
+                this.logger.warn(`为租户 ${tenant.tenantId} 同步字典数据时出错: ${getErrorMessage(dataError)}`);
               }
             }
 
@@ -489,7 +490,7 @@ export class TenantService {
       });
     } catch (error) {
       this.logger.error('同步租户字典失败:', error);
-      throw new HttpException(`同步租户字典失败: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(`同步租户字典失败: ${getErrorMessage(error)}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -591,7 +592,7 @@ export class TenantService {
 
           syncedCount += result.count;
         } catch (configError) {
-          this.logger.warn(`为租户 ${tenant.tenantId} 同步配置时出错: ${configError.message}`);
+          this.logger.warn(`为租户 ${tenant.tenantId} 同步配置时出错: ${getErrorMessage(configError)}`);
         }
 
         // 清除租户配置缓存
@@ -610,7 +611,7 @@ export class TenantService {
       });
     } catch (error) {
       this.logger.error('同步租户配置失败:', error);
-      throw new HttpException(`同步租户配置失败: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(`同步租户配置失败: ${getErrorMessage(error)}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

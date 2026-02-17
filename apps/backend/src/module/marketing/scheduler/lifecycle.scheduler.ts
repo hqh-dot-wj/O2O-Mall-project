@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayInstanceStatus, PublishStatus } from '@prisma/client';
 import { PlayInstanceService } from '../instance/instance.service';
 import { MarketingStockService } from '../stock/stock.service';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
  * 营销活动生命周期调度器
@@ -80,7 +81,7 @@ export class ActivityLifecycleScheduler {
           this.logger.debug(`[待支付超时] 实例 ${instance.id} 已超时关闭`);
         } catch (error) {
           this.logger.error(
-            `[待支付超时] 处理实例 ${instance.id} 失败: ${error.message}`,
+            `[待支付超时] 处理实例 ${instance.id} 失败: ${getErrorMessage(error)}`,
           );
           // 继续处理下一个，不中断整个任务
         }
@@ -113,7 +114,7 @@ export class ActivityLifecycleScheduler {
           }
         } catch (error) {
           this.logger.error(
-            `[活动超时] 处理实例 ${instance.id} 失败: ${error.message}`,
+            `[活动超时] 处理实例 ${instance.id} 失败: ${getErrorMessage(error)}`,
           );
         }
       }
@@ -125,7 +126,7 @@ export class ActivityLifecycleScheduler {
         `[定时任务] 超时实例处理完成，耗时 ${duration}ms，共处理 ${timeoutPendingInstances.length + activeTimeoutCount} 个实例`,
       );
     } catch (error) {
-      this.logger.error(`[定时任务] 处理超时实例失败: ${error.message}`, error.stack);
+      this.logger.error(`[定时任务] 处理超时实例失败: ${getErrorMessage(error)}`, getErrorStack(error));
     }
   }
 
@@ -194,7 +195,7 @@ export class ActivityLifecycleScheduler {
         `[定时任务] 活动状态检查完成，耗时 ${duration}ms，上架 ${toOnShelf.count} 个，下架 ${toOffShelf.count} 个`,
       );
     } catch (error) {
-      this.logger.error(`[定时任务] 检查活动状态失败: ${error.message}`, error.stack);
+      this.logger.error(`[定时任务] 检查活动状态失败: ${getErrorMessage(error)}`, getErrorStack(error));
     }
   }
 
@@ -247,7 +248,7 @@ export class ActivityLifecycleScheduler {
         `[定时任务] 过期数据清理完成，耗时 ${duration}ms，归档 ${archived.count} 个实例`,
       );
     } catch (error) {
-      this.logger.error(`[定时任务] 清理过期数据失败: ${error.message}`, error.stack);
+      this.logger.error(`[定时任务] 清理过期数据失败: ${getErrorMessage(error)}`, getErrorStack(error));
     }
   }
 
@@ -301,7 +302,7 @@ export class ActivityLifecycleScheduler {
         }
       }
     } catch (error) {
-      this.logger.error(`[健康检查] 执行失败: ${error.message}`, error.stack);
+      this.logger.error(`[健康检查] 执行失败: ${getErrorMessage(error)}`, getErrorStack(error));
     }
   }
 }

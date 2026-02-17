@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PointsRuleModule } from '../rule/rule.module';
-import {
-  PointsAccountClientController,
-  PointsAccountAdminController,
-} from './account.controller';
+import { PointsAccountAdminController } from './account.controller';
 import { PointsAccountService } from './account.service';
 import { PointsAccountRepository } from './account.repository';
 import { PointsTransactionRepository } from './transaction.repository';
@@ -15,7 +12,7 @@ import { PointsTransactionRepository } from './transaction.repository';
  */
 @Module({
   imports: [PointsRuleModule],
-  controllers: [PointsAccountClientController, PointsAccountAdminController],
+  controllers: [PointsAccountAdminController],
   providers: [
     PointsAccountService,
     PointsAccountRepository,

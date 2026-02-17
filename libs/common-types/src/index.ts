@@ -6,7 +6,7 @@ export * from './api';
 /**
  * 🛰️ 请求响应通用映射
  */
-export type ApiResult<T> = components["schemas"]["ResultData"] & { data: T };
+export type ApiResult<T> = components["schemas"]["Result"] & { data: T };
 
 /**
  * 📄 分页响应通用映射
@@ -32,12 +32,12 @@ export type RequestParams<
  */
 
 // 系统管理
-export type User = components["schemas"]["SysUserVo"];
+export type User = components["schemas"]["UserVo"];
 export type Role = components["schemas"]["RoleVo"];
 export type Dept = components["schemas"]["DeptVo"];
 export type Menu = components["schemas"]["MenuVo"];
 export type Config = components["schemas"]["ConfigVo"];
 
 // 常用查询参数
-export type ConfigQueryParams = RequestParams<"/system/config/list", "get"> & components["schemas"]["ListConfigDto"];
-export type UserQueryParams = RequestParams<"/system/user/list", "get"> & components["schemas"]["ListUserDto"];
+export type ConfigQueryParams = RequestParams<"/api/system/config/list", "get"> & components["schemas"]["ListConfigDto"];
+export type UserQueryParams = RequestParams<"/api/system/user/list", "get"> & components["schemas"]["ListUserDto"];

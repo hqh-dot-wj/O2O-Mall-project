@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { WechatService } from '../common/service/wechat.service';
 import { UploadService } from 'src/module/admin/upload/upload.service';
+import { getErrorMessage } from 'src/common/utils/error';
 
 /**
  * C端会员升级服务
@@ -218,7 +219,7 @@ export class UpgradeService {
         this.logger.log(`为会员 ${memberId} 生成小程序码: ${qrCodeUrl}`);
       }
     } catch (error) {
-      this.logger.error(`生成小程序码失败: ${error.message}`);
+      this.logger.error(`生成小程序码失败: ${getErrorMessage(error)}`);
       // 小程序码生成失败不影响推荐码创建
     }
 

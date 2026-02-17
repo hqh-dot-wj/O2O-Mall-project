@@ -5,6 +5,7 @@ import { WalletRepository } from '../wallet/wallet.repository';
 import { TransactionRepository } from '../wallet/transaction.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
+import { getErrorMessage } from 'src/common/utils/error';
 import { ResponseCode, Result } from 'src/common/response';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { WithdrawalPaymentService } from './withdrawal-payment.service';
@@ -41,8 +42,8 @@ export class WithdrawalAuditService {
 
       return Result.ok({ paymentNo }, '审核通过并打款成功');
     } catch (error: any) {
-      await this.handlePaymentFailure(withdrawal.id, error.message);
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `打款失败: ${error.message}`);
+      await this.handlePaymentFailure(withdrawal.id, getErrorMessage(error));
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `打款失败: ${getErrorMessage(error)}`);
     }
   }
 

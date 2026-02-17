@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MarketingEvent, MarketingEventType } from './marketing-event.types';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
  * 营销事件发射器服务
@@ -77,8 +78,8 @@ export class MarketingEventEmitter {
     } catch (error) {
       // 记录发送失败日志
       this.logger.error(
-        `[事件发送失败] 类型: ${event.type}, 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[事件发送失败] 类型: ${event.type}, 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
 
       // 不抛出异常，避免影响主流程
@@ -124,16 +125,16 @@ export class MarketingEventEmitter {
           this.logger.log(`[异步事件发送成功] 类型: ${event.type}, 实例: ${event.instanceId}`);
         } catch (error) {
           this.logger.error(
-            `[异步事件处理失败] 类型: ${event.type}, 实例: ${event.instanceId}, 错误: ${error.message}`,
-            error.stack,
+            `[异步事件处理失败] 类型: ${event.type}, 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+            getErrorStack(error),
           );
         }
       });
     } catch (error) {
       // 记录发送失败日志
       this.logger.error(
-        `[异步事件发送失败] 类型: ${event.type}, 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[异步事件发送失败] 类型: ${event.type}, 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
 
       // 不抛出异常，避免影响主流程

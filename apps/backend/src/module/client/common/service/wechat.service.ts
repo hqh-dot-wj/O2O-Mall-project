@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { CacheEnum } from 'src/common/enum';
 import { lastValueFrom } from 'rxjs';
+import { getErrorMessage } from 'src/common/utils/error';
 
 @Injectable()
 export class WechatService {
@@ -71,8 +72,9 @@ export class WechatService {
       }
       return { success: true, data: res.data };
     } catch (error) {
-      console.error('WeChat API Error Details:', error?.response?.data || error.message || error);
-      return { success: false, msg: `微信API请求失败: ${error.message || 'Unknown error'}` };
+      const err = error as { response?: { data?: unknown }; message?: string };
+      console.error('WeChat API Error Details:', err?.response?.data || getErrorMessage(error) || error);
+      return { success: false, msg: `微信API请求失败: ${getErrorMessage(error)}` };
     }
   }
 
@@ -163,7 +165,7 @@ export class WechatService {
 
       return buffer;
     } catch (e) {
-      console.error('调用 wxacode.getUnlimited 失败:', e?.message || e);
+      console.error('调用 wxacode.getUnlimited 失败:', e instanceof Error ? e.message : String(e));
       return null;
     }
   }

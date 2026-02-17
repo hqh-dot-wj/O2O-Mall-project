@@ -91,6 +91,7 @@ upload/
 .temp/
 .tmp/
 *.tsbuildinfo
+.turbo/
 
 # Prisma
 # server/prisma/migrations/*

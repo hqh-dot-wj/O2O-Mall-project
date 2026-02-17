@@ -1,6 +1,7 @@
 import { Params } from 'nestjs-pino';
 import { Request, Response } from 'express';
 import { TenantContext } from '../tenant';
+import { getErrorMessage, getErrorStack } from '../utils/error';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -103,8 +104,8 @@ export function createPinoConfig(
         },
       }),
 
-      // 自定义请求日志格式
-      customProps: (req: Request, res: Response) => {
+      // 自定义请求日志格式 (req/res 在 pino-http 中为 IncomingMessage/ServerResponse，Nest 会增强为 Express 类型)
+      customProps: (req: any, res: any) => {
         const user = req['user'];
         return {
           requestId: req['id'],
@@ -152,11 +153,11 @@ export function createPinoConfig(
         err(err) {
           return {
             type: err.constructor.name,
-            message: err.message,
-            stack: env === 'development' ? err.stack : undefined,
+            message: getErrorMessage(err),
+            stack: env === 'development' ? getErrorStack(err) : undefined,
             code: err.code,
             // 添加额外的错误信息
-            ...(err.response && { response: err.response }),
+            ...(err && typeof err === 'object' && 'response' in err && { response: (err as any).response }),
             ...(err.status && { status: err.status }),
           };
         },
@@ -182,7 +183,7 @@ export function createPinoConfig(
 
       // 自定义错误消息
       customErrorMessage: function (req, res, err) {
-        return `${req.method} ${req.url} failed: ${err.message}`;
+        return `${req.method} ${req.url} failed: ${getErrorMessage(err)}`;
       },
 
       // 自动记录请求

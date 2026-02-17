@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PointsTransactionType, PointsTransactionStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
  * 积分定时任务服务
@@ -109,7 +110,7 @@ export class PointsSchedulerService {
         } catch (error) {
           errorCount++;
           this.logger.error(
-            `处理过期积分失败: transactionId=${transaction.id}, memberId=${transaction.memberId}, error=${error.message}`,
+            `处理过期积分失败: transactionId=${transaction.id}, memberId=${transaction.memberId}, error=${getErrorMessage(error)}`,
           );
         }
       }
@@ -118,7 +119,7 @@ export class PointsSchedulerService {
         `过期积分处理完成: 成功=${processedCount}, 失败=${errorCount}, 跳过=${expiredTransactions.length - processedCount - errorCount}`,
       );
     } catch (error) {
-      this.logger.error(`处理过期积分异常: ${error.message}`, error.stack);
+      this.logger.error(`处理过期积分异常: ${getErrorMessage(error)}`, getErrorStack(error));
     }
   }
 }

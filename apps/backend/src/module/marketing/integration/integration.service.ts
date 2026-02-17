@@ -10,6 +10,7 @@ import { PointsAccountService } from '../points/account/account.service';
 import { PointsRuleService } from '../points/rule/rule.service';
 import { PointsGracefulDegradationService } from '../points/degradation/degradation.service';
 import { CalculateDiscountDto } from './dto/calculate-discount.dto';
+import { getErrorMessage } from 'src/common/utils/error';
 
 /**
  * 订单集成服务
@@ -141,7 +142,7 @@ export class OrderIntegrationService {
       }
     } catch (error) {
       this.logger.error(
-        `订单创建处理失败: orderId=${orderId}, error=${error.message}`,
+        `订单创建处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -264,7 +265,7 @@ export class OrderIntegrationService {
             orderId,
             memberId,
             pointsToEarn: totalPointsToEarn,
-            error: error.message,
+            error: getErrorMessage(error),
           });
 
           await this.degradationService.recordFailure({
@@ -273,7 +274,7 @@ export class OrderIntegrationService {
             type: PointsTransactionType.EARN_ORDER,
             relatedId: orderId,
             remark: '消费获得',
-            failureReason: error.message,
+            failureReason: getErrorMessage(error),
           });
 
           // 不抛出错误，避免影响订单支付流程
@@ -282,7 +283,7 @@ export class OrderIntegrationService {
       }
     } catch (error) {
       this.logger.error(
-        `订单支付处理失败: orderId=${orderId}, error=${error.message}`,
+        `订单支付处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -326,7 +327,7 @@ export class OrderIntegrationService {
       }
     } catch (error) {
       this.logger.error(
-        `订单取消处理失败: orderId=${orderId}, error=${error.message}`,
+        `订单取消处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -394,7 +395,7 @@ export class OrderIntegrationService {
       }
     } catch (error) {
       this.logger.error(
-        `订单退款处理失败: orderId=${orderId}, error=${error.message}`,
+        `订单退款处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
       );
       throw error;
     }

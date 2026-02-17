@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { OrderController } from './order.controller';
+import { OrderIntegrationController } from './order-integration.controller';
 import { OrderService } from './order.service';
 import { FinanceModule } from 'src/module/finance/finance.module';
 import { MessageModule } from 'src/module/admin/system/message/message.module';
@@ -31,7 +32,7 @@ import { ClientCartModule } from '../cart/cart.module';
       name: 'ORDER_DELAY',
     }),
   ],
-  controllers: [OrderController],
+  controllers: [OrderController, OrderIntegrationController],
   providers: [
     OrderService,
     NotificationProcessor,

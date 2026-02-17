@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { PlayStrategyFactory } from './play.factory';
 import { PlayMetadata } from './play.registry';
 import { BusinessException } from 'src/common/exceptions/business.exception';
+import { getErrorMessage } from 'src/common/utils/error';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { Api } from 'src/common/decorators/api.decorator';
 import { CourseGroupBuyService } from './course-group-buy.service';
@@ -102,7 +103,7 @@ export class PlayController {
       if (error instanceof BusinessException) {
         throw error;
       }
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取玩法元数据失败: ${error.message}`);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取玩法元数据失败: ${getErrorMessage(error)}`);
     }
   }
 
@@ -179,7 +180,7 @@ export class PlayController {
         canParallel: this.playFactory.canParallel(code),
       };
     } catch (error) {
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取玩法特性失败: ${error.message}`);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取玩法特性失败: ${getErrorMessage(error)}`);
     }
   }
 
@@ -206,7 +207,7 @@ export class PlayController {
       if (error instanceof BusinessException) {
         throw error;
       }
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取排课信息失败: ${error.message}`);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取排课信息失败: ${getErrorMessage(error)}`);
     }
   }
 
@@ -231,7 +232,7 @@ export class PlayController {
       if (error instanceof BusinessException) {
         throw error;
       }
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取考勤信息失败: ${error.message}`);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取考勤信息失败: ${getErrorMessage(error)}`);
     }
   }
 
@@ -267,7 +268,7 @@ export class PlayController {
       if (error instanceof BusinessException) {
         throw error;
       }
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `标记出勤失败: ${error.message}`);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `标记出勤失败: ${getErrorMessage(error)}`);
     }
   }
 
@@ -299,7 +300,7 @@ export class PlayController {
       if (error instanceof BusinessException) {
         throw error;
       }
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取出勤率失败: ${error.message}`);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, `获取出勤率失败: ${getErrorMessage(error)}`);
     }
   }
 }

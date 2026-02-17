@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
+import { getErrorMessage } from 'src/common/utils/error';
 import { ClientListProductDto } from './dto';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PlayStrategyFactory } from 'src/module/marketing/play/play.factory';
@@ -257,7 +258,7 @@ export class ClientProductService {
             priority: config.templateCode === 'SECKILL' ? 100 : 50,
           };
         } catch (e) {
-          this.logger.warn(`Failed to aggregate activity ${config.id}: ${e.message}`);
+          this.logger.warn(`Failed to aggregate activity ${config.id}: ${getErrorMessage(e)}`);
           return null;
         }
       });

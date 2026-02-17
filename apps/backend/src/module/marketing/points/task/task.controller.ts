@@ -1,6 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { User } from 'src/common/decorators/user.decorator';
 import { PointsTaskService } from './task.service';
 import { CreatePointsTaskDto } from './dto/create-points-task.dto';
 import { UpdatePointsTaskDto } from './dto/update-points-task.dto';
@@ -41,38 +40,3 @@ export class PointsTaskAdminController {
   }
 }
 
-/**
- * 积分任务控制器（客户端）
- * 
- * @description 提供用户任务完成接口
- */
-@ApiTags('积分任务')
-@Controller('client/marketing/points/tasks')
-export class PointsTaskClientController {
-  constructor(private readonly taskService: PointsTaskService) {}
-
-  @Get()
-  @ApiOperation({ summary: '查询可用任务列表' })
-  async findAvailableTasks() {
-    return this.taskService.findAll({ isEnabled: true });
-  }
-
-  @Post(':taskKey/complete')
-  @ApiOperation({ summary: '完成任务' })
-  async completeTask(
-    @User('id') memberId: string,
-    @Param('taskKey') taskKey: string,
-  ) {
-    return this.taskService.completeTask(memberId, taskKey);
-  }
-
-  @Get('my-completions')
-  @ApiOperation({ summary: '查询我的任务完成记录' })
-  async getMyCompletions(
-    @User('id') memberId: string,
-    @Query('pageNum') pageNum?: number,
-    @Query('pageSize') pageSize?: number,
-  ) {
-    return this.taskService.getUserCompletions(memberId, pageNum, pageSize);
-  }
-}

@@ -1,7 +1,7 @@
-﻿import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtAuthGuard } from './auth.guard';
+import { JwtAuthGuard } from 'src/module/admin/common/guards/auth.guard';
 import { UserService } from 'src/module/admin/system/user/user.service';
 import { AppConfigService } from 'src/config/app-config.service';
 

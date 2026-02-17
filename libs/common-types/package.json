@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "generate-types": "openapi-typescript ../../apps/backend/openApi.json -o ./src/api.d.ts"
+    "generate-types": "openapi-typescript ../../apps/backend/public/openApi.json -o ./src/api.d.ts"
   },
   "devDependencies": {
     "openapi-typescript": "^7.10.1",

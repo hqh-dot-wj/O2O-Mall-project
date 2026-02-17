@@ -1,4 +1,4 @@
-﻿import { Injectable, Inject, Scope } from '@nestjs/common';
+import { Injectable, Inject, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
@@ -216,8 +216,8 @@ export class OperlogService {
         {
           title: '消耗时间',
           dataIndex: 'costTime',
-          formateStr(value: number) {
-            return value + 'ms';
+          formateStr(value: unknown) {
+            return String(typeof value === 'number' ? value : 0) + 'ms';
           },
         },
       ],

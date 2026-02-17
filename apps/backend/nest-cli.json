@@ -2,31 +2,11 @@
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
-  "generateOptions": {
-    "spec": false,
-    "flat": false
-  },
+  "generateOptions": { "spec": false, "flat": false },
   "compilerOptions": {
-    "assets": [
-      {
-        "include": "config/*.yml",
-        "outDir": "dist/src"
-      }
-    ],
+    "assets": [{ "include": "config/*.yml", "outDir": "dist/src" }],
     "watchAssets": true,
     "deleteOutDir": true,
-    "plugins": [
-      {
-        "name": "@nestjs/swagger",
-        "options": {
-          "classValidatorShim": true,
-          "introspectComments": true,
-          "controllerKeyOfComment": "summary",
-          "dtoFileNameSuffix": [".dto.ts", ".vo.ts", ".entity.ts", "dto/index.ts"],
-          "controllerFileNameSuffix": ".controller.ts",
-          "dtoKeyOfComment": "description"
-        }
-      }
-    ]
+    "plugins": []
   }
 }

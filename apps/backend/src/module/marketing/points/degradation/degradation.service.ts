@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PointsTransactionType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
  * 积分发放失败记录接口
@@ -97,8 +98,8 @@ export class PointsGracefulDegradationService {
       // 记录失败本身也失败了，记录到日志
       this.logger.error({
         message: '记录积分发放失败时出错',
-        error: error.message,
-        stack: error.stack,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
         record,
       });
     }
@@ -169,8 +170,8 @@ export class PointsGracefulDegradationService {
     } catch (error) {
       this.logger.error({
         message: '更新重试状态时出错',
-        error: error.message,
-        stack: error.stack,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
       });
     }
   }
@@ -219,8 +220,8 @@ export class PointsGracefulDegradationService {
     } catch (error) {
       this.logger.error({
         message: '标记最终失败时出错',
-        error: error.message,
-        stack: error.stack,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
       });
     }
   }

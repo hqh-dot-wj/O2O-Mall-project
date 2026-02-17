@@ -2,17 +2,15 @@ import { Module } from '@nestjs/common';
 import { CouponModule } from '../coupon/coupon.module';
 import { PointsModule } from '../points/points.module';
 import { PointsDegradationModule } from '../points/degradation/degradation.module';
-import { OrderIntegrationController } from './integration.controller';
 import { OrderIntegrationService } from './integration.service';
 
 /**
  * 订单集成模块
- * 
- * @description 处理订单与优惠券、积分的集成
+ * C 端 calculate-discount Controller 已迁移至 module/client/order
  */
 @Module({
   imports: [CouponModule, PointsModule, PointsDegradationModule],
-  controllers: [OrderIntegrationController],
+  controllers: [],
   providers: [OrderIntegrationService],
   exports: [OrderIntegrationService],
 })

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getErrorMessage } from 'src/common/utils/error';
 
 @Injectable()
 export class PrismaHealthIndicator extends HealthIndicator {
@@ -20,7 +21,7 @@ export class PrismaHealthIndicator extends HealthIndicator {
       throw new HealthCheckError(
         'PostgreSQL check failed',
         this.getStatus(key, false, {
-          message: error.message,
+          message: getErrorMessage(error),
         }),
       );
     }

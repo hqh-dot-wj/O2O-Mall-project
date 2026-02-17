@@ -16,6 +16,7 @@ import { ProductRepository } from '../pms/product/product.repository';
 import { MemberRepository } from '../admin/member/member.repository';
 import { Cacheable } from 'src/common/decorators/redis.decorator';
 import { CommissionStatus, PayStatus } from '@prisma/client';
+import { getErrorInfo } from 'src/common/utils/error';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -74,7 +75,8 @@ export class MainService {
         pendingCommission: Number(commissionStats.pending),
       };
     } catch (error) {
-      this.logger.error(`Failed to fetch dashboard stats: ${error.message}`, error.stack);
+      const { message, stack } = getErrorInfo(error);
+      this.logger.error(`Failed to fetch dashboard stats: ${message}`, stack);
       throw error;
     }
   }

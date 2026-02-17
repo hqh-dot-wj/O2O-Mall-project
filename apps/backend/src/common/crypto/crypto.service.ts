@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { AppConfigService } from 'src/config/app-config.service';
+import { getErrorMessage } from 'src/common/utils/error';
 import * as crypto from 'crypto';
 import * as forge from 'node-forge';
 
@@ -122,7 +123,7 @@ export class CryptoService implements OnModuleInit {
 
       return decrypted;
     } catch (error) {
-      this.logger.error('RSA decrypt error:', error.message);
+      this.logger.error('RSA decrypt error:', getErrorMessage(error));
       throw new Error('RSA decrypt failed');
     }
   }
@@ -142,7 +143,7 @@ export class CryptoService implements OnModuleInit {
       // Base64 编码
       return forge.util.encode64(encrypted);
     } catch (error) {
-      this.logger.error('RSA encrypt error:', error.message);
+      this.logger.error('RSA encrypt error:', getErrorMessage(error));
       throw new Error('RSA encrypt failed');
     }
   }
@@ -175,7 +176,7 @@ export class CryptoService implements OnModuleInit {
 
       return decrypted.toString('utf8');
     } catch (error) {
-      this.logger.error('AES decrypt error:', error.message);
+      this.logger.error('AES decrypt error:', getErrorMessage(error));
       throw new Error('AES decrypt failed');
     }
   }
@@ -205,7 +206,7 @@ export class CryptoService implements OnModuleInit {
 
       return ivAndCiphertext.toString('base64');
     } catch (error) {
-      this.logger.error('AES encrypt error:', error.message);
+      this.logger.error('AES encrypt error:', getErrorMessage(error));
       throw new Error('AES encrypt failed');
     }
   }

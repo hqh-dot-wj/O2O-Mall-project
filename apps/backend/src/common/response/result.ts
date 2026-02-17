@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ResponseCode, ResponseMessage, IResponse, IPaginatedData, getResponseMessage } from './response.interface';
+import { getErrorMessage } from 'src/common/utils/error';
 
 /**
  * 统一响应结果类
@@ -106,7 +107,7 @@ export class Result<T = any> implements IResponse<T> {
       const data = await promise;
       return Result.ok(data);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : '操作失败';
+      const msg = getErrorMessage(error) || '操作失败';
       return Result.fail(failCode, msg);
     }
   }

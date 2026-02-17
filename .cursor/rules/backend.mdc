@@ -1,5 +1,5 @@
 ---
-description: NestJS 后端开发规范（响应、异常、DTO、Repository、事务、Controller、测试、性能、安全、多租户与接口分类）
+description: NestJS 后端开发规范（响应、异常、错误工具、DTO、Repository、事务、Controller、测试、性能、安全、多租户、Client/Marketing 模块划分）
 globs: apps/backend/**/*.ts
 alwaysApply: false
 ---
@@ -26,6 +26,34 @@ import { BusinessException } from 'src/common/exceptions';
 BusinessException.throwIfNull(user, '用户不存在');
 BusinessException.throwIf(age < 18, '未成年');
 ```
+
+### 2.1 catch 中安全获取错误信息（必做）
+
+`catch (error)` 的 `error` 为 `unknown` 类型，禁止直接访问 `error.message` / `error.stack`。统一使用 `src/common/utils/error`：
+
+```typescript
+import { getErrorMessage, getErrorStack, getErrorInfo } from 'src/common/utils/error';
+
+try {
+  // ...
+} catch (error) {
+  // 仅需 message
+  this.logger.error('操作失败:', getErrorMessage(error));
+
+  // 需 message + stack 打日志
+  const { message, stack } = getErrorInfo(error);
+  this.logger.error(message, stack);
+
+  // 抛给上游
+  throw new BusinessException(ResponseCode.BUSINESS_ERROR, getErrorMessage(error));
+}
+```
+
+| 函数 | 用途 |
+|------|------|
+| `getErrorMessage(error)` | 安全提取错误文案（Error / 带 message 对象 / 其他） |
+| `getErrorStack(error)` | 安全提取 stack，非 Error 返回 undefined |
+| `getErrorInfo(error)` | 返回 `{ message, stack? }`，便于 logger.error(msg, stack) |
 
 ## 📄 3. DTO 分页（项目标准）
 
@@ -260,3 +288,54 @@ Backend 同时服务 **Admin 后台**（system/*）与 **Miniapp 小程序**（c
 - 租户内接口：访问租户隔离表必须通过继承 BaseRepository/SoftDeleteRepository 的 Repository；禁止手写 `prisma.xxx.findMany()` 且不加租户条件（除非显式跨租户且已加权限）。
 - 创建租户隔离数据：禁止由前端传入 `tenantId` 落库；从 `TenantContext.getTenantId()` 或 `this.cls.get('tenantId')` 取。
 - 跨租户/平台查询：用项目约定的忽略租户机制（如 TenantContext.run + setIgnoreTenant），并做权限校验。
+
+---
+
+## 📁 13. Client 与 Marketing 模块职责划分
+
+**原则：client 目录 = 小程序接口全集；marketing 目录 = 营销能力域（配置、规则、Service）。**
+
+### 13.1 职责约定
+
+| 模块 | 目录 | 职责 | 路径前缀 |
+|------|------|------|----------|
+| **Client** | `module/client/` | 所有小程序端接口的 Controller 及 C 端专用逻辑 | `client/*` |
+| **Marketing** | `module/marketing/` | 营销能力（优惠券、积分、玩法等）的 Service、Repository、规则配置；仅提供 **admin** 端配置接口 | `admin/marketing/*` |
+
+### 13.2 强制规则
+
+- **client 下必须包含**：所有 `client/*` 路径的 Controller 实现，包括营销 C 端接口（领券、签到、积分、我的优惠券等）。
+- **marketing 下禁止**：直接使用 `@Controller('client/*')` 暴露 C 端接口。C 端营销能力通过 Service 对外提供，由 `module/client/marketing/` 的 Controller 调用。
+- **依赖方向**：`client` → `marketing`（client 依赖 marketing 的 Service），禁止 marketing 依赖 client。
+
+### 13.3 目录结构约定
+
+```
+module/client/
+├── auth/          # 登录、会员认证
+├── user/          # 用户信息
+├── order/         # 订单
+├── cart/          # 购物车
+├── product/       # 商品
+├── marketing/     # C 端营销接口（薄 Controller，调用 marketing Service）
+│   ├── coupon/    # 领券、我的优惠券
+│   └── points/    # 签到、积分账户、积分任务
+├── ...
+└── client.module.ts
+
+module/marketing/
+├── coupon/        # 优惠券 Service、Repository、admin 配置接口
+├── points/        # 积分 Service、Repository、admin 配置接口
+├── integration/   # 订单优惠计算 Service（供 order 调用）
+└── ...
+```
+
+### 13.4 新增 C 端营销接口时
+
+1. 在 `module/client/marketing/{coupon|points}/` 下新增或扩展 Controller。
+2. 注入并调用 `module/marketing` 导出的 Service。
+3. 路径使用 `client/marketing/xxx`，守卫使用 `MemberAuthGuard`，装饰器使用 `@Member()`。
+
+### 13.5 迁移指引
+
+若当前 C 端营销接口仍在 `module/marketing` 中，需按 **`docs/CLIENT_MARKETING_MIGRATION_SPEC.md`** 执行迁移，使结构符合本节约定。

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
 import { PlayStrategyFactory } from '../play/play.factory';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { getMetadataStorage } from 'class-validator';
@@ -173,7 +174,7 @@ export class RuleValidatorService {
    *
    * if (!result.valid) {
    *   result.errors.forEach(error => {
-   *     console.log(`${error.field}: ${error.message}`);
+   *     console.log(`${error.field}: ${getErrorMessage(error)}`);
    *   });
    * }
    * ```
@@ -213,7 +214,7 @@ export class RuleValidatorService {
         errors: [],
       };
     } catch (error) {
-      this.logger.error(`规则校验异常: ${error.message}`, error.stack);
+      this.logger.error(`规则校验异常: ${getErrorMessage(error)}`, getErrorStack(error));
 
       // 如果是业务异常，返回友好的错误信息
       if (error instanceof BusinessException) {
@@ -222,7 +223,7 @@ export class RuleValidatorService {
           errors: [
             {
               field: 'rules',
-              message: error.message,
+              message: getErrorMessage(error),
             },
           ],
         };
@@ -277,7 +278,7 @@ export class RuleValidatorService {
         errors: [],
       };
     } catch (error) {
-      this.logger.error(`DTO 校验异常: ${error.message}`, error.stack);
+      this.logger.error(`DTO 校验异常: ${getErrorMessage(error)}`, getErrorStack(error));
       return {
         valid: false,
         errors: [
@@ -326,7 +327,7 @@ export class RuleValidatorService {
         errors: [],
       };
     } catch (error) {
-      this.logger.warn(`业务逻辑校验失败: ${error.message}`);
+      this.logger.warn(`业务逻辑校验失败: ${getErrorMessage(error)}`);
 
       // 如果是业务异常，返回友好的错误信息
       if (error instanceof BusinessException) {
@@ -335,7 +336,7 @@ export class RuleValidatorService {
           errors: [
             {
               field: 'businessLogic',
-              message: error.message,
+              message: getErrorMessage(error),
             },
           ],
         };
@@ -347,7 +348,7 @@ export class RuleValidatorService {
         errors: [
           {
             field: 'businessLogic',
-            message: error.message || '业务逻辑校验失败',
+            message: getErrorMessage(error) || '业务逻辑校验失败',
           },
         ],
       };
@@ -472,7 +473,7 @@ export class RuleValidatorService {
         fields,
       };
     } catch (error) {
-      this.logger.error(`获取表单 Schema 失败: ${error.message}`, error.stack);
+      this.logger.error(`获取表单 Schema 失败: ${getErrorMessage(error)}`, getErrorStack(error));
       throw error;
     }
   }
@@ -522,7 +523,7 @@ export class RuleValidatorService {
 
       return fields;
     } catch (error) {
-      this.logger.error(`解析 DTO 类失败: ${error.message}`, error.stack);
+      this.logger.error(`解析 DTO 类失败: ${getErrorMessage(error)}`, getErrorStack(error));
       return [];
     }
   }
@@ -641,7 +642,7 @@ export class RuleValidatorService {
 
       return field;
     } catch (error) {
-      this.logger.error(`创建表单字段失败: ${propertyName}`, error.stack);
+      this.logger.error(`创建表单字段失败: ${propertyName}`, getErrorStack(error));
       return null;
     }
   }

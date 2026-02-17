@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { PointsAccountService } from '../account/account.service';
 import { PointsGracefulDegradationService, PointsGrantFailureRecord } from './degradation.service';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
  * 积分重试队列处理器
@@ -68,8 +69,8 @@ export class PointsRetryProcessor {
         jobId: job.id,
         memberId,
         amount,
-        error: error.message,
-        stack: error.stack,
+        error: getErrorMessage(error),
+        stack: getErrorStack(error),
         attemptsMade: job.attemptsMade,
       });
 
@@ -79,7 +80,7 @@ export class PointsRetryProcessor {
         relatedId,
         retryCount + 1,
         false,
-        error.message,
+        getErrorMessage(error),
       );
 
       // 如果是最后一次重试，标记为最终失败
@@ -87,7 +88,7 @@ export class PointsRetryProcessor {
         await this.degradationService.markAsFinalFailure(
           memberId,
           relatedId,
-          `重试${job.attemptsMade}次后仍然失败: ${error.message}`,
+          `重试${job.attemptsMade}次后仍然失败: ${getErrorMessage(error)}`,
         );
       }
 

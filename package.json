@@ -2,6 +2,7 @@
   "name": "nest-admin-soybean-monorepo",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.5.0",
   "scripts": {
     "dev": "turbo run dev",
     "dev:backend": "turbo run dev --filter=@apps/backend",
@@ -49,7 +50,8 @@
     "overrides": {
       "unconfig": "7.4.2",
       "string-width": "4.2.3",
-      "bin-wrapper": "npm:bin-wrapper-china"
+      "bin-wrapper": "npm:bin-wrapper-china",
+      "typescript": "5.8.3"
     }
   }
 }

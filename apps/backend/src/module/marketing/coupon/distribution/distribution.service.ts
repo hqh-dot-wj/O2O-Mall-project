@@ -10,6 +10,7 @@ import { CouponTemplateRepository } from '../template/template.repository';
 import { UserCouponRepository } from './user-coupon.repository';
 import { RedisLockService } from './redis-lock.service';
 import { ManualDistributionDto } from './dto/manual-distribution.dto';
+import { getErrorMessage } from 'src/common/utils/error';
 
 /**
  * 优惠券发放服务
@@ -54,7 +55,7 @@ export class CouponDistributionService {
         );
         results.push({ memberId, success: true, couponId: userCoupon.id });
       } catch (error) {
-        results.push({ memberId, success: false, error: error.message });
+        results.push({ memberId, success: false, error: getErrorMessage(error) });
       }
     }
 
@@ -107,7 +108,7 @@ export class CouponDistributionService {
           message: 'Failed to grant coupon by order',
           orderId,
           templateId,
-          error: error.message,
+          error: getErrorMessage(error),
         });
       }
     }

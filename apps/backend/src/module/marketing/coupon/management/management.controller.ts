@@ -2,11 +2,10 @@ import { Controller, Get, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
-import { User } from 'src/common/decorators/user.decorator';
-import { CouponStatisticsService } from '../statistics/statistics.service';
-import { UserCouponRepository } from '../distribution/user-coupon.repository';
 import { Result } from 'src/common/response/result';
 import { FormatDateFields } from 'src/common/utils';
+import { CouponStatisticsService } from '../statistics/statistics.service';
+import { UserCouponRepository } from '../distribution/user-coupon.repository';
 
 /**
  * 优惠券管理控制器
@@ -91,20 +90,5 @@ export class CouponManagementController {
       },
       res,
     );
-  }
-
-  /**
-   * 查询我的优惠券（C端）
-   */
-  @Get('client/marketing/coupon/my-coupons')
-  @Api({ summary: '查询我的优惠券' })
-  async getMyCoupons(
-    @User('memberId') memberId: string,
-    @Query('status') status?: string,
-    @Query('pageNum') pageNum?: number,
-    @Query('pageSize') pageSize?: number,
-  ) {
-    const result = await this.userCouponRepo.findUserCouponsPage(memberId, status as any, pageNum, pageSize);
-    return Result.page(FormatDateFields(result.rows), result.total);
   }
 }

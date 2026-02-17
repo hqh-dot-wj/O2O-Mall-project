@@ -10,6 +10,7 @@ import { ServiceSlotModule } from './service/service-slot.module';
 import { PaymentModule } from './payment/payment.module';
 import { ClientFinanceModule } from './finance/client-finance.module';
 import { UpgradeModule } from './upgrade/upgrade.module';
+import { ClientMarketingModule } from './marketing/client-marketing.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UpgradeModule } from './upgrade/upgrade.module';
     PaymentModule,
     ClientFinanceModule,
     UpgradeModule,
+    ClientMarketingModule,
   ],
   controllers: [],
   providers: [],

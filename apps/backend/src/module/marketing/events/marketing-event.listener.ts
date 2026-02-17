@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MarketingEvent, MarketingEventType } from './marketing-event.types';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
  * 营销事件监听器
@@ -53,8 +54,8 @@ export class MarketingEventListener {
     } catch (error) {
       // 异常处理：记录错误但不抛出，避免影响其他监听器
       this.logger.error(
-        `[实例创建事件处理失败] 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[实例创建事件处理失败] 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -93,8 +94,8 @@ export class MarketingEventListener {
       // await this.notificationService.sendPaymentSuccess(event.memberId, event.payload);
     } catch (error) {
       this.logger.error(
-        `[实例支付成功事件处理失败] 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[实例支付成功事件处理失败] 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -157,8 +158,8 @@ export class MarketingEventListener {
       // });
     } catch (error) {
       this.logger.error(
-        `[实例成功事件处理失败] 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[实例成功事件处理失败] 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -212,8 +213,8 @@ export class MarketingEventListener {
       // });
     } catch (error) {
       this.logger.error(
-        `[实例失败事件处理失败] 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[实例失败事件处理失败] 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -268,8 +269,8 @@ export class MarketingEventListener {
       // });
     } catch (error) {
       this.logger.error(
-        `[实例超时事件处理失败] 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[实例超时事件处理失败] 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -327,8 +328,8 @@ export class MarketingEventListener {
       // }
     } catch (error) {
       this.logger.error(
-        `[实例退款事件处理失败] 实例: ${event.instanceId}, 错误: ${error.message}`,
-        error.stack,
+        `[实例退款事件处理失败] 实例: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -367,8 +368,8 @@ export class MarketingEventListener {
       // }
     } catch (error) {
       this.logger.error(
-        `[拼团满员事件处理失败] 团ID: ${event.payload?.groupId}, 错误: ${error.message}`,
-        error.stack,
+        `[拼团满员事件处理失败] 团ID: ${event.payload?.groupId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -412,8 +413,8 @@ export class MarketingEventListener {
       // }
     } catch (error) {
       this.logger.error(
-        `[拼团失败事件处理失败] 团ID: ${event.payload?.groupId}, 错误: ${error.message}`,
-        error.stack,
+        `[拼团失败事件处理失败] 团ID: ${event.payload?.groupId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -448,8 +449,8 @@ export class MarketingEventListener {
       // await this.notificationService.sendFlashSaleSoldOut(event.configId);
     } catch (error) {
       this.logger.error(
-        `[秒杀售罄事件处理失败] 配置: ${event.configId}, 错误: ${error.message}`,
-        error.stack,
+        `[秒杀售罄事件处理失败] 配置: ${event.configId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }
@@ -497,8 +498,8 @@ export class MarketingEventListener {
       // }
     } catch (error) {
       this.logger.error(
-        `[课程开班事件处理失败] 课程: ${event.payload?.courseName}, 错误: ${error.message}`,
-        error.stack,
+        `[课程开班事件处理失败] 课程: ${event.payload?.courseName}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
     }
   }

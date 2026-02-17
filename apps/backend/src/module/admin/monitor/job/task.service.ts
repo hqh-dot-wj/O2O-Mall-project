@@ -1,7 +1,8 @@
-﻿import { Status, DelFlag } from '@prisma/client';
+import { Status, DelFlag } from '@prisma/client';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Task, TaskRegistry } from 'src/module/admin/common/decorators/task.decorator';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 import { JobLogService } from './job-log.service';
 import { BusinessException } from 'src/common/exceptions/index';
 import { ResponseCode } from 'src/common/response';
@@ -14,9 +15,9 @@ import { VersionService } from 'src/module/admin/upload/services/version.service
 @Injectable()
 export class TaskService implements OnModuleInit {
   private readonly logger = new Logger(TaskService.name);
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  private readonly taskMap = new Map<string, Function>();
-  private serviceInstances = new Map<string, any>();
+  /** 任务名 -> 任务方法（动态注册的 Service 方法） */
+  private readonly taskMap = new Map<string, (...args: unknown[]) => unknown>();
+  private serviceInstances = new Map<string, unknown>();
 
   constructor(
     private moduleRef: ModuleRef,
@@ -46,12 +47,13 @@ export class TaskService implements OnModuleInit {
           this.serviceInstances.set(classOrigin.name, serviceInstance);
         }
 
-        // 绑定方法到实例
-        const method = serviceInstance[methodName].bind(serviceInstance);
+        // 绑定方法到实例（动态获取的 Service 实例，方法名来自装饰器注册）
+        const instance = serviceInstance as Record<string, (...args: unknown[]) => unknown>;
+        const method = instance[methodName].bind(serviceInstance);
         this.taskMap.set(metadata.name, method);
         this.logger.log(`注册任务: ${metadata.name}`);
       } catch (error) {
-        this.logger.error(`注册任务失败 ${metadata.name}: ${error.message}`);
+        this.logger.error(`注册任务失败 ${metadata.name}: ${getErrorMessage(error)}`);
       }
     }
   }
@@ -88,11 +90,11 @@ export class TaskService implements OnModuleInit {
       // 执行任务
       await taskFn(...params);
       return true;
-    } catch (error: any) {
+    } catch (error) {
       status = Status.STOP;
       jobMessage = '执行失败';
-      exceptionInfo = error.message;
-      this.logger.error(`执行任务失败: ${error.message}`);
+      exceptionInfo = getErrorMessage(error);
+      this.logger.error(`执行任务失败: ${getErrorMessage(error)}`);
       return false;
     } finally {
       // 记录日志
@@ -114,7 +116,7 @@ export class TaskService implements OnModuleInit {
   /**
    * 解析参数字符串
    */
-  private parseParams(paramsStr: string): any[] {
+  private parseParams(paramsStr: string): unknown[] {
     if (!paramsStr.trim()) {
       return [];
     }
@@ -128,8 +130,8 @@ export class TaskService implements OnModuleInit {
 
       // 尝试解析为 JSON
       return Function(`return [${normalizedStr}]`)();
-    } catch (error: any) {
-      this.logger.error(`解析参数失败: ${error.message}`);
+    } catch (error) {
+      this.logger.error(`解析参数失败: ${getErrorMessage(error)}`);
       return [];
     }
   }
@@ -252,8 +254,8 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
       }
 
       this.logger.log(`存储配额预警任务执行完成，共发送 ${alertCount} 条预警通知`);
-    } catch (error: any) {
-      this.logger.error(`存储配额预警任务执行失败: ${error.message}`, error.stack);
+    } catch (error) {
+      this.logger.error(`存储配额预警任务执行失败: ${getErrorMessage(error)}`, getErrorStack(error));
       throw error;
     }
   }
@@ -344,16 +346,16 @@ ${percentage >= 95 ? '⚠️ 存储空间即将耗尽，请立即清理文件！
 
               totalCleaned++;
               this.logger.log(`已清理版本: ${version.uploadId}, 文件: ${version.fileName}, 版本号: ${version.version}`);
-            } catch (error: any) {
-              this.logger.error(`清理版本失败: ${version.uploadId}, 错误: ${error.message}`);
+            } catch (error) {
+              this.logger.error(`清理版本失败: ${version.uploadId}, 错误: ${getErrorMessage(error)}`);
             }
           }
         }
       }
 
       this.logger.log(`清理旧文件版本任务执行完成，共清理 ${totalCleaned} 个旧版本`);
-    } catch (error: any) {
-      this.logger.error(`清理旧文件版本任务执行失败: ${error.message}`, error.stack);
+    } catch (error) {
+      this.logger.error(`清理旧文件版本任务执行失败: ${getErrorMessage(error)}`, getErrorStack(error));
       throw error;
     }
   }

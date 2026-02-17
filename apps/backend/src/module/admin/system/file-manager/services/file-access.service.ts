@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { getErrorMessage } from 'src/common/utils/error';
 import { AppConfigService } from 'src/config/app-config.service';
 
 interface FileAccessPayload {
@@ -57,7 +58,7 @@ export class FileAccessService {
         tenantId: payload.tenantId,
       };
     } catch (error) {
-      throw new UnauthorizedException('令牌验证失败: ' + error.message);
+      throw new UnauthorizedException('令牌验证失败: ' + getErrorMessage(error));
     }
   }
 

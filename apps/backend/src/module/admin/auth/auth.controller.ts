@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Body, HttpCode, Logger, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpCode, Logger, Headers } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { AppConfigService } from 'src/config/app-config.service';
 import { AuthService } from './auth.service';
@@ -18,6 +18,7 @@ import { Api } from 'src/common/decorators/api.decorator';
 import { TenantContext, IgnoreTenant } from 'src/common/tenant';
 import { SkipDecrypt, CryptoService } from 'src/common/crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getErrorMessage } from 'src/common/utils/error';
 
 /**
  * 认证控制器 - 匹配 Soybean 前端 API
@@ -97,7 +98,7 @@ export class AuthController {
         }));
       } catch (error) {
         // 如果表不存在，返回默认租户
-        this.logger.warn('SysTenant table may not exist yet:', error.message);
+        this.logger.warn('SysTenant table may not exist yet:', getErrorMessage(error));
         result.voList = [
           {
             tenantId: TenantContext.SUPER_TENANT_ID,

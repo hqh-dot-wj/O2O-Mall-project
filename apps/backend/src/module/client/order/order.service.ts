@@ -18,6 +18,7 @@ import { OrderCheckoutService } from './services/order-checkout.service';
 import { AttributionService } from './services/attribution.service';
 import { CartService } from '../cart/cart.service';
 import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
+import { getErrorMessage } from 'src/common/utils/error';
 
 /**
  * C端订单服务
@@ -121,8 +122,9 @@ export class OrderService {
           finalPayAmount = discountResult.data.finalAmount;
         }
       } catch (error) {
-        this.logger.error(`计算优惠失败: ${error.message}`);
-        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `优惠计算失败: ${error.message}`);
+        const msg = getErrorMessage(error);
+        this.logger.error(`计算优惠失败: ${msg}`);
+        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `优惠计算失败: ${msg}`);
       }
     }
 
@@ -191,9 +193,10 @@ export class OrderService {
           dto.pointsUsed,
         );
       } catch (error) {
-        this.logger.error(`锁定优惠券/冻结积分失败: ${error.message}`);
+        const msg = getErrorMessage(error);
+        this.logger.error(`锁定优惠券/冻结积分失败: ${msg}`);
         // 如果锁定失败，需要回滚订单创建
-        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `优惠券或积分处理失败: ${error.message}`);
+        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `优惠券或积分处理失败: ${msg}`);
       }
     }
 
