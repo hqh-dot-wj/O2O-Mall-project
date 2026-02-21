@@ -5,25 +5,26 @@
 ## 📁 文档结构
 
 ### 快速开始
+
 - **E2E_TEST_QUICK_REFERENCE.md** - 快速参考卡，一页纸总结
 
 ### 详细文档
+
 - **E2E_TEST_GUIDE.md** - 完整的测试指南（位于 `apps/backend/docs/`）
 - **E2E_TEST_RESULTS_SUMMARY.md** - 测试结果详细总结
-
-### 实现记录
-- **TASK_9_SUMMARY.md** - 测试脚本修复任务总结
-- **CLEANUP_SUMMARY.md** - 清理误导性信息的记录
+- **E2E_TEST_IMPLEMENTATION.md** - 实现记录
 
 ## 🚀 快速执行
 
 ### Windows
+
 ```bash
 cd apps/backend
 scripts\test-e2e.bat
 ```
 
 ### Linux/Mac
+
 ```bash
 cd apps/backend
 ./scripts/test-e2e.sh
@@ -55,13 +56,16 @@ cd apps/backend
 ## 📝 相关文件
 
 ### 测试脚本
+
 - `apps/backend/test/e2e-marketing-flow.test.ts` - 主测试脚本
 
 ### 执行脚本
+
 - `apps/backend/scripts/test-e2e.bat` - Windows 执行脚本
 - `apps/backend/scripts/test-e2e.sh` - Linux/Mac 执行脚本
 
 ### 开发文档
+
 - `apps/backend/docs/PLATFORM_COMMISSION_GUIDE.md` - 平台抽成设计指南
 - `apps/backend/docs/PLATFORM_COMMISSION_REALITY_CHECK.md` - 平台抽成实际情况
 - `apps/backend/docs/COMPLETE_BUSINESS_FLOW.md` - 完整业务流程
