@@ -116,6 +116,7 @@ describe('PointsRetryProcessor', () => {
       const error = new Error('积分账户不存在');
       mockPointsAccountService.addPoints.mockRejectedValue(error);
       mockDegradationService.updateRetryStatus.mockResolvedValue(undefined);
+      jest.spyOn(processor['logger'], 'error').mockImplementation(() => {});
 
       await expect(processor.handleRetry(mockJob)).rejects.toThrow(error);
 
@@ -154,6 +155,7 @@ describe('PointsRetryProcessor', () => {
       mockPointsAccountService.addPoints.mockRejectedValue(error);
       mockDegradationService.updateRetryStatus.mockResolvedValue(undefined);
       mockDegradationService.markAsFinalFailure.mockResolvedValue(undefined);
+      jest.spyOn(processor['logger'], 'error').mockImplementation(() => {});
 
       await expect(processor.handleRetry(mockJob)).rejects.toThrow(error);
 

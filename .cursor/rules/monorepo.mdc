@@ -1,0 +1,94 @@
+---
+description: Monorepo 项目开发规范（结构、依赖、Turbo、内部包、脚本与校验）
+alwaysApply: true
+---
+
+# Monorepo 项目开发规范
+
+开发时**必须**意识到这是 **pnpm + Turborepo** 的 monorepo，所有改动需符合根目录与工作区约定。
+
+## 1. 仓库结构
+
+- **根目录**：仅保留 `package.json`、`pnpm-workspace.yaml`、`turbo.json`、`scripts/`、共享配置（如 `tsconfig.base.json`）。**依赖只在根或各子包声明，不重复安装。**
+- **apps/**：可部署应用（如 `backend`、`admin-web`、`miniapp-client`）。每个应用有独立 `package.json`，通过 Turbo 任务参与 `dev`/`build`。
+- **apps/admin-web/packages/**：admin-web 内部共享包，命名空间 `@sa/*`。
+- **libs/**：跨应用共享库（如 `@libs/common-types`）。
+- **docs**：文档包（若存在）。
+
+新增应用放 `apps/`，新增跨应用共享库放 `libs/`，仅 admin-web 用的放 `apps/admin-web/packages/`。新增后需在 `pnpm-workspace.yaml` 的 `packages` 中已有通配符覆盖（如 `apps/*`、`libs/*`），无需改 workspace 配置除非新加顶层目录。
+
+## 2. 依赖与版本
+
+- **内部包引用**：凡依赖 `@apps/*`、`@libs/*`、`@sa/*` 的，**必须**使用 `workspace:*`（或 `workspace:^` 等），禁止写死版本。
+  ```json
+  "@libs/common-types": "workspace:*",
+  "@sa/utils": "workspace:*"
+  ```
+- **共享依赖版本**：根目录 `pnpm-workspace.yaml` 中通过 **catalog** 统一版本（如 TypeScript、Vue、axios、eslint 等）。子包优先使用 `catalog:` 引用；若未进 catalog，则各子包间**同一依赖版本须一致**，避免同一依赖多版本。
+- **安装位置**：依赖装在**使用它的那个包**的 `package.json` 里，不要只在根装而子包不声明。
+- **锁文件**：仅根目录保留 `pnpm-lock.yaml`，**禁止**在 `apps/*` 或 `libs/*` 下出现 `package-lock.json` / `pnpm-lock.yaml`。
+
+## 3. Turbo 与脚本
+
+- **任务定义**：在根目录 `turbo.json` 中统一定义 `build`、`dev`、`lint`、`typecheck`、`test` 等。需要先构建依赖包时使用 `dependsOn: ["^build"]`；`dev` 使用 `persistent: true`、`cache: false`。
+- **运行方式**：开发/构建**从根目录**用 pnpm 跑 Turbo，例如：
+  - `pnpm dev` / `pnpm dev:backend` / `pnpm dev:admin` / `pnpm dev:mp`
+  - `pnpm build` / `pnpm build:backend` / `pnpm build:admin`
+  - `pnpm lint` / `pnpm typecheck` / `pnpm test`
+- **单包脚本**：若需在某个 app 下执行命令，先确认是否应改为在根用 `pnpm --filter <包名> <script>` 或已有根脚本封装。
+
+## 4. 跨包引用与边界
+
+- **禁止**在应用或包内通过相对路径跨到**其他 app** 的源码（如 `admin-web` 直接引用 `backend` 的 ts 源文件）。跨应用共享只通过 **发布/workspace 包**（如 `@libs/*`）或 API 调用。
+- **允许**同一 app 内子包互相引用（如 `@sa/axios` 依赖 `@sa/utils`），均用 `workspace:*`。
+
+## 5. 配置与 Git
+
+- **TypeScript**：各子包 `tsconfig.json` 应 **extends** 根目录的 `tsconfig.base.json`，不重复写一整套 compilerOptions。
+- **Git Hooks / Husky**：只在**根目录**配置（如 `simple-git-hooks`、commitlint、lint-staged）。子包**不得**再配自己的 hooks 或 `.husky`。
+- **环境变量**：应用级仅使用 `.env.development`、`.env.production`、`.env.test`、`.env.example`；每个 app 需提供 `.env.example`。
+
+## 6. 运行环境
+
+- **当前主要环境**：开发/运行环境为 **Windows**，终端为 **PowerShell**。
+- **PowerShell 与命令串联**：PowerShell **不支持**使用 `&&` 串联命令（`&&` 为 Bash/CMD 语法）。在 PowerShell 中应使用 **`;`** 分隔顺序执行的多条命令，或将多条命令拆成多个脚本/步骤。
+- **文档与示例命令**：README、文档及需要用户手动在终端执行的示例中，**避免仅写** `cmd1 && cmd2`；若需串联命令，应使用 `;` 或同时给出 PowerShell 与 Bash 两种写法，例如：
+  - PowerShell：`pnpm build; pnpm test`
+  - Bash：`pnpm build && pnpm test`
+- **package.json scripts**：脚本内的命令串联由 npm/pnpm 在 Node 环境中解析，通常仍可使用 `&&`；若某脚本需在 PowerShell 中**直接复制粘贴**执行，则按上一条改用 `;` 或分步说明。
+
+## 7. 校验与 CI
+
+- 改完依赖或结构后，在根目录执行 **`pnpm verify-monorepo`**（即 `node scripts/verify-monorepo.mjs`），通过后再提交。CI 也应跑该脚本。
+- 校验项包括：共享依赖版本一致、内部包用 `workspace:*`、无子级锁文件、tsconfig 继承根配置、无分散 Git Hooks、环境变量文件命名、各应用有 `.env.example`、backend 脚本无 `.bat`/`.sh` 且脚本名为 kebab-case。
+
+## 8. 结合本项目的补充规则（15 条）
+
+以下均来自当前仓库约定与配置，开发时需遵守。
+
+1. **路径别名**：backend 使用 `@src/*`（映射 `src/*`），admin-web、miniapp-client 使用 `@/*`（映射 `./src/*`）。各 app 内统一用该 app 已有别名，不混用或新增未在 tsconfig 中声明的别名。
+2. **API 类型来源**：前端使用的 `Api.*` 类型必须来自 `@libs/common-types` 的 **generate-types** 生成的 `api.d.ts`（源为 backend 的 openApi.json），不手写重复类型；新接口以 OpenAPI/后端为准，再生成类型。
+3. **类型生成顺序**：生成前端类型前须先构建 backend（产出 `public/openApi.json`），再在 `libs/common-types` 执行 `generate-types`。Turbo 已配置 `generate-types` 的 `dependsOn: ["@apps/backend#build"]`，从根跑 `pnpm --filter @libs/common-types generate-types` 会按依赖顺序执行。
+4. **新应用包名**：新增 app 时包名建议与 backend、admin-web 一致使用 `@apps/xxx`（如 `@apps/miniapp-client`），便于 filter 与内部引用统一；现有 miniapp-client 未带前缀为历史命名，可逐步统一。
+5. **根 pnpm.overrides**：根 `package.json` 的 `pnpm.overrides` 已统一部分依赖（如 typescript）。子包**不要**对同一依赖再写 overrides，避免版本分裂。
+6. **lint-staged 范围**：根目录 lint-staged 仅对 `apps/backend/**/*.ts`、`apps/admin-web/**/*.{ts,tsx,vue}`、`apps/miniapp-client/**/*.{ts,tsx,vue}` 及根级 `*.{json,md,yaml,yml}` 生效。**新增 app 时**若需 pre-commit 校验，须在根 `package.json` 的 `lint-staged` 中显式加入路径。
+7. **新增共享依赖**：需要多包共用的依赖先加入 `pnpm-workspace.yaml` 的 **catalog**，子包用 `catalog:` 引用（如 `"typescript": "catalog:"`），保证版本一致并便于 verify-monorepo 通过。
+8. **Turbo 新任务**：在 `turbo.json` 中新增会产出文件的任务时，必须配置 **outputs**（如 `["dist/**"]`、`["src/api.d.ts"]`），否则缓存行为异常或无法正确复用。
+9. **应用包 private**：可部署的 app（backend、admin-web、miniapp-client 等）的 `package.json` 保持 **`private: true`**，不发布到 npm。
+10. **Prisma 归属**：Prisma 仅 backend 使用。migrate、seed、generate 等仅在 **backend 目录**或通过 backend 的 scripts（如 `pnpm --filter @apps/backend prisma:migrate`）执行，不在根或其它 app 执行。
+11. **根 prepare 脚本**：根目录 **prepare** 脚本（当前为 `simple-git-hooks`）用于安装 Git hooks，**勿删除**，保证 `pnpm install` 后 commit/pre-commit 等 hooks 生效。
+12. **Backend scripts 目录**：`apps/backend/scripts` 下仅使用跨平台脚本（`.cjs`、`.mjs`、`.ts` 等），**禁止** `.bat`、`.sh`；脚本文件名使用 **kebab-case**（与 verify-monorepo P8、P9 一致）。
+13. **engines 对齐**：各 app 若声明 `engines`（如 admin-web 的 `node: ">=20.19.0"`、`pnpm: ">=10.5.0"`），建议与根或其它 app 对齐，避免本地与 CI 环境不一致。
+14. **docs 包**：若存在 `docs` 包，仅作文档/静态站点，**不**参与构建链的强依赖（不在 turbo 的 build 链里 dependsOn backend 等），避免文档构建强依赖后端产物。
+15. **Backend 环境变量跨平台**：backend 的 build/dev 脚本通过 **cross-env** 设置 `NODE_ENV`（如 `cross-env NODE_ENV=development nest start --watch`），保证 Windows 与 Unix 行为一致。
+
+---
+
+## 9. 你可继续补充的规则（建议项）
+
+- **导入路径**：是否禁止 `../../../` 跨多层目录、统一用别名。
+- **Turbo 缓存**：是否启用 remote cache、哪些任务禁止缓存。
+- **变更与发布**：是否使用 Changesets 或其它版本/发布流程。
+- **文档/README**：新加 app 或 lib 是否必须更新根 README 或 docs。
+
+以上 §1–§8 为必守项；§9 可根据团队习惯继续追加。

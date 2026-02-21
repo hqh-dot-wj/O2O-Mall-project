@@ -12,7 +12,7 @@ fileMatchPattern: 'apps/backend/**/*.ts'
 ```typescript
 return Result.ok(data);
 return Result.ok(data, '操作成功');
-return Result.ok({ rows, total });           // 分页
+return Result.ok({ rows, total }); // 分页
 return Result.fail(ResponseCode.BUSINESS_ERROR, '错误信息');
 throw new BusinessException(ResponseCode.BUSINESS_ERROR, '非法操作');
 BusinessException.throwIf(condition, '错误信息');
@@ -26,17 +26,48 @@ BusinessException.throwIfNull(user, '用户不存在');
 BusinessException.throwIf(age < 18, '未成年');
 ```
 
+### 2.1 catch 中安全获取错误信息（必做）
+
+`catch (error)` 的 `error` 为 `unknown` 类型，禁止直接访问 `error.message` / `error.stack`。统一使用 `src/common/utils/error`：
+
+```typescript
+import { getErrorMessage, getErrorStack, getErrorInfo } from 'src/common/utils/error';
+
+try {
+  // ...
+} catch (error) {
+  // 仅需 message
+  this.logger.error('操作失败:', getErrorMessage(error));
+
+  // 需 message + stack 打日志
+  const { message, stack } = getErrorInfo(error);
+  this.logger.error(message, stack);
+
+  // 抛给上游
+  throw new BusinessException(ResponseCode.BUSINESS_ERROR, getErrorMessage(error));
+}
+```
+
+| 函数                     | 用途                                                      |
+| ------------------------ | --------------------------------------------------------- |
+| `getErrorMessage(error)` | 安全提取错误文案（Error / 带 message 对象 / 其他）        |
+| `getErrorStack(error)`   | 安全提取 stack，非 Error 返回 undefined                   |
+| `getErrorInfo(error)`    | 返回 `{ message, stack? }`，便于 logger.error(msg, stack) |
+
 ## 📄 3. DTO 分页（项目标准）
 
 ```typescript
 export class ListXxxDto extends PageQueryDto {
   @ApiProperty({ required: false })
-  @IsOptional() @IsString() @Length(0, 30)
+  @IsOptional()
+  @IsString()
+  @Length(0, 30)
   userName?: string;
 
   @ApiProperty({ enum: StatusEnum, required: false })
-  @IsOptional() @IsEnum(StatusEnum)
-  @Transform(({ value }) => value === '0' ? StatusEnum.NORMAL : value === '1' ? StatusEnum.STOP : value)
+  @IsOptional()
+  @IsEnum(StatusEnum)
+  @Transform(({ value }) => (value === '0' ? StatusEnum.NORMAL : value === '1' ? StatusEnum.STOP : value))
   status?: StatusEnum;
 }
 ```
@@ -65,7 +96,9 @@ async create(dto) { ... }
 ## 🎨 6. Controller
 
 ```typescript
-@ApiTags('模块名') @Controller('path') @ApiBearerAuth('Authorization')
+@ApiTags('模块名')
+@Controller('path')
+@ApiBearerAuth('Authorization')
 export class XxxController {
   @Api({ summary: 'xxx-列表', type: XxxListVo })
   @RequirePermission('system:xxx:list')
@@ -76,7 +109,9 @@ export class XxxController {
 
   @Operlog({ businessType: BusinessType.INSERT })
   @Post()
-  create(@Body() dto: CreateXxxDto) { return this.xxxService.create(dto); }
+  create(@Body() dto: CreateXxxDto) {
+    return this.xxxService.create(dto);
+  }
 }
 ```
 
@@ -91,12 +126,12 @@ xxx/
 
 ## 📊 8. 最佳实践
 
-| 维度 | 坏习惯 | 最佳实践 |
-| --- | ------ | ----- |
+| 维度 | 坏习惯       | 最佳实践         |
+| ---- | ------------ | ---------------- |
 | 逻辑 | 层层 if-else | 卫语句、策略模式 |
-| 代码 | 魔法值 | 枚举 |
-| 事务 | 事务里调 RPC | 事务仅包裹 DB |
-| DB | 循环查库 N+1 | Where IN 批量 |
+| 代码 | 魔法值       | 枚举             |
+| 事务 | 事务里调 RPC | 事务仅包裹 DB    |
+| DB   | 循环查库 N+1 | Where IN 批量    |
 
 ---
 
@@ -107,10 +142,10 @@ xxx/
 - **单元测试**：Service、工具函数、核心业务逻辑须有对应 `*.spec.ts`，覆盖主路径与关键边界、异常分支。
 - **联合/集成测试**：涉及多模块协作、数据库或外部依赖的流程，在 `test/` 下编写 e2e 或 integration 测试（如 `xxx-flow.e2e-spec.ts`、`integration/xxx.spec.ts`）。
 
-| 类型 | 放置位置 | 适用场景 |
-| --- | --- | --- |
-| 单元测试 | 与源文件同目录 `xxx.spec.ts` | Service 方法、Repository、工具函数、业务规则 |
-| 集成/联合测试 | `test/integration/`、`test/*.e2e-spec.ts` | 多模块联调、完整业务流程、数据库+外部依赖 |
+| 类型          | 放置位置                                  | 适用场景                                     |
+| ------------- | ----------------------------------------- | -------------------------------------------- |
+| 单元测试      | 与源文件同目录 `xxx.spec.ts`              | Service 方法、Repository、工具函数、业务规则 |
+| 集成/联合测试 | `test/integration/`、`test/*.e2e-spec.ts` | 多模块联调、完整业务流程、数据库+外部依赖    |
 
 PR 时新逻辑应有对应单测或集成测试，核心/资金类逻辑建议二者兼备。
 
@@ -126,11 +161,11 @@ PR 时新逻辑应有对应单测或集成测试，核心/资金类逻辑建议�
 
 ### 10.2 QPS 分级（按档位评估即可）
 
-| 档位 | QPS | 典型 | 要求 |
-| --- | --- | --- | --- |
-| 低 | < 20 | 后台、配置 | 简单查询可接受 |
-| 中 | 20 ~ 200 | 列表、详情 | 命中索引、评估缓存、禁止深分页 |
-| 高 | > 200 | 首页、核心链路 | 必须缓存/读模型、水平扩展 |
+| 档位 | QPS      | 典型           | 要求                           |
+| ---- | -------- | -------------- | ------------------------------ |
+| 低   | < 20     | 后台、配置     | 简单查询可接受                 |
+| 中   | 20 ~ 200 | 列表、详情     | 命中索引、评估缓存、禁止深分页 |
+| 高   | > 200    | 首页、核心链路 | 必须缓存/读模型、水平扩展      |
 
 **必评估 QPS**：大表、流水、订单、日志、高频列表。其余可默认「低」。
 
@@ -140,12 +175,12 @@ PR 时新逻辑应有对应单测或集成测试，核心/资金类逻辑建议�
 
 ### 10.4 数据量级
 
-| 级别 | 数据量 | 要求 |
-| --- | --- | --- |
-| D1 | < 10 万 | offset 分页可接受 |
-| D2 | 10 万 ~ 100 万 | 索引、禁止全表扫描 |
-| D3 | 100 万 ~ 1000 万 | 禁止 offset > 5000、游标/时间分页 |
-| D4 | > 1000 万 | 分表、读写分离、ES、归档 |
+| 级别 | 数据量           | 要求                              |
+| ---- | ---------------- | --------------------------------- |
+| D1   | < 10 万          | offset 分页可接受                 |
+| D2   | 10 万 ~ 100 万   | 索引、禁止全表扫描                |
+| D3   | 100 万 ~ 1000 万 | 禁止 offset > 5000、游标/时间分页 |
+| D4   | > 1000 万        | 分表、读写分离、ES、归档          |
 
 ### 10.5 禁止项
 
@@ -213,3 +248,69 @@ orderBy、where 条件白名单，禁止前端随意传入任意字段。防注�
 ### 11.10 可观测性（P3）
 
 核心接口监控：QPS、P95 耗时、错误率。日志含 traceId、userId、关键参数（脱敏）。
+
+---
+
+## 🏢 12. 多租户与接口分类
+
+Backend 同时服务 **Admin 后台**（system/_）与 **Miniapp 小程序**（client/_）。接口分为「按租户隔离」与「不按租户隔离」两类，新增/修改接口时必须先区分并标明。
+
+### 12.1 三种接口类型
+
+| 类型               | 说明                                                                                                                  | 示例                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **TenantScoped**   | 数据按当前租户隔离；租户来自请求头 `tenant-id` 或登录态；Repository 用 BaseRepository/SoftDeleteRepository 自动过滤。 | 用户/角色/部门列表；小程序的订单、购物车、商品、钱包。 |
+| **PlatformOnly**   | 不按租户隔离，仅平台或超管可调；必须配 `RequirePermission` 或角色校验。                                               | 租户管理、租户套餐、同步字典、监控。                   |
+| **TenantAgnostic** | 不依赖当前登录租户；租户由参数或返回值决定。                                                                          | `client/location/match-tenant`、`nearby-tenants`。     |
+
+### 12.2 路径与调用方约定
+
+- **system/tenant、system/tenant-package** → 一律 **PlatformOnly**。
+- **client/location** 下「根据坐标/位置解析或列出租户」的接口 → **TenantAgnostic**。
+- **client/** 下订单、购物车、商品、钱包等 → **TenantScoped**（租户来自 header 或 body，与前端约定一致）。
+- **system/** 下其余业务（用户、角色、部门等）→ **TenantScoped**。
+
+### 12.3 标明方式（必做）
+
+- 在 Controller 类或方法上用 JSDoc 标明：`/** @tenantScope TenantScoped */` 或 `PlatformOnly` 或 `TenantAgnostic`。
+- 与路径约定不一致时必须在类或方法上显式注释。
+
+### 12.4 新增接口前自检
+
+1. 主要调用方：admin / miniapp / both？
+2. 是否按租户隔离？→ 是则 TenantScoped，否则 PlatformOnly 或 TenantAgnostic。
+3. PlatformOnly 是否已加权限？
+4. Miniapp 且 TenantScoped 时，租户来源是 header 还是 body/query？在注释或文档写明。
+
+### 12.5 数据层要求
+
+- 租户内接口：访问租户隔离表必须通过继承 BaseRepository/SoftDeleteRepository 的 Repository；禁止手写 `prisma.xxx.findMany()` 且不加租户条件（除非显式跨租户且已加权限）。
+- 创建租户隔离数据：禁止由前端传入 `tenantId` 落库；从 `TenantContext.getTenantId()` 或 `this.cls.get('tenantId')` 取。
+- 跨租户/平台查询：用项目约定的忽略租户机制（如 TenantContext.run + setIgnoreTenant），并做权限校验。
+
+---
+
+## 📁 13. Client 与能力域模块职责划分
+
+**通用原则**：`client` 目录 = 小程序 C 端接口全集；能力域目录 = Service、Repository、规则配置，仅通过 admin 暴露配置接口，C 端能力由 `client` 薄 Controller 调用。
+
+### 13.1 通用职责约定
+
+| 角色       | 目录               | 职责                                                                                           | 路径约定           |
+| ---------- | ------------------ | ---------------------------------------------------------------------------------------------- | ------------------ |
+| **Client** | `module/client/`   | 所有 `client/*` 的 Controller，包含各能力域的 C 端接口（薄 Controller，调用能力域 Service）    | `client/*`         |
+| **能力域** | `module/{domain}/` | Service、Repository、规则配置；仅提供 `admin/{domain}/*` 配置接口；**禁止**直接暴露 `client/*` | `admin/{domain}/*` |
+
+适用于：marketing、finance、store 等可被 C 端调用的能力域。依赖方向：`client` → 能力域，**禁止**能力域 → client。
+
+### 13.2 强制规则（通用）
+
+- **client 下必须包含**：所有 `client/*` 路径的 Controller，包括各能力域的 C 端接口。
+- **能力域下禁止**：直接使用 `@Controller('client/*')`。C 端能力通过 Service 对外提供，由 `module/client/{domain}/` 的 Controller 调用。
+- **依赖方向**：`client` → 能力域，禁止能力域依赖 client。
+
+### 13.3 新增 C 端能力域接口时（通用流程）
+
+1. 在 `module/client/{能力域}/` 下新增或扩展 Controller。
+2. 注入并调用对应能力域模块导出的 Service。
+3. 路径使用 `client/{能力域}/xxx`，守卫使用 `MemberAuthGuard`，装饰器使用 `@Member()`。

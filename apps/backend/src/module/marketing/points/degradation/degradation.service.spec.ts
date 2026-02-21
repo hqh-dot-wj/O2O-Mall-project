@@ -115,6 +115,9 @@ describe('PointsGracefulDegradationService', () => {
       const error = new Error('数据库错误');
       mockPrisma.mktPointsGrantFailure.create.mockRejectedValue(error);
 
+      // 抑制预期内的 error 日志，避免测试输出中出现 ERROR（本用例即验证：写库失败时不抛错、只打日志）
+      jest.spyOn(service['logger'], 'error').mockImplementation(() => {});
+
       // 不应该抛出错误
       await expect(service.recordFailure(failureRecord)).resolves.not.toThrow();
     });
@@ -191,6 +194,7 @@ describe('PointsGracefulDegradationService', () => {
       mockPrisma.mktPointsGrantFailure.updateMany.mockResolvedValue({
         count: 1,
       });
+      jest.spyOn(service['logger'], 'error').mockImplementation(() => {});
 
       await service.markAsFinalFailure(memberId, relatedId, errorMessage);
 
