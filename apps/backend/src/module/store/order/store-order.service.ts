@@ -308,56 +308,15 @@ export class StoreOrderService {
     let remainingAmount = new Prisma.Decimal(order.payAmount);
     let totalCommissionAmount = new Prisma.Decimal(0);
 
-    // 调试日志：打印特定订单的佣金数据
-    if (order.orderSn === '202602031020VJSIA849') {
-      this.logger.log(`[订单详情] 订单号: 202602031020VJSIA849, 订单ID: ${orderId}`);
-      this.logger.log(`[订单详情] 查询到的所有佣金记录数: ${commissions?.length || 0}`);
-      if (commissions && commissions.length > 0) {
-        this.logger.log(
-          `[订单详情] 查询到的所有佣金记录: ${JSON.stringify(
-            commissions.map((c: any) => ({
-              id: c.id?.toString(),
-              amount: c.amount?.toString(),
-              status: c.status,
-              beneficiaryId: c.beneficiaryId,
-              tenantId: c.tenantId,
-            })),
-          )}`,
-        );
-      }
-    }
-
     if (commissions && commissions.length > 0) {
       // 只计算有效状态的佣金（FROZEN 和 SETTLED），排除 CANCELLED
       const validCommissions = commissions.filter((comm: any) => comm.status !== CommissionStatus.CANCELLED);
-
-      if (order.orderSn === '202602031020VJSIA849') {
-        this.logger.log(`[订单详情] 有效佣金记录数: ${validCommissions.length}`);
-        this.logger.log(
-          `[订单详情] 有效佣金记录: ${JSON.stringify(
-            validCommissions.map((c: any) => ({
-              id: c.id?.toString(),
-              amount: c.amount?.toString(),
-              status: c.status,
-            })),
-          )}`,
-        );
-      }
 
       totalCommissionAmount = validCommissions.reduce(
         (sum: Prisma.Decimal, item: any) => sum.add(new Prisma.Decimal(item.amount)),
         new Prisma.Decimal(0),
       );
       remainingAmount = remainingAmount.sub(totalCommissionAmount);
-
-      if (order.orderSn === '202602031020VJSIA849') {
-        this.logger.log(`[订单详情] 佣金总计: ${totalCommissionAmount.toString()}`);
-        this.logger.log(`[订单详情] 商户收款: ${remainingAmount.toString()}`);
-      }
-    } else {
-      if (order.orderSn === '202602031020VJSIA849') {
-        this.logger.log(`[订单详情] 未查询到佣金记录`);
-      }
     }
 
     // 5. 组装返回数据
@@ -452,6 +411,7 @@ export class StoreOrderService {
    * 强制核销订单
    */
   @Transactional()
+  @Transactional()
   async verifyService(dto: VerifyServiceDto, operatorId: string) {
     const tenantId = TenantContext.getTenantId();
     // 查询订单
@@ -484,6 +444,12 @@ export class StoreOrderService {
 
   /**
    * 订单退款
+   *
+   * TODO: [微信支付-退款] 对接微信退款接口
+   * - 在更新订单状态后、佣金回滚前，调用微信退款 API
+   * - 退款成功后再执行佣金取消和优惠券/积分退还
+   * - 需要处理退款回调通知 (异步确认退款到账)
+   * - 支持部分退款场景 (按商品维度)
    */
   @Transactional()
   async refundOrder(orderId: string, remark: string, operatorId: string) {

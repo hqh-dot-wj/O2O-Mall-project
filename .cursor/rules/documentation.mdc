@@ -96,3 +96,59 @@ alwaysApply: false
 
 - **何时遵循**：用户要求生成需求文档、设计文档，或对 `docs/**`、`**/docs/**` 下的文档进行编写/补充时。
 - **可省略场景**：纯修复、小改动、内部备忘类文档；若用户明确不需完整文档，可简化执行。
+
+---
+
+## 8. 文件命名规范
+
+- **强制小写**：`docs/` 目录下新建的文档文件名必须全部使用小写字母，单词之间用连字符 `-` 分隔。
+  - ✅ `payment-service-design.md`、`commission-requirements.md`
+  - ❌ `PAYMENT_SERVICE_DESIGN.md`、`Commission_Requirements.md`
+- **已有文件**：历史遗留的大写文件名不强制重命名，但新增文档必须遵循小写规范。
+- **目录名**：同样使用小写 + 连字符，如 `docs/archive/`、`docs/e2e-tests/`。
+
+---
+
+## 9. 文档目录归类规范
+
+新建需求文档或设计文档时，必须按文档类型放入对应子目录，禁止直接堆放在 `docs/` 根目录：
+
+| 文档类型 | 目录 | 示例 |
+|----------|------|------|
+| 需求文档 | `docs/requirements/` | `docs/requirements/payment-service-requirements.md` |
+| 设计文档 | `docs/design/` | `docs/design/payment-notification-service-design.md` |
+
+- **已有文件**：历史遗留在 `docs/` 根目录的文档不强制迁移，但新增文档必须归类。
+- **跨文档引用**：使用相对路径引用，如设计文档引用需求文档：`[需求文档](../requirements/xxx.md)`。
+- **其他类型**：测试指南放 `docs/testing/`，部署指南放 `docs/deployment/`，归档文档放 `docs/archive/`。按需创建子目录，保持一致性即可。
+- **模块对齐**：当文档针对特定模块时，优先在对应类型目录下创建与 `src/module/` 同构的子路径。例如 `store/distribution` 模块的设计文档放 `docs/design/store/distribution/`，需求文档放 `docs/requirements/store/distribution/`。这样文档与代码一一对应，便于查找。
+
+---
+
+## 10. 缺陷分析前置检查规范
+
+编写需求文档或设计文档中的「缺陷分析」章节时，**必须先查阅项目实际代码**，禁止凭模块内部代码推断项目全局结构。
+
+### 10.1 C 端接口缺陷检查
+
+分析某能力域模块是否缺少 C 端接口时，必须先检查 `src/module/client/` 目录：
+
+- 按照后端规范 §13，C 端接口统一放在 `module/client/{能力域}/` 下，而非能力域模块内部。
+- 因此，在能力域模块（如 `marketing/points/`）内看不到 `client/*` Controller 是正常的，不能直接判定为缺陷。
+- **必做**：检查 `src/module/client/marketing/points/` 等对应路径是否已有 C 端 Controller。
+
+### 10.2 跨模块依赖检查
+
+分析跨模块缺陷时，必须确认：
+
+- 被引用的 Service/Repository 是否已通过 Module exports 正确导出
+- 调用方是否通过 Module imports 正确引入
+- 不能仅凭「模块 A 的代码中没有看到模块 B 的引用」就判定为缺陷
+
+### 10.3 Mermaid 图表编码规范
+
+Mermaid 图表中禁止使用以下特殊字符，避免编码损坏：
+
+- 禁止使用 `→`、`←`、`≤`、`≥`、`∈` 等 Unicode 特殊符号，改用纯 ASCII 文字描述
+- 禁止在节点标签中使用 `<br/>`，改用空格或换行
+- 节点标签中避免使用 `<`、`>` 符号，改用「大于」「小于」等文字

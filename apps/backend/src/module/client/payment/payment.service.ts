@@ -20,6 +20,12 @@ export class PaymentService {
 
   /**
    * 预下单，获取微信支付参数
+   *
+   * TODO: [微信支付] 对接微信支付 JSAPI 统一下单接口
+   * - 需要配置商户号 (mchId)、API 密钥、证书
+   * - 调用 wechatpay-node-v3 SDK 的 transactions.jsapi()
+   * - 返回前端所需的 5 个支付参数 (timeStamp, nonceStr, package, signType, paySign)
+   * - 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/direct-jsons/jsapi-prepay.html
    */
   async prepay(memberId: string, dto: PrepayDto) {
     // 1. 校验订单
@@ -36,9 +42,15 @@ export class PaymentService {
     const isProd = process.env.NODE_ENV === 'production';
 
     if (isProd) {
-      // 生产环境：调用微信支付统一下单 API
-      // const wxParams = await this.wechatPay.transactions.jsapi(...)
-      // return wxParams;
+      // TODO: [微信支付-生产] 生产环境微信支付统一下单
+      // 1. 初始化 wechatpay-node-v3 实例 (商户号、API密钥、证书路径从配置读取)
+      // 2. 调用 pay.transactions_jsapi({
+      //      appid, mchid, description, out_trade_no: order.orderSn,
+      //      notify_url: config.wechat.payNotifyUrl,
+      //      amount: { total: order.payAmount * 100, currency: 'CNY' },
+      //      payer: { openid: member.openid }
+      //    })
+      // 3. 对返回的 prepay_id 生成前端签名参数
       throw new BusinessException(1001, '生产环境支付未配置');
     } else {
       // 开发/测试环境：Mock 返回
@@ -48,6 +60,13 @@ export class PaymentService {
 
   /**
    * 支付回调处理 (模拟或真实)
+   *
+   * TODO: [微信支付] 实现微信支付回调验签
+   * - 使用微信平台证书验证回调请求的签名
+   * - 解密回调报文中的 resource 字段 (AES-256-GCM)
+   * - 验证 out_trade_no 与 transaction_id 的一致性
+   * - 验证 amount.total 与订单金额一致，防止金额篡改
+   * - 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/payment-notice.html
    */
   async handleCallback(orderId: string, transactionId: string, payAmount: number) {
     // 验证签名等逻辑在此处处理...
@@ -83,7 +102,11 @@ export class PaymentService {
       this.logger.warn(
         `[Payment Defense] Order ${orderId} was cancelled but payment received. Triggering auto-refund.`,
       );
-      // TODO: Call WechatPay Refund API
+      // TODO: [微信支付-退款] 调用微信退款接口自动退款
+      // - 调用 wechatpay-node-v3 SDK 的 refunds.create()
+      // - 传入 transaction_id、out_refund_no、退款金额
+      // - 记录退款流水到 fin_transaction
+      // - 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/create.html
       return { status: 'REFUND_PENDING', message: 'Order was cancelled, refund triggered' };
     }
 

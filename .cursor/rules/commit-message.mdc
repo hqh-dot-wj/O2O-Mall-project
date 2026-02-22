@@ -15,7 +15,7 @@ alwaysApply: true
 
 - **type**：必填，从下表选择
 - **scope**：选填，变更影响的范围；Monorepo 下常用：`backend`、`admin-web`、`miniapp-client`、`libs`、`common-types` 等
-- **description**：必填，简短描述（中文或英文均可）；若为破坏性变更，以 `!` 开头
+- **description**：必填，简短描述（**须使用中文**）；若为破坏性变更，以 `!` 开头
 
 ## Type 类型（按项目约定）
 

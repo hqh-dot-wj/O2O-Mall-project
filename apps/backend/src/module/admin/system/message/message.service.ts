@@ -29,6 +29,11 @@ export class MessageService {
 
   /**
    * 发送新订单通知 (Stub)
+   *
+   * TODO: [通用服务-通知] 接入通用通知服务后重构
+   * - 站内信 → NotificationService.send(target, 'IN_APP', ...)
+   * - SMS → NotificationService.send(target, 'SMS', ...)
+   * - 微信模板消息 → NotificationService.send(target, 'WECHAT_TEMPLATE', ...)
    */
   async notifyNewOrder(order: any) {
     // 1. 发送站内信
@@ -54,12 +59,21 @@ export class MessageService {
 
   /**
    * 发送短信 (Stub)
+   *
+   * TODO: [通用服务-通知] 抽离为独立 NotificationService
+   * - 当前 SMS/站内信/推送逻辑分散在 MessageService 中，应抽离为通用通知服务
+   * - 支持多渠道: SMS (阿里云/腾讯云)、APP 推送、微信模板消息、站内信
+   * - 统一接口: notify(target, channel, template, params)
+   * - 支持异步队列发送、发送记录、失败重试
+   *
    * @param phone 接收手机号 (or userId to lookup phone)
    * @param content 内容
    */
   async sendSmsStub(target: string, content: string) {
     this.logger.log(`[SMS Stub] Sending SMS to ${target}: ${content}`);
-    // TODO: Integrate Aliyun SMS or Tencent Cloud SMS here
+    // TODO: [通用服务-SMS] 接入阿里云短信或腾讯云短信 SDK
+    // - 配置 AccessKeyId、AccessKeySecret、SignName、TemplateCode
+    // - 实现发送记录持久化和失败重试
   }
 
   /**

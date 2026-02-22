@@ -100,6 +100,7 @@ export class StoreDashboardService {
         where: {
           ...baseWhere,
           createTime: { gte: today },
+          status: { not: CommissionStatus.CANCELLED },
         },
         _sum: { amount: true },
       }),
@@ -107,6 +108,7 @@ export class StoreDashboardService {
         where: {
           ...baseWhere,
           createTime: { gte: monthStart },
+          status: { not: CommissionStatus.CANCELLED },
         },
         _sum: { amount: true },
       }),
