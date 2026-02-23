@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PublishStatus, ProductType, DistributionMode } from '@prisma/client';
+import { SpecValues } from 'src/common/types';
 
 export class StoreSkuVo {
   @ApiProperty({ description: '店铺SKU ID' })
@@ -20,8 +21,13 @@ export class StoreSkuVo {
   @ApiProperty({ description: '是否有效' })
   isActive: boolean;
 
-  @ApiProperty({ description: '规格值', type: 'object', additionalProperties: true })
-  specValues: any;
+  @ApiProperty({ 
+    description: '规格值', 
+    type: 'object', 
+    additionalProperties: { type: 'string' },
+    example: { '颜色': '红色', '尺寸': 'XL' }
+  })
+  specValues: SpecValues;
 
   @ApiProperty({ description: '成本价' })
   costPrice: number;

@@ -8,13 +8,14 @@ import { ListWithdrawalDto } from './dto/list-withdrawal.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { WithdrawalStatus } from '@prisma/client';
 import { BusinessException } from 'src/common/exceptions';
+import { MockRepository, MockService, TestPaginatedResult } from 'src/common/types/test-helpers.types';
 
 describe('WithdrawalService', () => {
   let service: WithdrawalService;
   let prismaService: PrismaService;
-  let withdrawalRepo: WithdrawalRepository;
-  let walletService: WalletService;
-  let auditService: WithdrawalAuditService;
+  let withdrawalRepo: MockRepository<WithdrawalRepository>;
+  let walletService: MockService<WalletService>;
+  let auditService: MockService<WithdrawalAuditService>;
 
   const mockPrismaService = {
     umsMember: {
@@ -22,18 +23,18 @@ describe('WithdrawalService', () => {
     },
   };
 
-  const mockWithdrawalRepo = {
+  const mockWithdrawalRepo: MockRepository<Pick<WithdrawalRepository, 'create' | 'findOne' | 'findPage'>> = {
     create: jest.fn(),
     findOne: jest.fn(),
     findPage: jest.fn(),
   };
 
-  const mockWalletService = {
+  const mockWalletService: MockService<Pick<WalletService, 'getOrCreateWallet' | 'freezeBalance'>> = {
     getOrCreateWallet: jest.fn(),
     freezeBalance: jest.fn(),
   };
 
-  const mockAuditService = {
+  const mockAuditService: MockService<Pick<WithdrawalAuditService, 'approve' | 'reject'>> = {
     approve: jest.fn(),
     reject: jest.fn(),
   };
@@ -178,7 +179,10 @@ describe('WithdrawalService', () => {
     it('应该抛出异常 - 不支持的审核操作', async () => {
       mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
 
-      await expect(service.audit('withdrawal1', 'INVALID' as any, 'admin1')).rejects.toThrow(BusinessException);
+      // 使用类型断言明确表示这是测试无效输入的场景
+      await expect(
+        service.audit('withdrawal1', 'INVALID' as 'APPROVE' | 'REJECT', 'admin1'),
+      ).rejects.toThrow(BusinessException);
     });
   });
 
@@ -217,7 +221,20 @@ describe('WithdrawalService', () => {
     });
 
     it('应该支持关键词搜索', async () => {
-      const mockResult: any = {
+      interface WithdrawalListItem {
+        id: string;
+        memberId: string;
+        amount: Decimal;
+        status: WithdrawalStatus;
+        member?: {
+          memberId: string;
+          nickname: string;
+          mobile?: string;
+          avatar?: string;
+        };
+      }
+
+      const mockResult: TestPaginatedResult<WithdrawalListItem> = {
         rows: [],
         total: 0,
       };
@@ -236,7 +253,14 @@ describe('WithdrawalService', () => {
     });
 
     it('应该支持会员ID筛选', async () => {
-      const mockResult: any = {
+      interface WithdrawalListItem {
+        id: string;
+        memberId: string;
+        amount: Decimal;
+        status: WithdrawalStatus;
+      }
+
+      const mockResult: TestPaginatedResult<WithdrawalListItem> = {
         rows: [],
         total: 0,
       };

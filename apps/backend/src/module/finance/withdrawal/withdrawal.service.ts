@@ -11,6 +11,7 @@ import { WithdrawalRepository } from './withdrawal.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { BusinessConstants } from 'src/common/constants/business.constants';
 import { WithdrawalAuditService } from './withdrawal-audit.service';
+import { WithdrawalWithMember, WithdrawalListItem } from 'src/common/types/finance.types';
 
 /**
  * 提现服务
@@ -133,8 +134,8 @@ export class WithdrawalService {
     });
 
     // 扁平化处理
-    const rows = result.rows.map((item: any) => {
-      const flatItem: any = { ...item };
+    const rows = result.rows.map((item: WithdrawalWithMember): WithdrawalListItem => {
+      const flatItem: WithdrawalListItem = { ...item };
       if (item.member) {
         flatItem.memberName = item.member.nickname;
         flatItem.memberMobile = item.member.mobile;

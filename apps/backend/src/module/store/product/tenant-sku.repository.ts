@@ -61,7 +61,7 @@ export class TenantSkuRepository extends BaseRepository<
    *   tenantProdId: 'tp1'
    * });
    */
-  async findWithRelations(where: any) {
+  async findWithRelations(where: Prisma.PmsTenantSkuWhereInput) {
     return this.delegate.findMany({
       where,
       include: {
@@ -294,7 +294,10 @@ export class TenantSkuRepository extends BaseRepository<
    * await updateStatus(['sku1', 'sku2'], 'ON_SHELF');
    */
   async updateStatus(tenantSkuIds: string[], status: string) {
-    return this.updateMany({ tenantSkuId: { in: tenantSkuIds } }, { status });
+    return this.updateMany(
+      { tenantSkuId: { in: tenantSkuIds } } as Partial<PmsTenantSku>,
+      { status } as Partial<PmsTenantSku>,
+    );
   }
 
   /**

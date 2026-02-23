@@ -37,19 +37,105 @@ fileMatchPattern: '**/*.spec.{ts,tsx,vue},**/*.test.{ts,tsx,vue},**/*.e2e-spec.t
 
 ## 3. Mock 规范
 
-### 3.1 Backend (NestJS + Jest)
+### 3.1 类型安全的 Mock（推荐）
+
+Backend 提供了类型安全的测试辅助类型，位于 `src/common/types/test-helpers.types.ts`：
+
+**核心类型**：
+
+- `MockRepository<T>` - 类型安全的 Repository Mock
+- `MockService<T>` - 类型安全的 Service Mock
+- `PartialMock<T>` - 部分 Mock 类型
+- `TestPaginatedResult<T>` - 测试分页结果
+- `TestPrismaClient` - 测试 Prisma 客户端
+- `TestRedisClient` - 测试 Redis 客户端
+- `TestClsService` - 测试 CLS 服务
+
+**辅助函数**：
+
+- `createMockRepository<T>(methods)` - 创建 Mock Repository
+- `createMockService<T>(methods)` - 创建 Mock Service
+- `createTestPrismaClient()` - 创建测试 Prisma 客户端
+- `createTestRedisClient()` - 创建测试 Redis 客户端
+- `createTestClsService()` - 创建测试 CLS 服务
+- `expectAny` - 类型安全的 expect.any 替代
+
+**使用示例**：
+
+```typescript
+import { MockRepository, MockService, TestPaginatedResult } from 'src/common/types/test-helpers.types';
+
+describe('WithdrawalService', () => {
+  let service: WithdrawalService;
+  let withdrawalRepo: MockRepository<Pick<WithdrawalRepository, 'create' | 'findOne' | 'findPage'>>;
+  let walletService: MockService<Pick<WalletService, 'getOrCreateWallet' | 'freezeBalance'>>;
+
+  const mockWithdrawalRepo: MockRepository<Pick<WithdrawalRepository, 'create' | 'findOne' | 'findPage'>> = {
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findPage: jest.fn(),
+  };
+
+  const mockWalletService: MockService<Pick<WalletService, 'getOrCreateWallet' | 'freezeBalance'>> = {
+    getOrCreateWallet: jest.fn(),
+    freezeBalance: jest.fn(),
+  };
+
+  // 使用类型安全的分页结果
+  it('应该返回列表', async () => {
+    interface WithdrawalListItem {
+      id: string;
+      memberId: string;
+      amount: Decimal;
+      status: WithdrawalStatus;
+    }
+
+    const mockResult: TestPaginatedResult<WithdrawalListItem> = {
+      rows: [],
+      total: 0,
+    };
+
+    mockWithdrawalRepo.findPage.mockResolvedValue(mockResult);
+    // ...
+  });
+
+  // 使用 expectAny
+  it('应该更新时间', async () => {
+    expect(mockRepo.update).toHaveBeenCalledWith('id1', {
+      status: 'APPROVED',
+      auditTime: expectAny.date(),
+    });
+  });
+});
+```
+
+**优势**：
+
+- 编译时类型检查，减少运行时错误
+- IDE 智能提示更准确
+- 避免 any 类型，提高代码质量
+- 统一的 Mock 创建方式
+
+**何时使用**：
+
+- ✅ 新编写的测试文件应使用类型安全的 Mock
+- ✅ 修改现有测试时可顺带改造
+- ⏸️ 现有测试不强制全部改造
+
+### 3.2 Backend (NestJS + Jest)
 
 - **共享 Mock**：优先从 `src/test-utils/mocks/` 导入 `createPrismaMock`、`createRedisMock`、`createClsMock`。
+- **类型安全 Mock**：优先使用 `src/common/types/test-helpers.types.ts` 中的类型和工具函数。
 - **注入方式**：`{ provide: XxxService, useValue: mockXxx }`。
 - **清理**：`beforeEach` 中 `jest.clearAllMocks()`；有 `jest.spyOn` 时在 `afterEach` 中 `jest.restoreAllMocks()`。
 
-### 3.2 Admin-Web (Vue + Vitest)
+### 3.3 Admin-Web (Vue + Vitest)
 
 - **全局 Mock**：在 `src/test/setup.ts` 中 mock `window.$message`、`$t`、路由、Pinia 等。
 - **组件 Mock**：`mount(Comp, { global: { mocks: { $t: vi.fn(), $message: { success: vi.fn() } } } })`。
 - **API Mock**：优先使用 `vi.mock('@/service/api/xxx')` 或 MSW。
 
-### 3.3 Mock 命名
+### 3.4 Mock 命名
 
 - 变量：`mockPrisma`、`mockRedis`、`mockCls`。
 - 工厂：`createPrismaMock()`、`createRedisMock()`、`createClsMock(tenantId?)`。

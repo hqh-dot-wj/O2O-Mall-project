@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { DistributionMode } from '@prisma/client';
 import { MarketProductVo } from './market-product.vo';
 import { Type } from 'class-transformer';
+import { SpecValues } from 'src/common/types';
 
 export class GlobalSkuVo {
   @ApiProperty({ description: '全局SKU ID' })
@@ -10,8 +11,13 @@ export class GlobalSkuVo {
   @ApiProperty({ description: '关联产品ID' })
   productId: string;
 
-  @ApiProperty({ description: '规格值JSON' })
-  specValues: any;
+  @ApiProperty({ 
+    description: '规格值JSON',
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    example: { '颜色': '红色', '尺寸': 'XL' }
+  })
+  specValues: SpecValues;
 
   @ApiProperty({ description: '图片' })
   skuImage: string;

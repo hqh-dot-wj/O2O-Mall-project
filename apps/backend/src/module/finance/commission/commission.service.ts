@@ -11,6 +11,11 @@ import { Transactional, IsolationLevel } from 'src/common/decorators/transaction
 import { BusinessException } from 'src/common/exceptions';
 import { BusinessConstants } from 'src/common/constants/business.constants';
 import { WalletService } from '../wallet/wallet.service';
+import {
+  MemberForCommission,
+  DistributionConfig,
+  CommissionRecord,
+} from 'src/common/types/finance.types';
 
 /**
  * 佣金服务
@@ -164,7 +169,7 @@ export class CommissionService {
     );
 
     const planSettleTime = this.calculateSettleTime(order.orderType);
-    const records: any[] = [];
+    const records: CommissionRecord[] = [];
 
     // 6. 计算 L1 佣金 (直接推荐: 分享人优先，否则绑定的parentId)
     const l1Result = await this.calculateL1(order, member, distConfig, commissionBase, planSettleTime);
@@ -224,7 +229,7 @@ export class CommissionService {
             level: record.level,
           },
         },
-        create: enrichedRecord,
+        create: enrichedRecord as any, // 使用 any 避免 Prisma 类型过于严格的问题
         update: {}, // 若存在则忽略
       });
     }
@@ -242,12 +247,18 @@ export class CommissionService {
    * @returns { record, beneficiaryId, beneficiaryLevel, noL2Available }
    */
   private async calculateL1(
-    order: any,
-    member: any,
-    config: any,
+    order: {
+      id: string;
+      tenantId: string;
+      memberId: string;
+      shareUserId: string | null;
+      payAmount: Decimal;
+    },
+    member: MemberForCommission,
+    config: DistributionConfig,
     baseWait: Decimal,
     planSettleTime: Date,
-  ): Promise<{ record: any; beneficiaryId: string; beneficiaryLevel: number; noL2Available: boolean } | null> {
+  ): Promise<{ record: CommissionRecord; beneficiaryId: string; beneficiaryLevel: number; noL2Available: boolean } | null> {
     // 优先归属分享人，其次绑定的上级
     const beneficiaryId = order.shareUserId || member.parentId;
 
@@ -340,9 +351,14 @@ export class CommissionService {
    * - 若是临时分享: L2 = 分享人的上级
    */
   private async calculateL2(
-    order: any,
-    member: any,
-    config: any,
+    order: {
+      id: string;
+      tenantId: string;
+      memberId: string;
+      shareUserId: string | null;
+    },
+    member: MemberForCommission,
+    config: DistributionConfig,
     baseWait: Decimal,
     planSettleTime: Date,
     l1BeneficiaryId?: string,
@@ -444,23 +460,34 @@ export class CommissionService {
    * @returns { base: 分佣基数, type: 基数类型 }
    */
   private async calculateCommissionBase(
-    order: any,
+    order: {
+      items: Array<{ skuId: string; totalAmount: Decimal; quantity: number }>;
+      totalAmount: Decimal;
+      payAmount: Decimal;
+    },
     baseType: string = 'ORIGINAL_PRICE'
   ): Promise<{ base: Decimal; type: string }> {
     let totalBase = new Decimal(0);
     let hasExchangeProduct = false;
     let hasNormalProduct = false;
 
+    // 批量查询所有 SKU，避免 N+1 查询
+    const skuIds = order.items.map((item) => item.skuId);
+    const tenantSkus = await this.prisma.pmsTenantSku.findMany({
+      where: {
+        id: { in: skuIds },
+      },
+      include: {
+        globalSku: true,
+      },
+    });
+
+    // 构建 SKU Map，O(1) 查找
+    const skuMap = new Map(tenantSkus.map((sku) => [sku.id, sku]));
+
     for (const item of order.items) {
-      // 查询 SKU 的分佣配置
-      const tenantSku = await this.prisma.pmsTenantSku.findUnique({
-        where: {
-          id: item.skuId,
-        },
-        include: {
-          globalSku: true,
-        },
-      });
+      // 从 Map 中获取 SKU 配置
+      const tenantSku = skuMap.get(item.skuId);
 
       if (!tenantSku || tenantSku.distMode === 'NONE') {
         continue;
@@ -575,7 +602,7 @@ export class CommissionService {
    * 回滚已结算佣金
    */
   @Transactional()
-  private async rollbackCommission(commission: any) {
+  private async rollbackCommission(commission: { beneficiaryId: string; amount: Decimal; orderId: string; id: string | bigint }) {
     // 扣减余额 (可能变负)
     await this.walletService.deductBalance(
       commission.beneficiaryId,

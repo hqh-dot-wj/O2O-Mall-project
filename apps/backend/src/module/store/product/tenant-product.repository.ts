@@ -66,7 +66,7 @@ export class TenantProductRepository extends BaseRepository<
    *   10
    * );
    */
-  async findWithRelations(where: any, skip: number, take: number) {
+  async findWithRelations(where: Prisma.PmsTenantProductWhereInput, skip: number, take: number) {
     return this.delegate.findMany({
       where,
       include: {
@@ -214,8 +214,8 @@ export class TenantProductRepository extends BaseRepository<
    *   status: PublishStatus.ON_SHELF
    * });
    */
-  async countWithConditions(where: any): Promise<number> {
-    return this.count(where);
+  async countWithConditions(where: Prisma.PmsTenantProductWhereInput): Promise<number> {
+    return this.count(where as Partial<PmsTenantProduct>);
   }
 
   /**
@@ -232,6 +232,9 @@ export class TenantProductRepository extends BaseRepository<
    * await updateStatus(['tp1', 'tp2'], PublishStatus.ON_SHELF);
    */
   async updateStatus(tenantProdIds: string[], status: string) {
-    return this.updateMany({ tenantProdId: { in: tenantProdIds } }, { status });
+    return this.updateMany(
+      { tenantProdId: { in: tenantProdIds } } as Partial<PmsTenantProduct>,
+      { status } as Partial<PmsTenantProduct>,
+    );
   }
 }

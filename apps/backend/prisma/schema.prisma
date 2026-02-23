@@ -391,7 +391,7 @@ model PmsTenantSku {
   // --- [新增] 积分配置 ---
   // 积分获得比例（0-100，默认100表示正常获得积分，0表示不产生积分）
   pointsRatio Int @default(100) @map("points_ratio")
-  
+
   // 是否营销活动商品
   isPromotionProduct Boolean @default(false) @map("is_promotion_product")
 
@@ -795,6 +795,53 @@ model SysTenantGeo {
   tenant SysTenant @relation(fields: [tenantId], references: [tenantId])
 
   @@map("sys_tenant_geo")
+}
+
+/// 租户访问审计日志表
+model SysTenantAuditLog {
+  id String @id @default(uuid())
+
+  // 访问主体
+  userId   String? @map("user_id") @db.VarChar(64)
+  userName String? @map("user_name") @db.VarChar(50)
+  userType String  @map("user_type") @db.VarChar(20)
+
+  // 租户信息
+  requestTenantId String? @map("request_tenant_id") @db.VarChar(20)
+  accessTenantId  String? @map("access_tenant_id") @db.VarChar(20)
+
+  // 访问行为
+  action    String @map("action") @db.VarChar(50)
+  modelName String @map("model_name") @db.VarChar(100)
+  operation String @map("operation") @db.VarChar(20)
+
+  // 访问特征
+  isSuperTenant  Boolean @default(false) @map("is_super_tenant")
+  isIgnoreTenant Boolean @default(false) @map("is_ignore_tenant")
+  isCrossTenant  Boolean @default(false) @map("is_cross_tenant")
+
+  // 请求信息
+  ip            String? @map("ip") @db.VarChar(50)
+  userAgent     String? @map("user_agent") @db.VarChar(500)
+  requestPath   String? @map("request_path") @db.VarChar(500)
+  requestMethod String? @map("request_method") @db.VarChar(10)
+
+  // 审计元数据
+  traceId      String? @map("trace_id") @db.VarChar(100)
+  duration     Int?    @map("duration")
+  status       String  @map("status") @db.VarChar(20)
+  errorMessage String? @map("error_message") @db.Text
+
+  // 时间戳
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@index([requestTenantId, createTime])
+  @@index([accessTenantId, createTime])
+  @@index([userId, createTime])
+  @@index([isCrossTenant, createTime])
+  @@index([status, createTime])
+  @@index([traceId])
+  @@map("sys_tenant_audit_log")
 }
 
 /// [新增] 区域代理商表 (O2O 分销)
@@ -1679,7 +1726,7 @@ model OmsOrderItem {
   // --- [新增] 积分相关 ---
   // 下单时的积分比例（快照，防止后续修改影响已下单商品）
   pointsRatio Int @default(100) @map("points_ratio")
-  
+
   // 该商品产生的积分
   earnedPoints Int @default(0) @map("earned_points")
 
@@ -2230,7 +2277,7 @@ model MktUserCoupon {
   receiveTime DateTime @default(now()) @map("receive_time")
 
   // 关联
-  template     MktCouponTemplate  @relation(fields: [templateId], references: [id])
+  template     MktCouponTemplate @relation(fields: [templateId], references: [id])
   usageRecords MktCouponUsage[]
 
   @@index([tenantId, memberId, status])
@@ -2432,11 +2479,11 @@ model MktPointsGrantFailure {
   expireTime DateTime?             @map("expire_time")
 
   // 失败信息
-  failureReason    String   @map("failure_reason") @db.VarChar(500)
-  failureTime      DateTime @map("failure_time")
-  retryCount       Int      @default(0) @map("retry_count")
+  failureReason    String    @map("failure_reason") @db.VarChar(500)
+  failureTime      DateTime  @map("failure_time")
+  retryCount       Int       @default(0) @map("retry_count")
   lastRetryTime    DateTime? @map("last_retry_time")
-  lastErrorMessage String?  @map("last_error_message") @db.VarChar(1000)
+  lastErrorMessage String?   @map("last_error_message") @db.VarChar(1000)
 
   // 状态: PENDING-待重试, COMPLETED-已完成, FAILED-最终失败
   status String @default("PENDING") @db.VarChar(20)

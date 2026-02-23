@@ -7,6 +7,12 @@ import { Prisma } from '@prisma/client';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { ListLedgerDto } from './dto/store-finance.dto';
 import { Response } from 'express';
+import {
+  LedgerQueryResult,
+  LedgerStatsResult,
+  OrderCommissionsMap,
+  CountResult,
+} from 'src/common/types/finance.types';
 
 /**
  * 店铺财务流水服务
@@ -208,29 +214,14 @@ export class StoreLedgerService {
       LIMIT ${query.take} OFFSET ${query.skip}
     `;
 
-    const result = await this.prisma.$queryRaw<
-      Array<{
-        id: string;
-        type: string;
-        type_name: string;
-        amount: any;
-        balance_after: any;
-        related_id: string;
-        remark: string;
-        create_time: Date;
-        user_name: string;
-        user_phone: string;
-        user_id: string | null;
-        status: string | null;
-      }>
-    >(finalQuery);
+    const result = await this.prisma.$queryRaw<LedgerQueryResult[]>(finalQuery);
 
     const countQuery = Prisma.sql`
       SELECT COUNT(*) as total FROM (
         ${Prisma.join(unionQueries, ' UNION ALL ')}
       ) AS unified_ledger
     `;
-    const countResult = await this.prisma.$queryRaw<Array<{ total: bigint }>>(countQuery);
+    const countResult = await this.prisma.$queryRaw<CountResult[]>(countQuery);
     const total = Number(countResult[0]?.total || 0);
 
     // 只为 ORDER_INCOME 类型收集订单ID，用于查询分销信息
@@ -246,10 +237,7 @@ export class StoreLedgerService {
     });
 
     // 查询订单收入对应的佣金信息（L1和L2）
-    const orderCommissionsMap = new Map<
-      string,
-      Array<{ level: number; beneficiary: any; amount: any; status: string }>
-    >();
+    const orderCommissionsMap: OrderCommissionsMap = new Map();
 
     if (orderIncomeIds.size > 0) {
       const commissions = await this.prisma.finCommission.findMany({
@@ -286,7 +274,7 @@ export class StoreLedgerService {
     // 构建返回列表
     const list = result.map((r) => {
       // 只为 ORDER_INCOME 类型添加分销信息
-      let distribution: any = undefined;
+      let distribution: Record<string, unknown> | undefined = undefined;
 
       if (r.type === 'ORDER_INCOME' && r.id.startsWith('order-')) {
         const orderId = r.id.replace('order-', '');
@@ -441,7 +429,7 @@ export class StoreLedgerService {
       GROUP BY type
     `;
 
-    const statsResult = await this.prisma.$queryRaw<Array<{ type: string; total: any }>>(statsQuery);
+    const statsResult = await this.prisma.$queryRaw<LedgerStatsResult[]>(statsQuery);
 
     let totalIncome = 0;
     let totalExpense = 0;
@@ -637,20 +625,7 @@ export class StoreLedgerService {
       ORDER BY create_time DESC
     `;
 
-    const result = await this.prisma.$queryRaw<
-      Array<{
-        id: string;
-        type: string;
-        type_name: string;
-        amount: any;
-        balance_after: any;
-        related_id: string;
-        remark: string;
-        create_time: Date;
-        user_name: string;
-        user_phone: string;
-      }>
-    >(finalQuery);
+    const result = await this.prisma.$queryRaw<LedgerQueryResult[]>(finalQuery);
 
     const list = result.map((r) => ({
       type_name: r.type_name,

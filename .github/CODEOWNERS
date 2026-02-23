@@ -1,21 +1,246 @@
-# 默认审查者
+# ============================================================================
+# CODEOWNERS - 代码所有权与审查规则
+# ============================================================================
+# 
+# 说明：
+# - 每个文件/目录可以有多个所有者
+# - 最后匹配的规则优先级最高
+# - PR 需要所有相关所有者批准才能合并
+# - 使用 GitHub 用户名或团队名（@org/team-name）
+#
+# 文档：https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 默认所有者（兜底规则）
+# ----------------------------------------------------------------------------
 * @linlingqin77
 
-# 后端
-/apps/backend/ @linlingqin77
-/prisma/ @linlingqin77
+# ============================================================================
+# 后端服务 (Backend)
+# ============================================================================
 
-# 前端管理后台
-/apps/admin-web/ @linlingqin77
+# ----------------------------------------------------------------------------
+# 后端 - 核心基础设施
+# ----------------------------------------------------------------------------
+/apps/backend/src/common/                    @linlingqin77
+/apps/backend/src/prisma/                    @linlingqin77
+/apps/backend/src/shared/                    @linlingqin77
+/apps/backend/src/main.ts                    @linlingqin77
+/apps/backend/src/app.module.ts              @linlingqin77
 
-# 小程序
-/apps/miniapp-client/ @linlingqin77
+# ----------------------------------------------------------------------------
+# 后端 - 金融模块（高风险，需要严格审查）
+# ----------------------------------------------------------------------------
+/apps/backend/src/module/finance/            @linlingqin77
+/apps/backend/src/module/finance/commission/ @linlingqin77
+/apps/backend/src/module/finance/wallet/     @linlingqin77
+/apps/backend/src/module/finance/withdrawal/ @linlingqin77
+/apps/backend/src/module/finance/settlement/ @linlingqin77
 
-# 共享库
-/libs/ @linlingqin77
+# ----------------------------------------------------------------------------
+# 后端 - 营销模块
+# ----------------------------------------------------------------------------
+/apps/backend/src/module/marketing/          @linlingqin77
+/apps/backend/src/module/marketing/coupon/   @linlingqin77
+/apps/backend/src/module/marketing/points/   @linlingqin77
+/apps/backend/src/module/marketing/activity/ @linlingqin77
 
-# 基础设施（需要更谨慎的审查）
-turbo.json @linlingqin77
-pnpm-workspace.yaml @linlingqin77
-tsconfig.base.json @linlingqin77
-.github/ @linlingqin77
+# ----------------------------------------------------------------------------
+# 后端 - 商城模块
+# ----------------------------------------------------------------------------
+/apps/backend/src/module/store/              @linlingqin77
+/apps/backend/src/module/store/order/        @linlingqin77
+/apps/backend/src/module/store/cart/         @linlingqin77
+/apps/backend/src/module/store/payment/      @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 后端 - 商品管理模块
+# ----------------------------------------------------------------------------
+/apps/backend/src/module/pms/                @linlingqin77
+/apps/backend/src/module/pms/product/        @linlingqin77
+/apps/backend/src/module/pms/category/       @linlingqin77
+/apps/backend/src/module/pms/brand/          @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 后端 - 用户与权限模块
+# ----------------------------------------------------------------------------
+/apps/backend/src/module/admin/              @linlingqin77
+/apps/backend/src/module/client/             @linlingqin77
+/apps/backend/src/module/auth/               @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 后端 - 系统模块
+# ----------------------------------------------------------------------------
+/apps/backend/src/module/system/             @linlingqin77
+/apps/backend/src/module/tenant/             @linlingqin77
+
+# ============================================================================
+# 数据库 (Database)
+# ============================================================================
+/apps/backend/prisma/                        @linlingqin77
+/apps/backend/prisma/schema.prisma           @linlingqin77
+/apps/backend/prisma/migrations/             @linlingqin77
+/apps/backend/prisma/seed.ts                 @linlingqin77
+
+# ============================================================================
+# 前端 - 管理后台 (Admin Web)
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 前端 - 核心基础设施
+# ----------------------------------------------------------------------------
+/apps/admin-web/src/main.ts                  @linlingqin77
+/apps/admin-web/src/App.vue                  @linlingqin77
+/apps/admin-web/src/router/                  @linlingqin77
+/apps/admin-web/src/store/                   @linlingqin77
+/apps/admin-web/src/layouts/                 @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 前端 - 业务模块
+# ----------------------------------------------------------------------------
+/apps/admin-web/src/views/system/            @linlingqin77
+/apps/admin-web/src/views/finance/           @linlingqin77
+/apps/admin-web/src/views/marketing/         @linlingqin77
+/apps/admin-web/src/views/store/             @linlingqin77
+/apps/admin-web/src/views/pms/               @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 前端 - 共享组件与工具
+# ----------------------------------------------------------------------------
+/apps/admin-web/src/components/              @linlingqin77
+/apps/admin-web/src/utils/                   @linlingqin77
+/apps/admin-web/src/hooks/                   @linlingqin77
+/apps/admin-web/src/service/                 @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 前端 - 包管理
+# ----------------------------------------------------------------------------
+/apps/admin-web/packages/                    @linlingqin77
+
+# ============================================================================
+# 前端 - 小程序 (Miniapp Client)
+# ============================================================================
+/apps/miniapp-client/                        @linlingqin77
+/apps/miniapp-client/src/pages/              @linlingqin77
+/apps/miniapp-client/src/components/         @linlingqin77
+/apps/miniapp-client/src/utils/              @linlingqin77
+
+# ============================================================================
+# 共享库 (Shared Libraries)
+# ============================================================================
+/libs/                                       @linlingqin77
+/libs/common-types/                          @linlingqin77
+/libs/shared-utils/                          @linlingqin77
+
+# ============================================================================
+# 配置文件 (Configuration)
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Monorepo 配置（需要特别谨慎）
+# ----------------------------------------------------------------------------
+/package.json                                @linlingqin77
+/pnpm-workspace.yaml                         @linlingqin77
+/pnpm-lock.yaml                              @linlingqin77
+/turbo.json                                  @linlingqin77
+
+# ----------------------------------------------------------------------------
+# TypeScript 配置
+# ----------------------------------------------------------------------------
+/tsconfig.base.json                          @linlingqin77
+/apps/backend/tsconfig.json                  @linlingqin77
+/apps/admin-web/tsconfig.json                @linlingqin77
+/apps/miniapp-client/tsconfig.json           @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 代码质量工具
+# ----------------------------------------------------------------------------
+/.eslintrc.*                                 @linlingqin77
+/.prettierrc.*                               @linlingqin77
+/.commitlintrc.*                             @linlingqin77
+
+# ----------------------------------------------------------------------------
+# CI/CD 配置（高风险）
+# ----------------------------------------------------------------------------
+/.github/workflows/                          @linlingqin77
+/.github/CODEOWNERS                          @linlingqin77
+/apps/backend/Dockerfile                     @linlingqin77
+/apps/admin-web/Dockerfile                   @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 环境变量（安全敏感）
+# ----------------------------------------------------------------------------
+**/.env.example                              @linlingqin77
+**/.env.production                           @linlingqin77
+**/deploy.config.*                           @linlingqin77
+
+# ============================================================================
+# 文档 (Documentation)
+# ============================================================================
+/docs/                                       @linlingqin77
+/README.md                                   @linlingqin77
+/CHANGELOG.md                                @linlingqin77
+/CONTRIBUTING.md                             @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 架构与设计文档（重要决策）
+# ----------------------------------------------------------------------------
+/docs/design/                                @linlingqin77
+/docs/architecture/                          @linlingqin77
+/docs/adr/                                   @linlingqin77
+
+# ============================================================================
+# 特殊规则（最高优先级）
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 安全相关（需要安全团队审查）
+# ----------------------------------------------------------------------------
+**/auth/**                                   @linlingqin77
+**/security/**                               @linlingqin77
+**/crypto/**                                 @linlingqin77
+**/*-secret*                                 @linlingqin77
+**/*-key*                                    @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 数据库迁移（需要 DBA 审查）
+# ----------------------------------------------------------------------------
+**/migrations/**                             @linlingqin77
+
+# ----------------------------------------------------------------------------
+# 支付相关（高风险）
+# ----------------------------------------------------------------------------
+**/payment/**                                @linlingqin77
+**/wallet/**                                 @linlingqin77
+**/withdrawal/**                             @linlingqin77
+
+# ============================================================================
+# 团队扩展示例（当团队扩大时取消注释并修改）
+# ============================================================================
+#
+# # 金融团队
+# /apps/backend/src/module/finance/          @org/finance-team @linlingqin77
+#
+# # 营销团队
+# /apps/backend/src/module/marketing/        @org/marketing-team @linlingqin77
+#
+# # 前端团队
+# /apps/admin-web/                           @org/frontend-team @linlingqin77
+# /apps/miniapp-client/                      @org/frontend-team @linlingqin77
+#
+# # 平台团队（基础设施）
+# /libs/                                     @org/platform-team @linlingqin77
+# /.github/workflows/                        @org/platform-team @org/devops-team @linlingqin77
+#
+# # DevOps 团队
+# **/Dockerfile                              @org/devops-team @linlingqin77
+# **/docker-compose.yml                      @org/devops-team @linlingqin77
+# /.github/workflows/                        @org/devops-team @linlingqin77
+#
+# # 安全团队（必须审查）
+# **/auth/**                                 @org/security-team @linlingqin77
+# **/payment/**                              @org/security-team @org/finance-team @linlingqin77
+# **/migrations/**                           @org/dba-team @linlingqin77
+#
+# ============================================================================

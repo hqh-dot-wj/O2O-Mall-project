@@ -81,7 +81,24 @@ describe('WithdrawalAuditService', () => {
   });
 
   describe('approve', () => {
-    const mockWithdrawal: any = {
+    interface MockWithdrawal {
+      id: string;
+      memberId: string;
+      tenantId: string;
+      amount: Decimal;
+      status: WithdrawalStatus;
+      method: string;
+      accountNo: string;
+      realName: string;
+      auditTime: Date | null;
+      auditBy: string | null;
+      auditRemark: string | null;
+      paymentNo: string | null;
+      failReason: string | null;
+      createTime: Date;
+    }
+
+    const mockWithdrawal: MockWithdrawal = {
       id: 'withdrawal1',
       memberId: 'member1',
       tenantId: 'tenant1',
@@ -140,7 +157,24 @@ describe('WithdrawalAuditService', () => {
   });
 
   describe('reject', () => {
-    const mockWithdrawal: any = {
+    interface MockWithdrawal {
+      id: string;
+      memberId: string;
+      tenantId: string;
+      amount: Decimal;
+      status: WithdrawalStatus;
+      method: string;
+      accountNo: string;
+      realName: string;
+      auditTime: Date | null;
+      auditBy: string | null;
+      auditRemark: string | null;
+      paymentNo: string | null;
+      failReason: string | null;
+      createTime: Date;
+    }
+
+    const mockWithdrawal: MockWithdrawal = {
       id: 'withdrawal1',
       memberId: 'member1',
       tenantId: 'tenant1',

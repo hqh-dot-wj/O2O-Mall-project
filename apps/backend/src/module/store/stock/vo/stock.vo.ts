@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SpecValues } from 'src/common/types';
 
 export class StockVo {
   @ApiProperty({ description: 'SKU ID' })
@@ -13,6 +14,11 @@ export class StockVo {
   @ApiProperty({ description: '当前库存' })
   stock: number;
 
-  @ApiProperty({ description: '规格信息' })
-  specs: any;
+  @ApiProperty({ 
+    description: '规格信息',
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    example: { '颜色': '红色', '尺寸': 'XL' }
+  })
+  specs: SpecValues;
 }

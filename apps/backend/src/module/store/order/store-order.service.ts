@@ -10,6 +10,7 @@ import { TenantContext } from 'src/common/tenant/tenant.context';
 import { StoreOrderRepository } from './store-order.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
+import { CommissionQueryResult, CommissionSumResult, OrderListItem } from 'src/common/types';
 
 /**
  * Store端订单服务
@@ -97,7 +98,7 @@ export class StoreOrderService {
       const orderIds = list.map((o) => o.id);
 
       // 调试日志：检查订单是否在列表中
-      const debugOrder = list.find((o: any) => o.orderSn === '202602031020VJSIA849');
+      const debugOrder = list.find((o: OrderListItem) => o.orderSn === '202602031020VJSIA849');
       if (debugOrder) {
         this.logger.log(
           `[订单列表] 找到订单: 202602031020VJSIA849, 订单ID: ${debugOrder.id}, 类型: ${typeof debugOrder.id}`,
@@ -107,9 +108,7 @@ export class StoreOrderService {
         );
 
         // 先单独查询该订单的佣金，看看是否能查到
-        const debugCommissionsBefore = await this.prisma.$queryRaw<
-          Array<{ orderId: string; amount: any; status: string; tenantId: string }>
-        >`
+        const debugCommissionsBefore = await this.prisma.$queryRaw<CommissionQueryResult[]>`
           SELECT order_id as "orderId", amount, status::text as status, tenant_id as "tenantId"
           FROM fin_commission
           WHERE order_id = ${debugOrder.id}
@@ -117,7 +116,7 @@ export class StoreOrderService {
         this.logger.log(`[订单列表] 单独查询该订单的佣金记录: ${JSON.stringify(debugCommissionsBefore)}`);
 
         // 测试IN查询
-        const testCommissions = await this.prisma.$queryRaw<Array<{ orderId: string; amount: any; status: string }>>`
+        const testCommissions = await this.prisma.$queryRaw<CommissionQueryResult[]>`
           SELECT order_id as "orderId", amount, status::text as status
           FROM fin_commission
           WHERE order_id IN (${Prisma.join([debugOrder.id])})
@@ -126,7 +125,7 @@ export class StoreOrderService {
         this.logger.log(`[订单列表] IN查询测试结果: ${JSON.stringify(testCommissions)}`);
       }
 
-      const commissionSums = await this.prisma.$queryRaw<Array<{ orderId: string; total: string | null }>>`
+      const commissionSums = await this.prisma.$queryRaw<CommissionSumResult[]>`
         SELECT order_id as "orderId", SUM(amount) as total
         FROM fin_commission
         WHERE order_id IN (${Prisma.join(orderIds)})
@@ -155,9 +154,7 @@ export class StoreOrderService {
         this.logger.log(`[订单列表] 订单号: 202602031020VJSIA849, 订单ID: ${debugOrderId}`);
         this.logger.log(`[订单列表] 佣金Map中的值: ${commissionMap.get(debugOrderId) || '未找到'}`);
         this.logger.log(`[订单列表] 佣金Map的所有键: ${Array.from(commissionMap.keys()).join(', ')}`);
-        const debugCommissions = await this.prisma.$queryRaw<
-          Array<{ orderId: string; amount: any; status: string; tenantId: string }>
-        >`
+        const debugCommissions = await this.prisma.$queryRaw<CommissionQueryResult[]>`
           SELECT order_id as "orderId", amount, status::text as status, tenant_id as "tenantId"
           FROM fin_commission
           WHERE order_id = ${debugOrderId}
@@ -170,7 +167,7 @@ export class StoreOrderService {
     }
 
     // 3. 组装数据
-    const resultList = list.map((item: any) => {
+    const resultList = list.map((item: OrderListItem) => {
       const commissionAmountStr = commissionMap.get(item.id) || '0.00';
       const payAmount = new Prisma.Decimal(item.payAmount);
       const commission = new Prisma.Decimal(commissionAmountStr);
@@ -310,10 +307,13 @@ export class StoreOrderService {
 
     if (commissions && commissions.length > 0) {
       // 只计算有效状态的佣金（FROZEN 和 SETTLED），排除 CANCELLED
-      const validCommissions = commissions.filter((comm: any) => comm.status !== CommissionStatus.CANCELLED);
+      const validCommissions = commissions.filter(
+        (comm: { status: string }) => comm.status !== CommissionStatus.CANCELLED,
+      );
 
       totalCommissionAmount = validCommissions.reduce(
-        (sum: Prisma.Decimal, item: any) => sum.add(new Prisma.Decimal(item.amount)),
+        (sum: Prisma.Decimal, item: { amount: Prisma.Decimal | string | number }) =>
+          sum.add(new Prisma.Decimal(item.amount)),
         new Prisma.Decimal(0),
       );
       remainingAmount = remainingAmount.sub(totalCommissionAmount);

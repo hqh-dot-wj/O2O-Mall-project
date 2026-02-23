@@ -11,6 +11,7 @@ import { ToolModule } from './tool/tool.module';
 import { UserModule } from './user/user.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TenantPackageModule } from './tenant-package/tenant-package.module';
+import { TenantAuditModule } from './tenant-audit/tenant-audit.module';
 
 import { FileManagerModule } from './file-manager/file-manager.module';
 import { MessageModule } from './message/message.module';
@@ -29,6 +30,7 @@ import { MessageModule } from './message/message.module';
     RoleModule,
     TenantModule, // 租户管理
     TenantPackageModule, // 租户套餐管理
+    TenantAuditModule, // 租户审计日志
     ToolModule,
     UserModule,
     FileManagerModule, // 文件管理
