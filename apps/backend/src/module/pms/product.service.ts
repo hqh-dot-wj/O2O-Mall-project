@@ -4,11 +4,12 @@ import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { PaginationHelper } from 'src/common/utils/pagination.helper';
-import { CreateProductDto, ListProductDto, ProductType, CreateAttrValueDto } from './dto';
+import { CreateProductDto, ListProductDto, ProductType, CreateAttrValueDto, CreateSkuDto } from './dto';
 import { ProductRepository } from './product/product.repository';
 import { SkuRepository } from './product/sku.repository';
 import { AttributeRepository } from './attribute/attribute.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ProductListItem } from 'src/common/types';
 
 /**
  * 商品管理服务层
@@ -94,8 +95,8 @@ export class PmsProductService {
    * @param productId - 商品ID
    * @param skus - SKU数据数组
    */
-  private async createSkus(productId: string, skus: any[]) {
-    const skuData = skus.map((sku: any) => ({
+  private async createSkus(productId: string, skus: CreateSkuDto[]) {
+    const skuData = skus.map((sku) => ({
       productId,
       specValues: sku.specValues || {},
       skuImage: sku.skuImage,
@@ -123,7 +124,7 @@ export class PmsProductService {
     });
 
     const attrValueData = attrs.map((item: CreateAttrValueDto) => {
-      const def = attrDefinitions.find((d: any) => d.attrId === item.attrId);
+      const def = attrDefinitions.find((d) => d.attrId === item.attrId);
       return {
         productId,
         attrId: item.attrId,
@@ -161,7 +162,7 @@ export class PmsProductService {
     const total = await this.productRepo.countWithConditions(where);
 
     // 数据映射：转换为前端期望的 VO 格式
-    const formattedList = list.map((item: any) => ({
+    const formattedList = list.map((item: ProductListItem) => ({
       ...item,
       albumPics: item.mainImages ? item.mainImages.join(',') : '',
       publishStatus: item.publishStatus === 'ON_SHELF' ? '1' : '0',
@@ -183,7 +184,7 @@ export class PmsProductService {
 
     return Result.ok({
       ...product,
-      attrs: product.attrValues.map((av: any) => ({
+      attrs: product.attrValues.map((av) => ({
         attrId: av.attrId,
         value: av.value,
       })),
@@ -244,13 +245,13 @@ export class PmsProductService {
    * @param productId - 商品ID
    * @param skus - SKU数据数组
    */
-  private async updateSkus(productId: string, skus: any[]) {
+  private async updateSkus(productId: string, skus: CreateSkuDto[]) {
     // 获取现有 SKU ID 列表
     const existingSkus = await this.skuRepo.findByProductId(productId);
     const existingSkuIds = existingSkus.map((s) => s.skuId);
 
     // 识别需要保留/更新的 SKU ID
-    const incomingSkuIds = skus.filter((s: any) => s.skuId).map((s: any) => s.skuId);
+    const incomingSkuIds = skus.filter((s) => s.skuId).map((s) => s.skuId!);
 
     // 识别需要删除的 SKU ID
     const skusToDelete = existingSkuIds.filter((id) => !incomingSkuIds.includes(id));

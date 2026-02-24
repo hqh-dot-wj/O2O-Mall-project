@@ -10,6 +10,7 @@ import { ReferralCodeRepository } from 'src/module/admin/member/referral-code.re
 import { StorePlayConfigRepository } from '../config/config.repository';
 import { OrderRepository } from 'src/module/client/order/order.repository';
 import { PlayStrategy } from './play-strategy.decorator';
+import { StrategyParams, ConfigDto, PlayRules } from 'src/common/types';
 
 /**
  * 会员升级营销策略插件
@@ -41,15 +42,15 @@ export class MemberUpgradeService implements IMarketingStrategy {
   /**
    * 准入校验: 只允许低等级用户购买
    */
-  async validateJoin(config: StorePlayConfig, memberId: string, params?: any): Promise<void> {
+  async validateJoin(config: StorePlayConfig, memberId: string, params?: StrategyParams): Promise<void> {
     const member = await this.memberRepo.findById(memberId);
 
     if (!member) {
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, '会员不存在');
     }
 
-    const rules = config.rules as any;
-    const targetLevel = rules?.targetLevel || 1;
+    const rules = config.rules as PlayRules;
+    const targetLevel = (rules.targetLevel as number) || 1;
 
     if (member.levelId >= targetLevel) {
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, '您已是该等级或更高等级，无需购买');
@@ -59,9 +60,9 @@ export class MemberUpgradeService implements IMarketingStrategy {
   /**
    * 价格计算: 从 rules.price 获取
    */
-  async calculatePrice(config: StorePlayConfig, params?: any): Promise<Decimal> {
-    const rules = config.rules as any;
-    return new Decimal(rules?.price || 0);
+  async calculatePrice(config: StorePlayConfig, params?: StrategyParams): Promise<Decimal> {
+    const rules = config.rules as PlayRules;
+    return new Decimal((rules.price as number) || 0);
   }
 
   /**
@@ -76,9 +77,9 @@ export class MemberUpgradeService implements IMarketingStrategy {
       return;
     }
 
-    const rules = config.rules as any;
-    const targetLevel = rules?.targetLevel || 1;
-    const autoApprove = rules?.autoApprove !== false; // 默认自动通过
+    const rules = config.rules as PlayRules;
+    const targetLevel = (rules.targetLevel as number) || 1;
+    const autoApprove = (rules.autoApprove as boolean) !== false; // 默认自动通过
 
     // 2. 通过 orderSn 获取订单信息
     let tenantId = config.tenantId;
@@ -160,7 +161,7 @@ export class MemberUpgradeService implements IMarketingStrategy {
   /**
    * 配置校验
    */
-  async validateConfig(dto: any): Promise<void> {
+  async validateConfig(dto: ConfigDto): Promise<void> {
     const rules = dto.rules;
     BusinessException.throwIf(!rules, '规则配置不能为空');
 
@@ -181,12 +182,13 @@ export class MemberUpgradeService implements IMarketingStrategy {
   /**
    * 获取前端展示数据
    */
-  async getDisplayData(config: StorePlayConfig): Promise<any> {
-    const rules = config.rules as any;
+  async getDisplayData(config: StorePlayConfig): Promise<Record<string, unknown>> {
+    const rules = config.rules as PlayRules;
+    const targetLevel = (rules.targetLevel as number) || 1;
     return {
-      price: rules?.price || 0,
-      targetLevel: rules?.targetLevel || 1,
-      targetLevelName: rules?.targetLevel === 2 ? '合伙人' : '会员', // 简单示例，实际可能需要查询等级名称
+      price: (rules.price as number) || 0,
+      targetLevel,
+      targetLevelName: targetLevel === 2 ? '合伙人' : '会员', // 简单示例，实际可能需要查询等级名称
     };
   }
 }

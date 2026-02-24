@@ -45,7 +45,7 @@ export class PlayStrategyFactory implements OnModuleInit {
    * @param strategyClass 策略类
    * @private
    */
-  private register(strategyClass: any) {
+  private register(strategyClass: new (...args: unknown[]) => IMarketingStrategy) {
     const instance = this.moduleRef.get(strategyClass, { strict: false });
     if (instance && instance.code) {
       this.strategies.set(instance.code, instance);

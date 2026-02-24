@@ -14,5 +14,15 @@ export * from './repository.types';
 
 // Finance 相关类型
 export * from './finance.types';
+
+// Store 相关类型
+export * from './store.types';
+
+// PMS 相关类型
+export * from './pms.types';
+
+// Marketing 相关类型
+export * from './marketing.types';
+
 // 测试辅助类型
 export * from './test-helpers.types';

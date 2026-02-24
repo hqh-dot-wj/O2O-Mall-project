@@ -1795,6 +1795,9 @@ model FinCommission {
   orderId  String @map("order_id")
   tenantId String @map("tenant_id")
 
+  // [新增] 关联订单明细ID，支持部分退款按商品回收佣金
+  orderItemId Int? @map("order_item_id")
+
   beneficiaryId String  @map("beneficiary_id") // 受益人
   level         Int // 1=一级(直推), 2=二级(间推)
   amount        Decimal @db.Decimal(10, 2)
@@ -1827,7 +1830,25 @@ model FinCommission {
   @@index([orderId])
   @@index([beneficiaryId, status])
   @@index([tenantId, status, planSettleTime]) // 定时任务索引
+  @@index([orderItemId]) // 支持按商品查询
   @@map("fin_commission")
+}
+
+/// 用户每日配额表 (用于跨店限额并发控制)
+/// 说明: 使用专门的计数器表，避免 SELECT SUM FOR UPDATE 的首笔并发漏洞
+model FinUserDailyQuota {
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  beneficiaryId String   @map("beneficiary_id")
+  quotaDate     DateTime @map("quota_date") @db.Date
+  usedAmount    Decimal  @default(0) @map("used_amount") @db.Decimal(10, 2)
+  limitAmount   Decimal  @map("limit_amount") @db.Decimal(10, 2)
+  createTime    DateTime @default(now()) @map("create_time")
+  updateTime    DateTime @updatedAt @map("update_time")
+
+  @@unique([tenantId, beneficiaryId, quotaDate])
+  @@index([tenantId, beneficiaryId, quotaDate])
+  @@map("fin_user_daily_quota")
 }
 
 /// 提现记录表

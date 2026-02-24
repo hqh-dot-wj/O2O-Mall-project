@@ -57,7 +57,8 @@ export class AddressService {
 
     if (!address) {
       // 如果没有默认地址，返回第一个
-      const first = await this.addressRepo.findOne({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const first = await (this.addressRepo as any).findOne({
         where: { memberId },
         orderBy: { createTime: 'desc' },
       });
@@ -150,7 +151,8 @@ export class AddressService {
 
     // 如果删除的是默认地址，自动设置另一个为默认
     if (address.isDefault) {
-      const first = await this.addressRepo.findOne({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const first = await (this.addressRepo as any).findOne({
         where: { memberId },
         orderBy: { createTime: 'desc' },
       });

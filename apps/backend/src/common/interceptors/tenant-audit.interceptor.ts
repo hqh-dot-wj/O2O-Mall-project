@@ -3,6 +3,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { TenantContext } from '../tenant/tenant.context';
 import { ClsService } from 'nestjs-cls';
+import { TenantAuditService } from 'src/module/admin/system/tenant-audit/tenant-audit.service';
 
 /**
  * 租户审计拦截器
@@ -13,7 +14,10 @@ import { ClsService } from 'nestjs-cls';
 export class TenantAuditInterceptor implements NestInterceptor {
   private readonly logger = new Logger(TenantAuditInterceptor.name);
 
-  constructor(private readonly cls: ClsService) {}
+  constructor(
+    private readonly cls: ClsService,
+    private readonly tenantAuditService: TenantAuditService,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
@@ -24,6 +28,8 @@ export class TenantAuditInterceptor implements NestInterceptor {
 
     // 存储到 CLS,供 Repository 使用
     this.cls.set('AUDIT_DATA', auditData);
+    // 注册审计服务到 CLS
+    this.cls.set('AUDIT_SERVICE', this.tenantAuditService);
 
     return next.handle().pipe(
       tap(() => {

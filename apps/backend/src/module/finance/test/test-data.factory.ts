@@ -9,7 +9,7 @@ export class TestDataFactory {
   /**
    * 生成测试订单
    */
-  static createOrder(overrides?: Partial<any>) {
+  static createOrder(overrides?: Record<string, unknown>) {
     return {
       id: 'order-' + Date.now(),
       tenantId: 'tenant1',
@@ -36,7 +36,7 @@ export class TestDataFactory {
   /**
    * 生成测试会员
    */
-  static createMember(overrides?: Partial<any>) {
+  static createMember(overrides?: Record<string, unknown>) {
     return {
       memberId: 'member-' + Date.now(),
       tenantId: 'tenant1',
@@ -55,7 +55,7 @@ export class TestDataFactory {
   /**
    * 生成 C1 会员 (一级分销商)
    */
-  static createC1Member(overrides?: Partial<any>) {
+  static createC1Member(overrides?: Record<string, unknown>) {
     return this.createMember({
       levelId: 1,
       parentId: 'member-c2',
@@ -66,7 +66,7 @@ export class TestDataFactory {
   /**
    * 生成 C2 会员 (二级分销商)
    */
-  static createC2Member(overrides?: Partial<any>) {
+  static createC2Member(overrides?: Record<string, unknown>) {
     return this.createMember({
       levelId: 2,
       parentId: null as string | null,
@@ -77,7 +77,7 @@ export class TestDataFactory {
   /**
    * 生成分销配置
    */
-  static createDistConfig(overrides?: Partial<any>) {
+  static createDistConfig(overrides?: Record<string, unknown>) {
     return {
       tenantId: 'tenant1',
       level1Rate: new Decimal(0.1), // 10%
@@ -93,7 +93,7 @@ export class TestDataFactory {
   /**
    * 生成跨店分销配置
    */
-  static createCrossTenantDistConfig(overrides?: Partial<any>) {
+  static createCrossTenantDistConfig(overrides?: Record<string, unknown>) {
     return this.createDistConfig({
       enableCrossTenant: true,
       crossTenantRate: new Decimal(0.5),
@@ -105,7 +105,7 @@ export class TestDataFactory {
   /**
    * 生成 SKU 配置
    */
-  static createTenantSku(overrides?: Partial<any>) {
+  static createTenantSku(overrides?: Record<string, unknown>) {
     return {
       id: 'sku-' + Date.now(),
       tenantId: 'tenant1',
@@ -125,7 +125,7 @@ export class TestDataFactory {
   /**
    * 生成佣金记录
    */
-  static createCommission(overrides?: Partial<any>) {
+  static createCommission(overrides?: Record<string, unknown>) {
     return {
       id: BigInt(Date.now()),
       orderId: 'order1',
@@ -147,7 +147,7 @@ export class TestDataFactory {
   /**
    * 生成 L1 佣金记录
    */
-  static createL1Commission(overrides?: Partial<any>) {
+  static createL1Commission(overrides?: Record<string, unknown>) {
     return this.createCommission({
       level: 1,
       amount: new Decimal(10),
@@ -158,7 +158,7 @@ export class TestDataFactory {
   /**
    * 生成 L2 佣金记录
    */
-  static createL2Commission(overrides?: Partial<any>) {
+  static createL2Commission(overrides?: Record<string, unknown>) {
     return this.createCommission({
       level: 2,
       amount: new Decimal(5),
@@ -169,7 +169,7 @@ export class TestDataFactory {
   /**
    * 生成已结算佣金记录
    */
-  static createSettledCommission(overrides?: Partial<any>) {
+  static createSettledCommission(overrides?: Record<string, unknown>) {
     return this.createCommission({
       status: CommissionStatus.SETTLED,
       settleTime: new Date(),
@@ -180,7 +180,7 @@ export class TestDataFactory {
   /**
    * 生成钱包
    */
-  static createWallet(overrides?: Partial<any>) {
+  static createWallet(overrides?: Record<string, unknown>) {
     return {
       id: 'wallet-' + Date.now(),
       memberId: 'member1',
@@ -198,7 +198,7 @@ export class TestDataFactory {
   /**
    * 生成空钱包
    */
-  static createEmptyWallet(overrides?: Partial<any>) {
+  static createEmptyWallet(overrides?: Record<string, unknown>) {
     return this.createWallet({
       balance: new Decimal(0),
       frozen: new Decimal(0),
@@ -210,7 +210,7 @@ export class TestDataFactory {
   /**
    * 生成流水记录
    */
-  static createTransaction(overrides?: Partial<any>) {
+  static createTransaction(overrides?: Record<string, unknown>) {
     return {
       id: BigInt(Date.now()),
       walletId: 'wallet1',
@@ -228,7 +228,7 @@ export class TestDataFactory {
   /**
    * 生成提现记录
    */
-  static createWithdrawal(overrides?: Partial<any>) {
+  static createWithdrawal(overrides?: Record<string, unknown>) {
     return {
       id: 'withdrawal-' + Date.now(),
       tenantId: 'tenant1',
@@ -251,7 +251,7 @@ export class TestDataFactory {
   /**
    * 生成待审核提现记录
    */
-  static createPendingWithdrawal(overrides?: Partial<any>) {
+  static createPendingWithdrawal(overrides?: Record<string, unknown>) {
     return this.createWithdrawal({
       status: WithdrawalStatus.PENDING,
       ...overrides,
@@ -261,7 +261,7 @@ export class TestDataFactory {
   /**
    * 生成已通过提现记录
    */
-  static createApprovedWithdrawal(overrides?: Partial<any>) {
+  static createApprovedWithdrawal(overrides?: Record<string, unknown>) {
     return this.createWithdrawal({
       status: WithdrawalStatus.APPROVED,
       auditTime: new Date(),
@@ -274,7 +274,7 @@ export class TestDataFactory {
   /**
    * 生成已驳回提现记录
    */
-  static createRejectedWithdrawal(overrides?: Partial<any>) {
+  static createRejectedWithdrawal(overrides?: Record<string, unknown>) {
     return this.createWithdrawal({
       status: WithdrawalStatus.REJECTED,
       auditTime: new Date(),
@@ -287,7 +287,7 @@ export class TestDataFactory {
   /**
    * 生成黑名单记录
    */
-  static createBlacklist(overrides?: Partial<any>) {
+  static createBlacklist(overrides?: Record<string, unknown>) {
     return {
       tenantId: 'tenant1',
       userId: 'member1',

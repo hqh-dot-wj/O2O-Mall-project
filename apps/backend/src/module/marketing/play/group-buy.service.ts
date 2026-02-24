@@ -11,6 +11,7 @@ import { GroupBuyJoinDto, GroupBuyRulesDto } from './dto/group-buy.dto';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PlayStrategy } from './play-strategy.decorator';
+import { StrategyParams, ConfigDto, PlayRules } from 'src/common/types';
 
 /**
  * 拼团玩法核心逻辑
@@ -30,7 +31,7 @@ export class GroupBuyService implements IMarketingStrategy {
   /**
    * 1.1 配置校验
    */
-  async validateConfig(dto: any): Promise<void> {
+  async validateConfig(dto: ConfigDto): Promise<void> {
     const rules = dto.rules;
     BusinessException.throwIf(!rules, '规则配置不能为空');
 
@@ -52,7 +53,7 @@ export class GroupBuyService implements IMarketingStrategy {
   /**
    * 1. 准入校验
    */
-  async validateJoin(config: StorePlayConfig, memberId: string, params: any = {}): Promise<void> {
+  async validateJoin(config: StorePlayConfig, memberId: string, params: StrategyParams = {}): Promise<void> {
     const joinDto = plainToInstance(GroupBuyJoinDto, params);
     // 可选：严格校验
     // const errors = await validate(joinDto);
@@ -65,8 +66,8 @@ export class GroupBuyService implements IMarketingStrategy {
       const parentInstance = await this.instanceService.findOne(groupId);
       BusinessException.throwIfNull(parentInstance?.data, '拼团不存在');
 
-      const parentData = parentInstance.data.instanceData as any;
-      if (parentData.currentCount >= parentData.targetCount) {
+      const parentData = parentInstance.data.instanceData as Record<string, unknown>;
+      if ((parentData.currentCount as number) >= (parentData.targetCount as number)) {
         throw new BusinessException(ResponseCode.BUSINESS_ERROR, '该团已满员');
       }
     }
@@ -78,14 +79,14 @@ export class GroupBuyService implements IMarketingStrategy {
   /**
    * 2. 计算价格
    */
-  async calculatePrice(config: StorePlayConfig, params: any): Promise<Decimal> {
-    const rules = config.rules as any;
-    let price = new Decimal(rules.price || 0);
+  async calculatePrice(config: StorePlayConfig, params: StrategyParams): Promise<Decimal> {
+    const rules = config.rules as PlayRules;
+    let price = new Decimal((rules.price as number) || 0);
 
     // 1. 优先使用 SKU 维度的配置
     if (params.skuId && Array.isArray(rules.skus)) {
-      const skuRule = rules.skus.find((s: any) => s.skuId === params.skuId);
-      if (skuRule && skuRule.price) {
+      const skuRule = (rules.skus as Array<{ skuId: string; price?: number }>).find((s) => s.skuId === params.skuId);
+      if (skuRule?.price) {
         price = new Decimal(skuRule.price);
       }
     }
@@ -111,6 +112,20 @@ export class GroupBuyService implements IMarketingStrategy {
   /**
    * 5. 前端展示增强数据
    */
+  async getDisplayData(config: StorePlayConfig): Promise<Record<string, unknown>> {
+    const rules = config.rules as PlayRules;
+    return {
+      price: (rules.price as number) || 0,
+      minCount: (rules.minCount as number) || 2,
+      maxCount: rules.maxCount as number | undefined,
+      validDays: (rules.validDays as number) || 24,
+      skus: (rules.skus as unknown[]) || [],
+    };
+  }
+
+  /**
+   * 5. 前端展示增强数据
+   */
   async getDisplayData(config: StorePlayConfig): Promise<any> {
     const rules = config.rules as any;
     return {
@@ -125,7 +140,7 @@ export class GroupBuyService implements IMarketingStrategy {
   /**
    * @deprecated Legacy method, kept for reference or internal use
    */
-  async joinGroup(memberId: string, configId: string, groupId?: string): Promise<any> {
+  async joinGroup(memberId: string, configId: string, groupId?: string): Promise<Record<string, unknown> | null> {
     // ... (Legacy logic can be removed or adapted if needed)
     // 目前 joinGroup 的逻辑应该上浮到 PlayInstanceService.create 中调用 validateJoin
     return null;
@@ -135,10 +150,10 @@ export class GroupBuyService implements IMarketingStrategy {
    * 处理拼团进度更新 (内部逻辑)
    */
   private async handleGroupUpdate(instance: PlayInstance) {
-    const data = instance.instanceData as any;
+    const data = instance.instanceData as Record<string, unknown>;
 
     // 1. 确定团长ID
-    const leaderId = data.isLeader ? instance.id : data.parentId;
+    const leaderId = (data.isLeader as boolean) ? instance.id : (data.parentId as string);
     if (!leaderId) return;
 
     // 2. 获取团长实例
@@ -147,8 +162,8 @@ export class GroupBuyService implements IMarketingStrategy {
     if (!leader) return;
 
     // 3. 增加成团人数
-    const leaderData = leader.instanceData as any;
-    const newCount = leaderData.currentCount + 1;
+    const leaderData = leader.instanceData as Record<string, unknown>;
+    const newCount = (leaderData.currentCount as number) + 1;
 
     // 更新团长数据
     await this.repo.update(leaderId, {
@@ -156,7 +171,7 @@ export class GroupBuyService implements IMarketingStrategy {
     });
 
     // 4. 判断是否成团
-    if (newCount >= leaderData.targetCount) {
+    if (newCount >= (leaderData.targetCount as number)) {
       await this.finalizeGroup(leaderId);
     } else {
       // 尚未成团，状态保持 (或如果是成员，状态流转为 ACTIVE)
@@ -164,7 +179,7 @@ export class GroupBuyService implements IMarketingStrategy {
         await this.instanceService.transitStatus(instance.id, PlayInstanceStatus.ACTIVE);
       }
       // 如果是团长自己，也更新为 ACTIVE
-      if (data.isLeader && leader.status !== PlayInstanceStatus.ACTIVE) {
+      if ((data.isLeader as boolean) && leader.status !== PlayInstanceStatus.ACTIVE) {
         await this.instanceService.transitStatus(leaderId, PlayInstanceStatus.ACTIVE);
       }
     }

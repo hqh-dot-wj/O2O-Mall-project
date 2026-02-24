@@ -63,7 +63,7 @@ export interface PlayMetadata {
    * - 对应的规则 DTO 类
    * - 用于规则校验和表单生成
    */
-  ruleSchema: any;
+  ruleSchema: new (...args: unknown[]) => unknown;
 
   /**
    * 默认库存模式

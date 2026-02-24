@@ -91,17 +91,27 @@ export type UpdateInput<T> = Partial<Omit<T, 'id' | 'createTime'>>;
  * 
  * @description
  * 定义 Prisma 模型 Delegate 的基本方法签名
- * 使用具体的函数签名而非 Function 类型
+ * 使用 any 参数和返回类型以兼容实际的 Prisma delegate 签名
  */
 export type PrismaDelegate = {
-  findUnique: (args: Record<string, unknown>) => Promise<unknown>;
-  findFirst: (args?: Record<string, unknown>) => Promise<unknown>;
-  findMany: (args?: Record<string, unknown>) => Promise<unknown[]>;
-  create: (args: Record<string, unknown>) => Promise<unknown>;
-  update: (args: Record<string, unknown>) => Promise<unknown>;
-  delete: (args: Record<string, unknown>) => Promise<unknown>;
-  count: (args?: Record<string, unknown>) => Promise<number>;
-  createMany?: (args: Record<string, unknown>) => Promise<{ count: number }>;
-  updateMany?: (args: Record<string, unknown>) => Promise<{ count: number }>;
-  deleteMany?: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  findUnique: (args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  findFirst?: (args?: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  findMany: (args?: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  create: (args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  update: (args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete: (args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  count: (args?: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createMany?: (args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateMany?: (args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  deleteMany?: (args: any) => any;
 };

@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { UpdateDistConfigDto } from './dto/update-dist-config.dto';
 import { DistConfigVo, DistConfigLogVo } from './vo/dist-config.vo';
 import { BusinessConstants } from 'src/common/constants/business.constants';
+import { DistributionLogItem } from 'src/common/types';
 
 @Injectable()
 export class DistributionService {
@@ -41,11 +43,11 @@ export class DistributionService {
       level1Rate: Number(config.level1Rate) * 100,
       level2Rate: Number(config.level2Rate) * 100,
       enableLV0: config.enableLV0,
-      enableCrossTenant: (config as any).enableCrossTenant ?? false,
-      crossTenantRate: Number((config as any).crossTenantRate ?? 1) * 100,
-      crossMaxDaily: Number((config as any).crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
+      enableCrossTenant: config.enableCrossTenant ?? false,
+      crossTenantRate: Number(config.crossTenantRate ?? 1) * 100,
+      crossMaxDaily: Number(config.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
       commissionBaseType: config.commissionBaseType ?? 'ORIGINAL_PRICE',
-      maxCommissionRate: Number((config as any).maxCommissionRate ?? 0.5) * 100,
+      maxCommissionRate: Number(config.maxCommissionRate ?? 0.5) * 100,
       createTime: config.createTime.toISOString(),
     });
   }
@@ -86,22 +88,22 @@ export class DistributionService {
 
     await this.prisma.sysDistConfig.upsert({
       where: { tenantId },
-      update: updatePayload as any,
-      create: createPayload as any,
+      update: updatePayload as Prisma.SysDistConfigUpdateInput,
+      create: createPayload as Prisma.SysDistConfigCreateInput,
     });
 
     // 记录变更日志（审计）
     await this.prisma.sysDistConfigLog.create({
       data: {
         tenantId,
-        level1Rate,
-        level2Rate,
+        level1Rate: new Prisma.Decimal(level1Rate),
+        level2Rate: new Prisma.Decimal(level2Rate),
         enableLV0: dto.enableLV0,
         enableCrossTenant: dto.enableCrossTenant ?? false,
-        crossTenantRate,
-        crossMaxDaily: dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT,
+        crossTenantRate: new Prisma.Decimal(crossTenantRate),
+        crossMaxDaily: new Prisma.Decimal(dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
         operator,
-      } as any,
+      },
     });
 
     return Result.ok(true, '更新成功');
@@ -119,9 +121,9 @@ export class DistributionService {
       take: 20,
     });
 
-    const result = logs.map((log: any) => ({
-      id: log.id,
-      configId: log.id,
+    const result = logs.map((log: DistributionLogItem): DistConfigLogVo => ({
+      id: Number(log.id),
+      configId: Number(log.id),
       level1Rate: Number(log.level1Rate) * 100,
       level2Rate: Number(log.level2Rate) * 100,
       enableLV0: log.enableLV0,
@@ -168,9 +170,9 @@ export class DistributionService {
       level1Rate: distConfig?.level1Rate
         ? Number(distConfig.level1Rate)
         : BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE,
-      enableCrossTenant: (distConfig as any)?.enableCrossTenant ?? false,
-      crossTenantRate: (distConfig as any)?.crossTenantRate
-        ? Number((distConfig as any).crossTenantRate)
+      enableCrossTenant: distConfig?.enableCrossTenant ?? false,
+      crossTenantRate: distConfig?.crossTenantRate
+        ? Number(distConfig.crossTenantRate)
         : BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE,
     };
 

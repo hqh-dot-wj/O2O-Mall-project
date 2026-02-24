@@ -15,6 +15,7 @@ import { TenantMiddleware, TenantGuard, TenantModule } from './common/tenant';
 import { CryptoModule, DecryptInterceptor } from './common/crypto';
 import { LoggerModule } from './common/logger';
 import { ClsModule } from './common/cls';
+import { AuditModule } from './common/audit';
 import { TransactionalInterceptor } from './common/interceptors/transactional.interceptor';
 import { IdempotentGuard } from './common/guards/idempotent.guard';
 
@@ -54,6 +55,8 @@ import { MarketingModule } from './module/marketing/marketing.module';
     LoggerModule,
     // CLS 上下文模块 (Request ID)
     ClsModule,
+    // 审计模块 (租户访问审计)
+    AuditModule,
     // 数据库改为 Prisma + PostgreSQL
     PrismaModule,
     // 多租户模块

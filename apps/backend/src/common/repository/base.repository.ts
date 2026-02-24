@@ -84,8 +84,9 @@ export abstract class BaseRepository<
   /**
    * 根据条件查询单条记录
    */
+   
   async findOne(
-    where: Partial<T>,
+    where: any,
     options?: { include?: Record<string, boolean | object>; select?: Record<string, boolean> },
   ): Promise<T | null> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,7 +149,8 @@ export abstract class BaseRepository<
   /**
    * 创建记录
    */
-  async create(data: CreateInput, options?: { include?: any; select?: any }): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async create(data: any, options?: { include?: any; select?: any }): Promise<T> {
     return this.delegate.create({
       data,
       ...options,
@@ -158,7 +160,8 @@ export abstract class BaseRepository<
   /**
    * 批量创建
    */
-  async createMany(data: CreateInput[]): Promise<{ count: number }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async createMany(data: any[]): Promise<{ count: number }> {
     if (!this.delegate.createMany) {
       throw new Error('createMany not supported for this model');
     }
@@ -171,9 +174,10 @@ export abstract class BaseRepository<
   /**
    * 更新记录
    */
+   
   async update(
     id: number | string | bigint,
-    data: UpdateInput,
+    data: any,
     options?: { include?: Record<string, boolean | object>; select?: Record<string, boolean> },
   ): Promise<T> {
     return this.delegate.update({
@@ -186,7 +190,8 @@ export abstract class BaseRepository<
   /**
    * 根据条件更新
    */
-  async updateMany(where: Partial<T>, data: Partial<T>): Promise<{ count: number }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateMany(where: any, data: any): Promise<{ count: number }> {
     if (!this.delegate.updateMany) {
       throw new Error('updateMany not supported for this model');
     }
@@ -208,7 +213,8 @@ export abstract class BaseRepository<
   /**
    * 批量删除
    */
-  async deleteMany(where: Partial<T>): Promise<{ count: number }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteMany(where: any): Promise<{ count: number }> {
     if (!this.delegate.deleteMany) {
       throw new Error('deleteMany not supported for this model');
     }
@@ -218,23 +224,26 @@ export abstract class BaseRepository<
   /**
    * 根据主键批量删除
    */
+   
   async deleteByIds(ids: (number | string | bigint)[]): Promise<{ count: number }> {
     return this.deleteMany({
       [this.getPrimaryKeyName()]: { in: ids },
-    } as Partial<T>);
+    });
   }
 
   /**
    * 统计记录数
    */
-  async count(where?: Partial<T>): Promise<number> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async count(where?: any): Promise<number> {
     return this.delegate.count({ where });
   }
 
   /**
    * 检查是否存在
    */
-  async exists(where: Partial<T>): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async exists(where: any): Promise<boolean> {
     const count = await this.count(where);
     return count > 0;
   }
@@ -249,8 +258,9 @@ export abstract class BaseRepository<
   /**
    * 软删除（设置 delFlag）
    */
+   
   async softDelete(id: number | string | bigint): Promise<T> {
-    return this.update(id, { delFlag: DelFlagEnum.DELETE } as unknown as UpdateInput);
+    return this.update(id, { delFlag: DelFlagEnum.DELETE } as any);
   }
 
   /**
@@ -258,8 +268,8 @@ export abstract class BaseRepository<
    */
   async softDeleteBatch(ids: (number | string | bigint)[]): Promise<number> {
     const result = await this.updateMany(
-      { [this.getPrimaryKeyName()]: { in: ids } } as Partial<T>,
-      { delFlag: DelFlagEnum.DELETE } as unknown as Partial<T>,
+      { [this.getPrimaryKeyName()]: { in: ids } },
+      { delFlag: DelFlagEnum.DELETE },
     );
     return result.count;
   }
@@ -305,7 +315,8 @@ export abstract class BaseRepository<
   /**
    * 合并查询条件，增加租户隔离
    */
-  protected applyTenantFilter(where?: Partial<T> | Record<string, unknown>): Record<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected applyTenantFilter(where?: any): Record<string, unknown> {
     const tenantWhere = this.getTenantWhere();
     
     // 记录审计日志
@@ -320,7 +331,8 @@ export abstract class BaseRepository<
   /**
    * 记录审计日志
    */
-  private recordAuditLog(where: Partial<T> | Record<string, unknown> | undefined, tenantWhere: Record<string, unknown>): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private recordAuditLog(where: any, tenantWhere: Record<string, unknown>): void {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const auditData = this.cls.get('AUDIT_DATA') as any;
@@ -391,15 +403,17 @@ export abstract class SoftDeleteRepository<
   /**
    * 合并默认查询条件
    */
-  protected mergeWhere(where?: Record<string, unknown>): Record<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected mergeWhere(where?: any): Record<string, unknown> {
     return { ...this.getDefaultWhere(), ...where };
   }
 
+   
   async findOne(
-    where: Partial<T>,
+    where: any,
     options?: { include?: Record<string, boolean | object>; select?: Record<string, boolean> },
   ): Promise<T | null> {
-    return super.findOne(this.mergeWhere(where) as Partial<T>, options);
+    return super.findOne(this.mergeWhere(where), options);
   }
 
   async findAll(options?: Omit<QueryOptions, 'pageNum' | 'pageSize'>): Promise<T[]> {
@@ -423,11 +437,13 @@ export abstract class SoftDeleteRepository<
     });
   }
 
-  async count(where?: Partial<T>): Promise<number> {
-    return super.count(this.mergeWhere(where) as Partial<T>);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async count(where?: any): Promise<number> {
+    return super.count(this.mergeWhere(where));
   }
 
-  async exists(where: Partial<T>): Promise<boolean> {
-    return super.exists(this.mergeWhere(where) as Partial<T>);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async exists(where: any): Promise<boolean> {
+    return super.exists(this.mergeWhere(where));
   }
 }

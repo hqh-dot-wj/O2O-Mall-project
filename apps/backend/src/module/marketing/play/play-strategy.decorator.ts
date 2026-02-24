@@ -66,7 +66,8 @@ export const PLAY_METADATA_KEY = 'play:metadata';
  * }
  */
 export function PlayStrategy(code: string) {
-  return function <T extends { new (...args: any[]): {} }>(target: T) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function <T extends { new (...args: any[]): object }>(target: T) {
     // 验证玩法代码是否已在注册表中
     const metadata = PLAY_REGISTRY[code];
     if (!metadata) {
@@ -101,7 +102,7 @@ export function PlayStrategy(code: string) {
  * const code = getPlayCode(GroupBuyService);
  * console.log(code); // 'GROUP_BUY'
  */
-export function getPlayCode(target: any): string | undefined {
+export function getPlayCode(target: object): string | undefined {
   return Reflect.getMetadata(PLAY_CODE_METADATA_KEY, target);
 }
 
@@ -120,7 +121,7 @@ export function getPlayCode(target: any): string | undefined {
  * console.log(metadata.name); // "普通拼团"
  * console.log(metadata.hasInstance); // true
  */
-export function getPlayMetadata(target: any): PlayMetadata | undefined {
+export function getPlayMetadata(target: object): PlayMetadata | undefined {
   return Reflect.getMetadata(PLAY_METADATA_KEY, target);
 }
 
@@ -139,7 +140,7 @@ export function getPlayMetadata(target: any): PlayMetadata | undefined {
  *   console.log('这是一个玩法策略类');
  * }
  */
-export function isPlayStrategy(target: any): boolean {
+export function isPlayStrategy(target: object): boolean {
   return Reflect.hasMetadata(PLAY_CODE_METADATA_KEY, target);
 }
 

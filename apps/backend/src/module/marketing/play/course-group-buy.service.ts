@@ -188,8 +188,8 @@ export class CourseGroupBuyService implements IMarketingStrategy {
       scheduleText = `上课时间：${startDate} ~ ${endDate}`;
     }
 
-    let addressText = rules.classAddress ? `上课地址：${rules.classAddress}` : '';
-    let deadlineText = rules.joinDeadline 
+    const addressText = rules.classAddress ? `上课地址：${rules.classAddress}` : '';
+    const deadlineText = rules.joinDeadline 
       ? `报名截止：${new Date(rules.joinDeadline).toLocaleString('zh-CN')}` 
       : '长期有效';
 
@@ -339,7 +339,7 @@ export class CourseGroupBuyService implements IMarketingStrategy {
 
     // 生成排课记录
     const schedules = [];
-    let currentDate = new Date(startTime);
+    const currentDate = new Date(startTime);
     let remainingLessons = totalLessons;
 
     while (remainingLessons > 0) {

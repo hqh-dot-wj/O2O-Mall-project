@@ -83,7 +83,7 @@ export class RedisService {
    * @param val key 对应的 val
    * @param ttl 可选，过期时间，单位 毫秒
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   async set(
     key: string,
     val: string | number | Buffer | Record<string, any> | any[],

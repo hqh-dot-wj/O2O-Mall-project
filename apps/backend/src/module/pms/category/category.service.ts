@@ -8,6 +8,7 @@ import { CacheEnum } from 'src/common/enum/cache.enum';
 import { PaginationHelper } from 'src/common/utils/pagination.helper';
 import { CategoryRepository } from './category.repository';
 import { CreateCategoryDto, UpdateCategoryDto, ListCategoryDto } from './dto';
+import { CategoryTreeNode } from 'src/common/types';
 
 /**
  * 分类服务层
@@ -155,12 +156,12 @@ export class CategoryService {
    * @param parentId - 父级ID，null表示查找顶级分类
    * @returns 树形结构的分类数组
    */
-  private buildTree(items: any[], parentId: number | null = null) {
-    const tree: any[] = [];
+  private buildTree(items: CategoryTreeNode[], parentId: number | null = null): CategoryTreeNode[] {
+    const tree: CategoryTreeNode[] = [];
     for (const item of items) {
       if (item.parentId === parentId) {
         // 递归查找子分类
-        const children = this.buildTree(items, item.catId);
+        const children = this.buildTree(items, item.catId as number);
         if (children.length) {
           item.children = children;
         } else {

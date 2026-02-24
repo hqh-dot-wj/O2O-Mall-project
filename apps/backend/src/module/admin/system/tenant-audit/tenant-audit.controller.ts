@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Api } from 'src/common/decorators/api.decorator';
-import { RequirePermission } from 'src/common/decorators/require-permission.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Result } from 'src/common/response/result';
 import { ListTenantAuditDto } from './dto/list-tenant-audit.dto';
 import { TenantAuditService } from './tenant-audit.service';

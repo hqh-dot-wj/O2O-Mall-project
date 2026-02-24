@@ -12,6 +12,7 @@ import {
 import { Type } from 'class-transformer';
 import { PublishStatus } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
+import { SpecDefinition, SpecValues } from 'src/common/types';
 
 export enum ProductType {
   REAL = 'REAL',
@@ -32,7 +33,7 @@ export class CreateSkuDto {
 
   @ApiProperty({ description: '规格值', example: { Color: 'Red' } })
   @IsOptional()
-  specValues: Record<string, any>;
+  specValues: SpecValues;
 
   @ApiProperty({ description: 'SKU图片', required: false })
   @IsString()
@@ -131,7 +132,7 @@ export class CreateProductDto {
 
   @ApiProperty({ description: '规格定义', isArray: true })
   @IsArray()
-  specDef: any[];
+  specDef: SpecDefinition[];
 
   @ApiProperty({ description: 'SKU列表', type: [CreateSkuDto] })
   @IsArray()

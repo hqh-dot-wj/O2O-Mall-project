@@ -12,6 +12,14 @@ import { WithdrawalRepository } from './withdrawal/withdrawal.repository';
 import { CommissionRepository } from './commission/commission.repository';
 import { WalletRepository } from './wallet/wallet.repository';
 import { TransactionRepository } from './wallet/transaction.repository';
+// Commission sub-services
+import { DistConfigService } from './commission/services/dist-config.service';
+import { CommissionValidatorService } from './commission/services/commission-validator.service';
+import { BaseCalculatorService } from './commission/services/base-calculator.service';
+import { L1CalculatorService } from './commission/services/l1-calculator.service';
+import { L2CalculatorService } from './commission/services/l2-calculator.service';
+import { CommissionCalculatorService } from './commission/services/commission-calculator.service';
+import { CommissionSettlerService } from './commission/services/commission-settler.service';
 
 @Module({
   imports: [
@@ -28,6 +36,14 @@ import { TransactionRepository } from './wallet/transaction.repository';
     WithdrawalAuditService,
     WithdrawalPaymentService,
     SettlementScheduler,
+    // Commission sub-services
+    DistConfigService,
+    CommissionValidatorService,
+    BaseCalculatorService,
+    L1CalculatorService,
+    L2CalculatorService,
+    CommissionCalculatorService,
+    CommissionSettlerService,
     // Repositories
     WithdrawalRepository,
     CommissionRepository,

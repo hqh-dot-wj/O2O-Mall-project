@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Response } from 'express';
 import { WithdrawalService } from 'src/module/finance/withdrawal/withdrawal.service';
 import { ListCommissionDto, ListWithdrawalDto, AuditWithdrawalDto, ListLedgerDto } from './dto/store-finance.dto';
 import { ListWithdrawalDto as FinListWithdrawalDto } from 'src/module/finance/withdrawal/dto/list-withdrawal.dto';
@@ -91,7 +92,7 @@ export class StoreFinanceService {
   /**
    * 导出流水数据
    */
-  async exportLedger(res: any, query: ListLedgerDto) {
+  async exportLedger(res: Response, query: ListLedgerDto) {
     return this.ledgerService.exportLedger(res, query);
   }
 }

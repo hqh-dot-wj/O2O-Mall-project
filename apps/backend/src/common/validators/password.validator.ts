@@ -46,7 +46,7 @@ export class PasswordValidator {
     if (cfg.requireUppercase && !/[A-Z]/.test(password)) errors.push('密码必须包含大写字母');
     if (cfg.requireLowercase && !/[a-z]/.test(password)) errors.push('密码必须包含小写字母');
     if (cfg.requireNumber && !/\d/.test(password)) errors.push('密码必须包含数字');
-    if (cfg.requireSpecial && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/\?]/.test(password))
+    if (cfg.requireSpecial && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password))
       errors.push('密码必须包含特殊字符');
 
     for (const p of cfg.forbiddenPatterns) {
@@ -66,7 +66,7 @@ export class PasswordValidator {
     if (password.length >= 12) score++;
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
     if (/\d/.test(password)) score++;
-    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/\?]/.test(password)) score++;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) score++;
     return Math.min(score, 4);
   }
 }
@@ -87,7 +87,7 @@ export class IsStrongPasswordConstraint implements ValidatorConstraintInterface 
 }
 
 export function IsStrongPassword(config?: PasswordValidationConfig, validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

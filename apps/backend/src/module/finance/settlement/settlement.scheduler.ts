@@ -85,7 +85,7 @@ export class SettlementScheduler {
   /**
    * 结算单条佣金
    */
-  private async settleOne(commission: any) {
+  private async settleOne(commission: { id: bigint; beneficiaryId: string; tenantId: string; amount: Decimal; orderId: string }) {
     await this.prisma.$transaction(async (tx) => {
       // 1. 更新佣金状态
       await tx.finCommission.update({

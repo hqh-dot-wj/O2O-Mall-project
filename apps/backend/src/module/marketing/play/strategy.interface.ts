@@ -1,5 +1,6 @@
 import { PlayInstance, StorePlayConfig } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { StrategyParams, ConfigDto } from 'src/common/types';
 
 /**
  * 营销玩法策略标准接口 (IMarketingStrategy)
@@ -24,7 +25,7 @@ export interface IMarketingStrategy {
    * @param params 附加参数 (可选)
    * @throws BusinessException 如果校验不通过，直接抛出业务异常中断流程
    */
-  validateJoin(config: StorePlayConfig, memberId: string, params?: any): Promise<void>;
+  validateJoin(config: StorePlayConfig, memberId: string, params?: StrategyParams): Promise<void>;
 
   /**
    * 1.1 配置校验逻辑 (Config Validation)
@@ -32,7 +33,7 @@ export interface IMarketingStrategy {
    * @param dto 创建参数
    * @throws BusinessException 如果校验不通过
    */
-  validateConfig?(dto: any): Promise<void>;
+  validateConfig?(dto: ConfigDto): Promise<void>;
 
   /**
    * 2. 动态价格计算 (Price Calculation)
@@ -41,7 +42,7 @@ export interface IMarketingStrategy {
    * @param params 影响价格的动态参数
    * @returns 返回精确的 Decimal 类型金额
    */
-  calculatePrice(config: StorePlayConfig, params?: any): Promise<Decimal>;
+  calculatePrice(config: StorePlayConfig, params?: StrategyParams): Promise<Decimal>;
 
   /**
    * 3. 支付成功后置逻辑 (Payment Callback Hook)
@@ -64,5 +65,5 @@ export interface IMarketingStrategy {
    * @description 这是一个可选方法。用于将复杂的 JSON 配置格式化为 C 端前端易于渲染的组合对象或文案。
    * @param config 配置详情
    */
-  getDisplayData?(config: StorePlayConfig): Promise<any>;
+  getDisplayData?(config: StorePlayConfig): Promise<Record<string, unknown>>;
 }

@@ -41,7 +41,7 @@ export class WithdrawalAuditService {
       await this.completeApproval(withdrawal, paymentNo, auditBy);
 
       return Result.ok({ paymentNo }, '审核通过并打款成功');
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.handlePaymentFailure(withdrawal.id, getErrorMessage(error));
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, `打款失败: ${getErrorMessage(error)}`);
     }

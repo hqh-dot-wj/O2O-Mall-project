@@ -1,6 +1,481 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/admin/system/tenant-audit/list": {
+      "get": {
+        "operationId": "TenantAuditController_findPage",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "orderByColumn",
+            "required": false,
+            "in": "query",
+            "description": "排序字段",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isAsc",
+            "required": false,
+            "in": "query",
+            "description": "排序方向",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            }
+          },
+          {
+            "name": "params",
+            "required": false,
+            "in": "query",
+            "description": "时间范围",
+            "schema": {
+              "$ref": "#/components/schemas/DateRangeDto"
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userName",
+            "required": false,
+            "in": "query",
+            "description": "用户名",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "requestTenantId",
+            "required": false,
+            "in": "query",
+            "description": "请求租户ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "accessTenantId",
+            "required": false,
+            "in": "query",
+            "description": "访问租户ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelName",
+            "required": false,
+            "in": "query",
+            "description": "模型名称",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "operation",
+            "required": false,
+            "in": "query",
+            "description": "操作类型",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isCrossTenant",
+            "required": false,
+            "in": "query",
+            "description": "是否跨租户访问",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "isSuperTenant",
+            "required": false,
+            "in": "query",
+            "description": "是否超级管理员",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "isIgnoreTenant",
+            "required": false,
+            "in": "query",
+            "description": "是否忽略租户",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "startTime",
+            "required": false,
+            "in": "query",
+            "description": "开始时间",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "required": false,
+            "in": "query",
+            "description": "结束时间",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "状态",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/TenantAuditVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "审计日志-列表",
+        "tags": ["租户审计日志"]
+      }
+    },
+    "/api/admin/system/tenant-audit/cross-tenant-stats": {
+      "get": {
+        "operationId": "TenantAuditController_getCrossTenantStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CrossTenantStatsVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "跨租户访问统计",
+        "tags": ["租户审计日志"]
+      }
+    },
+    "/api/admin/system/tenant-audit/anomalies": {
+      "get": {
+        "operationId": "TenantAuditController_analyzeAnomalies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Result"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/AnomalyAccessVo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "请先登录"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "没有操作权限"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 500
+                    },
+                    "msg": {
+                      "type": "string",
+                      "example": "系统异常"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "summary": "异常访问分析",
+        "tags": ["租户审计日志"]
+      }
+    },
     "/api/login": {
       "post": {
         "description": "用户登录接口，需要用户名、密码和验证码",
@@ -39714,6 +40189,197 @@
         },
         "required": ["code", "msg", "data"]
       },
+      "TenantAuditVo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "审计日志ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "用户ID"
+          },
+          "userName": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "userType": {
+            "type": "string",
+            "description": "用户类型"
+          },
+          "requestTenantId": {
+            "type": "string",
+            "description": "请求租户ID"
+          },
+          "accessTenantId": {
+            "type": "string",
+            "description": "访问租户ID"
+          },
+          "action": {
+            "type": "string",
+            "description": "操作"
+          },
+          "modelName": {
+            "type": "string",
+            "description": "模型名称"
+          },
+          "operation": {
+            "type": "string",
+            "description": "操作类型"
+          },
+          "isSuperTenant": {
+            "type": "boolean",
+            "description": "是否超级管理员"
+          },
+          "isIgnoreTenant": {
+            "type": "boolean",
+            "description": "是否忽略租户"
+          },
+          "isCrossTenant": {
+            "type": "boolean",
+            "description": "是否跨租户访问"
+          },
+          "ip": {
+            "type": "string",
+            "description": "IP地址"
+          },
+          "userAgent": {
+            "type": "string",
+            "description": "User Agent"
+          },
+          "requestPath": {
+            "type": "string",
+            "description": "请求路径"
+          },
+          "requestMethod": {
+            "type": "string",
+            "description": "请求方法"
+          },
+          "traceId": {
+            "type": "string",
+            "description": "追踪ID"
+          },
+          "duration": {
+            "type": "number",
+            "description": "耗时(ms)"
+          },
+          "status": {
+            "type": "string",
+            "description": "状态"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "错误信息"
+          },
+          "createTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "userName",
+          "userType",
+          "requestTenantId",
+          "accessTenantId",
+          "action",
+          "modelName",
+          "operation",
+          "isSuperTenant",
+          "isIgnoreTenant",
+          "isCrossTenant",
+          "ip",
+          "userAgent",
+          "requestPath",
+          "requestMethod",
+          "traceId",
+          "duration",
+          "status",
+          "errorMessage",
+          "createTime"
+        ]
+      },
+      "DateRangeDto": {
+        "type": "object",
+        "properties": {
+          "beginTime": {
+            "type": "string",
+            "description": "开始时间",
+            "example": "2024-01-01"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "结束时间",
+            "example": "2024-12-31"
+          }
+        }
+      },
+      "CrossTenantStatsVo": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "number",
+            "description": "总次数"
+          },
+          "todayCount": {
+            "type": "number",
+            "description": "今日次数"
+          },
+          "topUsers": {
+            "description": "访问最多的用户",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "topModels": {
+            "description": "访问最多的模型",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["totalCount", "todayCount", "topUsers", "topModels"]
+      },
+      "AnomalyAccessVo": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "用户ID"
+          },
+          "userName": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "pattern": {
+            "type": "string",
+            "description": "异常模式"
+          },
+          "severity": {
+            "type": "string",
+            "description": "严重程度"
+          },
+          "description": {
+            "type": "string",
+            "description": "描述"
+          },
+          "count": {
+            "type": "number",
+            "description": "发生次数"
+          },
+          "lastOccurrence": {
+            "format": "date-time",
+            "type": "string",
+            "description": "最后发生时间"
+          }
+        },
+        "required": ["userId", "userName", "pattern", "severity", "description", "count", "lastOccurrence"]
+      },
       "LoginVo": {
         "type": "object",
         "properties": {
@@ -40366,21 +41032,6 @@
           }
         },
         "required": ["rows", "total"]
-      },
-      "DateRangeDto": {
-        "type": "object",
-        "properties": {
-          "beginTime": {
-            "type": "string",
-            "description": "开始时间",
-            "example": "2024-01-01"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "结束时间",
-            "example": "2024-12-31"
-          }
-        }
       },
       "UpdateConfigDto": {
         "type": "object",
@@ -46501,7 +47152,14 @@
           },
           "specs": {
             "type": "object",
-            "description": "规格信息"
+            "description": "规格信息",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "颜色": "红色",
+              "尺寸": "XL"
+            }
           }
         },
         "required": ["id", "productName", "skuCode", "stock", "specs"]
@@ -46656,7 +47314,14 @@
           },
           "specValues": {
             "type": "object",
-            "description": "规格值JSON"
+            "description": "规格值JSON",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "颜色": "红色",
+              "尺寸": "XL"
+            }
           },
           "skuImage": {
             "type": "string",
@@ -46817,7 +47482,13 @@
           "specValues": {
             "type": "object",
             "description": "规格值",
-            "additionalProperties": true
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "颜色": "红色",
+              "尺寸": "XL"
+            }
           },
           "costPrice": {
             "type": "number",

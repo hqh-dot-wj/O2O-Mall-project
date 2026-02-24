@@ -43,7 +43,7 @@ export class ProductRepository extends BaseRepository<
    * @param take - 获取记录数（分页）
    * @returns 商品列表
    */
-  async findWithRelations(where: any, skip: number, take: number) {
+  async findWithRelations(where: Prisma.PmsProductWhereInput, skip: number, take: number) {
     return this.delegate.findMany({
       where,
       include: {
@@ -73,7 +73,7 @@ export class ProductRepository extends BaseRepository<
    * @param where - 查询条件
    * @returns 商品数量
    */
-  async countWithConditions(where: any): Promise<number> {
+  async countWithConditions(where: Prisma.PmsProductWhereInput): Promise<number> {
     return this.count(where);
   }
 

@@ -222,7 +222,7 @@ export function Paginate(data: { list: Array<any>; pageSize: number; pageNum: nu
       if (filterParam.userName && item.userName) {
         arr.push(Boolean(item.userName.includes(filterParam.userName)));
       }
-      return !Boolean(arr.includes(false));
+      return !arr.includes(false);
     });
   }
 

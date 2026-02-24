@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/module/common/redis/redis.service';
@@ -14,6 +14,8 @@ import { ResponseCode } from 'src/common/response/response.interface';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -124,7 +126,7 @@ export class AuthService {
               }
             } else {
               // 不允许跨店，斩断关系，视为自然流量
-              console.log(
+              this.logger.log(
                 `Cross-tenant referrer ${dto.referrerId} rejected: tenant ${targetTenantId} disables cross-tenant`,
               );
             }

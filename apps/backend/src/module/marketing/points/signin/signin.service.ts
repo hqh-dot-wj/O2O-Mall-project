@@ -141,7 +141,7 @@ export class PointsSigninService {
   private async calculateContinuousDays(memberId: string): Promise<number> {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
     let continuousDays = 0;
-    let checkDate = new Date();
+    const checkDate = new Date();
     checkDate.setHours(0, 0, 0, 0);
 
     // 从今天开始往前查，直到找到没有签到的日期

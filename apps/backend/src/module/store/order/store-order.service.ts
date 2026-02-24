@@ -185,13 +185,15 @@ export class StoreOrderService {
       return {
         ...item,
         // 取第一个商品的图片作为列表展示图
-        productImg: item.items?.[0]?.productImg || '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        productImg: (item.items as any)?.[0]?.productImg || '',
         // 佣金金额(从 Map 中获取，转换为数字)
         commissionAmount: commissionAmount,
         // 商户收款金额(支付金额 - 佣金总额，转换为数字)
         remainingAmount: Number(remainingAmount.toFixed(2)),
         // 所属租户(从关联数据中获取)
-        tenantName: item.tenant?.companyName || '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tenantName: (item.tenant as any)?.companyName || '',
       };
     });
 

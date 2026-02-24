@@ -18,7 +18,7 @@ export class CommissionRepository extends BaseRepository<
    * Upsert commission record
    */
   async upsert(args: Prisma.FinCommissionUpsertArgs): Promise<FinCommission> {
-    return (this.delegate as any).upsert(args);
+    return this.delegate.upsert(args);
   }
 
   /**
@@ -27,6 +27,6 @@ export class CommissionRepository extends BaseRepository<
   async aggregate(
     args: Prisma.FinCommissionAggregateArgs,
   ): Promise<Prisma.GetFinCommissionAggregateType<Prisma.FinCommissionAggregateArgs>> {
-    return (this.delegate as any).aggregate(args);
+    return this.delegate.aggregate(args);
   }
 }

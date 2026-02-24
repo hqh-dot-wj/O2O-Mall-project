@@ -8,6 +8,14 @@ import { WalletService } from '../wallet/wallet.service';
 import { Queue } from 'bull';
 import { Decimal } from '@prisma/client/runtime/library';
 import { CommissionStatus, OrderType } from '@prisma/client';
+// Import new sub-services
+import { DistConfigService } from './services/dist-config.service';
+import { CommissionValidatorService } from './services/commission-validator.service';
+import { BaseCalculatorService } from './services/base-calculator.service';
+import { L1CalculatorService } from './services/l1-calculator.service';
+import { L2CalculatorService } from './services/l2-calculator.service';
+import { CommissionCalculatorService } from './services/commission-calculator.service';
+import { CommissionSettlerService } from './services/commission-settler.service';
 
 describe('CommissionService', () => {
   let service: CommissionService;
@@ -15,6 +23,10 @@ describe('CommissionService', () => {
   let commissionRepo: CommissionRepository;
   let walletService: WalletService;
   let commissionQueue: Queue;
+  let calculatorService: CommissionCalculatorService;
+  let settlerService: CommissionSettlerService;
+  let validatorService: CommissionValidatorService;
+  let configService: DistConfigService;
 
   const mockPrismaService: any = {
     sysDistConfig: {
@@ -27,6 +39,7 @@ describe('CommissionService', () => {
       findUnique: jest.fn(),
     },
     pmsTenantSku: {
+      findMany: jest.fn(),
       findUnique: jest.fn(),
     },
     sysDistBlacklist: {
@@ -66,6 +79,13 @@ describe('CommissionService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommissionService,
+        CommissionCalculatorService,
+        CommissionSettlerService,
+        CommissionValidatorService,
+        DistConfigService,
+        BaseCalculatorService,
+        L1CalculatorService,
+        L2CalculatorService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
@@ -98,6 +118,10 @@ describe('CommissionService', () => {
     commissionRepo = module.get<CommissionRepository>(CommissionRepository);
     walletService = module.get<WalletService>(WalletService);
     commissionQueue = module.get<Queue>('BullQueue_CALC_COMMISSION');
+    calculatorService = module.get<CommissionCalculatorService>(CommissionCalculatorService);
+    settlerService = module.get<CommissionSettlerService>(CommissionSettlerService);
+    validatorService = module.get<CommissionValidatorService>(CommissionValidatorService);
+    configService = module.get<DistConfigService>(DistConfigService);
   });
 
   afterEach(() => {
@@ -131,6 +155,8 @@ describe('CommissionService', () => {
         enableCrossTenant: true,
         crossTenantRate: new Decimal(0.5),
         crossMaxDaily: new Decimal(1000),
+        commissionBaseType: 'ORIGINAL_PRICE',
+        maxCommissionRate: new Decimal(0.5),
       };
 
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockConfig);
@@ -178,6 +204,10 @@ describe('CommissionService', () => {
       memberId: 'member1',
       shareUserId: null as string | null,
       orderType: OrderType.PRODUCT,
+      totalAmount: new Decimal(100),
+      payAmount: new Decimal(100),
+      couponDiscount: new Decimal(0),
+      pointsDiscount: new Decimal(0),
       items: [
         {
           skuId: 'sku1',
@@ -237,9 +267,12 @@ describe('CommissionService', () => {
     it('应该跳过计算 - 佣金基数为0', async () => {
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
       mockPrismaService.umsMember.findUnique.mockResolvedValue(mockMember);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
-        distMode: 'NONE',
-      });
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
+        {
+          id: 'sku1',
+          distMode: 'NONE',
+        },
+      ]);
 
       await service.calculateCommission('order1', 'tenant1');
 
@@ -260,11 +293,14 @@ describe('CommissionService', () => {
         .mockResolvedValueOnce(beneficiary)
         .mockResolvedValueOnce({ memberId: 'member3', tenantId: 'tenant1', levelId: 2 });
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
-        distMode: 'RATIO',
-        distRate: new Decimal(1),
-        globalSku: {},
-      });
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
+        {
+          id: 'sku1',
+          distMode: 'RATIO',
+          distRate: new Decimal(1),
+          globalSku: {},
+        },
+      ]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
       await service.calculateCommission('order1', 'tenant1');
@@ -283,11 +319,14 @@ describe('CommissionService', () => {
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
       mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
-        distMode: 'RATIO',
-        distRate: new Decimal(1),
-        globalSku: {},
-      });
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
+        {
+          id: 'sku1',
+          distMode: 'RATIO',
+          distRate: new Decimal(1),
+          globalSku: {},
+        },
+      ]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
       await service.calculateCommission('order1', 'tenant1');
@@ -309,11 +348,14 @@ describe('CommissionService', () => {
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
       mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
-        distMode: 'RATIO',
-        distRate: new Decimal(1),
-        globalSku: {},
-      });
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
+        {
+          id: 'sku1',
+          distMode: 'RATIO',
+          distRate: new Decimal(1),
+          globalSku: {},
+        },
+      ]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue({
         tenantId: 'tenant1',
         userId: 'member2',
@@ -335,11 +377,14 @@ describe('CommissionService', () => {
       mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
       mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue({
-        distMode: 'RATIO',
-        distRate: new Decimal(1),
-        globalSku: {},
-      });
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
+        {
+          id: 'sku1',
+          distMode: 'RATIO',
+          distRate: new Decimal(1),
+          globalSku: {},
+        },
+      ]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
       await service.calculateCommission('order1', 'tenant1');
@@ -349,7 +394,7 @@ describe('CommissionService', () => {
   });
 
   describe('cancelCommissions', () => {
-    it('应该取消冻结中的佣金', async () => {
+    it('应该取消冻结中的佣金 - 全额退款', async () => {
       const mockCommissions = [
         {
           id: 'comm1',
@@ -362,12 +407,37 @@ describe('CommissionService', () => {
 
       await service.cancelCommissions('order1');
 
+      expect(mockCommissionRepo.findMany).toHaveBeenCalledWith({
+        where: { orderId: 'order1' },
+      });
       expect(mockCommissionRepo.update).toHaveBeenCalledWith('comm1', {
         status: CommissionStatus.CANCELLED,
       });
     });
 
-    it('应该回滚已结算的佣金', async () => {
+    it('应该取消冻结中的佣金 - 部分退款', async () => {
+      const mockCommissions = [
+        {
+          id: 'comm1',
+          status: CommissionStatus.FROZEN,
+          amount: new Decimal(10),
+          orderItemId: 1,
+        },
+      ];
+
+      mockCommissionRepo.findMany.mockResolvedValue(mockCommissions);
+
+      await service.cancelCommissions('order1', [1, 2]);
+
+      expect(mockCommissionRepo.findMany).toHaveBeenCalledWith({
+        where: { orderId: 'order1', orderItemId: { in: [1, 2] } },
+      });
+      expect(mockCommissionRepo.update).toHaveBeenCalledWith('comm1', {
+        status: CommissionStatus.CANCELLED,
+      });
+    });
+
+    it('应该回滚已结算的佣金 - 全额退款', async () => {
       const mockCommissions = [
         {
           id: 'comm1',
@@ -388,6 +458,48 @@ describe('CommissionService', () => {
       expect(mockCommissionRepo.update).toHaveBeenCalledWith('comm1', {
         status: CommissionStatus.CANCELLED,
       });
+    });
+
+    it('应该回滚已结算的佣金 - 部分退款', async () => {
+      const mockCommissions = [
+        {
+          id: 'comm1',
+          status: CommissionStatus.SETTLED,
+          amount: new Decimal(5),
+          beneficiaryId: 'member1',
+          orderId: 'order1',
+          orderItemId: 1,
+        },
+      ];
+
+      mockCommissionRepo.findMany.mockResolvedValue(mockCommissions);
+      mockWalletService.deductBalance.mockResolvedValue({});
+      mockCommissionRepo.update.mockResolvedValue({});
+
+      await service.cancelCommissions('order1', [1]);
+
+      expect(mockCommissionRepo.findMany).toHaveBeenCalledWith({
+        where: { orderId: 'order1', orderItemId: { in: [1] } },
+      });
+      expect(mockWalletService.deductBalance).toHaveBeenCalledWith(
+        'member1',
+        new Decimal(5),
+        'order1',
+        '订单退款，佣金回收',
+        expect.anything(),
+      );
+      expect(mockCommissionRepo.update).toHaveBeenCalledWith('comm1', {
+        status: CommissionStatus.CANCELLED,
+      });
+    });
+
+    it('应该处理无佣金记录的情况', async () => {
+      mockCommissionRepo.findMany.mockResolvedValue([]);
+
+      await service.cancelCommissions('order1');
+
+      expect(mockCommissionRepo.update).not.toHaveBeenCalled();
+      expect(mockWalletService.deductBalance).not.toHaveBeenCalled();
     });
   });
 
@@ -439,6 +551,10 @@ describe('CommissionService', () => {
   });
 
   describe('checkCircularReferral', () => {
+    beforeEach(() => {
+      mockPrismaService.umsMember.findUnique.mockReset();
+    });
+
     it('应该检测到循环推荐', async () => {
       mockPrismaService.umsMember.findUnique
         .mockResolvedValueOnce({ memberId: 'member2', parentId: 'member3' })
