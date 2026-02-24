@@ -233,17 +233,175 @@ fileMatchPattern: '**/docs/**/*.md'
 
 ## 9. 文档目录归类规范
 
-新建需求文档或设计文档时，必须按文档类型放入对应子目录，禁止直接堆放在 `docs/` 根目录：
+新建需求文档或设计文档时，必须按文档类型和所属应用放入对应目录。
 
-| 文档类型 | 目录                 | 示例                                                 |
-| -------- | -------------------- | ---------------------------------------------------- |
-| 需求文档 | `docs/requirements/` | `docs/requirements/payment-service-requirements.md`  |
-| 设计文档 | `docs/design/`       | `docs/design/payment-notification-service-design.md` |
+### 9.1 文档位置选择
 
-- **已有文件**：历史遗留在 `docs/` 根目录的文档不强制迁移，但新增文档必须归类。
-- **跨文档引用**：使用相对路径引用，如设计文档引用需求文档：`[需求文档](../requirements/xxx.md)`。
-- **其他类型**：测试指南放 `docs/testing/`，部署指南放 `docs/deployment/`，归档文档放 `docs/archive/`。按需创建子目录，保持一致性即可。
-- **模块对齐**：当文档针对特定模块时，优先在对应类型目录下创建与 `src/module/` 同构的子路径。例如 `store/distribution` 模块的设计文档放 `docs/design/store/distribution/`，需求文档放 `docs/requirements/store/distribution/`。这样文档与代码一一对应，便于查找。
+项目采用 Monorepo 结构，文档分为两个层级：
+
+| 文档层级       | 位置               | 适用范围                               |
+| -------------- | ------------------ | -------------------------------------- |
+| **项目级文档** | `docs/`            | 整个项目的通用文档、用户指南、部署指南 |
+| **应用级文档** | `apps/{app}/docs/` | 特定应用的技术文档、需求文档、设计文档 |
+
+**选择原则**：
+
+- 如果文档是**后端模块的需求或设计**，放在 `apps/backend/docs/`
+- 如果文档是**前端功能的需求或设计**，放在 `apps/admin-web/docs/`
+- 如果文档是**项目通用的指南或说明**，放在根目录 `docs/`
+
+### 9.2 后端文档目录结构（apps/backend/docs/）
+
+后端文档必须按文档类型放入对应子目录，**所有文档文件名必须使用小写+连字符命名**：
+
+| 文档类型 | 目录                                | 示例                                                                                                                            |
+| -------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 需求文档 | `apps/backend/docs/requirements/`   | `apps/backend/docs/requirements/finance/commission/commission-requirements.md`                                                  |
+| 设计文档 | `apps/backend/docs/design/`         | `apps/backend/docs/design/finance/commission/commission-design.md`                                                              |
+| 指南文档 | `apps/backend/docs/guides/`         | `apps/backend/docs/guides/quick-start.md`、`apps/backend/docs/guides/testing-guide.md`                                          |
+| 任务文档 | `apps/backend/docs/tasks/`          | `apps/backend/docs/tasks/architecture-optimization.md`、`apps/backend/docs/tasks/multi-tenant-migration.md`                     |
+| 计划文档 | `apps/backend/docs/plans/`          | `apps/backend/docs/plans/performance-optimization-plan.md`、`apps/backend/docs/plans/database-optimization-plan.md`             |
+| 改进文档 | `apps/backend/docs/improvements/`   | `apps/backend/docs/improvements/p1-eliminate-finance-any-types.md`                                                              |
+| 重构文档 | `apps/backend/docs/refactoring/`    | `apps/backend/docs/refactoring/commission-service-refactoring-summary.md`                                                       |
+| 总结文档 | `apps/backend/docs/summaries/`      | `apps/backend/docs/summaries/performance-optimization-summary.md`、`apps/backend/docs/summaries/test-implementation-summary.md` |
+| 参考文档 | `apps/backend/docs/references/`     | `apps/backend/docs/references/api-reference.md`、`apps/backend/docs/references/commission-quick-reference.md`                   |
+| 最佳实践 | `apps/backend/docs/best-practices/` | `apps/backend/docs/best-practices/logging-best-practices.md`、`apps/backend/docs/best-practices/code-review.md`                 |
+| 测试文档 | `apps/backend/docs/testing/`        | `apps/backend/docs/testing/e2e-test-guide.md`、`apps/backend/docs/testing/unit-test-guide.md`                                   |
+| 归档文档 | `apps/backend/docs/archive/`        | `apps/backend/docs/archive/marketing-reset-guide.md`                                                                            |
+
+**模块对齐规则**：
+
+当文档针对特定模块时，在对应类型目录下创建与 `src/module/` 同构的子路径：
+
+```
+src/module/finance/commission/     →  apps/backend/docs/requirements/finance/commission/
+src/module/marketing/coupon/       →  apps/backend/docs/requirements/marketing/coupon/
+src/module/store/distribution/     →  apps/backend/docs/requirements/store/distribution/
+```
+
+**整体分析文档**：
+
+大模块的整体架构评估文档放在模块根目录：
+
+```
+apps/backend/docs/requirements/finance/finance-overall-analysis.md
+apps/backend/docs/requirements/marketing/marketing-overall-analysis.md
+apps/backend/docs/requirements/store/store-overall-analysis.md
+```
+
+**文档类型说明**：
+
+| 类型           | 说明                                             | 典型文档                                                                  |
+| -------------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| requirements   | 需求文档，描述功能需求、业务流程、验收标准       | `commission-requirements.md`、`finance-overall-analysis.md`               |
+| design         | 设计文档，描述技术方案、架构设计、接口设计       | `commission-design.md`、`payment-notification-service-design.md`          |
+| guides         | 指南文档，提供操作步骤、使用说明、配置指南       | `quick-start.md`、`deployment-guide.md`、`testing-guide.md`               |
+| tasks          | 任务文档，记录具体任务的执行过程、进度、结果     | `architecture-optimization.md`、`multi-tenant-migration.md`               |
+| plans          | 计划文档，描述未来的工作计划、优化方案、演进路线 | `performance-optimization-plan.md`、`database-optimization-plan.md`       |
+| improvements   | 改进文档，记录具体的改进实施（通常按优先级命名） | `p1-eliminate-finance-any-types.md`、`p0-audit-service-implementation.md` |
+| refactoring    | 重构文档，记录代码重构的过程、原因、结果         | `commission-service-refactoring-summary.md`、`config-refactoring.md`      |
+| summaries      | 总结文档，对某个阶段或某项工作的总结             | `performance-optimization-summary.md`、`test-implementation-summary.md`   |
+| references     | 参考文档，提供快速查阅的参考信息                 | `api-reference.md`、`commission-quick-reference.md`                       |
+| best-practices | 最佳实践文档，提供编码规范、设计模式、经验总结   | `logging-best-practices.md`、`code-review.md`                             |
+| testing        | 测试文档，提供测试指南、测试策略、测试结果       | `e2e-test-guide.md`、`unit-test-guide.md`                                 |
+| archive        | 归档文档，已过时或不再使用的文档                 | `marketing-reset-guide.md`、`old-architecture.md`                         |
+
+**根目录文档（apps/backend/docs/）**：
+
+根目录只保留以下文档：
+
+- `README.md` - 文档索引（必须）
+- `quick-start.md` - 快速开始（可选，也可以放在 guides/ 中）
+
+其他所有文档都必须放入对应的子目录中。
+
+### 9.3 项目级文档目录结构（docs/）
+
+项目级文档按用途分类：
+
+| 文档类型     | 目录                  | 示例                                                                                          |
+| ------------ | --------------------- | --------------------------------------------------------------------------------------------- |
+| 用户指南     | `docs/guide/`         | `docs/guide/quick-start.md`、`docs/guide/multi-tenant.md`                                     |
+| 开发文档     | `docs/development/`   | `docs/development/getting-started.md`、`docs/development/testing-standardization-analysis.md` |
+| 架构设计     | `docs/design/`        | `docs/design/architecture-comprehensive-analysis.md`                                          |
+| 部署文档     | `docs/deployment/`    | `docs/deployment/overview.md`                                                                 |
+| 在线部署步骤 | `docs/deploy-online/` | `docs/deploy-online/nginx.md`、`docs/deploy-online/mysql.md`                                  |
+| 功能说明     | `docs/features/`      | `docs/features/demo-account.md`                                                               |
+| 需求文档     | `docs/requirements/`  | `docs/requirements/finance/` (历史遗留，新文档应放在 apps/backend/docs/)                      |
+| 设计文档     | `docs/design/`        | `docs/design/admin/` (历史遗留，新文档应放在 apps/backend/docs/)                              |
+
+**注意**：
+
+- `docs/requirements/` 和 `docs/design/` 中的后端模块文档是历史遗留
+- 新的后端需求和设计文档应放在 `apps/backend/docs/requirements/` 和 `apps/backend/docs/design/`
+- 项目级的架构设计文档（如整体架构分析）可以放在 `docs/design/`
+
+### 9.4 跨文档引用规范
+
+**后端文档内部引用**（推荐使用相对路径）：
+
+```markdown
+<!-- 在 apps/backend/docs/design/finance/commission/commission-design.md 中 -->
+<!-- 引用同模块的需求文档 -->
+
+[需求文档](../../requirements/finance/commission/commission-requirements.md)
+
+<!-- 引用其他模块的文档 -->
+
+[Marketing 整体分析](../../requirements/marketing/marketing-overall-analysis.md)
+```
+
+**项目级文档引用后端文档**：
+
+```markdown
+<!-- 在 docs/development/architecture-optimization-tasks.md 中 -->
+<!-- 引用后端文档 -->
+
+[Finance 整体分析](../apps/backend/docs/requirements/finance/finance-overall-analysis.md)
+```
+
+**后端文档引用项目级文档**：
+
+```markdown
+<!-- 在 apps/backend/docs/requirements/finance/finance-overall-analysis.md 中 -->
+<!-- 引用项目级文档 -->
+
+[部署指南](../../../../docs/deployment/overview.md)
+```
+
+### 9.5 文档命名规范
+
+**强制小写**：所有新建文档文件名必须全部使用小写字母，单词之间用连字符 `-` 分隔。
+
+- ✅ `payment-service-design.md`、`commission-requirements.md`、`quick-start.md`
+- ❌ `PAYMENT_SERVICE_DESIGN.md`、`Commission_Requirements.md`、`QuickStart.md`
+
+**已有文件**：
+
+- `apps/backend/docs/` 根目录的历史遗留大写文件需要重组（参考 `apps/backend/docs/TODO/document-reorganization-plan.md`）
+- 新增文档必须遵循小写规范
+- 子目录（`requirements/`、`design/`、`guides/` 等）中的文档必须使用小写
+
+**目录名**：同样使用小写 + 连字符，如 `best-practices/`、`e2e-tests/`
+
+### 9.6 文档重组说明
+
+**当前状态**：`apps/backend/docs/` 根目录存在大量历史遗留的大写命名文档，需要重组。
+
+**重组计划**：参考 `apps/backend/docs/TODO/document-reorganization-plan.md`
+
+**重组原则**：
+
+1. 按文档类型分类到对应目录
+2. 统一使用小写+连字符命名
+3. 根目录只保留 `README.md`
+4. 更新所有文档内部链接
+
+**新文档要求**：
+
+- 即使历史文档尚未重组，新增文档也必须遵循新规范
+- 新文档必须放入对应的分类目录
+- 新文档必须使用小写+连字符命名
 
 ---
 
@@ -251,7 +409,68 @@ fileMatchPattern: '**/docs/**/*.md'
 
 编写需求文档或设计文档中的「缺陷分析」章节时，**必须先查阅项目实际代码**，禁止凭模块内部代码推断项目全局结构。
 
-### 10.1 C 端接口缺陷检查
+### 10.1 跨模块文档查阅规范（必须遵守）
+
+在编写任何模块的需求文档或设计文档前，**必须先查阅相关模块的现有文档**，避免将已在其他模块实现的功能误判为缺失。
+
+**查阅范围**：
+
+1. **同级模块文档**：查阅 `docs/requirements/{能力域}/` 下其他子模块的整体分析文档和需求文档
+2. **关联模块文档**：查阅可能存在功能交叉的其他能力域文档（如 Finance 与 Marketing、Store 与 PMS）
+3. **C 端接口文档**：查阅 `src/module/client/{能力域}/` 下的 C 端接口实现
+
+**查阅方法**：
+
+```typescript
+// 示例：编写 Finance 模块文档前，必须先查阅
+readMultipleFiles([
+  'apps/backend/docs/requirements/marketing/marketing-overall-analysis.md', // 关联模块
+  'apps/backend/docs/requirements/store/store-overall-analysis.md', // 关联模块
+  'apps/backend/src/module/client/finance/', // C 端接口
+  'apps/backend/src/module/client/marketing/', // 关联 C 端接口
+]);
+```
+
+**常见误判场景**：
+
+| 误判场景                  | 正确做法                                                 |
+| ------------------------- | -------------------------------------------------------- |
+| 认为 Finance 缺少积分系统 | 查阅 Marketing 模块，积分在 `marketing/points/` 中实现   |
+| 认为 Finance 缺少优惠券   | 查阅 Marketing 模块，优惠券在 `marketing/coupon/` 中实现 |
+| 认为模块缺少 C 端接口     | 查阅 `src/module/client/{能力域}/` 目录                  |
+| 认为功能完全缺失          | 查阅其他模块的整体分析文档，可能已在其他模块实现         |
+
+**文档编写流程**：
+
+1. **第一步**：查阅相关模块的整体分析文档（`*-overall-analysis.md`）
+2. **第二步**：查阅相关模块的子模块需求文档
+3. **第三步**：查阅 `src/module/client/` 下的 C 端接口实现
+4. **第四步**：查阅 `src/module/{能力域}/` 下的后端实现
+5. **第五步**：开始编写文档，明确模块职责边界
+
+**模块职责划分示例**：
+
+| 能力域    | 职责范围                                   | 不包含                 |
+| --------- | ------------------------------------------ | ---------------------- |
+| Finance   | 佣金、结算、钱包、提现、账单、发票、充值   | 积分、优惠券、营销活动 |
+| Marketing | 积分、优惠券、营销活动、会员等级、营销玩法 | 佣金、结算、钱包       |
+| Store     | 商品、分类、品牌、规格、库存               | 订单、支付、物流       |
+| PMS       | 商品管理系统（供应商视角）                 | 店铺商品（商家视角）   |
+| Order     | 订单、购物车、售后                         | 支付、物流             |
+
+**跨模块协作说明**：
+
+在文档中明确说明跨模块协作关系，而非将其他模块的功能列为缺失：
+
+```markdown
+**说明**：
+
+- 积分系统和优惠券系统已在 Marketing 模块中实现（`marketing/points` 和 `marketing/coupon`）
+- Finance 模块专注于资金流转和财务管理，与 Marketing 模块协作完成完整的用户激励体系
+- Finance 模块提供钱包余额支付能力，Marketing 模块提供积分抵扣和优惠券核销能力
+```
+
+### 10.2 C 端接口缺陷检查
 
 分析某能力域模块是否缺少 C 端接口时，必须先检查 `src/module/client/` 目录：
 
@@ -259,7 +478,7 @@ fileMatchPattern: '**/docs/**/*.md'
 - 因此，在能力域模块（如 `marketing/points/`）内看不到 `client/*` Controller 是正常的，不能直接判定为缺陷。
 - **必做**：检查 `src/module/client/marketing/points/` 等对应路径是否已有 C 端 Controller。
 
-### 10.2 跨模块依赖检查
+### 10.3 跨模块依赖检查
 
 分析跨模块缺陷时，必须确认：
 
@@ -267,7 +486,7 @@ fileMatchPattern: '**/docs/**/*.md'
 - 调用方是否通过 Module imports 正确引入
 - 不能仅凭「模块 A 的代码中没有看到模块 B 的引用」就判定为缺陷
 
-### 10.3 Mermaid 图表编码规范
+### 10.4 Mermaid 图表编码规范
 
 Mermaid 图表中禁止使用以下特殊字符，避免编码损坏：
 
@@ -362,10 +581,13 @@ fsAppend(
 
 **缺陷分析**：
 
+- [ ] 已查阅相关模块的整体分析文档（避免误判缺失）
+- [ ] 已查阅 client/ 目录的 C 端接口（避免误判缺失）
 - [ ] 对照代码检查（不凭假设）
 - [ ] 对照规范检查（后端开发规范）
 - [ ] 跨模块依赖检查（检查exports/imports）
 - [ ] 性能问题识别（N+1查询、深分页等）
+- [ ] 明确模块职责边界（不将其他模块功能列为缺失）
 
 ### 11.3 批量文档编写流程
 
@@ -373,18 +595,20 @@ fsAppend(
 
 **第一个模块**（建立标准，耗时约2小时）：
 
-1. 详细阅读代码（Controller、Service、Repository、DTO）
-2. 完整编写需求文档（包含所有章节和图表）
-3. 完整编写设计文档（包含所有章节和图表）
-4. 建立文档模板和质量标准
-5. 确认工作流程
+1. **查阅相关模块文档**（15-20分钟）：阅读其他模块的整体分析文档，了解模块职责边界
+2. 详细阅读代码（Controller、Service、Repository、DTO）
+3. 完整编写需求文档（包含所有章节和图表）
+4. 完整编写设计文档（包含所有章节和图表）
+5. 建立文档模板和质量标准
+6. 确认工作流程
 
 **后续模块**（复用标准，耗时约30-45分钟）：
 
-1. 快速浏览代码（使用readMultipleFiles批量读取）
-2. 复用文档结构（章节、图表类型）
-3. 仅修改业务内容（保持格式一致）
-4. 保持一致性（术语、风格、深度）
+1. **快速查阅相关文档**（5分钟）：确认模块职责边界
+2. 快速浏览代码（使用readMultipleFiles批量读取）
+3. 复用文档结构（章节、图表类型）
+4. 仅修改业务内容（保持格式一致）
+5. 保持一致性（术语、风格、深度）
 
 **效率提升**：
 
@@ -598,7 +822,7 @@ graph TD
 
 **文档名称**：`{module}-overall-analysis.md`
 
-**存放位置**：`docs/requirements/{module}/{module}-overall-analysis.md`
+**存放位置**：`apps/backend/docs/requirements/{module}/{module}-overall-analysis.md`
 
 **文档结构**（10 章节）：
 
@@ -667,8 +891,8 @@ graph TD
 
 **示例文档**：
 
-- `docs/requirements/finance/finance-overall-analysis.md`
-- `docs/requirements/marketing/marketing-overall-analysis.md`
+- `apps/backend/docs/requirements/finance/finance-overall-analysis.md`
+- `apps/backend/docs/requirements/marketing/marketing-overall-analysis.md`
 
 ### 13.4 第二步：子模块需求文档
 
@@ -682,7 +906,7 @@ graph TD
 
 **文档结构**：遵循 §5.1 需求文档标准结构（11 章节）
 
-**存放位置**：`docs/requirements/{module}/{submodule}/{submodule}-requirements.md`
+**存放位置**：`apps/backend/docs/requirements/{module}/{submodule}/{submodule}-requirements.md`
 
 **第一个子模块**（建立标准）：
 
@@ -705,7 +929,7 @@ graph TD
 
 **文档结构**：遵循 §5.2 设计文档标准结构（14 章节）
 
-**存放位置**：`docs/design/{module}/{submodule}/{submodule}-design.md`
+**存放位置**：`apps/backend/docs/design/{module}/{submodule}/{submodule}-design.md`
 
 ### 13.6 整体架构评估文档编写要点
 
@@ -887,15 +1111,15 @@ graph TD
 
 **整体架构评估文档**：
 
-- `docs/requirements/finance/finance-overall-analysis.md`
-- `docs/requirements/marketing/marketing-overall-analysis.md`
+- `apps/backend/docs/requirements/finance/finance-overall-analysis.md`
+- `apps/backend/docs/requirements/marketing/marketing-overall-analysis.md`
 
 **子模块需求文档**：
 
-- `docs/requirements/finance/commission/commission-requirements.md`
-- `docs/requirements/marketing/coupon/coupon-requirements.md`
+- `apps/backend/docs/requirements/finance/commission/commission-requirements.md`
+- `apps/backend/docs/requirements/marketing/coupon/coupon-requirements.md`
 
 **子模块设计文档**：
 
-- `docs/design/finance/commission/commission-design.md`
-- `docs/design/marketing/coupon/coupon-design.md`
+- `apps/backend/docs/design/finance/commission/commission-design.md`
+- `apps/backend/docs/design/marketing/coupon/coupon-design.md`
