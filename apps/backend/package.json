@@ -22,6 +22,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typecheck": "tsc --noEmit",
     "test:finance": "jest --testPathPattern=finance",
     "test:finance:watch": "jest --testPathPattern=finance --watch",
     "test:finance:cov": "jest --testPathPattern=finance --coverage",
@@ -37,11 +38,6 @@
     "prisma:reset": "prisma migrate reset --force && npm run prisma:seed:only",
     "redis:flush": "docker exec nest-admin-redis redis-cli -a 123456 -n 2 FLUSHDB",
     "generate:keys": "node scripts/generate-rsa-keys.cjs",
-    "logs:view": "bash scripts/view-logs.sh -t",
-    "logs:error": "bash scripts/view-logs.sh -e",
-    "logs:warn": "bash scripts/view-logs.sh -w",
-    "logs:clean": "bash scripts/view-logs.sh -c",
-    "logs:list": "bash scripts/view-logs.sh -l",
     "deploy:prod": "node scripts/deploy.cjs prod",
     "deploy:test": "node scripts/deploy.cjs test",
     "deploy:dev": "node scripts/deploy.cjs dev"
@@ -50,6 +46,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@libs/common-utils": "workspace:*",
     "@bull-board/express": "^6.15.0",
     "@bull-board/nestjs": "^6.15.0",
     "@nestjs/axios": "catalog:",

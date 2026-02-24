@@ -1,29 +1,31 @@
 /**
  * 订单相关 API
+ * 类型来自 @libs/common-types（由 backend openApi.json 生成）
  */
+import type {
+  CreateOrderParams,
+  OrderDetail,
+  OrderListItem,
+  OrderItemInput,
+} from '@libs/common-types'
+import type { OrderStatusEnum } from '@libs/common-types/enum'
 import { httpGet, httpPost } from '@/http/http'
 
-/**
- * 订单商品项
- */
-export interface OrderItemDto {
-  skuId: string
-  quantity: number
-  shareUserId?: string
-}
+/** 向后兼容别名：旧代码中使用的 OrderItemDto */
+export type OrderItemDto = OrderItemInput
 
 /**
- * 结算预览请求参数
+ * 结算预览请求参数（backend 暂未在 openApi 中定义独立 schema，保留本地类型）
  */
 export interface CheckoutPreviewParams {
   tenantId: string
-  items: OrderItemDto[]
+  items: OrderItemInput[]
   marketingConfigId?: string
   playInstanceId?: string
 }
 
 /**
- * 结算预览响应
+ * 结算预览响应（backend 暂未在 openApi 中定义独立 schema，保留本地类型）
  */
 export interface CheckoutPreviewVo {
   items: {
@@ -50,64 +52,27 @@ export interface CheckoutPreviewVo {
   hasService: boolean
 }
 
-/**
- * 创建订单请求参数
- */
-export interface CreateOrderDto {
-  tenantId: string
-  items: OrderItemDto[]
-  receiverName?: string
-  receiverPhone?: string
-  receiverAddress?: string
-  receiverLat?: number
-  receiverLng?: number
-  bookingTime?: string
-  serviceRemark?: string
-  remark?: string
-  marketingConfigId?: string
-  playInstanceId?: string
-}
-
-/**
- * 创建订单响应
- */
-export interface CreateOrderVo {
-  orderId: string
-  orderSn: string
-  payAmount: number
-}
-
-/**
- * 获取结算预览
- */
+/** 获取结算预览 */
 export function getCheckoutPreview(params: CheckoutPreviewParams) {
   return httpPost<CheckoutPreviewVo>('/client/order/checkout/preview', params)
 }
 
-/**
- * 创建订单
- */
-export function createOrder(dto: CreateOrderDto) {
-  return httpPost<CreateOrderVo>('/client/order/create', dto)
+/** 创建订单 */
+export function createOrder(dto: CreateOrderParams) {
+  return httpPost<{ orderId: string, orderSn: string, payAmount: number }>('/client/order/create', dto)
 }
 
-/**
- * 获取订单列表
- */
-export function getOrderList(params: { status?: string, pageNum: number, pageSize: number }) {
-  return httpGet<{ rows: any[], total: number }>('/client/order/list', params)
+/** 获取订单列表 */
+export function getOrderList(params: { status?: OrderStatusEnum, pageNum: number, pageSize: number }) {
+  return httpGet<{ rows: OrderListItem[], total: number }>('/client/order/list', params)
 }
 
-/**
- * 获取订单详情
- */
+/** 获取订单详情 */
 export function getOrderDetail(orderId: string) {
-  return httpGet<any>(`/client/order/${orderId}`)
+  return httpGet<OrderDetail>(`/client/order/${orderId}`)
 }
 
-/**
- * 取消订单
- */
+/** 取消订单 */
 export function cancelOrder(orderId: string, reason?: string) {
   return httpPost('/client/order/cancel', { orderId, reason })
 }

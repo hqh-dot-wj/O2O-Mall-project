@@ -86,6 +86,10 @@ upload/
 *.sqlite
 *.sqlite3
 
+# Prevent sub-package .git directories (monorepo uses root .git only)
+apps/*/.git/
+libs/*/.git/
+
 # Cache
 .cache/
 .temp/

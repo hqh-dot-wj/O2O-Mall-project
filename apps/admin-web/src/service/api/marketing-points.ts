@@ -6,7 +6,7 @@ import { request } from '@/service/request';
 export function fetchGetPointsRuleConfig() {
   return request<Api.Marketing.PointsRule>({
     url: '/admin/marketing/points/rules',
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -15,7 +15,7 @@ export function fetchUpdatePointsRuleConfig(data: Api.Marketing.PointsRuleUpdate
   return request<Api.Marketing.PointsRule>({
     url: '/admin/marketing/points/rules',
     method: 'put',
-    data,
+    data
   });
 }
 
@@ -24,7 +24,7 @@ export function fetchGetPointTaskList(params?: Api.Marketing.PointTaskSearchPara
   return request<Api.Marketing.PointTaskList>({
     url: '/admin/marketing/points/tasks',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -33,7 +33,7 @@ export function fetchCreatePointTask(data: Api.Marketing.PointTaskCreate) {
   return request<Api.Marketing.PointTask>({
     url: '/admin/marketing/points/tasks',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -42,7 +42,7 @@ export function fetchUpdatePointTask(id: string, data: Api.Marketing.PointTaskUp
   return request<Api.Marketing.PointTask>({
     url: `/admin/marketing/points/tasks/${id}`,
     method: 'put',
-    data,
+    data
   });
 }
 
@@ -50,7 +50,7 @@ export function fetchUpdatePointTask(id: string, data: Api.Marketing.PointTaskUp
 export function fetchDeletePointTask(id: string) {
   return request({
     url: `/admin/marketing/points/tasks/${id}`,
-    method: 'delete',
+    method: 'delete'
   });
 }
 
@@ -59,7 +59,7 @@ export function fetchGetPointsAccounts(params?: { pageNum?: number; pageSize?: n
   return request<Common.PaginatingQueryRecord<Api.Marketing.PointsAccount>>({
     url: '/admin/marketing/points/accounts',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -68,7 +68,7 @@ export function fetchAdjustPoints(data: { memberId: string; amount: number; type
   return request({
     url: '/admin/marketing/points/adjust',
     method: 'post',
-    data,
+    data
   });
 }
 
@@ -77,7 +77,7 @@ export function fetchGetPointsTransactions(params?: Api.Marketing.PointsTransact
   return request<Common.PaginatingQueryRecord<Api.Marketing.PointsTransaction>>({
     url: '/admin/marketing/points/transactions',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -86,7 +86,7 @@ export function fetchGetPointsEarnStatistics(params?: { startTime?: string; endT
   return request<Api.Marketing.PointsEarnStatistics>({
     url: '/admin/marketing/points/statistics/earn',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -95,7 +95,7 @@ export function fetchGetPointsUseStatistics(params?: { startTime?: string; endTi
   return request<Api.Marketing.PointsUseStatistics>({
     url: '/admin/marketing/points/statistics/use',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -103,7 +103,7 @@ export function fetchGetPointsUseStatistics(params?: { startTime?: string; endTi
 export function fetchGetPointsBalanceStatistics() {
   return request<Api.Marketing.PointsBalanceStatistics>({
     url: '/admin/marketing/points/statistics/balance',
-    method: 'get',
+    method: 'get'
   });
 }
 
@@ -112,7 +112,7 @@ export function fetchGetPointsExpireStatistics(params?: { startTime?: string; en
   return request({
     url: '/admin/marketing/points/statistics/expire',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -121,7 +121,7 @@ export function fetchGetPointsRanking(params?: { limit?: number }) {
   return request<{ ranking: Api.Marketing.PointsRankingItem[] }>({
     url: '/admin/marketing/points/ranking',
     method: 'get',
-    params,
+    params
   });
 }
 
@@ -136,6 +136,6 @@ export function fetchExportPointsTransactions(params?: {
     url: '/admin/marketing/points/export',
     method: 'get',
     params,
-    responseType: 'blob',
+    responseType: 'blob'
   });
 }

@@ -5,7 +5,7 @@ import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'TemplateModal',
+  name: 'TemplateModal'
 });
 
 interface Props {
@@ -31,7 +31,7 @@ const { defaultRequiredRule } = useFormRules();
 const title = computed(() => {
   const titles: Record<string, string> = {
     add: '新增优惠券模板',
-    edit: '编辑优惠券模板',
+    edit: '编辑优惠券模板'
   };
   return titles[props.operateType];
 });
@@ -69,7 +69,7 @@ function createDefaultModel(): Model {
     limitPerPerson: 1,
     description: '',
     timeType: 'days',
-    validTimeRange: null,
+    validTimeRange: null
   };
 }
 
@@ -79,17 +79,17 @@ const rules = {
   value: defaultRequiredRule,
   minAmount: defaultRequiredRule,
   totalCount: defaultRequiredRule,
-  limitPerPerson: defaultRequiredRule,
+  limitPerPerson: defaultRequiredRule
 };
 
 const typeOptions = [
   { label: '代金券', value: 'CASH' },
-  { label: '折扣券', value: 'DISCOUNT' },
+  { label: '折扣券', value: 'DISCOUNT' }
 ];
 
 const timeTypeOptions = [
   { label: '领取后生效天数', value: 'days' },
-  { label: '固定时间范围', value: 'date-range' },
+  { label: '固定时间范围', value: 'date-range' }
 ];
 
 function handleUpdateModel(modelValue: Model, values: Partial<Model>) {
@@ -147,7 +147,7 @@ async function handleSubmit() {
     limitPerUser: model.limitPerPerson,
     applicableProducts: [],
     applicableCategories: [],
-    memberLevels: [],
+    memberLevels: []
   };
 
   if (props.operateType === 'add') {
@@ -161,7 +161,7 @@ async function handleSubmit() {
   emit('submitted');
 }
 
-watch(visible, (val) => {
+watch(visible, val => {
   if (val) {
     handleInitModel();
     restoreValidation();

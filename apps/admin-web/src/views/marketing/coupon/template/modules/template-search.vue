@@ -5,7 +5,7 @@ import { useIconRender } from '@/hooks/common/icon';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'TemplateSearch',
+  name: 'TemplateSearch'
 });
 
 interface Emits {
@@ -26,7 +26,7 @@ const rules = computed<Record<RuleKey, App.Global.FormRule[]>>(() => {
   return {
     name: [],
     type: [],
-    status: [],
+    status: []
   };
 });
 
@@ -42,12 +42,12 @@ async function search() {
 
 const typeOptions = [
   { label: '代金券', value: 'DISCOUNT' },
-  { label: '折扣券', value: 'PERCENTAGE' },
+  { label: '折扣券', value: 'PERCENTAGE' }
 ];
 
 const statusOptions = [
   { label: '启用', value: 'ACTIVE' },
-  { label: '停用', value: 'INACTIVE' },
+  { label: '停用', value: 'INACTIVE' }
 ];
 </script>
 

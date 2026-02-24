@@ -5,7 +5,7 @@ import { useBoolean } from '@sa/hooks';
 import {
   fetchDeleteCouponTemplate,
   fetchGetCouponTemplateList,
-  fetchUpdateCouponTemplateStatus,
+  fetchUpdateCouponTemplateStatus
 } from '@/service/api/marketing-coupon';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
@@ -16,7 +16,7 @@ import TemplateSearch from './modules/template-search.vue';
 import TemplateModal from './modules/template-modal.vue';
 
 defineOptions({
-  name: 'CouponTemplateList',
+  name: 'CouponTemplateList'
 });
 
 const appStore = useAppStore();
@@ -31,64 +31,64 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
     pageSize: 10,
     name: null,
     type: null,
-    status: null,
+    status: null
   },
   columns: () => [
     {
       key: 'name',
       title: '模板名称',
       align: 'center',
-      width: 150,
+      width: 150
     },
     {
       key: 'type',
       title: '类型',
       align: 'center',
       width: 100,
-      render: (row) => {
+      render: row => {
         const tagType = row.type === 'DISCOUNT' ? 'warning' : 'info';
         const label = row.type === 'DISCOUNT' ? '代金券' : row.type === 'PERCENTAGE' ? '折扣券' : '兑换券';
         return <NTag type={tagType}>{label}</NTag>;
-      },
+      }
     },
     {
       key: 'value',
       title: '面值',
       align: 'center',
       width: 100,
-      render: (row) => {
+      render: row => {
         const val = row.discountAmount ?? row.discountPercent;
         if (row.type === 'DISCOUNT' && val != null) return `¥${val}`;
         if (row.type === 'PERCENTAGE' && val != null) return `${val}%`;
         return '-';
-      },
+      }
     },
     {
       key: 'minOrderAmount',
       title: '门槛',
       align: 'center',
-      render: (row) => {
+      render: row => {
         const min = row.minOrderAmount ?? 0;
         return min > 0 ? `满${min}可用` : '无门槛';
-      },
+      }
     },
     {
       key: 'count',
       title: '发放/领取/使用',
       align: 'center',
       width: 180,
-      render: (row) => (
+      render: row => (
         <span>
           {row.totalStock === -1 ? '无限' : row.totalStock} / {row.distributedCount ?? 0} / {row.usedCount ?? 0}
         </span>
-      ),
+      )
     },
     {
       key: 'validity',
       title: '有效期',
       align: 'center',
       width: 200,
-      render: (row) => {
+      render: row => {
         if (row.validDays) {
           return `领取后 ${row.validDays} 天有效`;
         }
@@ -106,26 +106,26 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
           );
         }
         return '-';
-      },
+      }
     },
     {
       key: 'status',
       title: '状态',
       align: 'center',
       width: 100,
-      render: (row) => (
+      render: row => (
         <StatusSwitch
           value={row.status === 'ACTIVE' ? '0' : '1'}
           onSubmitted={(val, callback) => handleStatusChange(row, val, callback)}
         />
-      ),
+      )
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
       width: 120,
-      render: (row) => (
+      render: row => (
         <div class="flex-center gap-8px">
           <ButtonIcon
             type="primary"
@@ -142,15 +142,15 @@ const { columns, data, getData, getDataByPage, loading, mobilePagination, search
             onClick={() => handleDelete(row.id)}
           />
         </div>
-      ),
-    },
-  ],
+      )
+    }
+  ]
 });
 
 async function handleStatusChange(
   row: Api.Marketing.CouponTemplate,
   val: Api.Common.EnableStatus,
-  callback: (flag: boolean) => void,
+  callback: (flag: boolean) => void
 ) {
   try {
     const status = val === '0' ? 'ACTIVE' : 'INACTIVE';
@@ -179,7 +179,7 @@ async function handleDelete(id: string) {
       await fetchDeleteCouponTemplate(id);
       window.$message?.success($t('common.deleteSuccess'));
       getData();
-    },
+    }
   });
 }
 

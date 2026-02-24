@@ -1,29 +1,29 @@
 <script setup lang="tsx">
 import { onMounted, ref } from 'vue';
 import {
+  NButton,
   NCard,
   NDataTable,
-  NGrid,
-  NGi,
-  NStatistic,
-  NSpin,
-  NButton,
-  NEmpty,
   NDatePicker,
+  NEmpty,
   NForm,
   NFormItem,
+  NGi,
+  NGrid,
   NSpace,
+  NSpin,
+  NStatistic
 } from 'naive-ui';
 import {
   fetchGetPointsBalanceStatistics,
   fetchGetPointsEarnStatistics,
   fetchGetPointsExpireStatistics,
   fetchGetPointsRanking,
-  fetchGetPointsUseStatistics,
+  fetchGetPointsUseStatistics
 } from '@/service/api/marketing-points';
 
 defineOptions({
-  name: 'PointsStatistics',
+  name: 'PointsStatistics'
 });
 
 const loading = ref(false);
@@ -45,7 +45,7 @@ async function loadData() {
       fetchGetPointsBalanceStatistics(),
       fetchGetPointsEarnStatistics(params),
       fetchGetPointsUseStatistics(params),
-      fetchGetPointsRanking({ limit: 10 }),
+      fetchGetPointsRanking({ limit: 10 })
     ]);
     balanceStats.value = balanceRes.data ?? null;
     earnStats.value = earnRes.data ?? null;
@@ -65,7 +65,7 @@ onMounted(() => {
 const rankingColumns = [
   { key: 'rank', title: '排名', width: 80, render: (_: any, index: number) => index + 1 },
   { key: 'nickname', title: '昵称', ellipsis: { tooltip: true } },
-  { key: 'availablePoints', title: '可用积分', width: 120 },
+  { key: 'availablePoints', title: '可用积分', width: 120 }
 ];
 </script>
 
@@ -102,7 +102,7 @@ const rankingColumns = [
         </NGi>
       </NGrid>
 
-      <NCard title="积分排行榜" :bordered="false" size="small" class="card-wrapper mt-16px">
+      <NCard title="积分排行榜" :bordered="false" size="small" class="mt-16px card-wrapper">
         <NDataTable :columns="rankingColumns" :data="ranking" :row-key="(row: any) => row.memberId" max-height="320" />
         <NEmpty v-if="ranking.length === 0 && !loading" description="暂无排行数据" class="py-8" />
       </NCard>

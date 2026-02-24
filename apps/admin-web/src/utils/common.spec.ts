@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { transformRecordToOption, humpToLine, toggleHtmlClass } from './common';
+import { describe, expect, it } from 'vitest';
+import { humpToLine, toggleHtmlClass, transformRecordToOption } from './common';
 
 describe('common utils', () => {
   describe('transformRecordToOption', () => {

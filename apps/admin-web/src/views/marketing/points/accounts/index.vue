@@ -43,8 +43,7 @@ const { columns, data, getData, getDataByPage, loading, searchParams, resetSearc
       title: '昵称/手机',
       align: 'center',
       width: 160,
-      render: (row: any) =>
-        row.member ? `${row.member.nickname || '-'} / ${row.member.mobile || '-'}` : '-'
+      render: (row: any) => (row.member ? `${row.member.nickname || '-'} / ${row.member.mobile || '-'}` : '-')
     },
     { key: 'availablePoints', title: '可用积分', align: 'center', width: 100 },
     { key: 'totalPoints', title: '累计获得', align: 'center', width: 100 },

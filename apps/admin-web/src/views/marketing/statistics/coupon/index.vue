@@ -5,7 +5,7 @@ import { fetchGetCouponStatistics } from '@/service/api/marketing-statistics';
 import { useEcharts } from '@/hooks/common/echarts';
 
 defineOptions({
-  name: 'CouponStatistics',
+  name: 'CouponStatistics'
 });
 
 const loading = ref(false);
@@ -14,22 +14,22 @@ const stats = ref<Api.Marketing.CouponStatistics | null>(null);
 const { domRef, updateOptions } = useEcharts(() => ({
   tooltip: {
     trigger: 'axis',
-    axisPointer: { type: 'cross' },
+    axisPointer: { type: 'cross' }
   },
   legend: {
     data: ['发放', '核销'],
-    top: '0',
+    top: '0'
   },
   grid: {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    top: '15%',
+    top: '15%'
   },
   xAxis: {
     type: 'category',
     boundaryGap: false,
-    data: [] as string[],
+    data: [] as string[]
   },
   yAxis: { type: 'value' },
   series: [
@@ -47,11 +47,11 @@ const { domRef, updateOptions } = useEcharts(() => ({
           y2: 1,
           colorStops: [
             { offset: 0.25, color: '#8e9dff' },
-            { offset: 1, color: 'rgba(142,157,255,0.1)' },
-          ],
-        },
+            { offset: 1, color: 'rgba(142,157,255,0.1)' }
+          ]
+        }
       },
-      data: [] as number[],
+      data: [] as number[]
     },
     {
       color: '#26deca',
@@ -67,13 +67,13 @@ const { domRef, updateOptions } = useEcharts(() => ({
           y2: 1,
           colorStops: [
             { offset: 0.25, color: '#26deca' },
-            { offset: 1, color: 'rgba(38,222,202,0.1)' },
-          ],
-        },
+            { offset: 1, color: 'rgba(38,222,202,0.1)' }
+          ]
+        }
       },
-      data: [] as number[],
-    },
-  ],
+      data: [] as number[]
+    }
+  ]
 }));
 
 async function loadData() {
@@ -82,10 +82,10 @@ async function loadData() {
     const { data } = await fetchGetCouponStatistics();
     stats.value = data;
     if (data?.trend?.length) {
-      updateOptions((opts) => {
-        opts.xAxis.data = data.trend.map((t) => t.date.slice(5));
-        opts.series[0].data = data.trend.map((t) => t.distributed);
-        opts.series[1].data = data.trend.map((t) => t.used);
+      updateOptions(opts => {
+        opts.xAxis.data = data.trend.map(t => t.date.slice(5));
+        opts.series[0].data = data.trend.map(t => t.distributed);
+        opts.series[1].data = data.trend.map(t => t.used);
         return opts;
       });
     }

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@10.5.0",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=10.5.0"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "dev:backend": "turbo run dev --filter=@apps/backend",
@@ -11,6 +15,8 @@
     "build": "turbo run build",
     "build:backend": "turbo run build --filter=@apps/backend",
     "build:admin": "turbo run build --filter=@apps/admin-web",
+    "build:mp": "turbo run build --filter=@apps/miniapp-client",
+    "generate-types": "turbo run generate-types",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

@@ -5,7 +5,7 @@ import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'TaskOperateModal',
+  name: 'TaskOperateModal'
 });
 
 interface Props {
@@ -39,7 +39,7 @@ const model = reactive<{
   pointsReward: 10,
   isRepeatable: false,
   maxCompletions: null,
-  isEnabled: true,
+  isEnabled: true
 });
 
 const rules = {
@@ -47,8 +47,8 @@ const rules = {
   taskName: defaultRequiredRule,
   pointsReward: [
     { required: true, message: '请输入积分奖励', trigger: 'blur' },
-    { type: 'number', min: 1, message: '至少 1 积分', trigger: 'blur' },
-  ],
+    { type: 'number', min: 1, message: '至少 1 积分', trigger: 'blur' }
+  ]
 };
 
 function getDefaultModel() {
@@ -59,7 +59,7 @@ function getDefaultModel() {
     pointsReward: 10,
     isRepeatable: false,
     maxCompletions: null as number | null,
-    isEnabled: true,
+    isEnabled: true
   };
 }
 
@@ -87,7 +87,7 @@ async function handleSubmit() {
       pointsReward: model.pointsReward,
       isRepeatable: model.isRepeatable,
       maxCompletions: model.maxCompletions ?? undefined,
-      isEnabled: model.isEnabled,
+      isEnabled: model.isEnabled
     });
   } else if (props.rowData?.id) {
     await fetchUpdatePointTask(props.rowData.id, {
@@ -96,7 +96,7 @@ async function handleSubmit() {
       pointsReward: model.pointsReward,
       isRepeatable: model.isRepeatable,
       maxCompletions: model.maxCompletions ?? undefined,
-      isEnabled: model.isEnabled,
+      isEnabled: model.isEnabled
     });
   }
   window.$message?.success($t('common.updateSuccess'));
@@ -104,7 +104,7 @@ async function handleSubmit() {
   emit('submitted');
 }
 
-watch(visible, (val) => {
+watch(visible, val => {
   if (val) {
     initModel();
     restoreValidation();

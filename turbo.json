@@ -3,11 +3,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "outputs": ["dist/**", ".next/**", "openApi.json"],
       "cache": true
     },
     "generate-types": {
       "dependsOn": ["@apps/backend#build"],
+      "inputs": ["openapi-ts-request.config.ts", "package.json"],
       "outputs": ["src/api.d.ts", "dist/**"],
       "cache": true
     },
@@ -18,14 +20,17 @@
     },
     "lint": {
       "dependsOn": [],
+      "inputs": ["src/**", "eslint.config.*", "package.json"],
       "cache": true
     },
     "typecheck": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "cache": true
     },
     "test": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**", "vitest.config.*", "jest.config.*", "package.json"],
       "cache": true
     }
   }

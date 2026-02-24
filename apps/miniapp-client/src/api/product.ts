@@ -1,15 +1,16 @@
+/**
+ * 商品相关 API
+ * 类型来自 @libs/common-types（由 backend openApi.json 生成）
+ */
+import type { ClientProduct, ClientCategory } from '@libs/common-types'
 import { httpGet, httpPost } from '@/http/http'
 
-/**
- * 商品分类树
- */
+/** 商品分类树 */
 export function getCategoryTree() {
-  return httpGet<any[]>('/client/product/category/tree')
+  return httpGet<ClientCategory[]>('/client/product/category/tree')
 }
 
-/**
- * 商品列表
- */
+/** 商品列表 */
 export function getProductList(params: {
   categoryId?: number
   name?: string
@@ -17,19 +18,15 @@ export function getProductList(params: {
   pageNum?: number
   pageSize?: number
 }) {
-  return httpGet<{ rows: any[], total: number }>('/client/product/list', params)
+  return httpGet<{ rows: ClientProduct[], total: number }>('/client/product/list', params)
 }
 
-/**
- * 商品详情
- */
+/** 商品详情 */
 export function getProductDetail(id: string) {
-  return httpGet<any>(`/client/product/detail/${id}`)
+  return httpGet<ClientProduct>(`/client/product/detail/${id}`)
 }
 
-/**
- * 匹配位置归属租户
- */
+/** 匹配位置归属租户 */
 export function matchTenant(lat: number, lng: number) {
   return httpPost<{ tenantId: string, tenantName: string }>(
     '/client/location/match-tenant',
@@ -37,11 +34,9 @@ export function matchTenant(lat: number, lng: number) {
   )
 }
 
-/**
- * 获取附近租户列表
- */
+/** 获取附近租户列表 */
 export function getNearbyTenants(lat: number, lng: number) {
-  return httpGet<any[]>(
+  return httpGet<{ tenantId: string, tenantName: string }[]>(
     '/client/location/nearby-tenants',
     { lat, lng },
   )

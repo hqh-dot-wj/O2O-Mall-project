@@ -5,7 +5,7 @@ import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
-  name: 'PointsRules',
+  name: 'PointsRules'
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -23,7 +23,7 @@ const model = reactive<Api.Marketing.PointsRule>({
   pointsRedemptionBase: 1,
   maxPointsPerOrder: null,
   maxDiscountPercentOrder: 50,
-  systemEnabled: true,
+  systemEnabled: true
 });
 
 /** 数字必填校验：用 validator 避免 NInputNumber 与 required 的兼容问题 */
@@ -39,7 +39,7 @@ function numberRequired(message: string) {
         return new Error(message);
       }
       return true;
-    },
+    }
   };
 }
 
@@ -70,7 +70,7 @@ const numberDefaults = {
   signinPointsAmount: 10,
   pointsRedemptionRatio: 100,
   pointsRedemptionBase: 1,
-  maxDiscountPercentOrder: 50,
+  maxDiscountPercentOrder: 50
 };
 
 async function initData() {
@@ -80,7 +80,7 @@ async function initData() {
     if (data) {
       Object.assign(model, data);
       // 确保必填数字字段不为 null（API 可能返回 null 或 NInputNumber 期望 number 而非 string）
-      (Object.keys(numberDefaults) as Array<keyof typeof numberDefaults>).forEach((k) => {
+      (Object.keys(numberDefaults) as Array<keyof typeof numberDefaults>).forEach(k => {
         const v = model[k];
         if (v == null || v === '' || (typeof v === 'number' && Number.isNaN(v))) {
           model[k] = numberDefaults[k] as never;
@@ -110,7 +110,7 @@ const UPDATE_KEYS: (keyof Api.Marketing.PointsRuleUpdate)[] = [
   'pointsRedemptionBase',
   'maxPointsPerOrder',
   'maxDiscountPercentOrder',
-  'systemEnabled',
+  'systemEnabled'
 ];
 
 async function handleSubmit() {

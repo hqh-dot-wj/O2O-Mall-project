@@ -41,3 +41,32 @@ export type Config = components["schemas"]["ConfigVo"];
 // 常用查询参数
 export type ConfigQueryParams = RequestParams<"/api/system/config/list", "get"> & components["schemas"]["ListConfigDto"];
 export type UserQueryParams = RequestParams<"/api/system/user/list", "get"> & components["schemas"]["ListUserDto"];
+
+// ─── Client 端 (miniapp-client) ───
+
+// 商品
+export type ClientProduct = components["schemas"]["ClientProductVo"];
+export type ClientProductDetail = components["schemas"]["ClientProductDetailVo"];
+export type ClientCategory = components["schemas"]["ClientCategoryVo"];
+
+// 订单
+export type CreateOrderParams = components["schemas"]["CreateOrderDto"];
+export type OrderDetail = components["schemas"]["OrderDetailVo"];
+export type OrderListItem = components["schemas"]["OrderListItemVo"];
+export type OrderItem = components["schemas"]["OrderItemVo"];
+export type OrderItemInput = components["schemas"]["OrderItemDto"];
+
+// 购物车
+export type CartItem = components["schemas"]["CartItemVo"];
+export type CartList = components["schemas"]["CartListVo"];
+export type AddCartParams = components["schemas"]["AddCartDto"];
+
+// 地址
+export type CreateAddressParams = components["schemas"]["CreateAddressDto"];
+export type UpdateAddressParams = components["schemas"]["UpdateAddressDto"];
+
+// 用户 (C端)
+export type ClientUser = components["schemas"]["ClientUserVo"];
+
+// 分销
+export type CommissionPreview = components["schemas"]["CommissionPreviewVo"];

@@ -1,14 +1,14 @@
 import { URL, fileURLToPath } from 'node:url';
-import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
       '~': fileURLToPath(new URL('./', import.meta.url)),
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
   },
   test: {
     globals: true,
@@ -25,9 +25,9 @@ export default defineConfig({
         'src/**/*.spec.{ts,tsx,vue}',
         'src/**/*.test.{ts,tsx,vue}',
         'src/locales/**',
-        'src/typings/**',
-      ],
+        'src/typings/**'
+      ]
     },
-    setupFiles: ['src/test/setup.ts'],
-  },
+    setupFiles: ['src/test/setup.ts']
+  }
 });

@@ -10,7 +10,7 @@ import ButtonIcon from '@/components/custom/button-icon.vue';
 import TaskOperateModal from './modules/task-operate-modal.vue';
 
 defineOptions({
-  name: 'PointTaskList',
+  name: 'PointTaskList'
 });
 
 const appStore = useAppStore();
@@ -22,56 +22,56 @@ const { columns, data, getData, loading, mobilePagination } = useTable({
   apiFn: fetchGetPointTaskList,
   apiParams: {
     pageNum: 1,
-    pageSize: 10,
+    pageSize: 10
   },
   columns: () => [
     {
       key: 'taskKey',
       title: '任务标识',
       align: 'center',
-      width: 140,
+      width: 140
     },
     {
       key: 'taskName',
       title: '任务名称',
       align: 'center',
-      minWidth: 120,
+      minWidth: 120
     },
     {
       key: 'pointsReward',
       title: '积分奖励',
       align: 'center',
       width: 100,
-      render: (row) => row.pointsReward ?? '-',
+      render: row => row.pointsReward ?? '-'
     },
     {
       key: 'isRepeatable',
       title: '可重复',
       align: 'center',
       width: 80,
-      render: (row) => (
+      render: row => (
         <NTag type={row.isRepeatable ? 'success' : 'default'} size="small">
           {row.isRepeatable ? '是' : '否'}
         </NTag>
-      ),
+      )
     },
     {
       key: 'maxCompletions',
       title: '最多次数',
       align: 'center',
       width: 100,
-      render: (row) => (row.maxCompletions != null ? row.maxCompletions : '不限'),
+      render: row => (row.maxCompletions != null ? row.maxCompletions : '不限')
     },
     {
       key: 'isEnabled',
       title: '状态',
       align: 'center',
       width: 80,
-      render: (row) => (
+      render: row => (
         <NTag type={row.isEnabled ? 'success' : 'default'} size="small">
           {row.isEnabled ? '启用' : '停用'}
         </NTag>
-      ),
+      )
     },
     {
       key: 'taskDescription',
@@ -79,7 +79,7 @@ const { columns, data, getData, loading, mobilePagination } = useTable({
       align: 'center',
       minWidth: 160,
       ellipsis: { tooltip: true },
-      render: (row) => row.taskDescription ?? '-',
+      render: row => row.taskDescription ?? '-'
     },
     {
       key: 'operate',
@@ -87,7 +87,7 @@ const { columns, data, getData, loading, mobilePagination } = useTable({
       align: 'center',
       width: 140,
       fixed: 'right',
-      render: (row) => (
+      render: row => (
         <div class="flex-center gap-8px">
           <ButtonIcon
             type="primary"
@@ -104,9 +104,9 @@ const { columns, data, getData, loading, mobilePagination } = useTable({
             onClick={() => handleDelete(row)}
           />
         </div>
-      ),
-    },
-  ],
+      )
+    }
+  ]
 });
 
 function handleAdd() {
@@ -131,7 +131,7 @@ async function handleDelete(row: Api.Marketing.PointTask) {
       await fetchDeletePointTask(row.id);
       window.$message?.success($t('common.deleteSuccess'));
       getData();
-    },
+    }
   });
 }
 </script>

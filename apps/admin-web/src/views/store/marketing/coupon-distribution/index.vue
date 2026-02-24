@@ -11,19 +11,19 @@ import {
   NInput,
   NSelect,
   NSpace,
-  useMessage,
+  useMessage
 } from 'naive-ui';
 import {
   fetchCouponDistributeManual,
   fetchGetCouponTemplateList,
-  fetchGetUserCoupons,
+  fetchGetUserCoupons
 } from '@/service/api/marketing-coupon';
 import { fetchGetMemberList } from '@/service/api/member';
 import { useTable } from '@/hooks/common/table';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 
 defineOptions({
-  name: 'CouponDistribution',
+  name: 'CouponDistribution'
 });
 
 const message = useMessage();
@@ -32,7 +32,7 @@ const { defaultRequiredRule } = useFormRules();
 
 const model = reactive({
   templateId: null as string | null,
-  memberIds: [] as string[],
+  memberIds: [] as string[]
 });
 
 const rules = {
@@ -42,9 +42,9 @@ const rules = {
       required: true,
       type: 'array' as const,
       trigger: ['blur', 'change'],
-      message: '请至少选择一个会员',
-    },
-  ],
+      message: '请至少选择一个会员'
+    }
+  ]
 };
 
 // 优惠券模板列表（仅用于下拉）
@@ -53,9 +53,9 @@ const { data: templateData, loading: templateLoading } = useTable({
   apiParams: {
     pageNum: 1,
     pageSize: 100,
-    status: 'ACTIVE',
+    status: 'ACTIVE'
   },
-  columns: () => [],
+  columns: () => []
 });
 
 // 会员列表（仅用于下拉）
@@ -63,22 +63,22 @@ const { data: memberData, loading: memberLoading } = useTable({
   apiFn: fetchGetMemberList,
   apiParams: {
     pageNum: 1,
-    pageSize: 100,
+    pageSize: 100
   },
-  columns: () => [],
+  columns: () => []
 });
 
 const templateOptions = computed(() => {
-  return (templateData.value || []).map((t) => ({
+  return (templateData.value || []).map(t => ({
     label: `${t.name} (面值: ${t.value}${t.type === 'CASH' ? '元' : '%'})`,
-    value: t.id,
+    value: t.id
   }));
 });
 
 const memberOptions = computed(() => {
-  return (memberData.value || []).map((m) => ({
+  return (memberData.value || []).map(m => ({
     label: `${m.nickname} (${m.mobile})`,
-    value: m.memberId,
+    value: m.memberId
   }));
 });
 
@@ -91,14 +91,14 @@ const {
   loading: recordLoading,
   searchParams,
   resetSearchParams,
-  mobilePagination,
+  mobilePagination
 } = useTable({
   apiFn: fetchGetUserCoupons,
   apiParams: {
     pageNum: 1,
     pageSize: 10,
     memberId: undefined as string | undefined,
-    status: undefined as string | undefined,
+    status: undefined as string | undefined
   },
   columns: () => [
     { key: 'index', title: '序号', align: 'center', width: 64, render: (_: any, index: number) => index + 1 },
@@ -108,7 +108,7 @@ const {
       align: 'center',
       minWidth: 140,
       ellipsis: { tooltip: true },
-      render: (row: Api.Marketing.UserCoupon) => row.couponName ?? row.templateName ?? '-',
+      render: (row: Api.Marketing.UserCoupon) => row.couponName ?? row.templateName ?? '-'
     },
     {
       key: 'typeValue',
@@ -120,7 +120,7 @@ const {
         if (type === 'PERCENTAGE' && row.discountPercent != null) return `${row.discountPercent}%`;
         if (row.discountAmount != null) return `¥${row.discountAmount}`;
         return row.value != null ? `${row.value}` : '-';
-      },
+      }
     },
     { key: 'memberId', title: '会员ID', align: 'center', width: 120, ellipsis: { tooltip: true } },
     {
@@ -133,10 +133,10 @@ const {
           UNUSED: '未使用',
           USED: '已使用',
           EXPIRED: '已过期',
-          LOCKED: '已锁定',
+          LOCKED: '已锁定'
         };
         return map[row.status] ?? row.status;
-      },
+      }
     },
     {
       key: 'distributionType',
@@ -147,10 +147,10 @@ const {
         const map: Record<string, string> = {
           MANUAL: '手动发放',
           ACTIVITY: '活动领取',
-          ORDER: '订单赠送',
+          ORDER: '订单赠送'
         };
         return map[row.distributionType ?? ''] ?? '-';
-      },
+      }
     },
     {
       key: 'receiveTime',
@@ -158,7 +158,7 @@ const {
       align: 'center',
       width: 170,
       render: (row: Api.Marketing.UserCoupon) =>
-        (row.receiveTime ?? row.createTime ?? '-').toString().replace('T', ' ').slice(0, 19),
+        (row.receiveTime ?? row.createTime ?? '-').toString().replace('T', ' ').slice(0, 19)
     },
     {
       key: 'usedTime',
@@ -166,9 +166,9 @@ const {
       align: 'center',
       width: 170,
       render: (row: Api.Marketing.UserCoupon) =>
-        row.usedTime ? row.usedTime.toString().replace('T', ' ').slice(0, 19) : '-',
-    },
-  ],
+        row.usedTime ? row.usedTime.toString().replace('T', ' ').slice(0, 19) : '-'
+    }
+  ]
 });
 
 async function handleDistribute() {
@@ -177,7 +177,7 @@ async function handleDistribute() {
   try {
     const res = await fetchCouponDistributeManual({
       templateId: model.templateId,
-      memberIds: model.memberIds,
+      memberIds: model.memberIds
     });
     const list = (res as any)?.data;
     const count = Array.isArray(list) ? list.filter((r: any) => r?.success).length : 0;
@@ -230,7 +230,7 @@ async function handleDistribute() {
       </NForm>
     </NCard>
 
-    <NCard title="发放记录" :bordered="false" size="small" class="card-wrapper mt-16px">
+    <NCard title="发放记录" :bordered="false" size="small" class="mt-16px card-wrapper">
       <NForm inline class="mb-16px" label-placement="left" :label-width="80">
         <NGrid :cols="24" :x-gap="12">
           <NGridItem :span="6">
@@ -248,7 +248,7 @@ async function handleDistribute() {
                   { label: '未使用', value: 'UNUSED' },
                   { label: '已使用', value: 'USED' },
                   { label: '已过期', value: 'EXPIRED' },
-                  { label: '已锁定', value: 'LOCKED' },
+                  { label: '已锁定', value: 'LOCKED' }
                 ]"
                 style="width: 100%"
               />

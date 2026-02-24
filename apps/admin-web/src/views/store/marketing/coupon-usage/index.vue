@@ -6,7 +6,7 @@ import { useTable } from '@/hooks/common/table';
 import { useDownload } from '@/hooks/business/download';
 
 defineOptions({
-  name: 'CouponUsage',
+  name: 'CouponUsage'
 });
 
 const appStore = useAppStore();
@@ -20,7 +20,7 @@ const { columns, data, getData, getDataByPage, loading, searchParams, resetSearc
     memberId: null,
     templateId: null,
     startTime: null,
-    endTime: null,
+    endTime: null
   },
   columns: () => [
     { key: 'index', title: '序号', align: 'center', width: 64, render: (_: any, index: number) => index + 1 },
@@ -28,8 +28,8 @@ const { columns, data, getData, getDataByPage, loading, searchParams, resetSearc
     { key: 'memberId', title: '会员ID', align: 'center', width: 120 },
     { key: 'nickname', title: '昵称', align: 'center', width: 100 },
     { key: 'templateName', title: '优惠券名称', align: 'center', minWidth: 140 },
-    { key: 'orderId', title: '订单号', align: 'center', minWidth: 180 },
-  ],
+    { key: 'orderId', title: '订单号', align: 'center', minWidth: 180 }
+  ]
 });
 
 function handleExport() {
@@ -49,7 +49,7 @@ function handleExport() {
       title="优惠券使用记录"
       :bordered="false"
       size="small"
-      class="card-wrapper sm:flex-1 sm:min-h-0 sm:flex sm:flex-col sm:overflow-hidden"
+      class="card-wrapper sm:min-h-0 sm:flex sm:flex-col sm:flex-1 sm:overflow-hidden"
     >
       <NForm inline class="mb-16px flex-shrink-0" label-placement="left" :label-width="80">
         <NGrid :cols="24" :x-gap="12">
@@ -94,7 +94,7 @@ function handleExport() {
           <NButton @click="handleExport">导出</NButton>
         </NSpace>
       </NForm>
-      <div class="sm:flex-1 sm:min-h-0 sm:flex sm:flex-col">
+      <div class="sm:min-h-0 sm:flex sm:flex-col sm:flex-1">
         <NDataTable
           :columns="columns"
           :data="data"

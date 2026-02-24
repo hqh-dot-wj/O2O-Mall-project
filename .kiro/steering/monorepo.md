@@ -11,7 +11,7 @@ inclusion: auto
 - **根目录**：仅保留 `package.json`、`pnpm-workspace.yaml`、`turbo.json`、`scripts/`、共享配置（如 `tsconfig.base.json`）。**依赖只在根或各子包声明，不重复安装。**
 - **apps/**：可部署应用（如 `backend`、`admin-web`、`miniapp-client`）。每个应用有独立 `package.json`，通过 Turbo 任务参与 `dev`/`build`。
 - **apps/admin-web/packages/**：admin-web 内部共享包，命名空间 `@sa/*`。
-- **libs/**：跨应用共享库（如 `@libs/common-types`）。
+- **libs/**：跨应用共享库（如 `@libs/common-types`、`@libs/common-utils`、`@libs/common-constants`）。
 - **docs**：文档包（若存在）。
 
 新增应用放 `apps/`，新增跨应用共享库放 `libs/`，仅 admin-web 用的放 `apps/admin-web/packages/`。新增后需在 `pnpm-workspace.yaml` 的 `packages` 中已有通配符覆盖（如 `apps/*`、`libs/*`），无需改 workspace 配置除非新加顶层目录。
@@ -32,7 +32,8 @@ inclusion: auto
 - **任务定义**：在根目录 `turbo.json` 中统一定义 `build`、`dev`、`lint`、`typecheck`、`test` 等。需要先构建依赖包时使用 `dependsOn: ["^build"]`；`dev` 使用 `persistent: true`、`cache: false`。
 - **运行方式**：开发/构建**从根目录**用 pnpm 跑 Turbo，例如：
   - `pnpm dev` / `pnpm dev:backend` / `pnpm dev:admin` / `pnpm dev:mp`
-  - `pnpm build` / `pnpm build:backend` / `pnpm build:admin`
+  - `pnpm build` / `pnpm build:backend` / `pnpm build:admin` / `pnpm build:mp`
+  - `pnpm generate-types`（先构建 backend，再生成 common-types）
   - `pnpm lint` / `pnpm typecheck` / `pnpm test`
 - **单包脚本**：若需在某个 app 下执行命令，先确认是否应改为在根用 `pnpm --filter <包名> <script>` 或已有根脚本封装。
 
@@ -57,7 +58,7 @@ inclusion: auto
 ## 7. 校验与 CI
 
 - 改完依赖或结构后，在根目录执行 **`pnpm verify-monorepo`**（即 `node scripts/verify-monorepo.mjs`），通过后再提交。CI 也应跑该脚本。
-- 校验项包括：共享依赖版本一致、内部包用 `workspace:*`、无子级锁文件、tsconfig 继承根配置、无分散 Git Hooks、环境变量文件命名、各应用有 `.env.example`、backend 脚本无 `.bat`/`.sh` 且脚本名为 kebab-case。
+- 校验项包括：共享依赖版本一致、内部包用 `workspace:*`、无子级锁文件、tsconfig 继承根配置、无分散 Git Hooks、环境变量文件命名、各应用有 `.env.example`、backend 脚本无 `.bat`/`.sh` 且脚本名为 kebab-case、包命名规范（`@apps/*`/`@libs/*`/`@sa/*`）、无内部包循环依赖、包边界正确（libs 不依赖 apps）。
 
 ## 8. 结合本项目的补充规则（15 条）
 
@@ -100,3 +101,125 @@ inclusion: auto
 ### 9.5 不重复犯错
 
 遇到过的错误和无效方案要记住，后续步骤中不再尝试已证明失败的路径。换方向时说明为什么换。
+
+## 10. 共享层管理规范
+
+### 10.1 共享库职责
+
+| 包                       | 职责                                   | 内容示例                                                 |
+| ------------------------ | -------------------------------------- | -------------------------------------------------------- |
+| `@libs/common-types`     | OpenAPI 生成的 API 类型 + 业务实体别名 | `User`、`Role`、`ApiResult<T>`、`RequestParams`          |
+| `@libs/common-utils`     | 跨应用通用工具函数                     | `listToTree`、`isEmpty`、`isNotEmpty`、`getErrorMessage` |
+| `@libs/common-constants` | 跨应用共享常量                         | 正则（手机号、邮箱、密码）、枚举映射                     |
+
+### 10.2 什么应该提取到共享层
+
+满足以下**全部**条件时，才考虑提取：
+
+1. **至少 2 个 app 使用**相同或高度相似的逻辑
+2. **函数签名和行为语义一致**（不是"看起来像"而是"做的事一样"）
+3. **无平台特定依赖**（不依赖 DOM、uni-app API、NestJS 装饰器等）
+4. **提取后调用方改动小**（理想情况：换个 import 路径即可）
+
+### 10.3 什么不应该提取
+
+- 仅 1 个 app 使用的工具函数（如 `formatFileSize` 仅 admin-web 用）
+- 签名或返回结构不同的"同名函数"（如 backend 的 `ListToTree` 返回 `{id, label, children}`，与前端的 `listToTree` 保留原始结构不同）
+- 依赖特定运行时的代码（如 `crypto` 封装依赖 `JSEncrypt`/浏览器环境）
+- 各 app 已有成熟生态方案的（如 debounce — admin-web 用 lodash/vueuse，miniapp-client 用 es-toolkit fork）
+
+### 10.4 提取流程
+
+1. 在 `libs/common-utils/src/` 下新增模块文件（如 `date.ts`）
+2. 在 `libs/common-utils/src/index.ts` 中 `export * from './date'`
+3. 在 `libs/common-utils/package.json` 的 `exports` 中添加子路径导出
+4. 调用方 app 的 `package.json` 添加 `"@libs/common-utils": "workspace:*"`（如未添加）
+5. 调用方原有实现改为 re-export 或直接替换 import（优先 re-export 以减少改动面）
+6. 运行 `pnpm verify-monorepo` 确认通过
+
+### 10.5 re-export 模式（推荐）
+
+提取共享逻辑后，原文件保留导出别名，避免大面积修改调用方：
+
+```typescript
+// apps/admin-web/src/utils/common.ts
+import { listToTree } from '@libs/common-utils';
+export const handleTree = listToTree; // 保持原有导出名
+```
+
+```typescript
+// apps/backend/src/common/utils/error.ts
+export { getErrorMessage, getErrorStack, getErrorInfo } from '@libs/common-utils/error';
+```
+
+## 11. 跨应用类型安全规范
+
+### 11.1 类型来源优先级
+
+1. **首选**：`@libs/common-types` 中 OpenAPI 生成的类型（`components["schemas"]["XxxVo"]`）
+2. **次选**：`@libs/common-types` 中手动定义的业务实体别名（如 `export type User = components["schemas"]["UserVo"]`）
+3. **末选**：各 app 内部 typings 中手写的类型定义
+
+### 11.2 新增 API 接口时的类型流程
+
+1. 后端新增/修改接口 → 构建 backend 生成 `openApi.json`
+2. 运行 `pnpm generate-types` → 更新 `@libs/common-types` 的 `api.d.ts`
+3. 如果是常用实体，在 `libs/common-types/src/index.ts` 中添加别名（如 `export type Order = components["schemas"]["OrderVo"]`）
+4. 前端 app 通过 `@libs/common-types` 引用类型，不手写重复定义
+
+### 11.3 admin-web 类型迁移规则
+
+admin-web 的 `src/typings/api/*.d.ts` 中已有部分类型引用了 `@libs/common-types`（如 `Config`、`Role`、`User`）。后续新增或修改 API 类型时：
+
+- **新增类型**：必须从 `@libs/common-types` 引用，禁止手写与后端 VO/DTO 重复的类型定义
+- **已有类型**：改动时顺带迁移到 `@libs/common-types` 引用（顺带偿还，不强制一次性全量迁移）
+- **前端独有类型**（如 UI 状态、表单临时类型）：保留在 app 内部 typings，不提取到共享层
+
+### 11.4 miniapp-client 类型规则
+
+miniapp-client 的 `src/api/*.ts` 已使用 `@libs/common-types` 的共享类型。后续：
+
+- API 请求/响应类型优先从 `@libs/common-types` 导入
+- C 端独有的类型（如小程序特有的页面参数、组件 props）保留在 app 内部
+
+## 12. CI/CD 质量门禁
+
+### 12.1 CI pipeline 执行顺序
+
+GitHub Actions CI 在 push/PR 到 main/master 时自动运行，执行顺序：
+
+1. `pnpm install --frozen-lockfile` — 安装依赖
+2. `pnpm verify-monorepo` — 结构校验（12 项检查）
+3. `pnpm lint` — ESLint 检查
+4. `pnpm typecheck` — TypeScript 类型检查
+5. `pnpm test` — 单元测试
+6. `pnpm build` — 构建
+
+任一步骤失败则 CI 失败，阻塞合并。
+
+### 12.2 verify-monorepo 必须通过
+
+`verify-monorepo` 是合并的硬性前提。12 项检查覆盖：
+
+- P1: 共享依赖版本一致性（catalog）
+- P2: 内部包引用 workspace:\*
+- P3: 无子级锁文件
+- P4: tsconfig 继承根配置
+- P5: 无分散 Git Hooks
+- P6: 环境变量文件命名规范
+- P7: 各应用提供 .env.example
+- P8: Backend 脚本无 .bat/.sh
+- P9: Backend 脚本 kebab-case
+- P10: 包命名规范
+- P11: 无内部包循环依赖
+- P12: 包边界正确（libs 不依赖 apps）
+
+### 12.3 本地提交前检查
+
+提交前建议运行：
+
+```bash
+pnpm verify-monorepo  # 结构校验
+pnpm lint             # 代码规范
+pnpm typecheck        # 类型检查
+```

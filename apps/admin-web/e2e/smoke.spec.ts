@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 /**
  * 冒烟 E2E：访问首页与登录页，确保应用可打开

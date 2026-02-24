@@ -50,7 +50,8 @@ async function init() {
       model.enableCrossTenant = data.enableCrossTenant ?? false;
       model.crossTenantRate = data.crossTenantRate ?? 100;
       model.crossMaxDaily = data.crossMaxDaily ?? 500;
-      model.commissionBaseType = (data.commissionBaseType as Api.Store.DistributionConfigUpdateParams['commissionBaseType']) ?? 'ORIGINAL_PRICE';
+      model.commissionBaseType =
+        (data.commissionBaseType as Api.Store.DistributionConfigUpdateParams['commissionBaseType']) ?? 'ORIGINAL_PRICE';
       model.maxCommissionRate = data.maxCommissionRate ?? 50;
     }
   } catch (error) {
@@ -81,12 +82,7 @@ onMounted(() => {
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-y-auto lt-sm:overflow-auto">
     <NSpace vertical :size="16">
-      <NCard
-        :title="$t('page.finance_distribution_config.title')"
-        :bordered="false"
-        size="small"
-        class="card-wrapper"
-      >
+      <NCard :title="$t('page.finance_distribution_config.title')" :bordered="false" size="small" class="card-wrapper">
         <NForm :model="model" label-placement="left" :label-width="180" class="max-w-640px">
           <NGrid :cols="24" :x-gap="24">
             <NFormItemGridItem :span="24" :label="$t('page.finance_distribution_config.level1Rate')" path="level1Rate">

@@ -51,7 +51,7 @@ function getWorkspaceDirs() {
 }
 
 const workspaceDirs = getWorkspaceDirs();
-const catalogDeps = new Set(['typescript', 'dayjs', 'axios', 'vue', 'vue-router', 'pinia', 'vue-i18n', '@types/node', 'eslint', 'prettier', 'vitest', 'simple-git-hooks', 'lint-staged', '@commitlint/cli', '@commitlint/config-conventional']);
+const catalogDeps = new Set(['typescript', 'dayjs', 'axios', 'vue', 'vue-router', 'pinia', 'vue-i18n', '@types/node', 'eslint', 'prettier', 'vitest', 'simple-git-hooks', 'lint-staged', '@commitlint/cli', '@commitlint/config-conventional', 'sass']);
 const internalPrefixes = ['@apps/', '@libs/', '@sa/'];
 
 // P1: 共享依赖版本一致性 (catalog 或相同版本)
@@ -149,15 +149,15 @@ function checkP5() {
 
 // P6: 环境变量文件命名规范
 function checkP6() {
-  const allowed = ['.env.development', '.env.production', '.env.test', '.env.example'];
+  const allowed = ['.env', '.env.development', '.env.production', '.env.test', '.env.example'];
   for (const dir of workspaceDirs) {
     if (!dir.startsWith('apps/')) continue;
     const full = path.join(root, dir);
     if (!fs.existsSync(full)) continue;
     const files = fs.readdirSync(full);
     for (const f of files) {
-      if (f.startsWith('.env.') && !allowed.includes(f)) {
-        fail(6, `${dir} 存在非规范环境变量文件: ${f}`);
+      if ((f === '.env' || f.startsWith('.env.')) && !allowed.includes(f)) {
+        fail(6, `${dir} 存在非规范环境变量文件: ${f} (允许: ${allowed.join(', ')})`);
       }
     }
   }
@@ -210,6 +210,118 @@ function checkP9() {
   ok(9, 'Backend 脚本命名 kebab-case');
 }
 
+// P10: 包命名规范 (@apps/*, @libs/*, @sa/*)
+function checkP10() {
+  const allowedPrefixes = ['@apps/', '@libs/', '@sa/'];
+  for (const dir of workspaceDirs) {
+    const pkgPath = path.join(root, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    const name = pkg.name;
+    if (!name) continue;
+    // docs 包和根包可以不遵循
+    if (dir === 'docs') continue;
+    const hasPrefix = allowedPrefixes.some((p) => name.startsWith(p));
+    // 允许 monorepo 根包名不带前缀
+    if (!hasPrefix && pkg.private !== true) {
+      fail(10, `${dir} 包名 "${name}" 不符合命名规范 (@apps/*, @libs/*, @sa/*)`);
+    } else if (!hasPrefix && dir.startsWith('apps/') && !dir.includes('/packages/')) {
+      fail(10, `${dir} 包名 "${name}" 应使用 @apps/ 前缀`);
+    } else if (!hasPrefix && dir.startsWith('libs/')) {
+      fail(10, `${dir} 包名 "${name}" 应使用 @libs/ 前缀`);
+    }
+  }
+  ok(10, '包命名规范');
+}
+
+// P11: 内部包循环依赖检测
+function checkP11() {
+  // 构建内部依赖图
+  const pkgNameToDir = new Map();
+  const graph = new Map(); // name -> Set<name>
+
+  for (const dir of workspaceDirs) {
+    const pkgPath = path.join(root, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    if (!pkg.name) continue;
+    pkgNameToDir.set(pkg.name, dir);
+    graph.set(pkg.name, new Set());
+  }
+
+  for (const dir of workspaceDirs) {
+    const pkgPath = path.join(root, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    if (!pkg.name) continue;
+    const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+    for (const depName of Object.keys(allDeps || {})) {
+      if (graph.has(depName)) {
+        graph.get(pkg.name).add(depName);
+      }
+    }
+  }
+
+  // DFS 检测环
+  const visited = new Set();
+  const inStack = new Set();
+  const cycles = [];
+
+  function dfs(node, pathArr) {
+    if (inStack.has(node)) {
+      const cycleStart = pathArr.indexOf(node);
+      cycles.push(pathArr.slice(cycleStart).concat(node));
+      return;
+    }
+    if (visited.has(node)) return;
+    visited.add(node);
+    inStack.add(node);
+    pathArr.push(node);
+    for (const dep of graph.get(node) || []) {
+      dfs(dep, [...pathArr]);
+    }
+    inStack.delete(node);
+  }
+
+  for (const name of graph.keys()) {
+    dfs(name, []);
+  }
+
+  if (cycles.length > 0) {
+    for (const cycle of cycles) {
+      fail(11, `循环依赖: ${cycle.join(' → ')}`);
+    }
+  } else {
+    ok(11, '无内部包循环依赖');
+  }
+}
+
+// P12: 包边界检查 (libs 不应依赖 apps)
+function checkP12() {
+  const pkgNameToDir = new Map();
+  for (const dir of workspaceDirs) {
+    const pkgPath = path.join(root, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    if (pkg.name) pkgNameToDir.set(pkg.name, dir);
+  }
+
+  for (const dir of workspaceDirs) {
+    if (!dir.startsWith('libs/')) continue;
+    const pkgPath = path.join(root, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+    for (const [depName, version] of Object.entries(allDeps || {})) {
+      const depDir = pkgNameToDir.get(depName);
+      if (depDir && depDir.startsWith('apps/')) {
+        fail(12, `${dir} (libs) 依赖了 ${depName} (apps)，违反包边界：libs 不应依赖 apps`);
+      }
+    }
+  }
+  ok(12, '包边界正确 (libs 不依赖 apps)');
+}
+
 checkP1();
 checkP2();
 checkP3();
@@ -219,6 +331,9 @@ checkP6();
 checkP7();
 checkP8();
 checkP9();
+checkP10();
+checkP11();
+checkP12();
 
 // Dedupe and output
 const failed = [...new Set(results.fail)];

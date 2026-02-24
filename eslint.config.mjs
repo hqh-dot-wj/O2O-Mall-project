@@ -8,8 +8,17 @@ export default [
   prettierConfig,
   {
     rules: {
+      // -- 类型安全 --
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+
+      // -- 代码质量 --
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-debugger': 'warn',
+      'no-duplicate-imports': ['warn', { includeExports: false }],
+      'prefer-const': 'warn',
+      'no-var': 'error',
+      eqeqeq: ['warn', 'smart'],
     },
   },
   {
