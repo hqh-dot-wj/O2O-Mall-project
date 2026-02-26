@@ -1,5 +1,5 @@
 import { PageQueryDto } from 'src/common/dto';
-import { IsOptional, IsString, IsInt, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsInt, IsEnum, IsArray, ValidateNested, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderStatus, OrderType } from '@prisma/client';
@@ -57,6 +57,56 @@ export class VerifyServiceDto {
   orderId: string;
 
   @ApiProperty({ description: '核销备注', required: false })
+  @IsOptional()
+  @IsString()
+  remark?: string;
+}
+
+/**
+ * 订单退款DTO
+ */
+export class RefundOrderDto {
+  @ApiProperty({ description: '订单ID' })
+  @IsString()
+  orderId: string;
+
+  @ApiProperty({ description: '退款原因', required: false })
+  @IsOptional()
+  @IsString()
+  remark?: string;
+}
+
+/**
+ * 部分退款订单项
+ */
+export class PartialRefundItemDto {
+  @ApiProperty({ description: '订单项ID' })
+  @IsInt()
+  @Type(() => Number)
+  itemId: number;
+
+  @ApiProperty({ description: '退款数量' })
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  quantity: number;
+}
+
+/**
+ * 部分退款DTO
+ */
+export class PartialRefundOrderDto {
+  @ApiProperty({ description: '订单ID' })
+  @IsString()
+  orderId: string;
+
+  @ApiProperty({ description: '退款订单项列表', type: [PartialRefundItemDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PartialRefundItemDto)
+  items: PartialRefundItemDto[];
+
+  @ApiProperty({ description: '退款原因', required: false })
   @IsOptional()
   @IsString()
   remark?: string;

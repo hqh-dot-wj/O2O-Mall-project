@@ -108,6 +108,7 @@
     "systeminformation": "^5.25.0",
     "useragent": "^2.3.0",
     "uuid": "catalog:",
+    "wechatpay-node-v3": "^2.2.1",
     "winston": "^3.15.0",
     "winston-daily-rotate-file": "^5.0.0"
   },

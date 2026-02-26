@@ -10,6 +10,8 @@
     "baseUrl": "./",
     "noImplicitAny": true,
     "strictNullChecks": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@src/*": ["src/*"]
     }

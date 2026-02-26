@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Test, TestingModule } from '@nestjs/testing';
 import { LevelScheduler } from './level.scheduler';
 import { LevelService } from '../services/level.service';

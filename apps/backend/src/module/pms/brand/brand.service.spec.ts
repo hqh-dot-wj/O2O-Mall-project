@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Test, TestingModule } from '@nestjs/testing';
 import { BrandService } from './brand.service';
 import { BrandRepository } from './brand.repository';

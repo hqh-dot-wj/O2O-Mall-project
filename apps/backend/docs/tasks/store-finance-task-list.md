@@ -7,11 +7,11 @@
 
 - [x] T-1: 流水查询增加深分页保护（offset ≤ 5000）(1h) ✅ 2026-02-26
 - [x] T-2: 流水导出增加数量限制（≤ 10000 条）(1h) ✅ 2026-02-26
-- [x] T-3: 流水统计佣金子查询增加 `status != 'CANCELLED'` (0.5h) ✅ 2026-02-26
-- [x] T-4: 提现审核增加租户归属校验 (1h) ✅ 2026-02-26
-- [x] T-5: 佣金查询 `phone` 参数生效（关联 `ums_member.mobile`）(0.5h) ✅ 2026-02-26
+- [x] T-3: 流水统计佣金子查询增加 `status != 'CANCELLED'`(0.5h) ✅ 2026-02-26
+- [x] T-4: 提现审核增加租户归属校验 (1h) ✅ 2026-02-26（已在 WithdrawalService.audit 中实现）
+- [x] T-5: 佣金查询 `phone` 参数生效（关联 `ums_member.mobile`）(0.5h) ✅ 2026-02-26（已在 StoreCommissionQueryService 中实现）
 - [x] T-6: 看板接口增加 30 秒 Redis 缓存 (1h) ✅ 2026-02-26
-- [x] T-7: 流水 SQL 抽取为共享方法（已完成：添加 buildLedgerUnionQueries 私有方法并重构 getLedger/exportLedger/getLedgerStats）(2h) ✅ 2026-02-26
+- [x] T-7: 流水 SQL 抽取为共享方法，消除 getLedger/exportLedger 重复 (2h) ✅ 2026-02-26
 
 ## 中期任务（1-2月）— 补齐核心功能
 
@@ -27,7 +27,3 @@
 - [ ] T-14: 财务预警机制（佣金异常增长、提现集中爆发告警）
 - [ ] T-15: 数据钻取（看板数字可点击下钻到明细列表）
 - [ ] T-16: 税务/发票管理
-
-## 备注
-
-所有短期任务已完成。T-7 已完成完整重构：添加了 `buildLedgerUnionQueries()` 私有方法，并成功重构了 getLedger、exportLedger 和 getLedgerStats 三个方法，消除了重复的 SQL 构建代码。所有测试通过，确保重构没有破坏现有功能。

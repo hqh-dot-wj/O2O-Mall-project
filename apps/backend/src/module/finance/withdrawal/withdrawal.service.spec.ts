@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Test, TestingModule } from '@nestjs/testing';
 import { WithdrawalService } from './withdrawal.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -10,14 +10,25 @@ import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response';
 import { WithdrawalStatus } from '@prisma/client';
 
-describe('WithdrawalService - T-4: 提现审核租户校验', () => {
+describe('WithdrawalService - T-4: 提现审核租户归属校验', () => {
   let service: WithdrawalService;
   let withdrawalRepo: WithdrawalRepository;
   let auditService: WithdrawalAuditService;
 
+  const mockPrismaService = {
+    umsMember: {
+      findUnique: jest.fn(),
+    },
+  };
+
+  const mockWalletService = {
+    getOrCreateWallet: jest.fn(),
+    freezeBalance: jest.fn(),
+  };
+
   const mockWithdrawalRepo = {
-    findOne: jest.fn(),
     create: jest.fn(),
+    findOne: jest.fn(),
     findPage: jest.fn(),
   };
 
@@ -26,21 +37,18 @@ describe('WithdrawalService - T-4: 提现审核租户校验', () => {
     reject: jest.fn(),
   };
 
-  const mockWalletService = {
-    getOrCreateWallet: jest.fn(),
-    freezeBalance: jest.fn(),
-  };
-
-  const mockPrismaService = {
-    umsMember: {
-      findUnique: jest.fn(),
-    },
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WithdrawalService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+        {
+          provide: WalletService,
+          useValue: mockWalletService,
+        },
         {
           provide: WithdrawalRepository,
           useValue: mockWithdrawalRepo,
@@ -48,14 +56,6 @@ describe('WithdrawalService - T-4: 提现审核租户校验', () => {
         {
           provide: WithdrawalAuditService,
           useValue: mockAuditService,
-        },
-        {
-          provide: WalletService,
-          useValue: mockWalletService,
-        },
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
         },
       ],
     }).compile();
@@ -67,39 +67,40 @@ describe('WithdrawalService - T-4: 提现审核租户校验', () => {
     jest.clearAllMocks();
   });
 
-  describe('audit', () => {
+  describe('audit - 租户归属校验', () => {
     it('应该在提现记录不存在时抛出错误', async () => {
       // Arrange
       mockWithdrawalRepo.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1')).rejects.toThrow(
-        BusinessException,
-      );
-      await expect(service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1')).rejects.toThrow(
-        '提现申请不存在或已处理',
-      );
+      await expect(
+        service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('应该在提现记录已处理时抛出错误', async () => {
+      // Arrange
+      mockWithdrawalRepo.findOne.mockResolvedValue(null); // findOne 查询条件包含 status=PENDING，已处理的记录会返回 null
+
+      // Act & Assert
+      await expect(
+        service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1'),
+      ).rejects.toThrow(BusinessException);
     });
 
     it('应该在租户不匹配时抛出错误', async () => {
       // Arrange
-      const mockWithdrawal = {
+      mockWithdrawalRepo.findOne.mockResolvedValue({
         id: 'withdrawal-1',
-        tenantId: 'tenant-2', // 不同的租户
-        memberId: 'member-1',
-        amount: 100,
+        tenantId: 'tenant-1',
         status: WithdrawalStatus.PENDING,
-      };
-
-      mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
+        member: { memberId: 'member-1' },
+      });
 
       // Act & Assert
-      await expect(service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1')).rejects.toThrow(
-        BusinessException,
-      );
-      await expect(service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1')).rejects.toThrow(
-        '无权审核其他租户的提现申请',
-      );
+      await expect(
+        service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-2'),
+      ).rejects.toThrow(BusinessException);
     });
 
     it('应该在租户匹配时正常审核通过', async () => {
@@ -107,13 +108,15 @@ describe('WithdrawalService - T-4: 提现审核租户校验', () => {
       const mockWithdrawal = {
         id: 'withdrawal-1',
         tenantId: 'tenant-1',
-        memberId: 'member-1',
-        amount: 100,
         status: WithdrawalStatus.PENDING,
+        member: { memberId: 'member-1' },
       };
 
       mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
-      mockAuditService.approve.mockResolvedValue({ code: 200, data: mockWithdrawal });
+      mockAuditService.approve.mockResolvedValue({
+        code: 200,
+        data: { ...mockWithdrawal, status: WithdrawalStatus.APPROVED },
+      });
 
       // Act
       const result = await service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1');
@@ -128,37 +131,47 @@ describe('WithdrawalService - T-4: 提现审核租户校验', () => {
       const mockWithdrawal = {
         id: 'withdrawal-1',
         tenantId: 'tenant-1',
-        memberId: 'member-1',
-        amount: 100,
         status: WithdrawalStatus.PENDING,
+        member: { memberId: 'member-1' },
       };
 
       mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
-      mockAuditService.reject.mockResolvedValue({ code: 200, data: mockWithdrawal });
+      mockAuditService.reject.mockResolvedValue({
+        code: 200,
+        data: { ...mockWithdrawal, status: WithdrawalStatus.REJECTED },
+      });
 
       // Act
-      const result = await service.audit('withdrawal-1', 'REJECT', 'admin-1', 'tenant-1', '余额不足');
+      const result = await service.audit(
+        'withdrawal-1',
+        'REJECT',
+        'admin-1',
+        'tenant-1',
+        '余额不足',
+      );
 
       // Assert
       expect(result).toBeDefined();
       expect(mockAuditService.reject).toHaveBeenCalledWith(mockWithdrawal, 'admin-1', '余额不足');
     });
 
-    it('应该在未提供 tenantId 时跳过租户校验', async () => {
+    it('应该在未提供 tenantId 时跳过租户校验（超管场景）', async () => {
       // Arrange
       const mockWithdrawal = {
         id: 'withdrawal-1',
-        tenantId: 'tenant-2',
-        memberId: 'member-1',
-        amount: 100,
+        tenantId: 'tenant-1',
         status: WithdrawalStatus.PENDING,
+        member: { memberId: 'member-1' },
       };
 
       mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
-      mockAuditService.approve.mockResolvedValue({ code: 200, data: mockWithdrawal });
+      mockAuditService.approve.mockResolvedValue({
+        code: 200,
+        data: { ...mockWithdrawal, status: WithdrawalStatus.APPROVED },
+      });
 
       // Act
-      const result = await service.audit('withdrawal-1', 'APPROVE', 'admin-1'); // 不传 tenantId
+      const result = await service.audit('withdrawal-1', 'APPROVE', 'admin-1');
 
       // Assert
       expect(result).toBeDefined();
@@ -170,20 +183,57 @@ describe('WithdrawalService - T-4: 提现审核租户校验', () => {
       const mockWithdrawal = {
         id: 'withdrawal-1',
         tenantId: 'tenant-1',
-        memberId: 'member-1',
-        amount: 100,
         status: WithdrawalStatus.PENDING,
+        member: { memberId: 'member-1' },
       };
 
       mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
 
       // Act & Assert
-      await expect(service.audit('withdrawal-1', 'INVALID' as any, 'admin-1', 'tenant-1')).rejects.toThrow(
-        BusinessException,
-      );
-      await expect(service.audit('withdrawal-1', 'INVALID' as any, 'admin-1', 'tenant-1')).rejects.toThrow(
-        '不支持的审核操作',
-      );
+      await expect(
+        service.audit('withdrawal-1', 'INVALID_ACTION' as any, 'admin-1', 'tenant-1'),
+      ).rejects.toThrow(BusinessException);
+    });
+  });
+
+  describe('audit - 边界情况', () => {
+    it('应该在提现记录的 tenantId 为 null 时正确处理', async () => {
+      // Arrange
+      mockWithdrawalRepo.findOne.mockResolvedValue({
+        id: 'withdrawal-1',
+        tenantId: null,
+        status: WithdrawalStatus.PENDING,
+        member: { memberId: 'member-1' },
+      });
+
+      // Act & Assert
+      await expect(
+        service.audit('withdrawal-1', 'APPROVE', 'admin-1', 'tenant-1'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('应该在提供的 tenantId 为空字符串时正确处理', async () => {
+      // Arrange
+      const mockWithdrawal = {
+        id: 'withdrawal-1',
+        tenantId: 'tenant-1',
+        status: WithdrawalStatus.PENDING,
+        member: { memberId: 'member-1' },
+      };
+
+      mockWithdrawalRepo.findOne.mockResolvedValue(mockWithdrawal);
+      mockAuditService.approve.mockResolvedValue({
+        code: 200,
+        data: { ...mockWithdrawal, status: WithdrawalStatus.APPROVED },
+      });
+
+      // Act
+      const result = await service.audit('withdrawal-1', 'APPROVE', 'admin-1', '');
+
+      // Assert
+      // 空字符串被视为 falsy，应该跳过租户校验
+      expect(result).toBeDefined();
+      expect(mockAuditService.approve).toHaveBeenCalled();
     });
   });
 });

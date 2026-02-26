@@ -1,10 +1,19 @@
-import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { User } from 'src/common/decorators/user.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 import { StoreOrderService } from './store-order.service';
-import { ListStoreOrderDto, ReassignWorkerDto, VerifyServiceDto } from './dto/store-order.dto';
+import {
+  ListStoreOrderDto,
+  ReassignWorkerDto,
+  VerifyServiceDto,
+  RefundOrderDto,
+  PartialRefundOrderDto,
+} from './dto/store-order.dto';
 
 /**
  * Store端订单管理控制器
@@ -52,6 +61,7 @@ export class StoreOrderController {
   @Post('reassign')
   @Api({ summary: '改派技师' })
   @RequirePermission('store:order:dispatch')
+  @Operlog({ businessType: BusinessType.UPDATE })
   async reassignWorker(@Body() dto: ReassignWorkerDto, @User('userId') userId: string) {
     return await this.storeOrderService.reassignWorker(dto, userId);
   }
@@ -64,5 +74,37 @@ export class StoreOrderController {
   @RequirePermission('store:order:verify')
   async verifyService(@Body() dto: VerifyServiceDto, @User('userId') userId: string) {
     return await this.storeOrderService.verifyService(dto, userId);
+  }
+
+  /**
+   * 订单退款
+   */
+  @Post('refund')
+  @Api({ summary: '订单退款' })
+  @RequirePermission('store:order:refund')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  async refundOrder(@Body() dto: RefundOrderDto, @User('userId') userId: string) {
+    return await this.storeOrderService.refundOrder(dto.orderId, dto.remark || '', userId);
+  }
+
+  /**
+   * 部分退款
+   */
+  @Post('refund/partial')
+  @Api({ summary: '部分退款' })
+  @RequirePermission('store:order:refund')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  async partialRefundOrder(@Body() dto: PartialRefundOrderDto, @User('userId') userId: string) {
+    return await this.storeOrderService.partialRefundOrder(dto, userId);
+  }
+
+  /**
+   * 导出订单数据
+   */
+  @Get('export')
+  @Api({ summary: '导出订单数据' })
+  @RequirePermission('store:order:export')
+  async exportOrders(@Query() query: ListStoreOrderDto, @Res() res: Response) {
+    return await this.storeOrderService.exportOrders(query, res);
   }
 }

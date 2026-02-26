@@ -790,6 +790,428 @@ PR时必须检查以下项目：
 
 ---
 
-**规范版本**: 1.1  
-**最后更新**: 2026-02-23  
-**新增内容**: §18 文档编写规范、§19 文档驱动开发
+## 20. 第三方 API 对接规范（必做）
+
+### 20.1 核心原则
+
+**禁止省略配置**：对接第三方 API 时，必须完整实现配置管理，不能因为"暂时用不到"而省略。
+
+**可测试性优先**：所有第三方 API 调用必须支持 Mock，确保测试可以独立运行。
+
+### 20.2 配置管理（强制）
+
+**必须实现**：
+
+1. **配置接口定义**（TypeScript Interface）
+2. **配置验证**（class-validator）
+3. **配置加载**（ConfigService）
+4. **环境变量映射**（.env 文件）
+
+**示例**：
+
+```typescript
+// config/wechat-pay.config.ts
+export interface WechatPayConfig {
+  appId: string;
+  mchId: string;
+  apiKey: string;
+  apiV3Key: string;
+  certPath: string;
+  notifyUrl: string;
+  refundNotifyUrl: string;
+}
+
+// wechat-pay.service.ts
+@Injectable()
+export class WechatPayService {
+  private readonly config: WechatPayConfig;
+
+  constructor(private readonly configService: ConfigService) {
+    this.config = {
+      appId: this.configService.get<string>('WECHAT_PAY_APP_ID'),
+      mchId: this.configService.get<string>('WECHAT_PAY_MCH_ID'),
+      apiKey: this.configService.get<string>('WECHAT_PAY_API_KEY'),
+      apiV3Key: this.configService.get<string>('WECHAT_PAY_API_V3_KEY'),
+      certPath: this.configService.get<string>('WECHAT_PAY_CERT_PATH'),
+      notifyUrl: this.configService.get<string>('WECHAT_PAY_NOTIFY_URL'),
+      refundNotifyUrl: this.configService.get<string>('WECHAT_PAY_REFUND_NOTIFY_URL'),
+    };
+    this.validateConfig();
+  }
+
+  private validateConfig() {
+    BusinessException.throwIf(!this.config.appId, '微信支付 AppId 未配置');
+    BusinessException.throwIf(!this.config.mchId, '微信支付商户号未配置');
+    // ... 其他配置验证
+  }
+}
+```
+
+**.env.example**（必须提供）：
+
+```bash
+# 微信支付配置
+WECHAT_PAY_APP_ID=wx1234567890abcdef
+WECHAT_PAY_MCH_ID=1234567890
+WECHAT_PAY_API_KEY=your_api_key_here
+WECHAT_PAY_API_V3_KEY=your_api_v3_key_here
+WECHAT_PAY_CERT_PATH=/path/to/cert.pem
+WECHAT_PAY_NOTIFY_URL=https://your-domain.com/api/payment/notify
+WECHAT_PAY_REFUND_NOTIFY_URL=https://your-domain.com/api/payment/refund-notify
+```
+
+### 20.3 接口抽象（强制）
+
+**必须定义接口**：使用 TypeScript Interface 或 Abstract Class 定义第三方 API 的抽象接口。
+
+**目的**：
+
+- 便于 Mock 测试
+- 支持多实现（如微信支付 + 支付宝）
+- 降低耦合度
+
+**示例**：
+
+```typescript
+// interfaces/payment-provider.interface.ts
+export interface IPaymentProvider {
+  /**
+   * 创建支付订单
+   */
+  createOrder(params: CreateOrderParams): Promise<CreateOrderResult>;
+
+  /**
+   * 查询订单状态
+   */
+  queryOrder(orderId: string): Promise<OrderStatus>;
+
+  /**
+   * 申请退款
+   */
+  refund(params: RefundParams): Promise<RefundResult>;
+
+  /**
+   * 查询退款状态
+   */
+  queryRefund(refundId: string): Promise<RefundStatus>;
+}
+
+// wechat-pay.service.ts
+@Injectable()
+export class WechatPayService implements IPaymentProvider {
+  async createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
+    // 实现微信支付逻辑
+  }
+
+  async refund(params: RefundParams): Promise<RefundResult> {
+    // 实现微信退款逻辑
+  }
+
+  // ... 其他方法
+}
+```
+
+### 20.4 Mock 测试（强制）
+
+**所有第三方 API 调用必须可 Mock**：
+
+**方式 1：使用 Interface + Mock 实现**
+
+```typescript
+// wechat-pay.service.spec.ts
+describe('WechatPayService', () => {
+  let service: WechatPayService;
+  let mockPaymentProvider: jest.Mocked<IPaymentProvider>;
+
+  beforeEach(async () => {
+    mockPaymentProvider = {
+      createOrder: jest.fn(),
+      queryOrder: jest.fn(),
+      refund: jest.fn(),
+      queryRefund: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        {
+          provide: WechatPayService,
+          useValue: mockPaymentProvider,
+        },
+      ],
+    }).compile();
+
+    service = module.get<WechatPayService>(WechatPayService);
+  });
+
+  it('should create order successfully', async () => {
+    mockPaymentProvider.createOrder.mockResolvedValue({
+      orderId: 'order123',
+      payUrl: 'https://pay.weixin.qq.com/...',
+    });
+
+    const result = await service.createOrder({
+      amount: 100,
+      description: 'Test Order',
+    });
+
+    expect(result.orderId).toBe('order123');
+    expect(mockPaymentProvider.createOrder).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+**方式 2：使用 jest.spyOn Mock 方法**
+
+```typescript
+it('should handle refund failure', async () => {
+  jest.spyOn(service, 'refund').mockRejectedValue(new Error('Refund failed'));
+
+  await expect(service.refund({ orderId: 'order123', amount: 100 })).rejects.toThrow('Refund failed');
+});
+```
+
+### 20.5 TODO 标记（强制）
+
+**暂未对接的第三方 API 必须标记 TODO**：
+
+```typescript
+/**
+ * 订单退款
+ *
+ * TODO: [第三方API] 对接微信退款接口
+ * - 配置已完成：WechatPayConfig (appId, mchId, apiKey, certPath, refundNotifyUrl)
+ * - Mock 已实现：见 store-order.service.spec.ts
+ * - 对接步骤：
+ *   1. 安装依赖：pnpm add wechatpay-node-v3
+ *   2. 实现 WechatPayService.refund() 方法
+ *   3. 调用微信退款 API：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_9.shtml
+ *   4. 处理退款回调：POST /payment/refund-notify
+ *   5. 更新测试：移除 Mock，使用沙箱环境测试
+ * - 预估工时：3-5d
+ * - 优先级：P1
+ */
+@Transactional()
+async refundOrder(orderId: string, remark: string, operatorId: string) {
+  // 当前实现：仅更新数据库状态
+  await this.orderRepo.update(orderId, {
+    status: OrderStatus.REFUNDED,
+    remark: remark ? `退款: ${remark}` : '订单退款',
+  });
+
+  // TODO: 在此处调用微信退款 API
+  // const refundResult = await this.wechatPayService.refund({
+  //   orderId,
+  //   amount: order.payAmount,
+  //   reason: remark,
+  // });
+
+  await this.commissionService.cancelCommissions(orderId);
+  await this.orderIntegrationService.handleOrderRefunded(orderId, order.memberId);
+
+  return Result.ok(null, '退款处理成功');
+}
+```
+
+### 20.6 配置文档（强制）
+
+**必须提供配置文档**：在模块的 README.md 或 docs/ 目录下说明：
+
+1. 需要哪些配置项
+2. 如何获取配置值（如微信商户平台）
+3. 配置示例
+4. 测试环境配置（沙箱）
+
+**示例**：
+
+````markdown
+## 微信支付配置
+
+### 1. 获取配置
+
+登录 [微信商户平台](https://pay.weixin.qq.com/)：
+
+- AppId：公众号/小程序 AppId
+- 商户号：商户平台 → 账户中心 → 商户信息
+- API 密钥：商户平台 → 账户中心 → API 安全 → 设置密钥
+- API v3 密钥：商户平台 → 账户中心 → API 安全 → 设置 APIv3 密钥
+- 证书：商户平台 → 账户中心 → API 安全 → 下载证书
+
+### 2. 配置环境变量
+
+复制 `.env.example` 到 `.env`，填写配置：
+
+\```bash
+WECHAT_PAY_APP_ID=wx1234567890abcdef
+WECHAT_PAY_MCH_ID=1234567890
+WECHAT_PAY_API_KEY=your_api_key_here
+WECHAT_PAY_API_V3_KEY=your_api_v3_key_here
+WECHAT_PAY_CERT_PATH=/path/to/cert.pem
+WECHAT_PAY_NOTIFY_URL=https://your-domain.com/api/payment/notify
+WECHAT_PAY_REFUND_NOTIFY_URL=https://your-domain.com/api/payment/refund-notify
+\```
+
+### 3. 测试环境
+
+使用微信支付沙箱环境测试：
+
+- 沙箱商户号：1234567890
+- 沙箱 API 密钥：sandbox_api_key
+- 沙箱文档：https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=23_1
+````
+
+### 20.7 禁止项
+
+**禁止以下行为**：
+
+- ❌ 硬编码配置值（appId、密钥等）
+- ❌ 省略配置管理（"暂时用不到"）
+- ❌ 第三方 API 调用无法 Mock
+- ❌ 缺少 TODO 标记和对接步骤
+- ❌ 缺少配置文档
+
+### 20.8 PR 检查清单
+
+对接第三方 API 时，PR 必须包含：
+
+- [ ] 配置接口定义（TypeScript Interface）
+- [ ] 配置加载和验证（ConfigService）
+- [ ] 环境变量示例（.env.example）
+- [ ] 接口抽象（Interface 或 Abstract Class）
+- [ ] Mock 测试（所有方法可 Mock）
+- [ ] TODO 标记（暂未对接的 API）
+- [ ] 配置文档（README.md 或 docs/）
+- [ ] 对接步骤说明（预估工时、优先级）
+
+---
+
+## 21. 测试规范补充（跳过测试的处理）
+
+### 21.1 禁止跳过测试
+
+**原则**：禁止使用 `it.skip()` 或 `describe.skip()` 跳过测试。
+
+**原因**：
+
+- 跳过的测试会被遗忘
+- 代码覆盖率虚高
+- 隐藏潜在问题
+
+### 21.2 无法运行的测试必须标记
+
+**如果测试暂时无法运行**（如依赖外部服务、配置未就绪），必须：
+
+1. **使用 `it.todo()` 标记**（而非 `it.skip()`）
+2. **添加详细说明**（为什么无法运行、如何修复）
+3. **创建 Issue 跟踪**（关联 Issue 编号）
+
+**示例**：
+
+```typescript
+describe('WechatPayService', () => {
+  // ✅ 正确：使用 it.todo() 标记
+  it.todo('should refund order via Wechat API (需要配置微信支付沙箱环境，见 Issue #123)');
+
+  // ❌ 错误：使用 it.skip()
+  it.skip('should refund order', async () => {
+    // 测试代码
+  });
+
+  // ✅ 正确：Mock 测试可以运行
+  it('should handle refund failure', async () => {
+    jest.spyOn(service, 'refund').mockRejectedValue(new Error('Refund failed'));
+    await expect(service.refund({ orderId: 'order123', amount: 100 })).rejects.toThrow();
+  });
+});
+```
+
+### 21.3 it.todo() 使用规范
+
+**格式**：
+
+```typescript
+it.todo('测试描述 (原因说明，见 Issue #编号)');
+```
+
+**示例**：
+
+```typescript
+describe('OrderService', () => {
+  it.todo('should sync order to ERP system (需要对接 ERP API，见 Issue #456)');
+  it.todo('should send SMS notification (需要配置短信服务，见 Issue #789)');
+});
+```
+
+### 21.4 测试覆盖率要求
+
+**核心模块**（订单、支付、佣金）：
+
+- 单元测试覆盖率 ≥ 80%
+- 关键路径必须有测试
+- 边界条件必须有测试
+- 异常场景必须有测试
+
+**非核心模块**：
+
+- 单元测试覆盖率 ≥ 60%
+- 主要功能有测试即可
+
+**it.todo() 不计入覆盖率**：
+
+- `it.todo()` 标记的测试不会影响覆盖率统计
+- 但必须在 Issue 中跟踪，确保最终实现
+
+### 21.5 PR 检查清单
+
+提交 PR 时，必须检查：
+
+- [ ] 没有使用 `it.skip()` 或 `describe.skip()`
+- [ ] 无法运行的测试使用 `it.todo()` 标记
+- [ ] `it.todo()` 包含原因说明和 Issue 编号
+- [ ] 核心模块测试覆盖率 ≥ 80%
+- [ ] 所有可运行的测试都通过
+
+### 21.6 示例对比
+
+**❌ 错误示例**：
+
+```typescript
+describe('PaymentService', () => {
+  // 错误：跳过测试，没有说明原因
+  it.skip('should process refund', async () => {
+    // 测试代码
+  });
+
+  // 错误：注释掉测试
+  // it('should send notification', async () => {
+  //   // 测试代码
+  // });
+});
+```
+
+**✅ 正确示例**：
+
+```typescript
+describe('PaymentService', () => {
+  // 正确：Mock 测试可以运行
+  it('should process refund successfully', async () => {
+    jest.spyOn(wechatPayService, 'refund').mockResolvedValue({ success: true });
+    const result = await service.processRefund('order123');
+    expect(result.success).toBe(true);
+  });
+
+  // 正确：使用 it.todo() 标记暂未实现的测试
+  it.todo('should integrate with real Wechat Pay API (需要沙箱环境，见 Issue #123)');
+
+  // 正确：异常场景测试
+  it('should handle refund failure', async () => {
+    jest.spyOn(wechatPayService, 'refund').mockRejectedValue(new Error('API Error'));
+    await expect(service.processRefund('order123')).rejects.toThrow('API Error');
+  });
+});
+```
+
+---
+
+**规范版本**: 1.2  
+**最后更新**: 2026-02-26  
+**新增内容**: §20 第三方 API 对接规范、§21 测试规范补充

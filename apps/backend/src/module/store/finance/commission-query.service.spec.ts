@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Test, TestingModule } from '@nestjs/testing';
 import { StoreCommissionQueryService } from './commission-query.service';
 import { CommissionRepository } from 'src/module/finance/commission/commission.repository';

@@ -1,16 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { FormatDateFields } from 'src/common/utils';
+import { ExportTable, ExportHeader } from 'src/common/utils/export';
 import { Prisma, OrderStatus, OrderType, CommissionStatus } from '@prisma/client';
-import { ListStoreOrderDto, ReassignWorkerDto, VerifyServiceDto } from './dto/store-order.dto';
+import { ListStoreOrderDto, ReassignWorkerDto, VerifyServiceDto, PartialRefundOrderDto } from './dto/store-order.dto';
 import { CommissionService } from 'src/module/finance/commission/commission.service';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { StoreOrderRepository } from './store-order.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
-import { CommissionQueryResult, CommissionSumResult, OrderListItem } from 'src/common/types';
+import { WechatPayService } from 'src/module/payment/wechat-pay.service';
+import { CommissionSumResult, OrderListItem } from 'src/common/types';
 
 /**
  * Store端订单服务
@@ -25,6 +28,7 @@ export class StoreOrderService {
     private readonly orderRepo: StoreOrderRepository,
     private readonly commissionService: CommissionService,
     private readonly orderIntegrationService: OrderIntegrationService,
+    private readonly wechatPayService: WechatPayService,
   ) {}
 
   /**
@@ -97,34 +101,6 @@ export class StoreOrderService {
     if (list.length > 0) {
       const orderIds = list.map((o) => o.id);
 
-      // 调试日志：检查订单是否在列表中
-      const debugOrder = list.find((o: OrderListItem) => o.orderSn === '202602031020VJSIA849');
-      if (debugOrder) {
-        this.logger.log(
-          `[订单列表] 找到订单: 202602031020VJSIA849, 订单ID: ${debugOrder.id}, 类型: ${typeof debugOrder.id}`,
-        );
-        this.logger.log(
-          `[订单列表] 订单ID列表长度: ${orderIds.length}, 包含该订单ID: ${orderIds.includes(debugOrder.id)}`,
-        );
-
-        // 先单独查询该订单的佣金，看看是否能查到
-        const debugCommissionsBefore = await this.prisma.$queryRaw<CommissionQueryResult[]>`
-          SELECT order_id as "orderId", amount, status::text as status, tenant_id as "tenantId"
-          FROM fin_commission
-          WHERE order_id = ${debugOrder.id}
-        `;
-        this.logger.log(`[订单列表] 单独查询该订单的佣金记录: ${JSON.stringify(debugCommissionsBefore)}`);
-
-        // 测试IN查询
-        const testCommissions = await this.prisma.$queryRaw<CommissionQueryResult[]>`
-          SELECT order_id as "orderId", amount, status::text as status
-          FROM fin_commission
-          WHERE order_id IN (${Prisma.join([debugOrder.id])})
-            AND status::text != 'CANCELLED'
-        `;
-        this.logger.log(`[订单列表] IN查询测试结果: ${JSON.stringify(testCommissions)}`);
-      }
-
       const commissionSums = await this.prisma.$queryRaw<CommissionSumResult[]>`
         SELECT order_id as "orderId", SUM(amount) as total
         FROM fin_commission
@@ -133,37 +109,7 @@ export class StoreOrderService {
         GROUP BY order_id
       `;
 
-      this.logger.log(`[订单列表] 查询到的佣金汇总数: ${commissionSums.length}`);
-      this.logger.log(`[订单列表] 佣金汇总数据: ${JSON.stringify(commissionSums)}`);
-      if (debugOrder) {
-        this.logger.log(
-          `[订单列表] 佣金汇总中是否包含该订单: ${commissionSums.some((c) => c.orderId === debugOrder.id)}`,
-        );
-        if (commissionSums.length > 0) {
-          this.logger.log(
-            `[订单列表] 佣金汇总中的订单ID示例: ${commissionSums[0].orderId}, 类型: ${typeof commissionSums[0].orderId}`,
-          );
-        }
-      }
-
       commissionMap = new Map(commissionSums.map((c) => [c.orderId, c.total || '0.00']));
-
-      // 调试日志：打印特定订单的佣金数据
-      if (debugOrder) {
-        const debugOrderId = debugOrder.id;
-        this.logger.log(`[订单列表] 订单号: 202602031020VJSIA849, 订单ID: ${debugOrderId}`);
-        this.logger.log(`[订单列表] 佣金Map中的值: ${commissionMap.get(debugOrderId) || '未找到'}`);
-        this.logger.log(`[订单列表] 佣金Map的所有键: ${Array.from(commissionMap.keys()).join(', ')}`);
-        const debugCommissions = await this.prisma.$queryRaw<CommissionQueryResult[]>`
-          SELECT order_id as "orderId", amount, status::text as status, tenant_id as "tenantId"
-          FROM fin_commission
-          WHERE order_id = ${debugOrderId}
-        `;
-        this.logger.log(`[订单列表] 该订单的所有佣金记录: ${JSON.stringify(debugCommissions)}`);
-        this.logger.log(`[订单列表] 当前租户ID: ${tenantId}, 是否超级管理员: ${isSuper}`);
-      }
-    } else {
-      this.logger.log(`[订单列表] 订单列表为空`);
     }
 
     // 3. 组装数据
@@ -173,14 +119,6 @@ export class StoreOrderService {
       const commission = new Prisma.Decimal(commissionAmountStr);
       const remainingAmount = payAmount.sub(commission);
       const commissionAmount = Number(commissionAmountStr);
-
-      // 调试日志：打印特定订单的最终数据
-      if (item.orderSn === '202602031020VJSIA849') {
-        this.logger.log(`[订单列表-组装] 订单号: ${item.orderSn}, 订单ID: ${item.id}`);
-        this.logger.log(`[订单列表-组装] 佣金金额字符串: ${commissionAmountStr}, 转换为数字: ${commissionAmount}`);
-        this.logger.log(`[订单列表-组装] 支付金额: ${payAmount.toString()}, 商户收款: ${remainingAmount.toFixed(2)}`);
-        this.logger.log(`[订单列表-组装] commissionMap中是否有该订单: ${commissionMap.has(item.id)}`);
-      }
 
       return {
         ...item,
@@ -238,7 +176,13 @@ export class StoreOrderService {
       where,
       include: {
         items: true,
-        commissions: true,
+        commissions: {
+          where: {
+            status: {
+              not: CommissionStatus.CANCELLED,
+            },
+          },
+        },
       },
     });
 
@@ -413,7 +357,6 @@ export class StoreOrderService {
    * 强制核销订单
    */
   @Transactional()
-  @Transactional()
   async verifyService(dto: VerifyServiceDto, operatorId: string) {
     const tenantId = TenantContext.getTenantId();
     // 查询订单
@@ -433,12 +376,8 @@ export class StoreOrderService {
       remark: dto.remark ? `强制核销: ${dto.remark}` : '强制核销',
     });
 
-    // 触发佣金结算时间更新
-    try {
-      await this.commissionService.updatePlanSettleTime(dto.orderId, 'VERIFY');
-    } catch (error) {
-      this.logger.error(`Update commission settle time failed for order ${dto.orderId}`, error);
-    }
+    // 触发佣金结算时间更新（失败时抛出异常，确保数据一致性）
+    await this.commissionService.updatePlanSettleTime(dto.orderId, 'VERIFY');
 
     this.logger.log(`订单 ${dto.orderId} 强制核销, 操作人: ${operatorId}`);
     return Result.ok(null, '核销成功');
@@ -446,12 +385,6 @@ export class StoreOrderService {
 
   /**
    * 订单退款
-   *
-   * TODO: [微信支付-退款] 对接微信退款接口
-   * - 在更新订单状态后、佣金回滚前，调用微信退款 API
-   * - 退款成功后再执行佣金取消和优惠券/积分退还
-   * - 需要处理退款回调通知 (异步确认退款到账)
-   * - 支持部分退款场景 (按商品维度)
    */
   @Transactional()
   async refundOrder(orderId: string, remark: string, operatorId: string) {
@@ -468,28 +401,357 @@ export class StoreOrderService {
       '当前订单状态不可退款',
     );
 
+    // 调用微信退款 API
+    try {
+      const refundSn = `REFUND_${order!.orderSn}_${Date.now()}`;
+
+      const refundResult = await this.wechatPayService.refund({
+        orderSn: order!.orderSn,
+        refundSn,
+        refundAmount: order!.payAmount,
+        totalAmount: order!.payAmount,
+        reason: remark || '订单退款',
+      });
+
+      this.logger.log(
+        `微信退款成功: 订单=${orderId}, 退款单=${refundResult.refundSn}, 微信退款单=${refundResult.refundId}`,
+      );
+    } catch (error) {
+      this.logger.error(`微信退款失败: 订单=${orderId}`, error);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '微信退款失败，请稍后重试');
+    }
+
     // 更新订单状态
     await this.orderRepo.update(orderId, {
       status: OrderStatus.REFUNDED,
       remark: remark ? `退款: ${remark}` : '订单退款',
     });
 
-    // 触发佣金取消/回滚
-    try {
-      await this.commissionService.cancelCommissions(orderId);
-    } catch (error) {
-      this.logger.error(`Cancel commission failed for order ${orderId}`, error);
-    }
+    // 触发佣金取消/回滚（失败时抛出异常，确保数据一致性）
+    await this.commissionService.cancelCommissions(orderId);
 
-    // 触发订单退款事件处理（优惠券和积分）
-    try {
-      await this.orderIntegrationService.handleOrderRefunded(orderId, order!.memberId);
-    } catch (error) {
-      this.logger.error(`Handle order refunded event failed for order ${orderId}`, error);
-      // 不抛出异常，避免影响退款流程
-    }
+    // 触发订单退款事件处理（优惠券和积分）（失败时抛出异常，确保数据一致性）
+    await this.orderIntegrationService.handleOrderRefunded(orderId, order!.memberId);
 
     this.logger.log(`订单 ${orderId} 退款, 操作人: ${operatorId}`);
     return Result.ok(null, '退款处理成功');
+  }
+
+  /**
+   * 部分退款（按商品维度）
+   *
+   * @description
+   * 支持按订单项退款，计算退款金额和佣金回滚
+   * 如果全部订单项都退款，订单状态改为 REFUNDED
+   * 如果部分订单项退款，订单状态保持不变
+   */
+  @Transactional()
+  async partialRefundOrder(dto: PartialRefundOrderDto, operatorId: string) {
+    const tenantId = TenantContext.getTenantId();
+
+    // 1. 查询订单和订单项
+    const order = await this.prisma.omsOrder.findFirst({
+      where: {
+        id: dto.orderId,
+        tenantId,
+        deleteTime: null,
+      },
+      include: {
+        items: true,
+        commissions: {
+          where: {
+            status: {
+              not: CommissionStatus.CANCELLED,
+            },
+          },
+        },
+      },
+    });
+
+    BusinessException.throwIfNull(order, '订单不存在');
+
+    // 2. 校验订单状态
+    BusinessException.throwIf(
+      order!.status === OrderStatus.PENDING_PAY ||
+        order!.status === OrderStatus.CANCELLED ||
+        order!.status === OrderStatus.REFUNDED,
+      '当前订单状态不可退款',
+    );
+
+    // 3. 校验退款订单项
+    const orderItems = order!.items;
+
+    for (const refundItem of dto.items) {
+      const orderItem = orderItems.find((item) => item.id === refundItem.itemId);
+      BusinessException.throwIfNull(orderItem, `订单项 ${refundItem.itemId} 不存在`);
+      BusinessException.throwIf(
+        refundItem.quantity > orderItem!.quantity,
+        `订单项 ${refundItem.itemId} 退款数量不能超过购买数量`,
+      );
+    }
+
+    // 4. 计算退款金额
+    let refundAmount = new Prisma.Decimal(0);
+    const refundDetails: Array<{ itemId: number; quantity: number; amount: string }> = [];
+
+    for (const refundItem of dto.items) {
+      const orderItem = orderItems.find((item) => item.id === refundItem.itemId)!;
+      // 按比例计算退款金额
+      const itemRefundAmount = new Prisma.Decimal(orderItem.price)
+        .mul(refundItem.quantity)
+        .toDecimalPlaces(2);
+      refundAmount = refundAmount.add(itemRefundAmount);
+
+      refundDetails.push({
+        itemId: refundItem.itemId,
+        quantity: refundItem.quantity,
+        amount: itemRefundAmount.toString(),
+      });
+    }
+
+    // 5. 调用微信部分退款 API
+    try {
+      const refundSn = `REFUND_${order!.orderSn}_${Date.now()}`;
+
+      const refundResult = await this.wechatPayService.refund({
+        orderSn: order!.orderSn,
+        refundSn,
+        refundAmount: refundAmount.toString(),
+        totalAmount: order!.payAmount,
+        reason: dto.remark || '部分退款',
+      });
+
+      this.logger.log(
+        `微信部分退款成功: 订单=${dto.orderId}, 退款金额=${refundAmount.toString()}, 微信退款单=${refundResult.refundId}`,
+      );
+    } catch (error) {
+      this.logger.error(`微信部分退款失败: 订单=${dto.orderId}`, error);
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '微信退款失败，请稍后重试');
+    }
+
+    // 6. 计算退款比例（用于佣金和优惠券/积分的按比例退还）
+    const refundRatio = refundAmount.div(order!.payAmount).toDecimalPlaces(4);
+
+    // 7. 按比例回滚佣金
+    if (order!.commissions && order!.commissions.length > 0) {
+      for (const commission of order!.commissions) {
+        const refundCommissionAmount = new Prisma.Decimal(commission.amount)
+          .mul(refundRatio)
+          .toDecimalPlaces(2);
+
+        // 更新佣金状态为已取消
+        await this.prisma.finCommission.update({
+          where: { id: commission.id },
+          data: {
+            status: CommissionStatus.CANCELLED,
+          },
+        });
+
+        // 如果佣金已结算，需要从钱包扣减
+        if (commission.status === CommissionStatus.SETTLED) {
+          await this.prisma.finWallet.update({
+            where: { memberId: commission.beneficiaryId },
+            data: {
+              balance: { decrement: refundCommissionAmount.toNumber() },
+              totalIncome: { decrement: refundCommissionAmount.toNumber() },
+            },
+          });
+        }
+      }
+    }
+
+    // 8. 按比例退还优惠券和积分
+    const refundPointsAmount = Math.floor(Number(order!.pointsUsed || 0) * Number(refundRatio));
+
+    if (order!.userCouponId || refundPointsAmount > 0) {
+      await this.orderIntegrationService.handleOrderRefunded(dto.orderId, order!.memberId);
+    }
+
+    // 9. 判断是否全部退款
+    const isFullRefund = dto.items.length === orderItems.length &&
+      dto.items.every((refundItem) => {
+        const orderItem = orderItems.find((item) => item.id === refundItem.itemId)!;
+        return refundItem.quantity === orderItem.quantity;
+      });
+
+    // 10. 更新订单状态和备注
+    const refundRemark = `部分退款: ${dto.remark || ''}\n退款金额: ${refundAmount.toString()}\n退款明细: ${JSON.stringify(refundDetails)}`;
+
+    if (isFullRefund) {
+      // 全部退款，更新订单状态为 REFUNDED
+      await this.orderRepo.update(dto.orderId, {
+        status: OrderStatus.REFUNDED,
+        remark: order!.remark ? `${order!.remark}\n${refundRemark}` : refundRemark,
+      });
+    } else {
+      // 部分退款，订单状态保持不变，仅更新备注
+      await this.orderRepo.update(dto.orderId, {
+        remark: order!.remark ? `${order!.remark}\n${refundRemark}` : refundRemark,
+      });
+    }
+
+    this.logger.log(
+      `订单 ${dto.orderId} 部分退款, 退款金额: ${refundAmount.toString()}, 操作人: ${operatorId}`,
+    );
+
+    return Result.ok(
+      {
+        refundAmount: refundAmount.toString(),
+        refundRatio: refundRatio.mul(100).toFixed(2) + '%',
+        isFullRefund,
+        refundDetails,
+      },
+      '部分退款处理成功',
+    );
+  }
+
+  /**
+   * 导出订单数据
+   */
+  async exportOrders(query: ListStoreOrderDto, res: Response) {
+    const tenantId = TenantContext.getTenantId();
+    const isSuper = TenantContext.isSuperTenant();
+
+    const where: Prisma.OmsOrderWhereInput = {
+      deleteTime: null,
+    };
+
+    if (!isSuper) {
+      where.tenantId = tenantId;
+    }
+
+    // 构建查询条件
+    if (query.orderSn) where.orderSn = { contains: query.orderSn };
+    if (query.receiverPhone) where.receiverPhone = { contains: query.receiverPhone };
+    if (query.status) where.status = query.status;
+    if (query.orderType) where.orderType = query.orderType;
+    if (query.memberId) where.memberId = query.memberId;
+
+    const dateRange = query.getDateRange('createTime');
+    if (dateRange) Object.assign(where, dateRange);
+
+    // 查询所有符合条件的订单（不分页，限制最多 5000 条）
+    const orders = await this.prisma.omsOrder.findMany({
+      where,
+      include: {
+        items: {
+          take: 1,
+          select: { productImg: true, productName: true },
+        },
+        tenant: {
+          select: { companyName: true },
+        },
+      },
+      orderBy: { createTime: 'desc' },
+      take: 5000,
+    });
+
+    // 批量查询佣金汇总
+    let commissionMap = new Map<string, string>();
+    if (orders.length > 0) {
+      const orderIds = orders.map((o) => o.id);
+      const commissionSums = await this.prisma.$queryRaw<CommissionSumResult[]>`
+        SELECT order_id as "orderId", SUM(amount) as total
+        FROM fin_commission
+        WHERE order_id IN (${Prisma.join(orderIds)})
+          AND status::text != 'CANCELLED'
+        GROUP BY order_id
+      `;
+      commissionMap = new Map(commissionSums.map((c) => [c.orderId, c.total || '0.00']));
+    }
+
+    // 组装导出数据
+    const exportData = orders.map((order: OrderListItem) => {
+      const commissionAmountStr = commissionMap.get(order.id) || '0.00';
+      const payAmount = new Prisma.Decimal(order.payAmount);
+      const commission = new Prisma.Decimal(commissionAmountStr);
+      const remainingAmount = payAmount.sub(commission);
+
+      return {
+        orderSn: order.orderSn,
+        tenantName: (order.tenant as { companyName?: string })?.companyName || '',
+        productName: (order.items as { productName?: string }[])?.[0]?.productName || '',
+        orderType: order.orderType,
+        status: order.status,
+        totalAmount: Number(order.totalAmount),
+        freightAmount: Number(order.freightAmount),
+        discountAmount: Number(order.discountAmount),
+        payAmount: Number(order.payAmount),
+        commissionAmount: Number(commissionAmountStr),
+        remainingAmount: Number(remainingAmount.toFixed(2)),
+        receiverName: order.receiverName || '',
+        receiverPhone: order.receiverPhone || '',
+        receiverAddress: order.receiverAddress || '',
+        createTime: order.createTime,
+        payTime: order.payTime,
+      };
+    });
+
+    // 定义导出表头
+    const headers: ExportHeader[] = [
+      { title: '订单号', dataIndex: 'orderSn', width: 20 },
+      { title: '所属商户', dataIndex: 'tenantName', width: 20 },
+      { title: '商品名称', dataIndex: 'productName', width: 30 },
+      { title: '订单类型', dataIndex: 'orderType', width: 12 },
+      { title: '订单状态', dataIndex: 'status', width: 12 },
+      { title: '商品总额', dataIndex: 'totalAmount', width: 12 },
+      { title: '运费', dataIndex: 'freightAmount', width: 12 },
+      { title: '优惠金额', dataIndex: 'discountAmount', width: 12 },
+      { title: '实付金额', dataIndex: 'payAmount', width: 12 },
+      { title: '佣金总额', dataIndex: 'commissionAmount', width: 12 },
+      { title: '商户收款', dataIndex: 'remainingAmount', width: 12 },
+      { title: '收货人', dataIndex: 'receiverName', width: 12 },
+      { title: '联系电话', dataIndex: 'receiverPhone', width: 15 },
+      { title: '收货地址', dataIndex: 'receiverAddress', width: 40 },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        width: 20,
+        formateStr: (value: unknown) => {
+          if (!value) return '';
+          return new Date(value as string).toLocaleString('zh-CN');
+        },
+      },
+      {
+        title: '支付时间',
+        dataIndex: 'payTime',
+        width: 20,
+        formateStr: (value: unknown) => {
+          if (!value) return '';
+          return new Date(value as string).toLocaleString('zh-CN');
+        },
+      },
+    ];
+
+    // 字典映射
+    const dictMap = {
+      orderType: {
+        PRODUCT: '实物订单',
+        SERVICE: '服务订单',
+      },
+      status: {
+        PENDING_PAY: '待支付',
+        PAID: '已支付',
+        SHIPPED: '已发货/服务中',
+        COMPLETED: '已完成',
+        CANCELLED: '已取消',
+        REFUNDED: '已退款',
+      },
+    };
+
+    const filename = `订单数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    await ExportTable(
+      {
+        data: exportData,
+        header: headers,
+        sheetName: '订单列表',
+        dictMap,
+        filename,
+      },
+      res,
+    );
+
+    this.logger.log(`导出订单数据: ${exportData.length} 条`);
   }
 }
