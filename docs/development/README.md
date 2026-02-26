@@ -16,6 +16,13 @@
 - [依赖管理规范](./dependency-management.md) - Monorepo 依赖版本管理
 - [GitHub 配置指南](./github-setup.md) - 分支保护、团队配置等
 
+### AI 辅助开发
+
+- [Steering 快速开始](./steering-quick-start.md) - Kiro AI 配置验证和使用指南
+- [Steering 重构说明](./steering-refactoring.md) - Context 优化技术细节
+- [Steering 变更日志](./steering-changelog.md) - 配置变更记录
+- [Skills 安装指南](./skills-installation.md) - Anthony Fu Skills 安装和配置
+
 ### 测试
 
 - [测试标准化分析](./testing-standardization-analysis.md) - 测试规范和最佳实践

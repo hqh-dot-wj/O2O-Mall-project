@@ -1,8 +1,10 @@
 ---
-inclusion: auto
+inclusion: manual
 ---
 
 # 架构决策元模型（Architecture Decision Meta-Model）
+
+> 手动引用: `#architecture`。架构设计和重构时使用。
 
 本文件定义架构决策的"元结构"——不是具体的技术规则，而是生成规则的规则。
 当涉及技术选型、架构变更、模块拆分、依赖引入等决策时，必须经过此元模型的推导。

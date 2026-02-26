@@ -1,9 +1,11 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: 'apps/backend/**/*.ts'
+fileMatchPattern: 'apps/backend/src/**/*.ts'
 ---
 
-# NestJS 后端开发规范
+# NestJS 后端开发规范（详细版）
+
+> 编辑 backend 源码时自动加载。核心原则见 `00-core-principles.md`。
 
 编辑 `apps/backend` 时遵循。**参考：`apps/backend/src/module/admin/system/user`**。
 

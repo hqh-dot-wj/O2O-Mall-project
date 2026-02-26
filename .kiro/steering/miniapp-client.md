@@ -1,9 +1,11 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: 'apps/miniapp-client/**/*'
+fileMatchPattern: 'apps/miniapp-client/src/**/*.{vue,ts,tsx}'
 ---
 
-# miniapp-client 开发规范（小程序 + H5）
+# miniapp-client 开发规范（小程序 + H5）（详细版）
+
+> 编辑 miniapp-client 源码时自动加载。核心原则见 `00-core-principles.md`。
 
 本规范融合项目既有规则，并参考微信官方、uni-app 官方及大厂实践，适用于 **小程序 + H5** 跨平台开发。
 
@@ -17,17 +19,17 @@ fileMatchPattern: 'apps/miniapp-client/**/*'
 
 ### 目录结构
 
-| 目录 | 用途 |
-|------|------|
-| `src/pages/` | 页面 |
-| `src/components/` | 全局组件 |
-| `src/pages/xx/components/` | 页面级组件 |
-| `src/api/` | API 接口定义 |
-| `src/http/` | HTTP 封装、拦截器 |
-| `src/store/` | Pinia 状态 |
-| `src/tabbar/` | 自定义 tabbar |
-| `src/utils/` | 工具函数 |
-| `src/style/` | 全局样式 |
+| 目录                       | 用途              |
+| -------------------------- | ----------------- |
+| `src/pages/`               | 页面              |
+| `src/components/`          | 全局组件          |
+| `src/pages/xx/components/` | 页面级组件        |
+| `src/api/`                 | API 接口定义      |
+| `src/http/`                | HTTP 封装、拦截器 |
+| `src/store/`               | Pinia 状态        |
+| `src/tabbar/`              | 自定义 tabbar     |
+| `src/utils/`               | 工具函数          |
+| `src/style/`               | 全局样式          |
 
 ---
 
@@ -40,11 +42,11 @@ fileMatchPattern: 'apps/miniapp-client/**/*'
 ```vue
 <script setup lang="ts">
 // #ifdef H5
-import { h5Api } from '@/utils/h5'
+import { h5Api } from '@/utils/h5';
 // #endif
 
 // #ifdef MP-WEIXIN
-import { mpApi } from '@/utils/mp'
+import { mpApi } from '@/utils/mp';
 // #endif
 </script>
 
@@ -62,12 +64,12 @@ import { mpApi } from '@/utils/mp'
 
 ### 2. 平台标识符
 
-| 平台 | 标识符 |
-|------|--------|
-| H5 | `H5` 或 `WEB` |
-| 微信小程序 | `MP-WEIXIN` |
-| 支付宝小程序 | `MP-ALIPAY` |
-| 所有小程序 | `MP` |
+| 平台         | 标识符        |
+| ------------ | ------------- |
+| H5           | `H5` 或 `WEB` |
+| 微信小程序   | `MP-WEIXIN`   |
+| 支付宝小程序 | `MP-ALIPAY`   |
+| 所有小程序   | `MP`          |
 
 ### 3. 条件编译语法
 
@@ -104,11 +106,15 @@ import { mpApi } from '@/utils/mp'
 
 ```scss
 /* #ifdef MP-WEIXIN */
-.xxx { /* 小程序特有 */ }
+.xxx {
+  /* 小程序特有 */
+}
 /* #endif */
 
 /* #ifdef H5 */
-.xxx { /* H5 特有 */ }
+.xxx {
+  /* H5 特有 */
+}
 /* #endif */
 ```
 
@@ -285,38 +291,38 @@ import { mpApi } from '@/utils/mp'
 
 ## 速查表（33 条核心规则）
 
-| # | 规则 | 简要说明 |
-|---|------|----------|
-| 1 | 条件编译 | 平台差异必须用 `#ifdef`/`#endif` |
-| 2 | 平台标识 | H5、MP-WEIXIN、MP 等 |
-| 3 | 条件编译语法 | JS用 `//`，CSS用 `/* */`，模板用 `<!-- -->` |
-| 4 | 优先 uni API | 能用 uni.xxx 就不用条件编译 |
-| 5 | 布局单位 | 优先 rpx，注意安全区 |
-| 6 | UnoCSS | 优先原子类，少写自定义 CSS |
-| 7 | SCSS scoped | 自定义样式用 scoped，平台差异用条件编译 |
-| 8 | 颜色兼容 | 避免 oklch、空格分隔 rgb |
-| 9 | 组件结构 | script setup → template → style |
-| 10 | 禁止 any | 使用 interface/type |
-| 11 | definePage | 页面配置写在最上方 |
-| 12 | 请求封装 | 使用 src/http 统一封装 |
-| 13 | 接口类型 | API 请求/响应定义类型 |
-| 14 | 包体积 | 主包 < 1.5M，单包 ≤ 2M |
-| 15 | 分包 | 非核心页面分包 |
-| 16 | 资源优化 | 移除未使用组件/资源，大图 CDN |
-| 17 | 安全 | 不信任用户输入，最小权限 |
-| 18 | 隐私 | manifest 中声明敏感接口 |
-| 19 | 命名 | kebab-case 文件，PascalCase 组件 |
-| 20 | 组件位置 | 页面组件在 pages/xx/components/ |
-| 21 | 长列表 | 虚拟滚动或 z-paging |
-| 22 | 图片 | 控制尺寸、懒加载、大图 CDN |
-| 23 | 防抖节流 | 搜索、滚动等高频逻辑 |
-| 24 | 生命周期 | 页面用 uni，组件用 Vue3 |
-| 25 | 开发命令 | dev/dev:mp/build 等 |
-| 26 | Lint | lint、lint:fix、type-check |
-| 27 | 调试 | DevTools、微信开发者工具 |
-| 28 | 设计 | 友好、即时反馈、视觉统一 |
-| 29 | 可访问性 | 按钮/图标有文案或 aria-label |
-| 30 | 错误态 | 网络/空数据有明确提示 |
-| 31 | 组件库 | 按需引入，注意包体积 |
-| 32 | 国际化 | vue-i18n + $t() |
-| 33 | 环境变量 | env/ 下 VITE_ 前缀 |
+| #   | 规则         | 简要说明                                    |
+| --- | ------------ | ------------------------------------------- |
+| 1   | 条件编译     | 平台差异必须用 `#ifdef`/`#endif`            |
+| 2   | 平台标识     | H5、MP-WEIXIN、MP 等                        |
+| 3   | 条件编译语法 | JS用 `//`，CSS用 `/* */`，模板用 `<!-- -->` |
+| 4   | 优先 uni API | 能用 uni.xxx 就不用条件编译                 |
+| 5   | 布局单位     | 优先 rpx，注意安全区                        |
+| 6   | UnoCSS       | 优先原子类，少写自定义 CSS                  |
+| 7   | SCSS scoped  | 自定义样式用 scoped，平台差异用条件编译     |
+| 8   | 颜色兼容     | 避免 oklch、空格分隔 rgb                    |
+| 9   | 组件结构     | script setup → template → style             |
+| 10  | 禁止 any     | 使用 interface/type                         |
+| 11  | definePage   | 页面配置写在最上方                          |
+| 12  | 请求封装     | 使用 src/http 统一封装                      |
+| 13  | 接口类型     | API 请求/响应定义类型                       |
+| 14  | 包体积       | 主包 < 1.5M，单包 ≤ 2M                      |
+| 15  | 分包         | 非核心页面分包                              |
+| 16  | 资源优化     | 移除未使用组件/资源，大图 CDN               |
+| 17  | 安全         | 不信任用户输入，最小权限                    |
+| 18  | 隐私         | manifest 中声明敏感接口                     |
+| 19  | 命名         | kebab-case 文件，PascalCase 组件            |
+| 20  | 组件位置     | 页面组件在 pages/xx/components/             |
+| 21  | 长列表       | 虚拟滚动或 z-paging                         |
+| 22  | 图片         | 控制尺寸、懒加载、大图 CDN                  |
+| 23  | 防抖节流     | 搜索、滚动等高频逻辑                        |
+| 24  | 生命周期     | 页面用 uni，组件用 Vue3                     |
+| 25  | 开发命令     | dev/dev:mp/build 等                         |
+| 26  | Lint         | lint、lint:fix、type-check                  |
+| 27  | 调试         | DevTools、微信开发者工具                    |
+| 28  | 设计         | 友好、即时反馈、视觉统一                    |
+| 29  | 可访问性     | 按钮/图标有文案或 aria-label                |
+| 30  | 错误态       | 网络/空数据有明确提示                       |
+| 31  | 组件库       | 按需引入，注意包体积                        |
+| 32  | 国际化       | vue-i18n + $t()                             |
+| 33  | 环境变量     | env/ 下 VITE\_ 前缀                         |

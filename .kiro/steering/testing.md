@@ -1,9 +1,10 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: '**/*.spec.{ts,tsx,vue},**/*.test.{ts,tsx,vue},**/*.e2e-spec.ts,**/test/**/*.ts,**/e2e/**/*.ts'
+inclusion: manual
 ---
 
 # 测试规范
+
+> 手动引用: `#testing`。编写测试时使用。
 
 跨应用（backend、admin-web 等）的测试命名、目录结构、覆盖率、Mock 与 Fixture 约定。各应用具体测试框架（Jest / Vitest）以对应规则为准。
 

@@ -1,9 +1,11 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: 'apps/admin-web/**/*'
+fileMatchPattern: 'apps/admin-web/src/**/*.{vue,ts,tsx}'
 ---
 
-# Admin-Web 前端开发规范（Coding Rules & Conventions）
+# Admin-Web 前端开发规范（详细版）
+
+> 编辑 admin-web 源码时自动加载。核心原则见 `00-core-principles.md`。
 
 编辑 `apps/admin-web` 时遵循。本规范以 `apps/admin-web/src/views/system` 为参考实现（如 `role`、`user`、`dept`），适用于 admin-web 下所有业务视图的开发与扩展。命名与结构对齐业界常见实践（如大厂管理后台的目录、组件、API 约定）。
 
@@ -74,12 +76,12 @@ src/views/[module]/[entity_name]/
 
 新开模块按数据关系选**一种**布局，参考 `src/views/system` 对应页面。
 
-| 布局 | 适用 | 参考 |
-|------|------|------|
-| **6.1 标准（Search + Table）** | 扁平列表 | role, post, tenant |
-| **6.2 左侧树筛选** | 列表按树筛选 | user, post |
-| **6.3 左侧树主从** | 树为主 + 详情+子表 | menu, dict |
-| **6.4 树形表格** | 表格树展开/折叠 | dept |
+| 布局                           | 适用               | 参考               |
+| ------------------------------ | ------------------ | ------------------ |
+| **6.1 标准（Search + Table）** | 扁平列表           | role, post, tenant |
+| **6.2 左侧树筛选**             | 列表按树筛选       | user, post         |
+| **6.3 左侧树主从**             | 树为主 + 详情+子表 | menu, dict         |
+| **6.4 树形表格**               | 表格树展开/折叠    | dept               |
 
 - 6.1：上方 Search，下方 NCard + NDataTable；`useTable`。
 - 6.2：`TableSiderLayout`，左树右表，树选中参与 searchParams；`useTable` + `useLoading`(树)。
@@ -127,11 +129,16 @@ src/views/[module]/[entity_name]/
 - Props/Emits 用 interface 或 type；`defineModel<T>` 带泛型；`defineEmits` 类型化签名。
 
 ```ts
-interface Props { operateType: NaiveUI.TableOperateType; rowData?: Api.System.Role | null; }
+interface Props {
+  operateType: NaiveUI.TableOperateType;
+  rowData?: Api.System.Role | null;
+}
 const props = defineProps<Props>();
 const visible = defineModel<boolean>('visible', { default: false });
 const model = defineModel<Api.System.RoleSearchParams>('model', { required: true });
-interface Emits { (e: 'submitted'): void; }
+interface Emits {
+  (e: 'submitted'): void;
+}
 const emit = defineEmits<Emits>();
 ```
 
@@ -157,17 +164,17 @@ const emit = defineEmits<Emits>();
 
 ### 8.9 速查
 
-| 场景 | 要求 |
-|------|------|
-| 禁止 any | unknown + 收窄或正确类型 |
-| API | 参数、返回值 Api.* / typings |
-| Props/Emits | interface + 类型化 |
-| defineModel | 泛型 |
-| ref/reactive | 泛型或接口 |
-| 函数 | 入参、返回值类型 |
-| columns | DataTableColumns<RowType> |
-| 可选/可空 | `?.`、`??`、`?` 与 `null` 类型 |
-| 类型导入 | `import type` |
+| 场景         | 要求                           |
+| ------------ | ------------------------------ |
+| 禁止 any     | unknown + 收窄或正确类型       |
+| API          | 参数、返回值 Api.\* / typings  |
+| Props/Emits  | interface + 类型化             |
+| defineModel  | 泛型                           |
+| ref/reactive | 泛型或接口                     |
+| 函数         | 入参、返回值类型               |
+| columns      | DataTableColumns<RowType>      |
+| 可选/可空    | `?.`、`??`、`?` 与 `null` 类型 |
+| 类型导入     | `import type`                  |
 
 ---
 

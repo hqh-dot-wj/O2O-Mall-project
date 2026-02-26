@@ -1,8 +1,11 @@
 ---
-inclusion: auto
+inclusion: fileMatch
+fileMatchPattern: '{**/*.ps1,**/*.bat,**/*.cmd,scripts/**/*,**/deploy.cjs}'
 ---
 
 # Windows 开发环境命令规范
+
+> 编辑 Windows 脚本或 scripts 目录时自动加载。
 
 本项目开发环境为 **Windows**，AI 助手执行或建议的所有命令必须兼容 Windows。
 

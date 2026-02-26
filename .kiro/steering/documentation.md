@@ -1,7 +1,10 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: '**/docs/**/*.md'
+inclusion: manual
 ---
+
+# 文档编写规范
+
+> 手动引用: `#doc`。编写项目文档时使用。
 
 # 需求文档与设计文档规范
 

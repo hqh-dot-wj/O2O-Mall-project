@@ -1,8 +1,11 @@
 ---
-inclusion: auto
+inclusion: fileMatch
+fileMatchPattern: '{package.json,pnpm-workspace.yaml,turbo.json,**/package.json,pnpm-lock.yaml}'
 ---
 
-# Monorepo 项目开发规范
+# Monorepo 项目开发规范（详细版）
+
+> 编辑 monorepo 配置文件时自动加载。核心原则见 `00-core-principles.md`。
 
 开发时**必须**意识到这是 **pnpm + Turborepo** 的 monorepo，所有改动需符合根目录与工作区约定。
 
