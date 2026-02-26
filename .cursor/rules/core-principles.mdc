@@ -1,0 +1,44 @@
+---
+description: 核心开发原则（Monorepo、类型安全、响应异常、复杂度控制、文件结构、提交前检查）
+alwaysApply: true
+---
+
+# 核心开发原则
+
+## Monorepo 基础
+
+- pnpm workspace + Turborepo 管理
+- 内部包引用必须用 `workspace:*`
+- 共享依赖版本使用 catalog 统一
+
+## 类型安全（强制）
+
+- 禁止 `any`、`as any`、`@ts-ignore`
+- API 类型来自 `@libs/common-types`（OpenAPI 生成）
+- Props/Emits/ref/reactive 必须显式类型
+
+## 响应与异常
+
+- Backend 统一返回 `Result<T>`
+- 异常使用 `BusinessException.throwIf(condition, msg)`
+- 禁止 `throw new Error()`
+
+## 复杂度控制
+
+- 卫语句替代嵌套 if（禁止箭头型代码）
+- 策略模式替代 3+ 分支的 switch/if-else
+- 单函数不超过 80 行
+
+## 文件结构约定
+
+- Backend: Controller → Service → Repository，定义 VO 层
+- Frontend: `index.vue` + `modules/[entity]-*.vue`
+- 命名: kebab-case (文件/目录)，PascalCase (组件/类型)
+
+## 提交前检查
+
+```bash
+pnpm verify-monorepo  # 结构校验（必须通过）
+pnpm lint            # 代码规范
+pnpm typecheck       # 类型检查
+```

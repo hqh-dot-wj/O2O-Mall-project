@@ -347,7 +347,7 @@ module/marketing/
 
 ### 13.6 Marketing 迁移指引
 
-若当前 C 端营销接口仍在 `module/marketing` 中，需按 **`docs/CLIENT_MARKETING_MIGRATION_SPEC.md`** 执行迁移，使结构符合本节约定。
+若当前 C 端营销接口仍在 `module/marketing` 中，需将 Controller 迁移至 `module/client/marketing/`，使结构符合本节约定。
 
 
 ---
