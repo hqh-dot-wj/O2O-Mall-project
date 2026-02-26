@@ -1564,6 +1564,10 @@ model SysDistConfigLog {
   crossTenantRate   Decimal? @map("cross_tenant_rate") @db.Decimal(5, 2)
   crossMaxDaily     Decimal? @map("cross_max_daily") @db.Decimal(10, 2)
 
+  // === 佣金计算配置 ===
+  commissionBaseType CommissionBaseType? @map("commission_base_type")
+  maxCommissionRate  Decimal?            @map("max_commission_rate") @db.Decimal(5, 2)
+
   operator   String   @db.VarChar(64) // 操作人
   createTime DateTime @default(now()) @map("create_time")
 
@@ -1584,6 +1588,120 @@ model SysDistBlacklist {
 
   @@unique([tenantId, userId])
   @@map("sys_dist_blacklist")
+}
+
+// 商品级分佣配置 (覆盖租户默认配置)
+model SysDistProductConfig {
+  id       Int    @id @default(autoincrement())
+  tenantId String @map("tenant_id") @db.VarChar(20)
+
+  // 商品或品类标识 (二选一)
+  productId  String? @map("product_id") @db.VarChar(50) // 具体商品ID
+  categoryId String? @map("category_id") @db.VarChar(50) // 品类ID
+
+  // 分佣比例 (覆盖租户默认值)
+  level1Rate Decimal? @map("level1_rate") @db.Decimal(5, 2) // null表示使用租户默认值
+  level2Rate Decimal? @map("level2_rate") @db.Decimal(5, 2)
+
+  // 佣金计算策略 (覆盖租户默认值)
+  commissionBaseType CommissionBaseType? @map("commission_base_type")
+
+  // 是否启用 (软删除)
+  isActive Boolean @default(true) @map("is_active")
+
+  createBy   String   @map("create_by") @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+  updateBy   String   @map("update_by") @db.VarChar(64)
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@unique([tenantId, productId], name: "uk_tenant_product")
+  @@unique([tenantId, categoryId], name: "uk_tenant_category")
+  @@index([tenantId, isActive])
+  @@map("sys_dist_product_config")
+}
+
+// ==========================================
+// 📌 分销员等级体系
+// ==========================================
+
+/// 分销员等级定义表
+model SysDistLevel {
+  id                Int      @id @default(autoincrement())
+  tenantId          String   @map("tenant_id") @db.VarChar(20)
+  levelId           Int      @map("level_id") // 等级编号（0-10）
+  levelName         String   @map("level_name") @db.VarChar(50)
+  levelIcon         String?  @map("level_icon") @db.VarChar(255)
+  level1Rate        Decimal  @map("level1_rate") @db.Decimal(5, 4) // 一级佣金比例
+  level2Rate        Decimal  @map("level2_rate") @db.Decimal(5, 4) // 二级佣金比例
+  upgradeCondition  Json?    @map("upgrade_condition") // 升级条件（JSON）
+  maintainCondition Json?    @map("maintain_condition") // 保级条件（JSON）
+  benefits          String?  @db.Text // 等级权益描述
+  sort              Int      @default(0) // 排序
+  isActive          Boolean  @default(true) @map("is_active")
+  createBy          String   @map("create_by") @db.VarChar(64)
+  createTime        DateTime @default(now()) @map("create_time")
+  updateBy          String   @map("update_by") @db.VarChar(64)
+  updateTime        DateTime @updatedAt @map("update_time")
+
+  @@unique([tenantId, levelId])
+  @@index([tenantId, isActive])
+  @@map("sys_dist_level")
+}
+
+/// 分销员等级变更日志表
+model SysDistLevelLog {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @map("tenant_id") @db.VarChar(20)
+  memberId   String   @map("member_id") @db.VarChar(20)
+  fromLevel  Int      @map("from_level")
+  toLevel    Int      @map("to_level")
+  changeType String   @map("change_type") @db.VarChar(20) // UPGRADE, DOWNGRADE, MANUAL
+  reason     String?  @db.VarChar(255)
+  operator   String?  @db.VarChar(64)
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@index([tenantId, memberId])
+  @@index([createTime])
+  @@map("sys_dist_level_log")
+}
+
+/// 分销员申请表
+model SysDistApplication {
+  id           Int       @id @default(autoincrement())
+  tenantId     String    @map("tenant_id") @db.VarChar(20)
+  memberId     String    @map("member_id") @db.VarChar(20)
+  applyReason  String?   @map("apply_reason") @db.VarChar(500)
+  status       String    @db.VarChar(20) // PENDING, REVIEWING, APPROVED, REJECTED, CANCELLED
+  reviewerId   String?   @map("reviewer_id") @db.VarChar(20)
+  reviewTime   DateTime? @map("review_time")
+  reviewRemark String?   @map("review_remark") @db.VarChar(500)
+  autoReviewed Boolean   @default(false) @map("auto_reviewed")
+  createTime   DateTime  @default(now()) @map("create_time")
+  updateTime   DateTime  @updatedAt @map("update_time")
+
+  @@unique([tenantId, memberId, status])
+  @@index([tenantId, status])
+  @@index([memberId])
+  @@index([createTime])
+  @@map("sys_dist_application")
+}
+
+/// 分销员审核配置表
+model SysDistReviewConfig {
+  id               Int      @id @default(autoincrement())
+  tenantId         String   @unique @map("tenant_id") @db.VarChar(20)
+  enableAutoReview Boolean  @default(false) @map("enable_auto_review")
+  minRegisterDays  Int      @default(0) @map("min_register_days")
+  minOrderCount    Int      @default(0) @map("min_order_count")
+  minOrderAmount   Decimal  @default(0) @map("min_order_amount") @db.Decimal(10, 2)
+  requireRealName  Boolean  @default(false) @map("require_real_name")
+  requirePhone     Boolean  @default(true) @map("require_phone")
+  createBy         String   @map("create_by") @db.VarChar(64)
+  createTime       DateTime @default(now()) @map("create_time")
+  updateBy         String   @map("update_by") @db.VarChar(64)
+  updateTime       DateTime @updatedAt @map("update_time")
+
+  @@map("sys_dist_review_config")
 }
 
 // 📌 OMS 订单管理模块

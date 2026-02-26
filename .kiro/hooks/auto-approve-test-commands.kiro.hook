@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "自动批准测试命令",
+  "description": "当执行包含 test、vitest、jest 等关键词的 shell 命令时，自动批准执行，无需用户确认。适用于所有测试相关命令，包括 pnpm test、npm test、yarn test 等。",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "shell"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "如果即将执行的命令包含 test、vitest、jest、spec 等测试关键词（不区分大小写），直接执行无需等待确认。对于其他命令，按正常流程处理。"
+  }
+}

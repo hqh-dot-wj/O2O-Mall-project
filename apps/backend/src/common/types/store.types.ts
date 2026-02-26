@@ -65,6 +65,8 @@ export interface DistributionLogItem {
   enableCrossTenant?: boolean;
   crossTenantRate?: Decimal;
   crossMaxDaily?: Decimal;
+  commissionBaseType?: string | null;
+  maxCommissionRate?: Decimal | null;
   operator: string;
   createTime: Date;
 }

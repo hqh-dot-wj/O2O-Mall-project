@@ -56,9 +56,14 @@ export class BrandService {
    *
    * @param dto - 创建品牌DTO
    * @returns 创建成功的品牌对象
+   * @throws {BusinessException} 如果品牌名称已存在
    */
   @Transactional()
   async create(dto: CreateBrandDto) {
+    // 校验品牌名称唯一性
+    const existing = await this.brandRepo.findByName(dto.name);
+    BusinessException.throwIf(existing !== null, '品牌名称已存在', ResponseCode.BUSINESS_ERROR);
+
     const brand = await this.brandRepo.create({
       name: dto.name,
       logo: dto.logo || '', // 默认空字符串
@@ -73,9 +78,20 @@ export class BrandService {
    * @param id - 品牌ID
    * @param dto - 更新品牌DTO
    * @returns 更新后的品牌对象
+   * @throws {BusinessException} 如果品牌名称已被其他品牌使用
    */
   @Transactional()
   async update(id: number, dto: UpdateBrandDto) {
+    // 如果更新了名称，校验唯一性
+    if (dto.name) {
+      const existing = await this.brandRepo.findByName(dto.name);
+      BusinessException.throwIf(
+        existing !== null && existing.brandId !== id,
+        '品牌名称已存在',
+        ResponseCode.BUSINESS_ERROR,
+      );
+    }
+
     const brand = await this.brandRepo.update(id, dto);
     return Result.ok(brand);
   }

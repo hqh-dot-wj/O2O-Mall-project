@@ -41,6 +41,12 @@ export class StoreCommissionQueryService {
       if (query.orderSn) {
         where.order.orderSn = { contains: query.orderSn };
       }
+      // 如果提供了 phone 参数，需要通过 beneficiary 关联查询
+      if (query.phone) {
+        where.beneficiary = {
+          mobile: { contains: query.phone },
+        };
+      }
     }
 
     const result = await this.commissionRepo.findPage({

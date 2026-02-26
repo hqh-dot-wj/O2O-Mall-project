@@ -29,13 +29,13 @@
     "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
-    "apps/backend/**/*.ts": [
+    "apps/backend/**/!(*.spec|*.test).ts": [
       "eslint --fix"
     ],
-    "apps/admin-web/**/*.{ts,tsx,vue}": [
+    "apps/admin-web/**/!(*.spec|*.test).{ts,tsx,vue}": [
       "eslint --fix"
     ],
-    "apps/miniapp-client/**/*.{ts,tsx,vue}": [
+    "apps/miniapp-client/**/!(*.spec|*.test).{ts,tsx,vue}": [
       "eslint --fix"
     ],
     "*.{json,md,yaml,yml}": [

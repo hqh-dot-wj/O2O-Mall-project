@@ -59,6 +59,13 @@ export class DistConfigLogVo {
   @ApiProperty({ description: '跨店佣金日限额 (元)', required: false })
   crossMaxDaily?: number;
 
+  // === 佣金计算配置 ===
+  @ApiProperty({ description: '分佣基数类型', required: false })
+  commissionBaseType?: string;
+
+  @ApiProperty({ description: '熔断保护比例 (0-100)', required: false })
+  maxCommissionRate?: number;
+
   @ApiProperty({ description: '操作人' })
   operator: string;
 

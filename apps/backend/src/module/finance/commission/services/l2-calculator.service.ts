@@ -4,10 +4,13 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { CommissionStatus } from '@prisma/client';
 import { CommissionValidatorService } from './commission-validator.service';
 import { MemberForCommission, DistributionConfig, CommissionRecord } from 'src/common/types/finance.types';
+import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
+import { LevelService } from 'src/module/store/distribution/services/level.service';
 
 /**
  * L2 佣金计算服务
  * 职责：计算间推佣金
+ * 配置优先级：会员等级 > 商品级 > 品类级 > 租户默认
  */
 @Injectable()
 export class L2CalculatorService {
@@ -16,6 +19,7 @@ export class L2CalculatorService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly validator: CommissionValidatorService,
+    private readonly levelService: LevelService,
   ) {}
 
   /**
@@ -24,6 +28,7 @@ export class L2CalculatorService {
    * - 若L1是C1: L2 = L1的上级 (C2)
    * - 若L1是C2且无上级: L1已全拿，L2跳过
    * - 若是临时分享: L2 = 分享人的上级
+   * - 支持商品级配置（商品 > 品类 > 租户默认）
    */
   async calculateL2(
     order: {
@@ -31,14 +36,17 @@ export class L2CalculatorService {
       tenantId: string;
       memberId: string;
       shareUserId: string | null;
+      payAmount: Decimal;
     },
     member: MemberForCommission,
     config: DistributionConfig,
-    baseWait: Decimal,
+    baseAmount: Decimal,
     planSettleTime: Date,
     l1BeneficiaryId?: string,
     l1BeneficiaryLevel?: number,
     noL2Available?: boolean,
+    orderItems?: Array<{ skuId: string; productId: string; categoryId: string; quantity: number; price: Decimal }>,
+    productConfigService?: ProductConfigService,
   ): Promise<CommissionRecord | null> {
     // C2全拿场景，L2跳过
     if (noL2Available) {
@@ -95,18 +103,69 @@ export class L2CalculatorService {
       return null;
     }
 
-    // 5. 计算金额
-    let rate = new Decimal(config.level2Rate);
-    if (isCrossTenant && config.crossTenantRate) {
-      rate = rate.mul(config.crossTenantRate);
+    // 5. 获取会员等级配置（优先级最高）
+    const memberLevelConfig = await this.levelService.findOne(order.tenantId, beneficiary.levelId);
+
+    // 6. 计算金额（配置优先级：会员等级 > 商品级 > 品类级 > 租户默认）
+    let totalAmount = new Decimal(0);
+    let weightedRate = new Decimal(0);
+
+    // 如果有商品信息和ProductConfigService，按商品计算
+    if (orderItems && productConfigService && orderItems.length > 0) {
+      for (const item of orderItems) {
+        const productConfig = await productConfigService.getEffectiveConfig(
+          order.tenantId,
+          item.productId,
+          item.categoryId,
+        );
+
+        if (!productConfig) continue;
+
+        const itemBaseAmount = baseAmount.mul(item.price.mul(item.quantity)).div(order.payAmount);
+        
+        // 配置优先级：会员等级 > 商品级
+        let itemRate: Decimal;
+        if (memberLevelConfig && memberLevelConfig.level2Rate) {
+          // 使用会员等级配置的L2费率
+          itemRate = new Decimal(memberLevelConfig.level2Rate);
+          this.logger.debug(`[Commission] Using member level config for L2: levelId=${beneficiary.levelId}, rate=${itemRate}`);
+        } else {
+          // 使用商品级配置的L2费率
+          itemRate = new Decimal(productConfig.level2Rate);
+        }
+
+        if (isCrossTenant && config.crossTenantRate) {
+          itemRate = itemRate.mul(config.crossTenantRate);
+        }
+
+        const itemAmount = itemBaseAmount.mul(itemRate);
+        totalAmount = totalAmount.add(itemAmount);
+        weightedRate = weightedRate.add(itemRate.mul(item.price.mul(item.quantity)));
+      }
+    } else {
+      // 降级：使用会员等级配置或租户默认配置
+      let rate: Decimal;
+      if (memberLevelConfig && memberLevelConfig.level2Rate) {
+        rate = new Decimal(memberLevelConfig.level2Rate);
+        this.logger.debug(`[Commission] Using member level config for L2 (fallback): levelId=${beneficiary.levelId}, rate=${rate}`);
+      } else {
+        rate = new Decimal(config.level2Rate);
+      }
+      
+      if (isCrossTenant && config.crossTenantRate) {
+        rate = rate.mul(config.crossTenantRate);
+      }
+      totalAmount = baseAmount.mul(rate);
+      weightedRate = rate.mul(order.payAmount);
     }
 
-    const amount = baseWait.mul(rate);
-    if (amount.lt(0.01)) return null;
+    const avgRate = order.payAmount.gt(0) ? weightedRate.div(order.payAmount) : new Decimal(0);
 
-    // 6. 限额校验
+    if (totalAmount.lt(0.01)) return null;
+
+    // 7. 限额校验
     if (isCrossTenant && config.crossMaxDaily) {
-      const pass = await this.validator.checkDailyLimit(order.tenantId, beneficiaryId, amount, config.crossMaxDaily);
+      const pass = await this.validator.checkDailyLimit(order.tenantId, beneficiaryId, totalAmount, config.crossMaxDaily);
       if (!pass) return null;
     }
 
@@ -115,8 +174,8 @@ export class L2CalculatorService {
       tenantId: order.tenantId,
       beneficiaryId,
       level: 2,
-      amount: amount.toDecimalPlaces(2),
-      rateSnapshot: rate.mul(100),
+      amount: totalAmount.toDecimalPlaces(2),
+      rateSnapshot: avgRate.mul(100),
       status: 'FROZEN' as CommissionStatus,
       planSettleTime,
       isCrossTenant: !!isCrossTenant,

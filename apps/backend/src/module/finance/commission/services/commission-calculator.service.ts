@@ -10,6 +10,7 @@ import { BaseCalculatorService } from './base-calculator.service';
 import { L1CalculatorService } from './l1-calculator.service';
 import { L2CalculatorService } from './l2-calculator.service';
 import { CommissionRecord } from 'src/common/types/finance.types';
+import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
 
 /**
  * 佣金计算协调服务
@@ -27,6 +28,7 @@ export class CommissionCalculatorService {
     private readonly baseCalculator: BaseCalculatorService,
     private readonly l1Calculator: L1CalculatorService,
     private readonly l2Calculator: L2CalculatorService,
+    private readonly productConfigService: ProductConfigService,
   ) {}
 
   /**
@@ -44,10 +46,26 @@ export class CommissionCalculatorService {
    */
   @Transactional({ isolationLevel: IsolationLevel.RepeatableRead })
   async calculateCommission(orderId: string, tenantId: string) {
-    // 1. 获取订单详情
+    // 1. 获取订单详情（包含商品信息）
     const order = await this.prisma.omsOrder.findUnique({
       where: { id: orderId },
-      include: { items: true },
+      include: {
+        items: {
+          include: {
+            tenantSku: {
+              include: {
+                globalSku: {
+                  include: {
+                    product: {
+                      select: { categoryId: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!order) {
@@ -97,8 +115,25 @@ export class CommissionCalculatorService {
     const planSettleTime = this.calculateSettleTime(order.orderType);
     const records: CommissionRecord[] = [];
 
+    // 提取商品信息用于查询商品级配置
+    const orderItems = order.items.map(item => ({
+      skuId: item.skuId,
+      productId: item.tenantSku?.globalSku?.productId || '',
+      categoryId: item.tenantSku?.globalSku?.product?.categoryId || '',
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
     // 6. 计算 L1 佣金 (直接推荐: 分享人优先，否则绑定的parentId)
-    const l1Result = await this.l1Calculator.calculateL1(order, member, distConfig, commissionBase, planSettleTime);
+    const l1Result = await this.l1Calculator.calculateL1(
+      order,
+      member,
+      distConfig,
+      commissionBase,
+      planSettleTime,
+      orderItems,
+      this.productConfigService,
+    );
     if (l1Result?.record) records.push(l1Result.record);
 
     // 7. 计算 L2 佣金 (间接推荐: 仅当L1有上级C2时)
@@ -112,6 +147,8 @@ export class CommissionCalculatorService {
       l1Result?.beneficiaryId,
       l1Result?.beneficiaryLevel,
       l1Result?.noL2Available,
+      orderItems,
+      this.productConfigService,
     );
     if (l2Record) records.push(l2Record);
 
@@ -162,12 +199,12 @@ export class CommissionCalculatorService {
           level: enrichedRecord.level,
           amount: enrichedRecord.amount,
           rateSnapshot: enrichedRecord.rateSnapshot,
-          status: enrichedRecord.status,
+          status: enrichedRecord.status as any,
           planSettleTime: enrichedRecord.planSettleTime,
           isCrossTenant: enrichedRecord.isCrossTenant,
           isCapped: enrichedRecord.isCapped,
           commissionBase: enrichedRecord.commissionBase,
-          commissionBaseType: enrichedRecord.commissionBaseType,
+          commissionBaseType: enrichedRecord.commissionBaseType as any,
           orderOriginalPrice: enrichedRecord.orderOriginalPrice,
           orderActualPaid: enrichedRecord.orderActualPaid,
           couponDiscount: enrichedRecord.couponDiscount,

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
+import { DistributionModule } from '../store/distribution/distribution.module';
 import { WalletService } from './wallet/wallet.service';
 import { CommissionService } from './commission/commission.service';
 import { CommissionProcessor } from './commission/commission.processor';
@@ -26,6 +27,7 @@ import { CommissionSettlerService } from './commission/services/commission-settl
     BullModule.registerQueue({
       name: 'CALC_COMMISSION',
     }),
+    DistributionModule,
   ],
   controllers: [WithdrawalController],
   providers: [

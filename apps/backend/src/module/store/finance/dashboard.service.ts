@@ -6,6 +6,7 @@ import { TenantContext } from 'src/common/tenant/tenant.context';
 import { StoreOrderRepository } from 'src/module/store/order/store-order.repository';
 import { CommissionRepository } from 'src/module/finance/commission/commission.repository';
 import { WithdrawalRepository } from 'src/module/finance/withdrawal/withdrawal.repository';
+import { Cacheable } from 'src/common/decorators/redis.decorator';
 
 /**
  * 店铺财务看板服务
@@ -23,7 +24,9 @@ export class StoreDashboardService {
 
   /**
    * 获取资金看板数据
+   * 使用 30 秒缓存提升性能
    */
+  @Cacheable('store:finance:dashboard:', '', 30)
   async getDashboard() {
     const tenantId = TenantContext.getTenantId();
     const isSuper = TenantContext.isSuperTenant();

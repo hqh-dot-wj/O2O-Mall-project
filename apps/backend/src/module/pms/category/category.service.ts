@@ -74,16 +74,26 @@ export class CategoryService {
    * 创建分类
    * 创建成功后自动清除分类树缓存
    * 使用事务确保数据一致性
+   * 层级自动计算：无父级为1级，有父级则为父级层级+1
    *
    * @param dto - 创建分类DTO
    * @returns 创建成功的分类对象
+   * @throws {BusinessException} 如果父分类不存在
    */
   @CacheEvict(CacheEnum.PMS_CATEGORY_TREE, '*')
   @Transactional()
   async create(dto: CreateCategoryDto) {
+    // 计算层级
+    let level = 1;
+    if (dto.parentId) {
+      const parent = await this.categoryRepo.findById(dto.parentId);
+      BusinessException.throwIf(!parent, '父分类不存在', ResponseCode.NOT_FOUND);
+      level = parent.level + 1;
+    }
+
     const category = await this.categoryRepo.create({
       name: dto.name,
-      level: 1, // 默认一级分类，可根据parentId计算
+      level,
       icon: dto.icon || null,
       sort: dto.sort || 0,
       ...(dto.parentId && { parent: { connect: { catId: dto.parentId } } }),
@@ -96,14 +106,31 @@ export class CategoryService {
    * 更新分类信息
    * 更新成功后自动清除分类树缓存
    * 使用事务确保数据一致性
+   * 如果更新了父级，自动重新计算层级
    *
    * @param id - 分类ID
    * @param dto - 更新分类DTO
    * @returns 更新后的分类对象
+   * @throws {BusinessException} 如果父分类不存在或形成循环引用
    */
   @CacheEvict(CacheEnum.PMS_CATEGORY_TREE, '*')
   @Transactional()
   async update(id: number, dto: UpdateCategoryDto) {
+    // 如果更新了父级，重新计算层级
+    if (dto.parentId !== undefined) {
+      // parentId为null表示移到顶级
+      if (dto.parentId === null) {
+        dto.level = 1;
+      } else {
+        // 检查是否会形成循环引用（不能将分类移到自己的子分类下）
+        BusinessException.throwIf(dto.parentId === id, '不能将分类移到自己下面', ResponseCode.BUSINESS_ERROR);
+
+        const parent = await this.categoryRepo.findById(dto.parentId);
+        BusinessException.throwIf(!parent, '父分类不存在', ResponseCode.NOT_FOUND);
+        dto.level = parent.level + 1;
+      }
+    }
+
     const category = await this.categoryRepo.update(id, dto);
     return Result.ok(category);
   }

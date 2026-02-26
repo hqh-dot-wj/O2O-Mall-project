@@ -4,13 +4,21 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { UpdateDistConfigDto } from './dto/update-dist-config.dto';
+import { ListConfigLogsDto } from './dto/list-config-logs.dto';
+import { CommissionPreviewDto } from './dto/commission-preview.dto';
 import { DistConfigVo, DistConfigLogVo } from './vo/dist-config.vo';
 import { BusinessConstants } from 'src/common/constants/business.constants';
 import { DistributionLogItem } from 'src/common/types';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { PaginationHelper } from 'src/common/utils/pagination.helper';
+import { ProductConfigService } from './services/product-config.service';
 
 @Injectable()
 export class DistributionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly productConfigService: ProductConfigService,
+  ) {}
 
   /**
    * 获取分销规则配置
@@ -59,6 +67,7 @@ export class DistributionService {
    * @param operator 操作人
    * @returns 更新结果
    */
+  @Transactional()
   async updateConfig(tenantId: string, dto: UpdateDistConfigDto, operator: string): Promise<Result<boolean>> {
     // 校验比例总和不能超过 100%
     const totalRate = dto.level1Rate + dto.level2Rate;
@@ -102,6 +111,8 @@ export class DistributionService {
         enableCrossTenant: dto.enableCrossTenant ?? false,
         crossTenantRate: new Prisma.Decimal(crossTenantRate),
         crossMaxDaily: new Prisma.Decimal(dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
+        commissionBaseType: dto.commissionBaseType ?? null,
+        maxCommissionRate: new Prisma.Decimal(maxCommissionRate),
         operator,
       },
     });
@@ -112,16 +123,25 @@ export class DistributionService {
   /**
    * 获取分销规则变更历史
    * @param tenantId 租户ID
+   * @param query 分页参数
    * @returns 变更历史列表
    */
-  async getConfigLogs(tenantId: string): Promise<Result<DistConfigLogVo[]>> {
-    const logs = await this.prisma.sysDistConfigLog.findMany({
-      where: { tenantId },
-      orderBy: { createTime: 'desc' },
-      take: 20,
-    });
+  async getConfigLogs(tenantId: string, query: ListConfigLogsDto): Promise<Result<{ rows: DistConfigLogVo[]; total: number }>> {
+    const { skip, take } = PaginationHelper.getPagination(query);
 
-    const result = logs.map((log: DistributionLogItem): DistConfigLogVo => ({
+    const [logs, total] = await this.prisma.$transaction([
+      this.prisma.sysDistConfigLog.findMany({
+        where: { tenantId },
+        orderBy: { createTime: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.sysDistConfigLog.count({
+        where: { tenantId },
+      }),
+    ]);
+
+    const rows = logs.map((log) => ({
       id: Number(log.id),
       configId: Number(log.id),
       level1Rate: Number(log.level1Rate) * 100,
@@ -130,20 +150,23 @@ export class DistributionService {
       enableCrossTenant: log.enableCrossTenant ?? false,
       crossTenantRate: Number(log.crossTenantRate ?? 1) * 100,
       crossMaxDaily: Number(log.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
+      commissionBaseType: log.commissionBaseType ?? undefined,
+      maxCommissionRate: log.maxCommissionRate ? Number(log.maxCommissionRate) * 100 : undefined,
       operator: log.operator,
       createTime: log.createTime.toISOString(),
     }));
 
-    return Result.ok(result);
+    return Result.ok({ rows, total });
   }
 
   /**
    * 佣金预估 (前端提示用)
-   * @param tenantId 下单门店ID
-   * @param shareUserId 分享人ID (可选)
+   * @param dto 预估参数（包含门店ID、SKU列表、分享人ID）
    * @returns 佣金预估信息
    */
-  async getCommissionPreview(tenantId: string, shareUserId?: string) {
+  async getCommissionPreview(dto: CommissionPreviewDto) {
+    const { tenantId, items, shareUserId } = dto;
+
     // 获取门店信息
     const tenant = await this.prisma.sysTenant.findUnique({
       where: { tenantId },
@@ -166,7 +189,7 @@ export class DistributionService {
       where: { tenantId },
     });
 
-    const config = {
+    const tenantConfig = {
       level1Rate: distConfig?.level1Rate
         ? Number(distConfig.level1Rate)
         : BusinessConstants.DISTRIBUTION.DEFAULT_LEVEL1_RATE,
@@ -174,12 +197,13 @@ export class DistributionService {
       crossTenantRate: distConfig?.crossTenantRate
         ? Number(distConfig.crossTenantRate)
         : BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_TENANT_RATE,
+      commissionBaseType: distConfig?.commissionBaseType ?? 'ORIGINAL_PRICE',
     };
 
     // 判断是否跨店
     let isLocal = true;
     let notice: string | null = null;
-    let effectiveRate = config.level1Rate;
+    let crossTenantRate = 1;
 
     if (shareUserId) {
       const shareUser = await this.prisma.umsMember.findUnique({
@@ -191,25 +215,97 @@ export class DistributionService {
         isLocal = shareUser.tenantId === tenantId;
 
         if (!isLocal) {
-          if (config.enableCrossTenant) {
+          if (tenantConfig.enableCrossTenant) {
             // 跨店且开启
-            effectiveRate = config.level1Rate * config.crossTenantRate;
+            crossTenantRate = tenantConfig.crossTenantRate;
             notice = `当前下单门店为【${tenant.companyName}】，预计佣金按该店标准执行`;
           } else {
             // 跨店但未开启
-            effectiveRate = 0;
+            crossTenantRate = 0;
             notice = `【${tenant.companyName}】未开启跨店分销，本单不产生佣金`;
           }
         }
       }
     }
 
+    // 计算预估佣金金额（使用商品级配置）
+    let estimatedAmount = 0;
+    let avgRate = tenantConfig.level1Rate; // 用于显示平均比例
+
+    if (items && items.length > 0 && crossTenantRate > 0) {
+      // 批量查询SKU信息
+      const skuIds = items.map((item) => item.skuId);
+      const skus = await this.prisma.pmsTenantSku.findMany({
+        where: {
+          id: { in: skuIds },
+          tenantId,
+          isActive: true,
+        },
+        include: {
+          globalSku: {
+            include: {
+              product: {
+                select: {
+                  categoryId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const skuMap = new Map(skus.map((s) => [s.id, s]));
+      let totalRate = 0;
+      let validItemCount = 0;
+
+      // 根据佣金基数类型和商品级配置计算
+      for (const item of items) {
+        const sku = skuMap.get(item.skuId);
+        if (!sku) continue;
+
+        const quantity = item.quantity ?? 1;
+
+        // 获取该商品的有效配置（商品级 > 品类级 > 租户默认）
+        const productId = sku.id;
+        const categoryId = sku.globalSku.product.categoryId;
+        const effectiveConfig = await this.productConfigService.getEffectiveConfig(tenantId, String(productId), categoryId);
+
+        if (!effectiveConfig) continue;
+
+        const level1Rate = effectiveConfig.level1Rate;
+        const commissionBaseType = effectiveConfig.commissionBaseType;
+
+        let basePrice = 0;
+        if (commissionBaseType === 'ORIGINAL_PRICE') {
+          basePrice = Number(sku.globalSku.guidePrice);
+        } else if (commissionBaseType === 'ACTUAL_PAID') {
+          basePrice = Number(sku.price);
+        }
+        // ZERO 类型不计算佣金
+
+        // 应用跨店折扣
+        const effectiveRate = level1Rate * crossTenantRate;
+        estimatedAmount += basePrice * quantity * effectiveRate;
+
+        totalRate += effectiveRate;
+        validItemCount++;
+      }
+
+      // 计算平均比例用于显示
+      if (validItemCount > 0) {
+        avgRate = totalRate / validItemCount;
+      }
+    } else if (crossTenantRate === 0) {
+      // 跨店但未开启，佣金率为0
+      avgRate = 0;
+    }
+
     return Result.ok({
       tenantName: tenant.companyName,
-      commissionRate: `${(effectiveRate * 100).toFixed(0)}%`,
+      commissionRate: `${(avgRate * 100).toFixed(0)}%`,
       isLocalReferrer: isLocal,
-      isCrossEnabled: config.enableCrossTenant,
-      estimatedAmount: 0, // 需要传入商品列表计算
+      isCrossEnabled: tenantConfig.enableCrossTenant,
+      estimatedAmount: Number(estimatedAmount.toFixed(2)),
       notice,
     });
   }

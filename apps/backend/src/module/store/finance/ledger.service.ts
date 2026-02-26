@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Result } from 'src/common/response';
+import { Result, ResponseCode } from 'src/common/response';
 import { FormatDateFields } from 'src/common/utils';
 import { ExportTable, ExportOptions } from 'src/common/utils/export';
 import { Prisma } from '@prisma/client';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { ListLedgerDto } from './dto/store-finance.dto';
 import { Response } from 'express';
+import { BusinessException } from 'src/common/exceptions';
 import {
   LedgerQueryResult,
   LedgerStatsResult,
@@ -28,6 +29,14 @@ export class StoreLedgerService {
    * 查询财务流水(使用数据库分页)
    */
   async getLedger(query: ListLedgerDto) {
+    // 深分页保护：offset 不能超过 5000
+    if (query.skip > 5000) {
+      throw new BusinessException(
+        ResponseCode.BUSINESS_ERROR,
+        '分页偏移量不能超过5000，请使用时间范围缩小查询范围',
+      );
+    }
+
     const tenantId = TenantContext.getTenantId();
     const isSuper = TenantContext.isSuperTenant();
 
@@ -38,169 +47,8 @@ export class StoreLedgerService {
     // 统一的租户过滤逻辑
     const tenantFilter = isSuper ? Prisma.sql`1=1` : Prisma.sql`tenant_id = ${tenantId}`;
 
-    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
-    const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
-
-    const unionQueries: Prisma.Sql[] = [];
-
-    // 1. 订单收入
-    if (shouldIncludeOrders) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('order-', o.id) as id,
-          'ORDER_INCOME' as type,
-          '订单收入' as type_name,
-          o.pay_amount as amount,
-          NULL as balance_after,
-          o.order_sn as related_id,
-          CONCAT('订单支付: ', o.order_sn) as remark,
-          o.create_time,
-          m.nickname as user_name,
-          m.mobile as user_phone,
-          m.member_id as user_id,
-          NULL as status
-        FROM oms_order o
-        INNER JOIN ums_member m ON o.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND o.pay_status = '1'
-          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND o.order_sn LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount ? Prisma.sql`AND o.pay_amount >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount ? Prisma.sql`AND o.pay_amount <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
-
-    // 2. 钱包流水
-    if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('trans-', t.id) as id,
-          t.type::text as type,
-          CASE t.type
-            WHEN 'WITHDRAW_OUT' THEN '提现扣款'
-            WHEN 'REFUND_DEDUCT' THEN '退款扣减'
-            ELSE t.type::text
-          END as type_name,
-          t.amount as amount,
-          t."balanceAfter" as balance_after,
-          t.related_id,
-          t.remark,
-          t.create_time,
-          m.nickname as user_name,
-          m.mobile as user_phone,
-          m.member_id as user_id,
-          NULL as status
-        FROM fin_transaction t
-        INNER JOIN fin_wallet w ON t.wallet_id = w.id
-        INNER JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND t.type != 'COMMISSION_IN'
-          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
-          ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND t.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND t.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND t.related_id LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount !== undefined ? Prisma.sql`AND ABS(t.amount) >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount !== undefined ? Prisma.sql`AND ABS(t.amount) <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
-
-    // 3. 提现支出
-    if (!query.type || query.type === 'WITHDRAW_OUT') {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('withdraw-', w.id) as id,
-          'WITHDRAW_OUT' as type,
-          '提现支出' as type_name,
-          -w.amount as amount,
-          COALESCE(
-            (
-              SELECT t."balanceAfter"
-              FROM fin_transaction t
-              INNER JOIN fin_wallet fw ON t.wallet_id = fw.id
-              WHERE fw.member_id = w.member_id
-                AND t.related_id = w.id
-                AND t.type = 'WITHDRAW_OUT'
-              ORDER BY t.create_time DESC
-              LIMIT 1
-            ),
-            0
-          ) as balance_after,
-          w.id as related_id,
-          '余额提现' as remark,
-          w.create_time,
-          COALESCE(m.nickname, w."realName") as user_name,
-          COALESCE(m.mobile, '') as user_phone,
-          w.member_id as user_id,
-          NULL as status
-        FROM fin_withdrawal w
-        LEFT JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND w.status = 'APPROVED'
-          ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND w.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND w.id LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`} OR w."realName" LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount ? Prisma.sql`AND w.amount >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount ? Prisma.sql`AND w.amount <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
-
-    // 4. 佣金记录
-    if (shouldIncludeCommissions) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('commission-', c.id) as id,
-          'COMMISSION_IN' as type,
-          CASE c.status
-            WHEN 'FROZEN' THEN '佣金待结算'
-            ELSE '佣金已入账'
-          END as type_name,
-          c.amount as amount,
-          CASE c.status
-            WHEN 'FROZEN' THEN NULL
-            ELSE COALESCE(
-              (
-                SELECT t."balanceAfter"
-                FROM fin_transaction t
-                INNER JOIN fin_wallet fw ON t.wallet_id = fw.id
-                WHERE fw.member_id = c.beneficiary_id
-                  AND t.related_id = c.order_id
-                  AND t.type = 'COMMISSION_IN'
-                ORDER BY t.create_time DESC
-                LIMIT 1
-              ),
-              0
-            )
-          END as balance_after,
-          COALESCE(o.order_sn, c.order_id) as related_id,
-          CASE c.status
-            WHEN 'FROZEN' THEN CONCAT('订单', COALESCE(o.order_sn, c.order_id), '佣金（待结算）')
-            ELSE CONCAT('订单', COALESCE(o.order_sn, c.order_id), '佣金已入账')
-          END as remark,
-          c.create_time,
-          m.nickname as user_name,
-          m.mobile as user_phone,
-          c.beneficiary_id as user_id,
-          c.status::text as status
-        FROM fin_commission c
-        LEFT JOIN oms_order o ON c.order_id = o.id
-        LEFT JOIN ums_member m ON c.beneficiary_id = m.member_id
-        WHERE ${tenantFilter}
-          ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND (c.order_id LIKE ${`%${query.relatedId}%`} OR o.order_sn LIKE ${`%${query.relatedId}%`})` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount ? Prisma.sql`AND c.amount >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount ? Prisma.sql`AND c.amount <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
+    // 使用共享方法构建 UNION 查询
+    const unionQueries = this.buildLedgerUnionQueries(query, tenantFilter, startTime, endTime, true);
 
     if (unionQueries.length === 0) {
       return Result.page([], 0);
@@ -339,76 +187,8 @@ export class StoreLedgerService {
     // 统一的租户过滤逻辑
     const tenantFilter = isSuper ? Prisma.sql`1=1` : Prisma.sql`tenant_id = ${tenantId}`;
 
-    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
-    const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
-
-    const unionQueries: Prisma.Sql[] = [];
-
-    // 1. 订单收入
-    if (shouldIncludeOrders) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          'ORDER_INCOME' as type,
-          o.pay_amount as amount
-        FROM oms_order o
-        INNER JOIN ums_member m ON o.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND o.pay_status = '1'
-          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
-      `);
-    }
-
-    // 2. 钱包流水
-    if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          t.type::text as type,
-          t.amount as amount
-        FROM fin_transaction t
-        INNER JOIN fin_wallet w ON t.wallet_id = w.id
-        INNER JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND t.type != 'COMMISSION_IN'
-          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
-          ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND t.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND t.create_time <= ${endTime}` : Prisma.empty}
-      `);
-    }
-
-    // 3. 提现支出
-    if (!query.type || query.type === 'WITHDRAW_OUT') {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          'WITHDRAW_OUT' as type,
-          -w.amount as amount
-        FROM fin_withdrawal w
-        WHERE ${tenantFilter}
-          AND w.status = 'APPROVED'
-          ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND w.create_time <= ${endTime}` : Prisma.empty}
-      `);
-    }
-
-    // 4. 佣金记录
-    if (shouldIncludeCommissions) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CASE c.status
-            WHEN 'FROZEN' THEN 'COMMISSION_FROZEN'
-            ELSE 'COMMISSION_IN'
-          END as type,
-          c.amount as amount
-        FROM fin_commission c
-        WHERE ${tenantFilter}
-          ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}
-      `);
-    }
+    // 使用共享方法构建 UNION 查询（仅需要 type 和 amount 字段）
+    const unionQueries = this.buildLedgerUnionQueries(query, tenantFilter, startTime, endTime, false);
 
     if (unionQueries.length === 0) {
       return Result.ok({
@@ -461,6 +241,9 @@ export class StoreLedgerService {
    * 导出流水数据
    */
   async exportLedger(res: Response, query: ListLedgerDto) {
+    // 导出数量限制：单次不超过 10000 条
+    const MAX_EXPORT_LIMIT = 10000;
+
     const tenantId = TenantContext.getTenantId();
     const isSuper = TenantContext.isSuperTenant();
 
@@ -471,134 +254,8 @@ export class StoreLedgerService {
     // 统一的租户过滤逻辑
     const tenantFilter = isSuper ? Prisma.sql`1=1` : Prisma.sql`tenant_id = ${tenantId}`;
 
-    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
-    const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
-
-    const unionQueries: Prisma.Sql[] = [];
-
-    // 1. 订单收入
-    if (shouldIncludeOrders) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('order-', o.id) as id,
-          'ORDER_INCOME' as type,
-          '订单收入' as type_name,
-          o.pay_amount as amount,
-          NULL as balance_after,
-          o.order_sn as related_id,
-          CONCAT('订单支付: ', o.order_sn) as remark,
-          o.create_time,
-          m.nickname as user_name,
-          m.mobile as user_phone
-        FROM oms_order o
-        INNER JOIN ums_member m ON o.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND o.pay_status = '1'
-          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND o.order_sn LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount ? Prisma.sql`AND o.pay_amount >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount ? Prisma.sql`AND o.pay_amount <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
-
-    // 2. 钱包流水
-    if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('trans-', t.id) as id,
-          t.type::text as type,
-          CASE t.type
-            WHEN 'WITHDRAW_OUT' THEN '提现扣款'
-            WHEN 'REFUND_DEDUCT' THEN '退款扣减'
-            ELSE t.type::text
-          END as type_name,
-          t.amount as amount,
-          t."balanceAfter" as balance_after,
-          t.related_id,
-          t.remark,
-          t.create_time,
-          m.nickname as user_name,
-          m.mobile as user_phone
-        FROM fin_transaction t
-        INNER JOIN fin_wallet w ON t.wallet_id = w.id
-        INNER JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND t.type != 'COMMISSION_IN'
-          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
-          ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND t.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND t.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND t.related_id LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount !== undefined ? Prisma.sql`AND ABS(t.amount) >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount !== undefined ? Prisma.sql`AND ABS(t.amount) <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
-
-    // 3. 提现支出
-    if (!query.type || query.type === 'WITHDRAW_OUT') {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('withdraw-', w.id) as id,
-          'WITHDRAW_OUT' as type,
-          '提现支出' as type_name,
-          -w.amount as amount,
-          0 as balance_after,
-          w.id as related_id,
-          '余额提现' as remark,
-          w.create_time,
-          COALESCE(m.nickname, w."realName") as user_name,
-          COALESCE(m.mobile, '') as user_phone
-        FROM fin_withdrawal w
-        LEFT JOIN ums_member m ON w.member_id = m.member_id
-        WHERE ${tenantFilter}
-          AND w.status = 'APPROVED'
-          ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND w.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND w.id LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`} OR w."realName" LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount ? Prisma.sql`AND w.amount >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount ? Prisma.sql`AND w.amount <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
-
-    // 4. 佣金记录
-    if (shouldIncludeCommissions) {
-      unionQueries.push(Prisma.sql`
-        SELECT 
-          CONCAT('commission-', c.id) as id,
-          'COMMISSION_IN' as type,
-          CASE c.status
-            WHEN 'FROZEN' THEN '佣金待结算'
-            ELSE '佣金已入账'
-          END as type_name,
-          c.amount as amount,
-          0 as balance_after,
-          COALESCE(o.order_sn, c.order_id) as related_id,
-          CASE c.status
-            WHEN 'FROZEN' THEN CONCAT('订单', COALESCE(o.order_sn, c.order_id), '佣金（待结算）')
-            ELSE CONCAT('订单', COALESCE(o.order_sn, c.order_id), '佣金已入账')
-          END as remark,
-          c.create_time,
-          m.nickname as user_name,
-          m.mobile as user_phone
-        FROM fin_commission c
-        LEFT JOIN oms_order o ON c.order_id = o.id
-        LEFT JOIN ums_member m ON c.beneficiary_id = m.member_id
-        WHERE ${tenantFilter}
-          ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
-          ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
-          ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}
-          ${query.relatedId ? Prisma.sql`AND (c.order_id LIKE ${`%${query.relatedId}%`} OR o.order_sn LIKE ${`%${query.relatedId}%`})` : Prisma.empty}
-          ${query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
-          ${query.minAmount ? Prisma.sql`AND c.amount >= ${query.minAmount}` : Prisma.empty}
-          ${query.maxAmount ? Prisma.sql`AND c.amount <= ${query.maxAmount}` : Prisma.empty}
-      `);
-    }
+    // 使用共享方法构建 UNION 查询
+    const unionQueries = this.buildLedgerUnionQueries(query, tenantFilter, startTime, endTime, true);
 
     if (unionQueries.length === 0) {
       const options: ExportOptions = {
@@ -616,6 +273,22 @@ export class StoreLedgerService {
         ],
       };
       return await ExportTable(options, res);
+    }
+
+    // 先查询总数，检查是否超过限制
+    const countQuery = Prisma.sql`
+      SELECT COUNT(*) as total FROM (
+        ${Prisma.join(unionQueries, ' UNION ALL ')}
+      ) AS unified_ledger
+    `;
+    const countResult = await this.prisma.$queryRaw<CountResult[]>(countQuery);
+    const total = Number(countResult[0]?.total || 0);
+
+    if (total > MAX_EXPORT_LIMIT) {
+      throw new BusinessException(
+        ResponseCode.BUSINESS_ERROR,
+        `导出数据量过大（${total}条），单次最多导出${MAX_EXPORT_LIMIT}条，请缩小查询范围（如添加时间范围筛选）`,
+      );
     }
 
     const finalQuery = Prisma.sql`
@@ -654,5 +327,210 @@ export class StoreLedgerService {
     };
 
     return await ExportTable(options, res);
+  }
+
+  /**
+   * 构建统一流水查询的 UNION ALL 子查询
+   * @private
+   */
+  private buildLedgerUnionQueries(
+    query: ListLedgerDto,
+    tenantFilter: Prisma.Sql,
+    startTime: Date | undefined,
+    endTime: Date | undefined,
+    includeFullFields: boolean = true,
+  ): Prisma.Sql[] {
+    const shouldIncludeOrders = !query.type || query.type === 'ORDER_INCOME';
+    const shouldIncludeCommissions = !query.type || query.type === 'COMMISSION_IN';
+    const unionQueries: Prisma.Sql[] = [];
+
+    // 1. 订单收入
+    if (shouldIncludeOrders) {
+      const orderFields = includeFullFields
+        ? Prisma.sql`
+          CONCAT('order-', o.id) as id,
+          'ORDER_INCOME' as type,
+          '订单收入' as type_name,
+          o.pay_amount as amount,
+          NULL as balance_after,
+          o.order_sn as related_id,
+          CONCAT('订单支付: ', o.order_sn) as remark,
+          o.create_time,
+          m.nickname as user_name,
+          m.mobile as user_phone,
+          m.member_id as user_id,
+          NULL as status`
+        : Prisma.sql`
+          'ORDER_INCOME' as type,
+          o.pay_amount as amount`;
+
+      unionQueries.push(Prisma.sql`
+        SELECT ${orderFields}
+        FROM oms_order o
+        INNER JOIN ums_member m ON o.member_id = m.member_id
+        WHERE ${tenantFilter}
+          AND o.pay_status = '1'
+          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
+          ${startTime ? Prisma.sql`AND o.create_time >= ${startTime}` : Prisma.empty}
+          ${endTime ? Prisma.sql`AND o.create_time <= ${endTime}` : Prisma.empty}
+          ${includeFullFields && query.relatedId ? Prisma.sql`AND o.order_sn LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
+          ${includeFullFields && query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
+          ${includeFullFields && query.minAmount ? Prisma.sql`AND o.pay_amount >= ${query.minAmount}` : Prisma.empty}
+          ${includeFullFields && query.maxAmount ? Prisma.sql`AND o.pay_amount <= ${query.maxAmount}` : Prisma.empty}
+      `);
+    }
+
+    // 2. 钱包流水
+    if (!query.type || (query.type !== 'COMMISSION_IN' && query.type !== 'WITHDRAW_OUT')) {
+      const transactionFields = includeFullFields
+        ? Prisma.sql`
+          CONCAT('trans-', t.id) as id,
+          t.type::text as type,
+          CASE t.type
+            WHEN 'WITHDRAW_OUT' THEN '提现扣款'
+            WHEN 'REFUND_DEDUCT' THEN '退款扣减'
+            ELSE t.type::text
+          END as type_name,
+          t.amount as amount,
+          t."balanceAfter" as balance_after,
+          t.related_id,
+          t.remark,
+          t.create_time,
+          m.nickname as user_name,
+          m.mobile as user_phone,
+          m.member_id as user_id,
+          NULL as status`
+        : Prisma.sql`
+          t.type::text as type,
+          t.amount as amount`;
+
+      unionQueries.push(Prisma.sql`
+        SELECT ${transactionFields}
+        FROM fin_transaction t
+        INNER JOIN fin_wallet w ON t.wallet_id = w.id
+        INNER JOIN ums_member m ON w.member_id = m.member_id
+        WHERE ${tenantFilter}
+          AND t.type != 'COMMISSION_IN'
+          ${query.memberId ? Prisma.sql`AND m.member_id = ${query.memberId}` : Prisma.empty}
+          ${query.type ? Prisma.sql`AND t.type = ${query.type}` : Prisma.empty}
+          ${startTime ? Prisma.sql`AND t.create_time >= ${startTime}` : Prisma.empty}
+          ${endTime ? Prisma.sql`AND t.create_time <= ${endTime}` : Prisma.empty}
+          ${includeFullFields && query.relatedId ? Prisma.sql`AND t.related_id LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
+          ${includeFullFields && query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
+          ${includeFullFields && query.minAmount !== undefined ? Prisma.sql`AND ABS(t.amount) >= ${query.minAmount}` : Prisma.empty}
+          ${includeFullFields && query.maxAmount !== undefined ? Prisma.sql`AND ABS(t.amount) <= ${query.maxAmount}` : Prisma.empty}
+      `);
+    }
+
+    // 3. 提现支出
+    if (!query.type || query.type === 'WITHDRAW_OUT') {
+      const withdrawalFields = includeFullFields
+        ? Prisma.sql`
+          CONCAT('withdraw-', w.id) as id,
+          'WITHDRAW_OUT' as type,
+          '提现支出' as type_name,
+          -w.amount as amount,
+          COALESCE(
+            (
+              SELECT t."balanceAfter"
+              FROM fin_transaction t
+              INNER JOIN fin_wallet fw ON t.wallet_id = fw.id
+              WHERE fw.member_id = w.member_id
+                AND t.related_id = w.id
+                AND t.type = 'WITHDRAW_OUT'
+              ORDER BY t.create_time DESC
+              LIMIT 1
+            ),
+            0
+          ) as balance_after,
+          w.id as related_id,
+          '余额提现' as remark,
+          w.create_time,
+          COALESCE(m.nickname, w."realName") as user_name,
+          COALESCE(m.mobile, '') as user_phone,
+          w.member_id as user_id,
+          NULL as status`
+        : Prisma.sql`
+          'WITHDRAW_OUT' as type,
+          -w.amount as amount`;
+
+      unionQueries.push(Prisma.sql`
+        SELECT ${withdrawalFields}
+        FROM fin_withdrawal w
+        LEFT JOIN ums_member m ON w.member_id = m.member_id
+        WHERE ${tenantFilter}
+          AND w.status = 'APPROVED'
+          ${query.memberId ? Prisma.sql`AND w.member_id = ${query.memberId}` : Prisma.empty}
+          ${startTime ? Prisma.sql`AND w.create_time >= ${startTime}` : Prisma.empty}
+          ${endTime ? Prisma.sql`AND w.create_time <= ${endTime}` : Prisma.empty}
+          ${includeFullFields && query.relatedId ? Prisma.sql`AND w.id LIKE ${`%${query.relatedId}%`}` : Prisma.empty}
+          ${includeFullFields && query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`} OR w."realName" LIKE ${`%${query.keyword}%`})` : Prisma.empty}
+          ${includeFullFields && query.minAmount ? Prisma.sql`AND w.amount >= ${query.minAmount}` : Prisma.empty}
+          ${includeFullFields && query.maxAmount ? Prisma.sql`AND w.amount <= ${query.maxAmount}` : Prisma.empty}
+      `);
+    }
+
+    // 4. 佣金记录
+    if (shouldIncludeCommissions) {
+      const commissionFields = includeFullFields
+        ? Prisma.sql`
+          CONCAT('commission-', c.id) as id,
+          'COMMISSION_IN' as type,
+          CASE c.status
+            WHEN 'FROZEN' THEN '佣金待结算'
+            ELSE '佣金已入账'
+          END as type_name,
+          c.amount as amount,
+          CASE c.status
+            WHEN 'FROZEN' THEN NULL
+            ELSE COALESCE(
+              (
+                SELECT t."balanceAfter"
+                FROM fin_transaction t
+                INNER JOIN fin_wallet fw ON t.wallet_id = fw.id
+                WHERE fw.member_id = c.beneficiary_id
+                  AND t.related_id = c.order_id
+                  AND t.type = 'COMMISSION_IN'
+                ORDER BY t.create_time DESC
+                LIMIT 1
+              ),
+              0
+            )
+          END as balance_after,
+          COALESCE(o.order_sn, c.order_id) as related_id,
+          CASE c.status
+            WHEN 'FROZEN' THEN CONCAT('订单', COALESCE(o.order_sn, c.order_id), '佣金（待结算）')
+            ELSE CONCAT('订单', COALESCE(o.order_sn, c.order_id), '佣金已入账')
+          END as remark,
+          c.create_time,
+          m.nickname as user_name,
+          m.mobile as user_phone,
+          c.beneficiary_id as user_id,
+          c.status::text as status`
+        : Prisma.sql`
+          CASE c.status
+            WHEN 'FROZEN' THEN 'COMMISSION_FROZEN'
+            ELSE 'COMMISSION_IN'
+          END as type,
+          c.amount as amount`;
+
+      unionQueries.push(Prisma.sql`
+        SELECT ${commissionFields}
+        FROM fin_commission c
+        LEFT JOIN oms_order o ON c.order_id = o.id
+        LEFT JOIN ums_member m ON c.beneficiary_id = m.member_id
+        WHERE ${tenantFilter}
+          AND c.status != 'CANCELLED'
+          ${query.memberId ? Prisma.sql`AND c.beneficiary_id = ${query.memberId}` : Prisma.empty}
+          ${startTime ? Prisma.sql`AND c.create_time >= ${startTime}` : Prisma.empty}
+          ${endTime ? Prisma.sql`AND c.create_time <= ${endTime}` : Prisma.empty}
+          ${includeFullFields && query.relatedId ? Prisma.sql`AND (c.order_id LIKE ${`%${query.relatedId}%`} OR o.order_sn LIKE ${`%${query.relatedId}%`})` : Prisma.empty}
+          ${includeFullFields && query.keyword ? Prisma.sql`AND (m.nickname LIKE ${`%${query.keyword}%`} OR m.mobile LIKE ${`%${query.keyword}%`})` : Prisma.empty}
+          ${includeFullFields && query.minAmount ? Prisma.sql`AND c.amount >= ${query.minAmount}` : Prisma.empty}
+          ${includeFullFields && query.maxAmount ? Prisma.sql`AND c.amount <= ${query.maxAmount}` : Prisma.empty}
+      `);
+    }
+
+    return unionQueries;
   }
 }

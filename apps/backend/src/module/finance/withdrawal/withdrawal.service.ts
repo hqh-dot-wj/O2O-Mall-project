@@ -76,7 +76,13 @@ export class WithdrawalService {
   /**
    * 审核提现
    */
-  async audit(withdrawalId: string, action: 'APPROVE' | 'REJECT', auditBy: string, remark?: string) {
+  async audit(
+    withdrawalId: string,
+    action: 'APPROVE' | 'REJECT',
+    auditBy: string,
+    tenantId?: string,
+    remark?: string,
+  ) {
     // 1. 基础查询与校验
     const withdrawal = await this.withdrawalRepo.findOne(
       { id: withdrawalId, status: WithdrawalStatus.PENDING },
@@ -85,7 +91,12 @@ export class WithdrawalService {
 
     BusinessException.throwIfNull(withdrawal, '提现申请不存在或已处理');
 
-    // 2. 委托给 AuditService 处理
+    // 2. 租户归属校验（如果提供了 tenantId）
+    if (tenantId && withdrawal.tenantId !== tenantId) {
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '无权审核其他租户的提现申请');
+    }
+
+    // 3. 委托给 AuditService 处理
     if (action === 'APPROVE') {
       return this.auditService.approve(withdrawal, auditBy);
     } else if (action === 'REJECT') {

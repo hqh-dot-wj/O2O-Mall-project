@@ -7,8 +7,8 @@ export const BusinessConstants = {
    * 分销系统默认配置
    */
   DISTRIBUTION: {
-    DEFAULT_LEVEL1_RATE: 0.6, // 一级分佣默认 60%
-    DEFAULT_LEVEL2_RATE: 0.4, // 二级分佣默认 40%
+    DEFAULT_LEVEL1_RATE: 0.1, // 一级分佣默认 10%
+    DEFAULT_LEVEL2_RATE: 0.05, // 二级分佣默认 5%
     DEFAULT_CROSS_TENANT_RATE: 1.0, // 默认跨店折扣 100% (不打折)
     DEFAULT_CROSS_DAILY_LIMIT: 500, // 默认跨店日限额 500元
   },

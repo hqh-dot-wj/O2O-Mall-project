@@ -1,15 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsArray, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class CommissionPreviewItemDto {
+  @ApiProperty({ description: 'SKU ID' })
+  @IsString()
+  skuId: string;
+
+  @ApiProperty({ description: '购买数量', example: 1 })
+  @IsOptional()
+  quantity?: number;
+}
 
 export class CommissionPreviewDto {
   @ApiProperty({ description: '下单门店ID' })
   @IsString()
   tenantId: string;
 
-  @ApiProperty({ description: '商品ID列表', type: [String] })
+  @ApiProperty({ description: '商品SKU列表', type: [CommissionPreviewItemDto] })
   @IsArray()
-  @IsString({ each: true })
-  productIds: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CommissionPreviewItemDto)
+  items: CommissionPreviewItemDto[];
 
   @ApiProperty({ description: '分享人ID (可选)', required: false })
   @IsOptional()
