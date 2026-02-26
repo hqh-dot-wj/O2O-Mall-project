@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, Param, Query, Put, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AttributeService } from './attribute.service';
 import { CreateTemplateDto } from './dto/attribute.dto';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
@@ -10,6 +10,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
  * 属性模板管理控制器
  */
 @ApiTags('属性模板管理')
+@ApiBearerAuth('Authorization')
 @Controller('admin/pms/attribute')
 export class AttributeController {
   constructor(private readonly service: AttributeService) {}

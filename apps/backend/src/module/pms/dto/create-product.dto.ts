@@ -45,6 +45,12 @@ export class CreateSkuDto {
   @Min(0)
   guidePrice: number;
 
+  @ApiProperty({ description: '成本价', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costPrice?: number;
+
   @ApiProperty({ description: '分销模式', enum: DistributionMode })
   @IsEnum(DistributionMode)
   distMode: DistributionMode;

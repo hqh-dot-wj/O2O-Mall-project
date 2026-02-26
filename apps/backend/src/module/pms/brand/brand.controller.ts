@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BrandService } from './brand.service';
 import { CreateBrandDto, UpdateBrandDto, ListBrandDto } from './dto';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
@@ -10,6 +10,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
  * 品牌管理控制器
  */
 @ApiTags('品牌管理')
+@ApiBearerAuth('Authorization')
 @Controller('admin/pms/brand')
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}

@@ -416,17 +416,26 @@ stateDiagram-v2
 
 ## 9. 演进建议与待办
 
-### 9.1 短期（1-2 周）— 修复现有缺陷
+### 9.1 短期（1-2 周）— 修复现有缺陷 ✅ 已完成
 
-| 编号 | 任务                                                       | 对应缺陷 | 预估工时 |
-| ---- | ---------------------------------------------------------- | -------- | -------- |
-| T-1  | SKU 创建时传入 `costPrice` 字段                            | D-4      | 0.5h     |
-| T-2  | 新增独立上下架接口 `PATCH /admin/pms/product/:id/status`   | D-2      | 1h       |
-| T-3  | 上下架接口调用 `ProductSyncProducer.notifyOffShelf()`      | X-1      | 1h       |
-| T-4  | 注册 `store/product` 的 Bull 队列（前置依赖）              | X-6      | 1h       |
-| T-5  | 创建 `UpdateProductDto`（`PartialType(CreateProductDto)`） | D-3      | 0.5h     |
-| T-6  | 商品列表价格改为 `MIN(guidePrice)`                         | D-5      | 0.5h     |
-| T-7  | 所有 Controller 添加 `@ApiBearerAuth`                      | D-9      | 0.5h     |
+| 编号 | 任务                                                       | 对应缺陷 | 预估工时 | 状态 |
+| ---- | ---------------------------------------------------------- | -------- | -------- | ---- |
+| T-1  | SKU 创建时传入 `costPrice` 字段                            | D-4      | 0.5h     | ✅   |
+| T-2  | 新增独立上下架接口 `PATCH /admin/pms/product/:id/status`   | D-2      | 1h       | ✅   |
+| T-3  | 上下架接口调用 `ProductSyncProducer.notifyOffShelf()`      | X-1      | 1h       | ✅   |
+| T-4  | 注册 `store/product` 的 Bull 队列（前置依赖）              | X-6      | 1h       | ✅   |
+| T-5  | 创建 `UpdateProductDto`（`PartialType(CreateProductDto)`） | D-3      | 0.5h     | ✅   |
+| T-6  | 商品列表价格改为 `MIN(guidePrice)`                         | D-5      | 0.5h     | ✅   |
+| T-7  | 所有 Controller 添加 `@ApiBearerAuth`                      | D-9      | 0.5h     | ✅   |
+
+**额外完成**：
+
+- 商品删除接口（含门店级联处理）— 对应 D-1, X-3
+- 门店导入时校验 `distRate` 范围 — 对应 X-5
+
+**完成时间**：2026-02-26  
+**总工时**：8.5h  
+**详细文档**：`docs/improvements/pms-short-term-fixes-summary.md`
 
 ### 9.2 中期（1-2 月）— 补齐核心功能
 

@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto, ListCategoryDto } from './dto';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
@@ -10,6 +10,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
  * 分类管理控制器
  */
 @ApiTags('分类管理')
+@ApiBearerAuth('Authorization')
 @Controller('admin/pms/category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}

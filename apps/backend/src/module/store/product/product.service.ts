@@ -166,14 +166,21 @@ export class StoreProductService {
           ResponseCode.PARAM_INVALID,
         );
 
-        // 3. 校验每个SKU的利润
+        // 3. 校验每个SKU的利润和分销费率范围
         for (const sku of skus) {
           const globalSku = globalProduct.globalSkus.find((g) => g.skuId === sku.globalSkuId);
           if (globalSku) {
+            // 校验分销费率是否在允许范围内
+            const storeDistRate = sku.distRate || 0;
+            const minDistRate = Number(globalSku.guideRate) * 0.8; // 假设允许范围为指导费率的80%-120%
+            const maxDistRate = Number(globalSku.guideRate) * 1.2;
+            this.profitValidator.validateDistRateRange(storeDistRate, minDistRate, maxDistRate);
+
+            // 校验利润
             this.profitValidator.validate(
               sku.price,
               globalSku.costPrice,
-              sku.distRate || 0,
+              storeDistRate,
               sku.distMode || DistributionMode.RATIO,
             );
           }

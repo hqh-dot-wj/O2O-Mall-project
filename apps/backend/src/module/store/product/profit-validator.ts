@@ -193,4 +193,41 @@ export class ProfitValidator {
       isValid: profit.greaterThanOrEqualTo(0),
     };
   }
+
+   /**
+    * 校验店铺分销费率是否在全局商品允许的范围内
+    *
+    * @param storeDistRate - 店铺设置的分销费率
+    * @param minDistRate - 全局商品最小分销费率
+    * @param maxDistRate - 全局商品最大分销费率
+    *
+    * @throws BusinessException
+    * - 店铺分销费率超出允许范围
+    *
+    * @example
+    * // 正常情况
+    * validateDistRateRange(0.15, 0.10, 0.20); // ✓
+    *
+    * // 超出范围(抛出异常)
+    * validateDistRateRange(0.25, 0.10, 0.20);
+    * // 抛出: "店铺分销费率25.00%超出允许范围[10.00%-20.00%]"
+    */
+   validateDistRateRange(storeDistRate: number, minDistRate: number, maxDistRate: number): void {
+     // 参数校验
+     BusinessException.throwIf(
+       storeDistRate < 0 || minDistRate < 0 || maxDistRate < 0,
+       '分销费率不能为负数',
+       ResponseCode.PARAM_INVALID,
+     );
+
+     BusinessException.throwIf(minDistRate > maxDistRate, '最小费率不能大于最大费率', ResponseCode.PARAM_INVALID);
+
+     // 范围校验
+     if (storeDistRate < minDistRate || storeDistRate > maxDistRate) {
+       throw new BusinessException(
+         ResponseCode.PARAM_INVALID,
+         `店铺分销费率${(storeDistRate * 100).toFixed(2)}%超出允许范围[${(minDistRate * 100).toFixed(2)}%-${(maxDistRate * 100).toFixed(2)}%]`,
+       );
+     }
+   }
 }

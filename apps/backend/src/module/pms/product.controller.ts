@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Put, Query, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Put, Patch, Query, Param, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PmsProductService } from './product.service';
-import { CreateProductDto, ListProductDto } from './dto';
+import { CreateProductDto, UpdateProductDto, UpdateProductStatusDto, ListProductDto } from './dto';
 import { ProductVo } from './vo';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
@@ -11,6 +11,7 @@ import { BusinessType } from 'src/common/constant/business.constant';
  * 商品管理控制器
  */
 @ApiTags('商品管理')
+@ApiBearerAuth('Authorization')
 @Controller('admin/pms/product')
 export class PmsProductController {
   constructor(private readonly pmsProductService: PmsProductService) {}
@@ -41,7 +42,23 @@ export class PmsProductController {
   @RequirePermission('pms:product:update')
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: CreateProductDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.pmsProductService.update(id, dto);
+  }
+
+  @ApiOperation({ summary: '删除商品' })
+  @RequirePermission('pms:product:delete')
+  @Operlog({ businessType: BusinessType.DELETE })
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return this.pmsProductService.remove(id);
+  }
+
+  @ApiOperation({ summary: '更新商品发布状态' })
+  @RequirePermission('pms:product:update')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  @Patch(':id/status')
+  async updateStatus(@Param('id') id: string, @Body() dto: UpdateProductStatusDto) {
+    return this.pmsProductService.updateStatus(id, dto);
   }
 }
