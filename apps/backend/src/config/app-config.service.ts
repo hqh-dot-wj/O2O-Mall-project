@@ -12,6 +12,7 @@ import {
   GeneratorConfig,
   UserConfig,
   ClientConfig,
+  WechatConfig,
   Configuration,
 } from './types';
 
@@ -117,6 +118,13 @@ export class AppConfigService {
    */
   get client(): ClientConfig {
     return this.configService.get('client', { infer: true });
+  }
+
+  /**
+   * 微信多端配置
+   */
+  get wechat(): WechatConfig {
+    return this.configService.get('wechat', { infer: true });
   }
 
   /**

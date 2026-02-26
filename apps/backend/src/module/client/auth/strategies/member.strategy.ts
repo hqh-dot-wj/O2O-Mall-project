@@ -19,13 +19,17 @@ export class MemberStrategy extends PassportStrategy(Strategy, 'member-jwt') {
     });
   }
 
-  async validate(payload: { uuid: string; memberId: string; iat: Date }) {
+  async validate(payload: { uuid: string; memberId: string; platform?: string; iat: Date }) {
     const user = await this.redisService.get(`${CacheEnum.LOGIN_TOKEN_KEY}${payload.uuid}`);
     if (!user) throw new UnauthorizedException('登录已过期，请重新登录');
     if (user.status === MemberStatus.DISABLED) {
       throw new UnauthorizedException('账号已禁用，请联系客服');
     }
-    // 确保 memberId 始终存在 (兼容 Redis 数据可能缺失的情况)
-    return { ...user, memberId: user.memberId || payload.memberId };
+    // 确保 memberId / platform 始终存在（兼容旧 token 无 platform 的情况）
+    return {
+      ...user,
+      memberId: user.memberId || payload.memberId,
+      platform: payload.platform || 'MP_MALL',
+    };
   }
 }

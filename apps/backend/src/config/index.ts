@@ -171,8 +171,24 @@ export default () => {
     },
 
     wechat: {
+      // 向后兼容：顶层 appid/secret 保留
       appid: process.env.WX_APPID || '',
       secret: process.env.WX_SECRET || '',
+      // 商城小程序（C端），fallback 到顶层 WX_APPID/WX_SECRET
+      mpMall: {
+        appid: process.env.WX_MP_MALL_APPID || process.env.WX_APPID || '',
+        secret: process.env.WX_MP_MALL_SECRET || process.env.WX_SECRET || '',
+      },
+      // 师傅小程序（Worker端）
+      mpWork: {
+        appid: process.env.WX_MP_WORK_APPID || '',
+        secret: process.env.WX_MP_WORK_SECRET || '',
+      },
+      // H5 网页端
+      h5: {
+        appid: process.env.WX_H5_APPID || '',
+        secret: process.env.WX_H5_SECRET || '',
+      },
     },
   };
 
