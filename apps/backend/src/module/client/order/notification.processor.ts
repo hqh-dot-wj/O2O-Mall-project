@@ -1,7 +1,7 @@
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Logger } from '@nestjs/common';
-import { MessageService } from 'src/module/admin/system/message/message.service';
+import { NotificationService } from 'src/module/notification/notification.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 interface OrderNotificationJob {
@@ -10,13 +10,14 @@ interface OrderNotificationJob {
 
 /**
  * 订单通知处理器 (延迟队列)
+ * 通过 NotificationService 发送站内信 + SMS
  */
 @Processor('ORDER_NOTIFICATION')
 export class NotificationProcessor {
   private readonly logger = new Logger(NotificationProcessor.name);
 
   constructor(
-    private readonly messageService: MessageService,
+    private readonly notificationService: NotificationService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -26,7 +27,6 @@ export class NotificationProcessor {
     this.logger.log(`Processing order notification for order ${orderId}`);
 
     try {
-      // 1. Double Check: 查询订单状态
       const order = await this.prisma.omsOrder.findUnique({
         where: { id: orderId },
       });
@@ -36,18 +36,24 @@ export class NotificationProcessor {
         return;
       }
 
-      // 2. 如果订单已取消，拦截通知
       if (order.status === 'CANCELLED') {
         this.logger.log(`Order ${orderId} is CANCELLED, skipping notification`);
         return;
       }
 
-      // 3. 发送通知
-      await this.messageService.notifyNewOrder(order);
-      this.logger.log(`Notification sent for order ${orderId}`);
+      const content = `订单号: ${order.orderSn}, 金额: ${order.payAmount}`;
+      const target = order.tenantId;
+
+      await this.notificationService.sendMulti(target, ['IN_APP', 'SMS'], {
+        tenantId: order.tenantId,
+        title: '您有新订单',
+        content,
+        template: 'ORDER',
+      });
+
+      this.logger.log(`Notification queued for order ${orderId}`);
     } catch (error) {
       this.logger.error(`Failed to send notification for order ${orderId}`, error);
-      // 失败不重试，避免延迟过久造成困扰? 或者重试几次? Bull 默认会重试。
       throw error;
     }
   }

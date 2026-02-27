@@ -111,3 +111,62 @@ export class PartialRefundOrderDto {
   @IsString()
   remark?: string;
 }
+
+/**
+ * 批量核销DTO
+ */
+export class BatchVerifyDto {
+  @ApiProperty({ description: '订单ID列表' })
+  @IsArray()
+  @IsString({ each: true })
+  orderIds: string[];
+
+  @ApiProperty({ description: '核销备注', required: false })
+  @IsOptional()
+  @IsString()
+  remark?: string;
+}
+
+/**
+ * 批量退款DTO
+ */
+export class BatchRefundDto {
+  @ApiProperty({ description: '订单ID列表' })
+  @IsArray()
+  @IsString({ each: true })
+  orderIds: string[];
+
+  @ApiProperty({ description: '退款原因', required: false })
+  @IsOptional()
+  @IsString()
+  remark?: string;
+}
+
+/**
+ * 批量操作结果项
+ */
+export class BatchOperationResultItem {
+  @ApiProperty({ description: '订单ID' })
+  orderId: string;
+
+  @ApiProperty({ description: '是否成功' })
+  success: boolean;
+
+  @ApiProperty({ description: '错误信息', required: false })
+  error?: string;
+}
+
+/**
+ * 批量操作结果
+ */
+export class BatchOperationResult {
+  @ApiProperty({ description: '成功数量' })
+  successCount: number;
+
+  @ApiProperty({ description: '失败数量' })
+  failCount: number;
+
+  @ApiProperty({ description: '详细结果', type: [BatchOperationResultItem] })
+  details: BatchOperationResultItem[];
+}
+

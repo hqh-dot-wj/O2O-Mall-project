@@ -4,7 +4,7 @@ import { StoreOrderRepository } from './store-order.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CommissionService } from 'src/module/finance/commission/commission.service';
 import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
-import { WechatPayService } from 'src/module/payment/wechat-pay.service';
+import { PaymentGatewayPort } from 'src/module/payment/ports/payment-gateway.port';
 import { BusinessException } from 'src/common/exceptions';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { OrderStatus, OrderType, CommissionStatus } from '@prisma/client';
@@ -16,7 +16,7 @@ describe('StoreOrderService', () => {
   let orderRepo: StoreOrderRepository;
   let commissionService: CommissionService;
   let orderIntegrationService: OrderIntegrationService;
-  let wechatPayService: WechatPayService;
+  let paymentGateway: jest.Mocked<PaymentGatewayPort>;
 
   const mockPrisma = {
     $queryRaw: jest.fn(),
@@ -57,8 +57,11 @@ describe('StoreOrderService', () => {
     handleOrderRefunded: jest.fn(),
   };
 
-  const mockWechatPayService = {
+  const mockPaymentGateway = {
     refund: jest.fn(),
+    prepay: jest.fn(),
+    handleCallback: jest.fn(),
+    queryPaymentStatus: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -69,7 +72,7 @@ describe('StoreOrderService', () => {
         { provide: StoreOrderRepository, useValue: mockOrderRepo },
         { provide: CommissionService, useValue: mockCommissionService },
         { provide: OrderIntegrationService, useValue: mockOrderIntegrationService },
-        { provide: WechatPayService, useValue: mockWechatPayService },
+        { provide: PaymentGatewayPort, useValue: mockPaymentGateway },
       ],
     }).compile();
 
@@ -78,7 +81,7 @@ describe('StoreOrderService', () => {
     orderRepo = module.get<StoreOrderRepository>(StoreOrderRepository);
     commissionService = module.get<CommissionService>(CommissionService);
     orderIntegrationService = module.get<OrderIntegrationService>(OrderIntegrationService);
-    wechatPayService = module.get<WechatPayService>(WechatPayService);
+    paymentGateway = module.get(PaymentGatewayPort) as jest.Mocked<PaymentGatewayPort>;
 
     // Mock TenantContext
     jest.spyOn(TenantContext, 'getTenantId').mockReturnValue('tenant1');
@@ -236,7 +239,7 @@ describe('StoreOrderService', () => {
   describe('refundOrder', () => {
     it('should refund a paid order and cancel commissions', async () => {
       mockOrderRepo.findOne.mockResolvedValue({ id: 'order1', status: OrderStatus.PAID, memberId: 'm1', orderSn: 'ORDER123', payAmount: '100.00' });
-      mockWechatPayService.refund.mockResolvedValue({
+      mockPaymentGateway.refund.mockResolvedValue({
         refundSn: 'REFUND_ORDER123_123456',
         refundId: 'wx_refund_123',
         status: RefundStatus.SUCCESS,
@@ -247,7 +250,7 @@ describe('StoreOrderService', () => {
 
       await service.refundOrder('order1', 'Refund request', 'admin');
 
-      expect(wechatPayService.refund).toHaveBeenCalledWith({
+      expect(paymentGateway.refund).toHaveBeenCalledWith({
         orderSn: 'ORDER123',
         refundSn: expect.stringContaining('REFUND_ORDER123_'),
         refundAmount: '100.00',
@@ -284,15 +287,15 @@ describe('StoreOrderService', () => {
 
     it('should throw error if wechat refund fails', async () => {
       mockOrderRepo.findOne.mockResolvedValue({ id: 'order1', status: OrderStatus.PAID, memberId: 'm1', orderSn: 'ORDER123', payAmount: '100.00' });
-      mockWechatPayService.refund.mockRejectedValue(new Error('Wechat API Error'));
+      mockPaymentGateway.refund.mockRejectedValue(new Error('Wechat API Error'));
 
       await expect(service.refundOrder('order1', 'Refund', 'admin')).rejects.toThrow(BusinessException);
-      expect(wechatPayService.refund).toHaveBeenCalled();
+      expect(paymentGateway.refund).toHaveBeenCalled();
     });
 
     it('should throw error if commission cancellation fails', async () => {
       mockOrderRepo.findOne.mockResolvedValue({ id: 'order1', status: OrderStatus.PAID, memberId: 'm1', orderSn: 'ORDER123', payAmount: '100.00' });
-      mockWechatPayService.refund.mockResolvedValue({
+      mockPaymentGateway.refund.mockResolvedValue({
         refundSn: 'REFUND_ORDER123_123456',
         refundId: 'wx_refund_123',
         status: RefundStatus.SUCCESS,
@@ -305,7 +308,7 @@ describe('StoreOrderService', () => {
 
     it('should throw error if integration service fails', async () => {
       mockOrderRepo.findOne.mockResolvedValue({ id: 'order1', status: OrderStatus.PAID, memberId: 'm1', orderSn: 'ORDER123', payAmount: '100.00' });
-      mockWechatPayService.refund.mockResolvedValue({
+      mockPaymentGateway.refund.mockResolvedValue({
         refundSn: 'REFUND_ORDER123_123456',
         refundId: 'wx_refund_123',
         status: RefundStatus.SUCCESS,
@@ -339,7 +342,7 @@ describe('StoreOrderService', () => {
       };
 
       mockPrisma.omsOrder.findFirst.mockResolvedValue(mockOrder);
-      mockWechatPayService.refund.mockResolvedValue({
+      mockPaymentGateway.refund.mockResolvedValue({
         refundSn: 'REFUND_ORDER123_123456',
         refundId: 'wx_refund_123',
         status: RefundStatus.SUCCESS,
@@ -356,7 +359,7 @@ describe('StoreOrderService', () => {
 
       const result = await service.partialRefundOrder(dto, 'admin');
 
-      expect(wechatPayService.refund).toHaveBeenCalledWith({
+      expect(paymentGateway.refund).toHaveBeenCalledWith({
         orderSn: 'ORDER123',
         refundSn: expect.stringContaining('REFUND_ORDER123_'),
         refundAmount: '50',
@@ -382,7 +385,7 @@ describe('StoreOrderService', () => {
       };
 
       mockPrisma.omsOrder.findFirst.mockResolvedValue(mockOrder);
-      mockWechatPayService.refund.mockResolvedValue({
+      mockPaymentGateway.refund.mockResolvedValue({
         refundSn: 'REFUND_ORDER123_123456',
         refundId: 'wx_refund_123',
         status: RefundStatus.SUCCESS,
@@ -469,7 +472,7 @@ describe('StoreOrderService', () => {
       };
 
       mockPrisma.omsOrder.findFirst.mockResolvedValue(mockOrder);
-      mockWechatPayService.refund.mockRejectedValue(new Error('Wechat API Error'));
+      mockPaymentGateway.refund.mockRejectedValue(new Error('Wechat API Error'));
 
       const dto = {
         orderId: 'order1',
@@ -477,11 +480,241 @@ describe('StoreOrderService', () => {
       };
 
       await expect(service.partialRefundOrder(dto, 'admin')).rejects.toThrow(BusinessException);
-      expect(wechatPayService.refund).toHaveBeenCalled();
+      expect(paymentGateway.refund).toHaveBeenCalled();
     });
 
     // TODO: 对接真实微信支付 API 后的集成测试
     it.todo('should integrate with real Wechat Pay refund API in sandbox (需要沙箱环境，见 Issue #T-7)');
     it.todo('should handle refund callback notification (需要实现回调接口，见 Issue #T-7)');
+  });
+
+  describe('batchVerify', () => {
+    it('should verify multiple orders successfully', async () => {
+      mockOrderRepo.findOne.mockResolvedValue({ id: 'order1', status: OrderStatus.SHIPPED });
+      mockCommissionService.updatePlanSettleTime.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2', 'order3'],
+        remark: 'Batch verify',
+      };
+
+      const result = await service.batchVerify(dto, 'admin');
+
+      expect(result.data.successCount).toBe(3);
+      expect(result.data.failCount).toBe(0);
+      expect(result.data.details).toHaveLength(3);
+      expect(result.data.details[0].success).toBe(true);
+      expect(orderRepo.update).toHaveBeenCalledTimes(3);
+    });
+
+    it('should handle partial failures in batch verify', async () => {
+      mockOrderRepo.findOne
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.SHIPPED })
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 'order3', status: OrderStatus.SHIPPED });
+      mockCommissionService.updatePlanSettleTime.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2', 'order3'],
+        remark: 'Batch verify',
+      };
+
+      const result = await service.batchVerify(dto, 'admin');
+
+      expect(result.data.successCount).toBe(2);
+      expect(result.data.failCount).toBe(1);
+      expect(result.data.details).toHaveLength(3);
+      expect(result.data.details[0].success).toBe(true);
+      expect(result.data.details[1].success).toBe(false);
+      expect(result.data.details[1].error).toBeDefined();
+      expect(result.data.details[2].success).toBe(true);
+    });
+
+    it('should continue processing after one order fails', async () => {
+      mockOrderRepo.findOne
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.PAID })
+        .mockResolvedValueOnce({ id: 'order2', status: OrderStatus.SHIPPED });
+      mockCommissionService.updatePlanSettleTime.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2'],
+        remark: 'Batch verify',
+      };
+
+      const result = await service.batchVerify(dto, 'admin');
+
+      expect(result.data.successCount).toBe(1);
+      expect(result.data.failCount).toBe(1);
+      expect(result.data.details[0].success).toBe(false);
+      expect(result.data.details[0].error).toContain('不允许核销');
+      expect(result.data.details[1].success).toBe(true);
+    });
+
+    it('should return empty result for empty order list', async () => {
+      const dto = {
+        orderIds: [],
+        remark: 'Batch verify',
+      };
+
+      const result = await service.batchVerify(dto, 'admin');
+
+      expect(result.data.successCount).toBe(0);
+      expect(result.data.failCount).toBe(0);
+      expect(result.data.details).toHaveLength(0);
+    });
+  });
+
+  describe('batchRefund', () => {
+    it('should refund multiple orders successfully', async () => {
+      mockOrderRepo.findOne.mockResolvedValue({
+        id: 'order1',
+        status: OrderStatus.PAID,
+        memberId: 'm1',
+        orderSn: 'ORDER123',
+        payAmount: '100.00',
+      });
+      mockPaymentGateway.refund.mockResolvedValue({
+        refundSn: 'REFUND_ORDER123_123456',
+        refundId: 'wx_refund_123',
+        status: RefundStatus.SUCCESS,
+        amount: 10000,
+      });
+      mockCommissionService.cancelCommissions.mockResolvedValue(undefined);
+      mockOrderIntegrationService.handleOrderRefunded.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2', 'order3'],
+        remark: 'Batch refund',
+      };
+
+      const result = await service.batchRefund(dto, 'admin');
+
+      expect(result.data.successCount).toBe(3);
+      expect(result.data.failCount).toBe(0);
+      expect(result.data.details).toHaveLength(3);
+      expect(result.data.details[0].success).toBe(true);
+      expect(paymentGateway.refund).toHaveBeenCalledTimes(3);
+    });
+
+    it('should handle partial failures in batch refund', async () => {
+      mockOrderRepo.findOne
+        .mockResolvedValueOnce({
+          id: 'order1',
+          status: OrderStatus.PAID,
+          memberId: 'm1',
+          orderSn: 'ORDER123',
+          payAmount: '100.00',
+        })
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: 'order3',
+          status: OrderStatus.PAID,
+          memberId: 'm1',
+          orderSn: 'ORDER456',
+          payAmount: '100.00',
+        });
+      mockPaymentGateway.refund.mockResolvedValue({
+        refundSn: 'REFUND_123456',
+        refundId: 'wx_refund_123',
+        status: RefundStatus.SUCCESS,
+        amount: 10000,
+      });
+      mockCommissionService.cancelCommissions.mockResolvedValue(undefined);
+      mockOrderIntegrationService.handleOrderRefunded.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2', 'order3'],
+        remark: 'Batch refund',
+      };
+
+      const result = await service.batchRefund(dto, 'admin');
+
+      expect(result.data.successCount).toBe(2);
+      expect(result.data.failCount).toBe(1);
+      expect(result.data.details).toHaveLength(3);
+      expect(result.data.details[0].success).toBe(true);
+      expect(result.data.details[1].success).toBe(false);
+      expect(result.data.details[1].error).toBeDefined();
+      expect(result.data.details[2].success).toBe(true);
+    });
+
+    it('should continue processing after wechat refund fails', async () => {
+      mockOrderRepo.findOne.mockResolvedValue({
+        id: 'order1',
+        status: OrderStatus.PAID,
+        memberId: 'm1',
+        orderSn: 'ORDER123',
+        payAmount: '100.00',
+      });
+      mockPaymentGateway.refund
+        .mockRejectedValueOnce(new Error('Wechat API Error'))
+        .mockResolvedValueOnce({
+          refundSn: 'REFUND_123456',
+          refundId: 'wx_refund_123',
+          status: RefundStatus.SUCCESS,
+          amount: 10000,
+        });
+      mockCommissionService.cancelCommissions.mockResolvedValue(undefined);
+      mockOrderIntegrationService.handleOrderRefunded.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2'],
+        remark: 'Batch refund',
+      };
+
+      const result = await service.batchRefund(dto, 'admin');
+
+      expect(result.data.successCount).toBe(1);
+      expect(result.data.failCount).toBe(1);
+      expect(result.data.details[0].success).toBe(false);
+      expect(result.data.details[0].error).toContain('退款失败');
+      expect(result.data.details[1].success).toBe(true);
+    });
+
+    it('should return empty result for empty order list', async () => {
+      const dto = {
+        orderIds: [],
+        remark: 'Batch refund',
+      };
+
+      const result = await service.batchRefund(dto, 'admin');
+
+      expect(result.data.successCount).toBe(0);
+      expect(result.data.failCount).toBe(0);
+      expect(result.data.details).toHaveLength(0);
+    });
+
+    it('should handle orders with invalid status', async () => {
+      mockOrderRepo.findOne
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.PENDING_PAY })
+        .mockResolvedValueOnce({
+          id: 'order2',
+          status: OrderStatus.PAID,
+          memberId: 'm1',
+          orderSn: 'ORDER123',
+          payAmount: '100.00',
+        });
+      mockPaymentGateway.refund.mockResolvedValue({
+        refundSn: 'REFUND_123456',
+        refundId: 'wx_refund_123',
+        status: RefundStatus.SUCCESS,
+        amount: 10000,
+      });
+      mockCommissionService.cancelCommissions.mockResolvedValue(undefined);
+      mockOrderIntegrationService.handleOrderRefunded.mockResolvedValue(undefined);
+
+      const dto = {
+        orderIds: ['order1', 'order2'],
+        remark: 'Batch refund',
+      };
+
+      const result = await service.batchRefund(dto, 'admin');
+
+      expect(result.data.successCount).toBe(1);
+      expect(result.data.failCount).toBe(1);
+      expect(result.data.details[0].success).toBe(false);
+      expect(result.data.details[0].error).toContain('不可退款');
+      expect(result.data.details[1].success).toBe(true);
+    });
   });
 });

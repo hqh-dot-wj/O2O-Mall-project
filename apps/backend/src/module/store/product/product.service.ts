@@ -4,14 +4,22 @@ import { Prisma, DistributionMode, PublishStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { TenantContext } from 'src/common/tenant/tenant.context';
+import { getErrorMessage } from 'src/common/utils/error';
 import {
+  BatchImportProductDto,
+  BatchUpdateProductPriceDto,
   ImportProductDto,
   ListMarketProductDto,
   ListStoreProductDto,
+  RemoveProductDto,
   UpdateProductBaseDto,
   UpdateProductPriceDto,
 } from './dto';
 import { ProfitValidator } from './profit-validator';
+import { TenantProductRepository } from './tenant-product.repository';
+import { TenantSkuRepository } from './tenant-sku.repository';
 
 /**
  * 店铺商品管理服务
@@ -22,6 +30,8 @@ export class StoreProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly profitValidator: ProfitValidator,
+    private readonly tenantProductRepo: TenantProductRepository,
+    private readonly tenantSkuRepo: TenantSkuRepository,
   ) {}
 
   /**
@@ -144,96 +154,181 @@ export class StoreProductService {
    *   ]
    * });
    */
+  @Transactional()
   async importProduct(tenantId: string, dto: ImportProductDto) {
     const { productId, overrideRadius, skus } = dto;
 
-    // 在事务内完成所有操作
-    const res = await this.prisma.$transaction(async (tx) => {
-      // 1. 在事务内检查全局商品是否存在
-      const globalProduct = await tx.pmsProduct.findUnique({
-        where: { productId },
-        include: { globalSkus: true },
-      });
-      BusinessException.throwIfNull(globalProduct, '商品不存在');
+    // 1. 检查全局商品是否存在
+    const globalProduct = await this.prisma.pmsProduct.findUnique({
+      where: { productId },
+      include: { globalSkus: true },
+    });
+    BusinessException.throwIfNull(globalProduct, '商品不存在');
 
-      // 2. 校验 SKU 有效性
-      if (skus && skus.length > 0) {
-        const validSkuIds = new Set(globalProduct.globalSkus.map((s) => s.skuId));
-        const invalidSkus = skus.filter((s) => !validSkuIds.has(s.globalSkuId));
-        BusinessException.throwIf(
-          invalidSkus.length > 0,
-          `无效的SKU: ${invalidSkus.map((s) => s.globalSkuId).join(',')}`,
-          ResponseCode.PARAM_INVALID,
-        );
+    // 2. 校验 SKU 有效性
+    if (skus && skus.length > 0) {
+      const validSkuIds = new Set(globalProduct.globalSkus.map((s) => s.skuId));
+      const invalidSkus = skus.filter((s) => !validSkuIds.has(s.globalSkuId));
+      BusinessException.throwIf(
+        invalidSkus.length > 0,
+        `无效的SKU: ${invalidSkus.map((s) => s.globalSkuId).join(',')}`,
+        ResponseCode.PARAM_INVALID,
+      );
 
-        // 3. 校验每个SKU的利润和分销费率范围
-        for (const sku of skus) {
-          const globalSku = globalProduct.globalSkus.find((g) => g.skuId === sku.globalSkuId);
-          if (globalSku) {
-            // 校验分销费率是否在允许范围内
-            const storeDistRate = sku.distRate || 0;
-            const minDistRate = Number(globalSku.guideRate) * 0.8; // 假设允许范围为指导费率的80%-120%
-            const maxDistRate = Number(globalSku.guideRate) * 1.2;
-            this.profitValidator.validateDistRateRange(storeDistRate, minDistRate, maxDistRate);
+      // 3. 校验每个SKU的利润和分销费率范围
+      for (const sku of skus) {
+        const globalSku = globalProduct.globalSkus.find((g) => g.skuId === sku.globalSkuId);
+        if (globalSku) {
+          // 校验分销费率是否在允许范围内
+          const storeDistRate = sku.distRate || 0;
+          const minDistRate = Number(globalSku.guideRate) * 0.8; // 假设允许范围为指导费率的80%-120%
+          const maxDistRate = Number(globalSku.guideRate) * 1.2;
+          this.profitValidator.validateDistRateRange(storeDistRate, minDistRate, maxDistRate);
 
-            // 校验利润
-            this.profitValidator.validate(
-              sku.price,
-              globalSku.costPrice,
-              storeDistRate,
-              sku.distMode || DistributionMode.RATIO,
-            );
-          }
+          // 校验利润
+          this.profitValidator.validate(
+            sku.price,
+            globalSku.costPrice,
+            storeDistRate,
+            sku.distMode || DistributionMode.RATIO,
+          );
         }
       }
+    }
 
-      // 4. 使用 upsert 创建或更新店铺商品(防止并发重复导入)
-      const tenantProduct = await tx.pmsTenantProduct.upsert({
-        where: { tenantId_productId: { tenantId, productId } },
-        create: {
-          tenantId,
-          productId,
-          status: PublishStatus.OFF_SHELF,
-          overrideRadius: overrideRadius,
-        },
-        update: {
-          // 如果已存在,更新服务半径
-          overrideRadius: overrideRadius,
-        },
-      });
-
-      // 5. 批量创建 SKU(使用 skipDuplicates 防止重复)
-      if (skus && skus.length > 0) {
-        await tx.pmsTenantSku.createMany({
-          data: skus.map((sku) => ({
-            tenantId,
-            tenantProductId: tenantProduct.id,
-            globalSkuId: sku.globalSkuId,
-            price: new Decimal(sku.price),
-            stock: sku.stock,
-            distMode: sku.distMode || DistributionMode.RATIO,
-            distRate: new Decimal(sku.distRate || 0),
-            isActive: true,
-          })),
-          skipDuplicates: true, // 防止重复创建
-        });
-      }
-
-      return tenantProduct;
+    // 4. 使用 upsert 创建或更新店铺商品(防止并发重复导入)
+    const tenantProduct = await this.tenantProductRepo.delegate.upsert({
+      where: { tenantId_productId: { tenantId, productId } },
+      create: {
+        tenantId,
+        productId,
+        status: PublishStatus.OFF_SHELF,
+        overrideRadius: overrideRadius,
+      },
+      update: {
+        // 如果已存在,更新服务半径
+        overrideRadius: overrideRadius,
+      },
     });
 
-    return Result.ok(res);
+    // 5. 批量 upsert SKU（重新导入时更新已有 SKU 的价格/库存/分销配置）
+    if (skus && skus.length > 0) {
+      await Promise.all(
+        skus.map((sku) =>
+          this.tenantSkuRepo.delegate.upsert({
+            where: {
+              tenantProductId_globalSkuId: {
+                tenantProductId: tenantProduct.id,
+                globalSkuId: sku.globalSkuId,
+              },
+            },
+            create: {
+              tenantId,
+              tenantProductId: tenantProduct.id,
+              globalSkuId: sku.globalSkuId,
+              price: new Decimal(sku.price),
+              stock: sku.stock,
+              distMode: sku.distMode || DistributionMode.RATIO,
+              distRate: new Decimal(sku.distRate || 0),
+              isActive: true,
+            },
+            update: {
+              price: new Decimal(sku.price),
+              stock: sku.stock,
+              distMode: sku.distMode || DistributionMode.RATIO,
+              distRate: new Decimal(sku.distRate || 0),
+            },
+          }),
+        ),
+      );
+    }
+
+    return Result.ok(tenantProduct);
+  }
+
+  /**
+   * 批量导入商品到店铺
+   *
+   * @description
+   * 从选品中心多选商品后一次性导入。逐个调用 importProduct，支持部分成功。
+   * 单次最多 50 个商品，超过需分批提交。
+   *
+   * @param tenantId - 当前租户ID
+   * @param dto - 批量导入参数，items 为 ImportProductDto 数组
+   * @returns { success, failed, errors } 成功数、失败数、失败明细
+   */
+  async batchImportProducts(tenantId: string, dto: BatchImportProductDto) {
+    let success = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const [index, item] of dto.items.entries()) {
+      try {
+        await this.importProduct(tenantId, item);
+        success++;
+      } catch (error) {
+        failed++;
+        errors.push(`第 ${index + 1} 项 (productId=${item.productId}): ${getErrorMessage(error)}`);
+      }
+    }
+
+    return Result.ok(
+      { success, failed, errors },
+      `批量导入完成：成功 ${success} 个，失败 ${failed} 个`,
+    );
+  }
+
+  /**
+   * 批量更新 SKU 价格/库存/分销配置
+   *
+   * @description
+   * 选择多个 SKU 一次性调整价格、库存或分销配置。逐个调用 updateProductPrice，支持部分成功。
+   * 单次最多 50 个 SKU，超过需分批提交。每个 SKU 需通过利润风控校验。
+   *
+   * @param tenantId - 当前租户ID
+   * @param dto - 批量调价参数，items 为 UpdateProductPriceDto 数组
+   * @returns { success, failed, errors } 成功数、失败数、失败明细
+   */
+  async batchUpdateProductPrice(tenantId: string, dto: BatchUpdateProductPriceDto) {
+    let success = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const [index, item] of dto.items.entries()) {
+      try {
+        await this.updateProductPrice(tenantId, item);
+        success++;
+      } catch (error) {
+        failed++;
+        errors.push(`第 ${index + 1} 项 (tenantSkuId=${item.tenantSkuId}): ${getErrorMessage(error)}`);
+      }
+    }
+
+    return Result.ok(
+      { success, failed, errors },
+      `批量调价完成：成功 ${success} 个，失败 ${failed} 个`,
+    );
   }
 
   /**
    * 店铺商品列表
    * 查询当前店铺已引入的商品
+   * HQ 跨店查询需要超管身份
    */
   async findAll(tenantId: string, query: ListStoreProductDto) {
     const { name, type, status, storeId } = query;
 
+    // storeId 跨店查询仅允许超管
+    if (storeId && storeId !== tenantId) {
+      BusinessException.throwIf(
+        !TenantContext.isSuperTenant(),
+        '无权查看其他门店商品',
+        ResponseCode.FORBIDDEN,
+      );
+    }
+
     const where: Prisma.PmsTenantProductWhereInput = {
-      tenantId: storeId || tenantId, // 优先使用查询参数中的 storeId (HQ场景), 否则使用 Token 中的租户ID
+      tenantId: storeId || tenantId,
     };
 
     if (name) {
@@ -243,19 +338,8 @@ export class StoreProductService {
     if (status) where.status = status;
 
     const [list, total] = await Promise.all([
-      this.prisma.pmsTenantProduct.findMany({
-        where,
-        include: {
-          product: true,
-          skus: {
-            include: { globalSku: true },
-          },
-        },
-        skip: query.skip,
-        take: query.take,
-        orderBy: { createTime: 'desc' },
-      }),
-      this.prisma.pmsTenantProduct.count({ where }),
+      this.tenantProductRepo.findWithRelations(where, query.skip, query.take),
+      this.tenantProductRepo.countWithConditions(where),
     ]);
 
     const formatted = list.map((item) => ({
@@ -315,11 +399,12 @@ export class StoreProductService {
    *   distMode: 'RATIO'
    * });
    */
+  @Transactional()
   async updateProductPrice(tenantId: string, dto: UpdateProductPriceDto) {
     const { tenantSkuId, price, stock, distRate, distMode, pointsRatio, isPromotionProduct } = dto;
 
     // 1. 获取店铺 SKU (包含当前版本号)
-    const tenantSku = await this.prisma.pmsTenantSku.findUnique({
+    const tenantSku = await this.tenantSkuRepo.delegate.findUnique({
       where: { id: tenantSkuId },
       include: {
         tenantProd: true,
@@ -339,7 +424,7 @@ export class StoreProductService {
 
     // 3. 使用乐观锁更新数据库
     // updateMany 返回 { count: number },如果 count=0 说明版本号不匹配(被其他请求修改了)
-    const affected = await this.prisma.pmsTenantSku.updateMany({
+    const affected = await this.tenantSkuRepo.delegate.updateMany({
       where: {
         id: tenantSkuId,
         version: tenantSku.version, // 乐观锁条件: 版本号必须匹配
@@ -362,7 +447,7 @@ export class StoreProductService {
     }
 
     // 5. 查询最新数据返回
-    const updated = await this.prisma.pmsTenantSku.findUnique({
+    const updated = await this.tenantSkuRepo.delegate.findUnique({
       where: { id: tenantSkuId },
       include: { globalSku: true },
     });
@@ -376,21 +461,53 @@ export class StoreProductService {
   async updateProductBase(tenantId: string, dto: UpdateProductBaseDto) {
     const { id, status, customTitle, overrideRadius } = dto;
 
-    const tenantProduct = await this.prisma.pmsTenantProduct.findUnique({
-      where: { id },
-    });
+    const tenantProduct = await this.tenantProductRepo.findById(id);
     BusinessException.throwIfNull(tenantProduct, '商品不存在');
     BusinessException.throwIf(tenantProduct.tenantId !== tenantId, '无权操作此商品', ResponseCode.FORBIDDEN);
 
-    const res = await this.prisma.pmsTenantProduct.update({
-      where: { id },
-      data: {
-        status,
-        customTitle,
-        overrideRadius,
-      },
+    const res = await this.tenantProductRepo.update(id, {
+      status,
+      customTitle,
+      overrideRadius,
     });
 
     return Result.ok(res);
+  }
+
+  /**
+   * 从店铺移除商品（硬删除 + 关联 SKU 清理）
+   *
+   * @description
+   * 删除门店商品映射及其所有关联 SKU。
+   * 仅允许下架状态的商品被移除，上架中的商品需先下架。
+   *
+   * @param tenantId - 租户ID
+   * @param dto - 移除参数
+   * @returns 删除结果
+   *
+   * @throws BusinessException
+   * - 商品不存在
+   * - 无权操作此商品
+   * - 商品处于上架状态，请先下架
+   *
+   * @transaction 使用事务保证商品和 SKU 同时删除
+   */
+  @Transactional()
+  async removeProduct(tenantId: string, dto: RemoveProductDto) {
+    const { id } = dto;
+
+    const tenantProduct = await this.tenantProductRepo.findById(id);
+    BusinessException.throwIfNull(tenantProduct, '商品不存在');
+    BusinessException.throwIf(tenantProduct.tenantId !== tenantId, '无权操作此商品', ResponseCode.FORBIDDEN);
+    BusinessException.throwIf(
+      tenantProduct.status === PublishStatus.ON_SHELF,
+      '商品处于上架状态，请先下架',
+    );
+
+    // 先删除关联 SKU，再删除商品
+    await this.tenantSkuRepo.deleteMany({ tenantProductId: id });
+    await this.tenantProductRepo.delete(id);
+
+    return Result.ok(null, '商品已移除');
   }
 }

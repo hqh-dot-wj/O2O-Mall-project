@@ -397,7 +397,25 @@ model PmsTenantSku {
 
   tenantProd PmsTenantProduct @relation(fields: [tenantProductId], references: [id])
 
+  @@unique([tenantProductId, globalSkuId]) // 同一门店商品下不能重复引入同一全局SKU
   @@map("pms_tenant_sku")
+}
+
+/// 库存变动流水表 (审计追溯)
+model PmsStockLog {
+  id           String   @id @default(uuid()) @map("id")
+  tenantId     String   @map("tenant_id") @db.VarChar(20)
+  tenantSkuId  String   @map("tenant_sku_id") @db.VarChar(36)
+  operatorId   String   @map("operator_id") @db.VarChar(64)
+  stockChange  Int      @map("stock_change") // 正数增加,负数减少
+  stockBefore  Int      @map("stock_before")
+  stockAfter   Int      @map("stock_after")
+  reason       String?  @db.VarChar(200)
+  createTime   DateTime @default(now()) @map("create_time")
+
+  @@index([tenantId, createTime])
+  @@index([tenantSkuId])
+  @@map("pms_stock_log")
 }
 
 enum DistributionMode {
@@ -2020,6 +2038,25 @@ model SysMessage {
   @@index([receiverId])
   @@index([tenantId])
   @@map("sys_message")
+}
+
+/// 通知发送记录表 (AC-11)
+model SysNotificationLog {
+  id        Int      @id @default(autoincrement())
+  tenantId  String   @map("tenant_id") @db.VarChar(20)
+  channel   String   @db.VarChar(30) // IN_APP, SMS, WECHAT_TEMPLATE, APP_PUSH
+  target    String   @db.VarChar(100) // 接收目标 (userId/phone/openId)
+  template  String?  @db.VarChar(50) // 模板编码
+  title     String?  @db.VarChar(200)
+  content   String?  @db.Text
+  status    String   @db.VarChar(20) // QUEUED, SENDING, SENT, FAILED
+  errorMsg  String?  @map("error_msg") @db.VarChar(500)
+  createTime DateTime @default(now()) @map("create_time")
+  updateTime DateTime @updatedAt @map("update_time")
+
+  @@index([tenantId])
+  @@index([createTime])
+  @@map("sys_notification_log")
 }
 
 // ==========================================

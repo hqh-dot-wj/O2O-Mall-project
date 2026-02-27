@@ -41,7 +41,7 @@ export class TenantProductRepository extends BaseRepository<
    */
   constructor(prisma: PrismaService, cls: ClsService) {
     // 指定模型名、主键名、租户字段名
-    super(prisma, cls, 'pmsTenantProduct', 'tenantProdId', 'tenantId');
+    super(prisma, cls, 'pmsTenantProduct', 'id', 'tenantId');
   }
 
   /**
@@ -70,26 +70,9 @@ export class TenantProductRepository extends BaseRepository<
     return this.delegate.findMany({
       where,
       include: {
-        // 关联全局商品
-        globalProduct: {
-          select: {
-            name: true,
-            picUrl: true,
-            type: true,
-            // 关联分类和品牌
-            category: { select: { name: true } },
-            brand: { select: { name: true } },
-          },
-        },
-        // 关联租户SKU
-        tenantSkus: {
-          select: {
-            tenantSkuId: true,
-            price: true,
-            stock: true,
-            specValues: true,
-            status: true,
-          },
+        product: true,
+        skus: {
+          include: { globalSku: true },
         },
       },
       skip,
@@ -122,31 +105,16 @@ export class TenantProductRepository extends BaseRepository<
    */
   async findOneWithDetails(tenantProdId: string) {
     return this.delegate.findUnique({
-      where: { tenantProdId },
+      where: { id: tenantProdId },
       include: {
-        // 关联全局商品(完整信息)
-        globalProduct: {
+        product: {
           include: {
-            category: { select: { name: true } },
-            brand: { select: { name: true } },
             globalSkus: true,
-            attrValues: {
-              include: {
-                attribute: { select: { name: true } },
-              },
-            },
           },
         },
-        // 关联租户SKU(完整信息)
-        tenantSkus: {
+        skus: {
           include: {
-            globalSku: {
-              select: {
-                skuId: true,
-                specValues: true,
-                guidePrice: true,
-              },
-            },
+            globalSku: true,
           },
         },
       },

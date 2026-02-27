@@ -13,6 +13,8 @@ import {
   VerifyServiceDto,
   RefundOrderDto,
   PartialRefundOrderDto,
+  BatchVerifyDto,
+  BatchRefundDto,
 } from './dto/store-order.dto';
 
 /**
@@ -107,4 +109,27 @@ export class StoreOrderController {
   async exportOrders(@Query() query: ListStoreOrderDto, @Res() res: Response) {
     return await this.storeOrderService.exportOrders(query, res);
   }
+
+  /**
+   * 批量核销
+   */
+  @Post('batch/verify')
+  @Api({ summary: '批量核销' })
+  @RequirePermission('store:order:verify')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  async batchVerify(@Body() dto: BatchVerifyDto, @User('userId') userId: string) {
+    return await this.storeOrderService.batchVerify(dto, userId);
+  }
+
+  /**
+   * 批量退款
+   */
+  @Post('batch/refund')
+  @Api({ summary: '批量退款' })
+  @RequirePermission('store:order:refund')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  async batchRefund(@Body() dto: BatchRefundDto, @User('userId') userId: string) {
+    return await this.storeOrderService.batchRefund(dto, userId);
+  }
+
 }

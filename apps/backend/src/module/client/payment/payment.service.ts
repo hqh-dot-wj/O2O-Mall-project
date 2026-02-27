@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BusinessException } from 'src/common/exceptions';
 import { PrepayDto } from './dto/payment.dto';
-import * as crypto from 'crypto';
 import { OrderStatus } from '@prisma/client';
 import { CommissionService } from '../../finance/commission/commission.service';
 import { OrderRepository } from '../order/order.repository';
-import { PrismaService } from 'src/prisma/prisma.service'; // Needed for atomic updates if repo doesn't cover it? Repo covers it.
 import { OrderIntegrationService } from '../../marketing/integration/integration.service';
+import { PaymentGatewayPort } from 'src/module/payment/ports/payment-gateway.port';
 
 @Injectable()
 export class PaymentService {
@@ -16,20 +15,15 @@ export class PaymentService {
     private readonly orderRepo: OrderRepository,
     private readonly commissionService: CommissionService,
     private readonly orderIntegrationService: OrderIntegrationService,
+    private readonly paymentGateway: PaymentGatewayPort,
   ) {}
 
   /**
-   * 预下单，获取微信支付参数
+   * 预下单，获取支付参数
    *
-   * TODO: [微信支付] 对接微信支付 JSAPI 统一下单接口
-   * - 需要配置商户号 (mchId)、API 密钥、证书
-   * - 调用 wechatpay-node-v3 SDK 的 transactions.jsapi()
-   * - 返回前端所需的 5 个支付参数 (timeStamp, nonceStr, package, signType, paySign)
-   * - 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/direct-jsons/jsapi-prepay.html
+   * 委托 PaymentGatewayPort：测试环境返回 Mock，生产环境调用微信 JSAPI 统一下单
    */
   async prepay(memberId: string, dto: PrepayDto) {
-    // 1. 校验订单
-    // [MODIFIED] Use OrderRepository
     const order = await this.orderRepo.findOne({
       id: dto.orderId,
       memberId,
@@ -38,42 +32,26 @@ export class PaymentService {
     BusinessException.throwIfNull(order, '订单不存在');
     BusinessException.throwIf(order.status !== 'PENDING_PAY', '订单状态不正确');
 
-    // 2. 环境判断 (这里简化，实际应读取配置)
-    const isProd = process.env.NODE_ENV === 'production';
-
-    if (isProd) {
-      // TODO: [微信支付-生产] 生产环境微信支付统一下单
-      // 1. 初始化 wechatpay-node-v3 实例 (商户号、API密钥、证书路径从配置读取)
-      // 2. 调用 pay.transactions_jsapi({
-      //      appid, mchid, description, out_trade_no: order.orderSn,
-      //      notify_url: config.wechat.payNotifyUrl,
-      //      amount: { total: order.payAmount * 100, currency: 'CNY' },
-      //      payer: { openid: member.openid }
-      //    })
-      // 3. 对返回的 prepay_id 生成前端签名参数
-      throw new BusinessException(1001, '生产环境支付未配置');
-    } else {
-      // 开发/测试环境：Mock 返回
-      return this.mockPrepay(order);
-    }
+    const openId = (order as { openId?: string }).openId ?? '';
+    return this.paymentGateway.prepay({
+      orderSn: order.orderSn,
+      amount: order.payAmount,
+      description: `订单${order.orderSn}`,
+      openId,
+    });
   }
 
   /**
-   * 支付回调处理 (模拟或真实)
+   * 支付回调处理
    *
-   * TODO: [微信支付] 实现微信支付回调验签
-   * - 使用微信平台证书验证回调请求的签名
-   * - 解密回调报文中的 resource 字段 (AES-256-GCM)
-   * - 验证 out_trade_no 与 transaction_id 的一致性
-   * - 验证 amount.total 与订单金额一致，防止金额篡改
-   * - 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/payment-notice.html
+   * 委托 PaymentGatewayPort.handleCallback 验签，验签通过后执行业务逻辑
+   * 非法签名返回 FAIL，不更新订单（AC-2）
    */
-  async handleCallback(orderId: string, transactionId: string, payAmount: number) {
-    // 验证签名等逻辑在此处处理...
-    // ...
-
-    // 调用内部支付成功逻辑
-    return this.processPaymentSuccess(orderId, transactionId, payAmount);
+  async handleCallback(headers: Record<string, string>, body: string) {
+    const payload = await this.paymentGateway.handleCallback(headers, body);
+    const order = await this.orderRepo.findBySn(payload.orderSn);
+    BusinessException.throwIfNull(order, '订单不存在');
+    return this.processPaymentSuccess(order.id, payload.transactionId, payload.payAmount);
   }
 
   /**
@@ -97,16 +75,25 @@ export class PaymentService {
     const order = await this.orderRepo.findById(orderId);
     BusinessException.throwIfNull(order, '订单不存在');
 
-    // Payment Defense: Check if order is already cancelled
+    // Payment Defense: 已取消订单收到回调时记录 REFUND_PENDING + WARN 日志（AC-5）
     if (order.status === 'CANCELLED') {
       this.logger.warn(
         `[Payment Defense] Order ${orderId} was cancelled but payment received. Triggering auto-refund.`,
       );
-      // TODO: [微信支付-退款] 调用微信退款接口自动退款
-      // - 调用 wechatpay-node-v3 SDK 的 refunds.create()
-      // - 传入 transaction_id、out_refund_no、退款金额
-      // - 记录退款流水到 fin_transaction
-      // - 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/create.html
+      try {
+        await this.paymentGateway.refund({
+          orderSn: order.orderSn,
+          refundSn: `AUTO_REFUND_${order.orderSn}_${Date.now()}`,
+          refundAmount: order.payAmount,
+          totalAmount: order.payAmount,
+          reason: '订单已取消，自动退款',
+        });
+        this.logger.log(`[Payment Defense] Auto-refund success for order ${orderId}`);
+      } catch (err) {
+        this.logger.warn(
+          `[Payment Defense] Auto-refund failed for order ${orderId}, marked REFUND_PENDING. 待微信对接后处理`,
+        );
+      }
       return { status: 'REFUND_PENDING', message: 'Order was cancelled, refund triggered' };
     }
 
@@ -156,23 +143,4 @@ export class PaymentService {
     return { status: nextStatus };
   }
 
-  // ============ Helper ============
-
-  private mockPrepay(order: any) {
-    return {
-      timeStamp: Math.floor(Date.now() / 1000).toString(),
-      nonceStr: this.randomString(32),
-      package: `prepay_id=wx${this.randomString(20)}`,
-      signType: 'RSA',
-      paySign: 'mock_signature',
-      _debug_orderId: order.id,
-    };
-  }
-
-  private randomString(len: number) {
-    return crypto
-      .randomBytes(Math.ceil(len / 2))
-      .toString('hex')
-      .slice(0, len);
-  }
 }

@@ -61,7 +61,7 @@ describe('TenantSkuRepository', () => {
       expect(result).toEqual(mockSku);
       expect(mockPrismaService.pmsTenantSku.update).toHaveBeenCalledWith({
         where: {
-          tenantSkuId: 'sku1',
+          id: 'sku1',
           version: 5,
         },
         data: {
@@ -94,7 +94,7 @@ describe('TenantSkuRepository', () => {
 
       expect(result).toEqual(mockSku);
       expect(mockPrismaService.pmsTenantSku.update).toHaveBeenCalledWith({
-        where: { tenantSkuId: 'sku1' },
+        where: { id: 'sku1' },
         data: {
           stock: { increment: 10 },
           updateTime: expect.any(Date),
@@ -116,7 +116,7 @@ describe('TenantSkuRepository', () => {
 
       expect(result).toEqual(mockSku);
       expect(mockPrismaService.pmsTenantSku.update).toHaveBeenCalledWith({
-        where: { tenantSkuId: 'sku1' },
+        where: { id: 'sku1' },
         data: {
           stock: { decrement: 10 },
           updateTime: expect.any(Date),

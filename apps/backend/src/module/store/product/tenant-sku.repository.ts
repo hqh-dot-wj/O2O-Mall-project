@@ -41,7 +41,7 @@ export class TenantSkuRepository extends BaseRepository<
    */
   constructor(prisma: PrismaService, cls: ClsService) {
     // 指定模型名、主键名、租户字段名
-    super(prisma, cls, 'pmsTenantSku', 'tenantSkuId', 'tenantId');
+    super(prisma, cls, 'pmsTenantSku', 'id', 'tenantId');
   }
 
   /**
@@ -65,20 +65,12 @@ export class TenantSkuRepository extends BaseRepository<
     return this.delegate.findMany({
       where,
       include: {
-        globalSku: {
-          select: {
-            skuId: true,
-            specValues: true,
-            guidePrice: true,
-          },
-        },
-        tenantProduct: {
-          select: {
-            tenantProdId: true,
-            globalProduct: {
+        globalSku: true,
+        tenantProd: {
+          include: {
+            product: {
               select: {
                 name: true,
-                picUrl: true,
               },
             },
           },
@@ -126,6 +118,38 @@ export class TenantSkuRepository extends BaseRepository<
   }
 
   /**
+   * 库存列表分页查询(按租户、商品名称)
+   *
+   * @param tenantId - 租户ID
+   * @param options - skip, take, productName
+   * @returns [records, total]
+   */
+  async findStockList(
+    tenantId: string,
+    options: { skip: number; take: number; productName?: string },
+  ): Promise<[PmsTenantSku[], number]> {
+    const where: Prisma.PmsTenantSkuWhereInput = {
+      tenantProd: {
+        tenantId,
+        product: options.productName ? { name: { contains: options.productName } } : undefined,
+      },
+    };
+    const [records, total] = await Promise.all([
+      this.delegate.findMany({
+        where,
+        skip: options.skip,
+        take: options.take,
+        include: {
+          tenantProd: { include: { product: true } },
+          globalSku: true,
+        },
+      }),
+      this.delegate.count({ where }),
+    ]);
+    return [records, total];
+  }
+
+  /**
    * 根据租户商品ID查询SKU列表
    *
    * @param tenantProdId - 租户商品ID
@@ -169,7 +193,7 @@ export class TenantSkuRepository extends BaseRepository<
     try {
       return await this.delegate.update({
         where: {
-          tenantSkuId,
+          id: tenantSkuId,
           version: currentVersion, // 乐观锁条件
         },
         data: {
@@ -199,7 +223,7 @@ export class TenantSkuRepository extends BaseRepository<
    */
   async incrementStock(tenantSkuId: string, amount: number) {
     return this.delegate.update({
-      where: { tenantSkuId },
+      where: { id: tenantSkuId },
       data: {
         stock: { increment: amount },
         updateTime: new Date(),
@@ -229,12 +253,56 @@ export class TenantSkuRepository extends BaseRepository<
    */
   async decrementStock(tenantSkuId: string, amount: number) {
     return this.delegate.update({
-      where: { tenantSkuId },
+      where: { id: tenantSkuId },
       data: {
         stock: { decrement: amount },
         updateTime: new Date(),
       },
     });
+  }
+
+  /**
+   * 按租户原子更新库存(带库存检查)
+   *
+   * @description
+   * 使用 updateMany 原子操作,租户隔离,扣减时 WHERE 检查库存充足
+   *
+   * @param tenantId - 租户ID
+   * @param skuId - 租户SKU主键ID
+   * @param change - 库存变化量(正数增加,负数减少)
+   * @returns 更新成功返回最新SKU,失败返回 { updated: false, sku } 便于区分不存在/库存不足
+   */
+  async updateStockForTenant(
+    tenantId: string,
+    skuId: string,
+    change: number,
+  ): Promise<{ updated: true; sku: PmsTenantSku } | { updated: false; sku: PmsTenantSku | null }> {
+    const affected = await this.delegate.updateMany({
+      where: {
+        id: skuId,
+        tenantId,
+        stock: change < 0 ? { gte: Math.abs(change) } : undefined,
+      },
+      data: {
+        stock: { [change > 0 ? 'increment' : 'decrement']: Math.abs(change) },
+      },
+    });
+
+    if (affected.count > 0) {
+      const sku = await this.delegate.findUnique({
+        where: { id: skuId },
+        include: {
+          globalSku: true,
+          tenantProd: { include: { product: true } },
+        },
+      });
+      return { updated: true, sku: sku! };
+    }
+
+    const sku = await this.delegate.findFirst({
+      where: { id: skuId, tenantId },
+    });
+    return { updated: false, sku };
   }
 
   /**
@@ -269,7 +337,7 @@ export class TenantSkuRepository extends BaseRepository<
 
         return await this.delegate.update({
           where: {
-            tenantSkuId,
+            id: tenantSkuId,
             stock: { gte: Math.abs(change) }, // 确保库存充足
           },
           data: {
@@ -295,8 +363,8 @@ export class TenantSkuRepository extends BaseRepository<
    */
   async updateStatus(tenantSkuIds: string[], status: string) {
     return this.updateMany(
-      { tenantSkuId: { in: tenantSkuIds } } as Partial<PmsTenantSku>,
-      { status } as Partial<PmsTenantSku>,
+      { id: { in: tenantSkuIds } },
+      { status },
     );
   }
 
@@ -321,7 +389,7 @@ export class TenantSkuRepository extends BaseRepository<
     return client.$transaction(
       updates.map(({ tenantSkuId, price }) =>
         this.delegate.update({
-          where: { tenantSkuId },
+          where: { id: tenantSkuId },
           data: { price, updateTime: new Date() },
         }),
       ),

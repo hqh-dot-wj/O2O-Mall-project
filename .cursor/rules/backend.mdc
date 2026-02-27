@@ -1,5 +1,5 @@
 ---
-description: NestJS 后端开发规范（响应、异常、错误工具、DTO、Repository、事务、Controller、测试、性能、安全、多租户、Client 与能力域模块划分）
+description: NestJS 后端开发规范（响应、异常、错误工具、DTO、Repository、事务、Controller、测试、性能、安全、多租户、Client 与能力域、架构守护、SLO、技术债、DX、文档规范、第三方 API 对接）
 globs: apps/backend/**/*.ts
 alwaysApply: false
 ---
@@ -147,6 +147,15 @@ xxx/
 | ------------- | ----------------------------------------- | -------------------------------------------- |
 | 单元测试      | 与源文件同目录 `xxx.spec.ts`              | Service 方法、Repository、工具函数、业务规则 |
 | 集成/联合测试 | `test/integration/`、`test/*.e2e-spec.ts` | 多模块联调、完整业务流程、数据库+外部依赖    |
+
+**新增功能最低测试要求**（详见 `.cursor/rules/testing.mdc` §5）：
+
+| 类型 | 最低要求 |
+|------|----------|
+| Service 新方法 | 至少 2 个用例：主路径成功 + 异常/边界 |
+| Controller 新端点 | 至少验证 `@RequirePermission` 装饰器 |
+| Scheduler | 至少验证 Cron 元数据 + 调用 Service |
+| 批量操作 | 覆盖全部成功、部分失败 |
 
 PR 时新逻辑应有对应单测或集成测试，核心/资金类逻辑建议二者兼备。
 
@@ -588,3 +597,671 @@ PR 时必须回答以下问题：
 | 复杂逻辑有注释 | 业务规则、算法、边界条件需注释 |
 | 魔法数字用常量 | `14 * 24 * 60 * 60 * 1000` → `SETTLE_DAYS * DAY_MS` |
 | 长方法要拆分 | 超过 50 行考虑提取子方法 |
+
+---
+
+## 📋 18. 文档编写规范
+
+### 18.1 模块文档要求
+
+每个模块必须包含完整的文档，确保代码和文档同步更新。
+
+**必需文档**：
+
+- 需求文档（`docs/requirements/{模块路径}/`）
+- 设计文档（`docs/design/{模块路径}/`）
+
+**文档内容要求**：
+
+- 需求文档：用例图、活动图、状态图（若有状态流转）
+- 设计文档：类图、时序图、组件图、部署图、状态图（若适用）
+- 缺陷分析：P0-P3优先级分类，每个缺陷包含现状、影响、建议
+
+**文档命名规范**：
+
+- 文件名：小写+连字符（如 `user-requirements.md`）
+- 目录名：与 `src/module/` 结构对齐
+- 示例：`docs/requirements/admin/system/user/user-requirements.md`
+
+### 18.2 文档更新时机
+
+**必须更新文档**（阻塞PR）：
+
+- 新增模块或功能
+- 重大功能变更（如改变业务流程）
+- 架构调整（如拆分Service、改变依赖关系）
+- 接口变更（路径、参数、响应格式）
+- 数据模型变更（新增表、修改字段、改变关系）
+
+**建议更新文档**（PR中说明）：
+
+- 性能优化（如添加索引、引入缓存）
+- 重要缺陷修复（如修复P0/P1缺陷）
+- 代码重构（如拆分God Class、优化算法）
+
+**无需更新文档**：
+
+- 代码格式调整
+- 注释修改
+- 小型bug修复
+- 日志优化
+
+### 18.3 文档质量标准
+
+**基本要求**（必须满足）：
+
+- 术语统一（同一概念使用同一术语）
+- 逻辑严谨（因果关系清晰，无矛盾）
+- 图文一致（图表与文字描述一致）
+- 格式规范（遵循 `.kiro/steering/documentation.md`）
+
+**高级要求**（优秀文档）：
+
+- 缺陷分析深入（识别P0-P3缺陷，提供改进建议）
+- 性能指标明确（QPS、P99延迟、数据量级）
+- 扩展性考虑（预留扩展点，说明扩展方案）
+- 最佳实践总结（提炼可复用的模式和经验）
+
+### 18.4 文档与代码同步
+
+**开发流程**：
+
+1. 设计阶段：编写需求文档和设计文档
+2. 开发阶段：按照文档实现代码
+3. 测试阶段：验证实现与文档一致
+4. Review阶段：检查文档与代码同步
+5. 上线后：根据实际情况更新文档
+
+**同步检查**：
+
+- PR时检查文档是否更新
+- 接口变更必须更新文档
+- 缺陷修复后更新缺陷分析
+- 定期review文档准确性
+
+### 18.5 文档Review清单
+
+PR时必须检查以下项目：
+
+**结构完整性**：
+
+- [ ] 包含所有必需章节
+- [ ] 包含所有必需图表
+- [ ] 章节编号正确
+
+**内容准确性**：
+
+- [ ] 接口路径、参数、响应与代码一致
+- [ ] 数据模型与Prisma schema一致
+- [ ] 业务流程与代码逻辑一致
+- [ ] 缺陷分析与实际代码一致
+
+**规范遵循**：
+
+- [ ] 文件名小写+连字符
+- [ ] 目录归类正确
+- [ ] Mermaid使用纯ASCII字符
+- [ ] 缺陷分析有优先级
+
+### 18.6 文档编写工具和流程
+
+**推荐工具**：
+
+- Mermaid：绘制图表
+- Markdown编辑器：编写文档
+- Git：版本管理
+
+**批量编写流程**：
+
+- 参考：`.kiro/steering/documentation-workflow.md`
+- 第一个模块建立标准（约2小时）
+- 后续模块复用标准（约30-45分钟）
+- 每5-10个模块验收一次
+
+**效率提升**：
+
+- 使用标准模板
+- 批量读取文件
+- 分段写入文档
+- 简洁的提示词（"继续"）
+
+---
+
+## 📚 19. 文档驱动开发（DDD - Documentation Driven Development）
+
+### 19.1 核心理念
+
+文档先行，代码跟随。通过编写文档来驱动设计和开发，确保：
+
+- 设计充分思考
+- 接口定义清晰
+- 团队理解一致
+- 代码质量可控
+
+### 19.2 开发流程
+
+**1. 需求阶段**：
+
+- 编写需求文档
+- 明确功能范围
+- 定义验收标准
+- 识别非功能需求
+
+**2. 设计阶段**：
+
+- 编写设计文档
+- 设计架构和模块
+- 定义接口和数据模型
+- 识别技术风险
+
+**3. Review阶段**：
+
+- 团队review文档
+- 讨论设计方案
+- 识别潜在问题
+- 达成一致理解
+
+**4. 开发阶段**：
+
+- 按照文档实现
+- 保持文档同步
+- 遇到问题更新文档
+- 记录设计决策
+
+**5. 测试阶段**：
+
+- 按照验收标准测试
+- 验证实现与文档一致
+- 更新缺陷分析
+- 补充测试用例
+
+### 19.3 优势
+
+**设计质量**：
+
+- 提前发现设计问题
+- 充分思考边界情况
+- 避免返工
+
+**团队协作**：
+
+- 统一理解
+- 减少沟通成本
+- 便于并行开发
+
+**代码质量**：
+
+- 接口定义清晰
+- 职责划分明确
+- 易于维护
+
+**知识沉淀**：
+
+- 设计决策有记录
+- 新人快速上手
+- 便于回顾和改进
+
+### 19.4 注意事项
+
+**避免过度设计**：
+
+- 文档要适度，不要过于详细
+- 重点关注核心流程和关键决策
+- 细节可以在代码中体现
+
+**保持文档同步**：
+
+- 代码变更时及时更新文档
+- 定期review文档准确性
+- 使用版本管理追踪变更
+
+**平衡文档和代码**：
+
+- 文档是辅助，代码是核心
+- 不要为了文档而文档
+- 文档要服务于开发和维护
+
+---
+
+## 🔌 20. 第三方 API 对接规范（必做）
+
+> 核心思想：**文档先行** + **Adapter/Port 模式** + **韧性设计** + **务实类型安全** + **正确的 DI Mock**。配置管理是支撑，不是核心。
+
+### 20.0 对接前置要求（强制）
+
+#### 文档先行
+
+对接任何第三方 API 前，**必须先查阅官方文档**，禁止凭经验或猜测编写对接代码：
+
+- 阅读官方 API 文档，确认：接口地址、请求/响应格式、签名方式、错误码、频率限制
+- 如有 SDK，优先评估官方 SDK 是否适用（质量、维护状态、NestJS 兼容性）
+- 将关键文档链接记录在 Adapter 文件头部注释中
+
+```typescript
+/**
+ * 微信支付 Adapter
+ * @see https://pay.weixin.qq.com/doc/v3/merchant/4012791858
+ * @see https://pay.weixin.qq.com/doc/v3/merchant/4012068813 (回调通知)
+ */
+@Injectable()
+export class WechatPayAdapter extends PaymentPort { ... }
+```
+
+#### 务实类型安全
+
+第三方返回的数据结构**不完全可控**（可能多字段、少字段、类型不一致），类型策略需务实：
+
+| 层级 | 策略 | 说明 |
+|------|------|------|
+| Port 出入参 | 严格类型 | 这是我们自己定义的契约，必须精确 |
+| Adapter 内部（第三方原始响应） | 宽松类型 | 用 `Pick` 只取需要的字段，或定义 `RawXxxResponse` 仅覆盖用到的字段，**不要**试图完整映射第三方所有字段 |
+| Adapter → Port 的转换 | 显式映射 | 在 Adapter 内做 `raw → 我方类型` 的转换，隔离第三方数据结构变化 |
+
+```typescript
+// ✅ 务实：只定义我们用到的字段，其余不管
+interface RawWechatOrderResponse {
+  prepay_id: string;
+  // 微信实际返回更多字段，但我们只用 prepay_id，不需要全部定义
+  [key: string]: unknown; // 允许额外字段存在
+}
+
+// ✅ Port 出参是我们自己的类型，严格定义
+interface CreateOrderResult {
+  prepayId: string;
+}
+
+// Adapter 内做转换
+async createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
+  const { data } = await firstValueFrom(this.httpService.post<RawWechatOrderResponse>(url, body));
+  return { prepayId: data.prepay_id }; // raw → 我方类型
+}
+```
+
+```typescript
+// ❌ 过度：试图完整定义第三方所有字段，第三方一改就炸
+interface WechatOrderResponse {
+  prepay_id: string;
+  return_code: string;
+  return_msg: string;
+  appid: string;
+  mch_id: string;
+  nonce_str: string;
+  sign: string;
+  result_code: string;
+  trade_type: string;
+  // ... 20+ 字段，维护成本高，第三方新增字段时 TS 不报错但也没意义
+}
+
+// ❌ 摆烂：直接 any
+const { data } = await this.httpService.post(url, body); // data: any
+```
+
+### 20.1 架构：Adapter/Port 模式（强制）
+
+所有第三方 API 必须通过 **抽象接口（Port）** + **具体实现（Adapter）** 隔离。业务层只依赖 Port，不依赖具体第三方 SDK。
+
+```
+业务 Service → Port (abstract) ← Adapter (具体实现)
+                                    ↑
+                              HttpService / SDK
+```
+
+**Port 定义**（abstract class，便于 NestJS DI）：
+
+```typescript
+// ports/payment.port.ts
+export abstract class PaymentPort {
+  abstract createOrder(params: CreateOrderParams): Promise<CreateOrderResult>;
+  abstract queryOrder(outTradeNo: string): Promise<OrderQueryResult>;
+  abstract refund(params: RefundParams): Promise<RefundResult>;
+  abstract verifyCallback(headers: Record<string, string>, body: string): Promise<CallbackPayload>;
+}
+```
+
+**Adapter 实现**：
+
+```typescript
+// adapters/wechat-pay.adapter.ts
+@Injectable()
+export class WechatPayAdapter extends PaymentPort {
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) { super(); }
+
+  async createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
+    const config = this.getConfig();
+    const { data } = await firstValueFrom(
+      this.httpService.post('https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi', {
+        appid: config.appId,
+        mchid: config.mchId,
+        description: params.description,
+        out_trade_no: params.outTradeNo,
+        amount: { total: params.amountInCents, currency: 'CNY' },
+        notify_url: config.notifyUrl,
+      }, { headers: this.buildHeaders(config) }),
+    );
+    return { prepayId: data.prepay_id };
+  }
+
+  // ... 其他方法
+}
+```
+
+**Module 注册**（关键：用 Port token 注册 Adapter）：
+
+```typescript
+// payment.module.ts
+@Module({
+  imports: [HttpModule.register({ timeout: 5000 })],
+  providers: [
+    {
+      provide: PaymentPort,        // ← token 是抽象类
+      useClass: WechatPayAdapter,  // ← 实现是具体 Adapter
+    },
+    OrderService,
+  ],
+  exports: [PaymentPort],
+})
+export class PaymentModule {}
+```
+
+**业务 Service 只注入 Port**：
+
+```typescript
+@Injectable()
+export class OrderService {
+  constructor(private readonly payment: PaymentPort) {} // ← 不知道具体实现
+
+  async createOrder(dto: CreateOrderDto) {
+    const result = await this.payment.createOrder({ ... });
+    return Result.ok(result);
+  }
+}
+```
+
+### 20.2 HTTP 客户端层（强制使用 HttpModule）
+
+禁止直接使用 `axios`/`fetch`/`got`。统一使用 NestJS `HttpModule` + `HttpService`（基于 axios，但纳入 DI 体系）。
+
+```typescript
+// 在 Adapter 所在 Module 中注册
+imports: [
+  HttpModule.register({
+    timeout: 5000,
+    maxRedirects: 3,
+  }),
+],
+```
+
+Adapter 中使用 `HttpService`，配合 `firstValueFrom` 转 Promise：
+
+```typescript
+import { firstValueFrom } from 'rxjs';
+
+const { data } = await firstValueFrom(
+  this.httpService.post(url, body, { headers }),
+);
+```
+
+### 20.3 韧性设计（P0 级第三方必做）
+
+| 机制 | 适用场景 | 实现方式 |
+|------|---------|---------|
+| 超时 | 所有外部调用 | `HttpModule.register({ timeout: 5000 })` |
+| 重试 | 幂等读操作、网络抖动 | RxJS `retry` + 指数退避 |
+| 熔断 | 下游持续异常 | 简易计数器 / `opossum` 库 |
+| 降级 | 非核心依赖失败 | 返回缓存/默认值，不阻塞主流程 |
+
+**重试示例**（指数退避）：
+
+```typescript
+import { retry, timer } from 'rxjs';
+
+const { data } = await firstValueFrom(
+  this.httpService.get(url).pipe(
+    retry({
+      count: 3,
+      delay: (error, retryCount) => timer(Math.pow(2, retryCount) * 1000), // 2s, 4s, 8s
+      resetOnSuccess: true,
+    }),
+  ),
+);
+```
+
+**降级示例**：
+
+```typescript
+async getExchangeRate(currency: string): Promise<number> {
+  try {
+    return await this.rateAdapter.getRate(currency);
+  } catch {
+    this.logger.warn(`汇率服务不可用，使用缓存值: ${currency}`);
+    return this.cacheManager.get(`rate:${currency}`) ?? DEFAULT_RATES[currency];
+  }
+}
+```
+
+### 20.4 配置管理（支撑层）
+
+配置通过 `ConfigService` + `.env` 管理，启动时校验必填项：
+
+```typescript
+// 在 Adapter 构造函数或 onModuleInit 中校验
+onModuleInit() {
+  const required = ['WECHAT_PAY_APP_ID', 'WECHAT_PAY_MCH_ID', 'WECHAT_PAY_API_KEY'];
+  for (const key of required) {
+    BusinessException.throwIf(!this.configService.get(key), `缺少配置: ${key}`);
+  }
+}
+```
+
+`.env.example` 必须包含所有第三方配置项（含注释说明获取方式）。
+
+### 20.5 测试：Mock 依赖而非 Service 本身（强制）
+
+核心原则：**测试 OrderService 时，mock 它的依赖 PaymentPort，而不是 mock OrderService 本身**。
+
+```typescript
+// ✅ 正确：mock 依赖（PaymentPort），测试真实的 OrderService 逻辑
+describe('OrderService', () => {
+  let orderService: OrderService;
+  let mockPayment: jest.Mocked<PaymentPort>;
+
+  beforeEach(async () => {
+    mockPayment = {
+      createOrder: jest.fn(),
+      queryOrder: jest.fn(),
+      refund: jest.fn(),
+      verifyCallback: jest.fn(),
+    } as any;
+
+    const module = await Test.createTestingModule({
+      providers: [
+        OrderService,                          // ← 真实 Service
+        { provide: PaymentPort, useValue: mockPayment }, // ← mock 依赖
+      ],
+    }).compile();
+
+    orderService = module.get(OrderService);
+  });
+
+  it('should create order and return prepayId', async () => {
+    mockPayment.createOrder.mockResolvedValue({ prepayId: 'px_123' });
+
+    const result = await orderService.createOrder({ amount: 100, description: '测试' });
+
+    expect(result.data.prepayId).toBe('px_123');
+    expect(mockPayment.createOrder).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: 100 }),
+    );
+  });
+
+  it('should throw BusinessException when payment fails', async () => {
+    mockPayment.createOrder.mockRejectedValue(new Error('NETWORK_ERROR'));
+
+    await expect(orderService.createOrder({ amount: 100 }))
+      .rejects.toThrow(BusinessException);
+  });
+});
+```
+
+```typescript
+// ❌ 错误：mock 了 Service 本身，测试的是 mock 而不是业务逻辑
+const module = await Test.createTestingModule({
+  providers: [
+    { provide: OrderService, useValue: mockOrderService }, // ← 这测了个寂寞
+  ],
+}).compile();
+```
+
+**测试 Adapter 本身**时，mock `HttpService`：
+
+```typescript
+describe('WechatPayAdapter', () => {
+  let adapter: WechatPayAdapter;
+  let mockHttpService: jest.Mocked<HttpService>;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        WechatPayAdapter,
+        { provide: HttpService, useValue: { post: jest.fn(), get: jest.fn() } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('test-value') } },
+      ],
+    }).compile();
+
+    adapter = module.get(WechatPayAdapter);
+    mockHttpService = module.get(HttpService);
+  });
+
+  it('should call wechat API with correct params', async () => {
+    mockHttpService.post.mockReturnValue(of({ data: { prepay_id: 'px_123' } }) as any);
+
+    const result = await adapter.createOrder({ amountInCents: 100, outTradeNo: 'T001' });
+
+    expect(result.prepayId).toBe('px_123');
+    expect(mockHttpService.post).toHaveBeenCalledWith(
+      expect.stringContaining('weixin.qq.com'),
+      expect.objectContaining({ amount: { total: 100 } }),
+      expect.any(Object),
+    );
+  });
+});
+```
+
+### 20.6 Webhook / 回调处理（强制）
+
+第三方回调（如支付通知、退款通知）必须满足：
+
+| 要求 | 说明 |
+|------|------|
+| 签名验证 | 先验签再处理，验签失败直接返回错误 |
+| 幂等处理 | 同一通知可能重复推送，用唯一标识（如 outTradeNo）做幂等 |
+| 异步处理 | 回调 Controller 只做验签 + 入队，业务逻辑异步处理 |
+| 快速响应 | 5 秒内返回成功，避免第三方重试风暴 |
+
+```typescript
+// payment-callback.controller.ts
+@Controller('payment')
+export class PaymentCallbackController {
+  @Post('notify')
+  async handleNotify(@Headers() headers: Record<string, string>, @Body() body: string) {
+    // 1. 验签（通过 Port 调用 Adapter 的验签逻辑）
+    const payload = await this.payment.verifyCallback(headers, body);
+
+    // 2. 幂等检查
+    const processed = await this.redis.get(`pay:notify:${payload.outTradeNo}`);
+    if (processed) return { code: 'SUCCESS', message: '已处理' };
+
+    // 3. 异步处理业务（EventEmitter 或 Queue）
+    this.eventEmitter.emit('payment.success', payload);
+
+    // 4. 标记已处理 + 快速返回
+    await this.redis.set(`pay:notify:${payload.outTradeNo}`, '1', 'EX', 86400);
+    return { code: 'SUCCESS', message: 'OK' };
+  }
+}
+```
+
+### 20.7 TODO 标记（精简格式）
+
+暂未对接的第三方 API 使用统一格式：
+
+```typescript
+// TODO: [第三方] 对接微信退款 API | P1 | 3d | Issue #123
+```
+
+格式：`TODO: [第三方] 描述 | 优先级 | 预估工时 | Issue 编号`
+
+方法体内用注释占位：
+
+```typescript
+async refundOrder(orderId: string) {
+  // TODO: [第三方] 调用 this.payment.refund() | P1 | 2d | Issue #456
+  // 当前：仅更新数据库状态
+  await this.orderRepo.update(orderId, { status: OrderStatus.REFUND_PENDING });
+}
+```
+
+### 20.8 PR 检查清单
+
+| 检查项 | 必须 |
+|--------|------|
+| Port（抽象类）已定义 | ✅ |
+| Adapter 实现 Port，注入 HttpService | ✅ |
+| Module 中用 `provide: Port, useClass: Adapter` 注册 | ✅ |
+| 业务 Service 只注入 Port，不依赖具体 Adapter | ✅ |
+| 超时已配置（HttpModule.register） | ✅ |
+| 幂等读操作有重试 | P0 级 |
+| 回调接口有签名验证 + 幂等 | 有回调时 |
+| 单测 mock 的是依赖（Port/HttpService），不是 Service 本身 | ✅ |
+| `.env.example` 包含所有配置项 | ✅ |
+| TODO 标记含优先级和 Issue 编号 | 未完成对接时 |
+
+---
+
+## ⏭️ 21. 测试跳过与 TODO 处理（§9 补充）
+
+> 本节是 §9 测试规范的补充，聚焦于「跳过测试」和「未完成测试」的处理。
+
+### 21.1 禁止 `it.skip()` / `describe.skip()`
+
+跳过的测试会被遗忘、覆盖率虚高、隐藏问题。一律禁止。
+
+### 21.2 替代方案
+
+| 场景 | 做法 |
+|------|------|
+| 依赖未就绪（第三方 API 未对接） | `it.todo('描述 (原因, Issue #xxx)')` |
+| 可以 mock 的 | 写 mock 测试，正常运行 |
+| 临时调试想跳过 | 本地可以，但禁止提交到 PR |
+
+```typescript
+// ✅ it.todo — 不运行，不影响覆盖率，但在报告中可见
+it.todo('should call real Wechat API (需要沙箱环境, Issue #123)');
+
+// ✅ mock 测试 — 正常运行
+it('should handle payment failure', async () => {
+  mockPayment.createOrder.mockRejectedValue(new Error('TIMEOUT'));
+  await expect(orderService.createOrder(dto)).rejects.toThrow(BusinessException);
+});
+
+// ❌ 禁止提交
+it.skip('should work', async () => { ... });
+```
+
+### 21.3 覆盖率要求
+
+| 模块类型 | 最低覆盖率 | 说明 |
+|---------|-----------|------|
+| 核心（订单/支付/佣金） | ≥ 80% | 关键路径 + 边界 + 异常 |
+| 非核心 | ≥ 60% | 主要功能即可 |
+
+`it.todo()` 不计入覆盖率，但必须关联 Issue 跟踪。
+
+---
+
+**规范版本**: 1.3  
+**最后更新**: 2026-02-27  
+**变更记录**: §20 重写（Adapter/Port 模式 + 韧性设计 + 正确 Mock 模式）、§21 精简为 §9 补充

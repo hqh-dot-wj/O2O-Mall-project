@@ -5,6 +5,7 @@ import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { FormatDateFields } from 'src/common/utils';
 import { ExportTable, ExportHeader } from 'src/common/utils/export';
+import { getErrorMessage } from 'src/common/utils/error';
 import { Prisma, OrderStatus, OrderType, CommissionStatus } from '@prisma/client';
 import { ListStoreOrderDto, ReassignWorkerDto, VerifyServiceDto, PartialRefundOrderDto } from './dto/store-order.dto';
 import { CommissionService } from 'src/module/finance/commission/commission.service';
@@ -12,7 +13,7 @@ import { TenantContext } from 'src/common/tenant/tenant.context';
 import { StoreOrderRepository } from './store-order.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
-import { WechatPayService } from 'src/module/payment/wechat-pay.service';
+import { PaymentGatewayPort } from 'src/module/payment/ports/payment-gateway.port';
 import { CommissionSumResult, OrderListItem } from 'src/common/types';
 
 /**
@@ -28,7 +29,7 @@ export class StoreOrderService {
     private readonly orderRepo: StoreOrderRepository,
     private readonly commissionService: CommissionService,
     private readonly orderIntegrationService: OrderIntegrationService,
-    private readonly wechatPayService: WechatPayService,
+    private readonly paymentGateway: PaymentGatewayPort,
   ) {}
 
   /**
@@ -405,7 +406,7 @@ export class StoreOrderService {
     try {
       const refundSn = `REFUND_${order!.orderSn}_${Date.now()}`;
 
-      const refundResult = await this.wechatPayService.refund({
+      const refundResult = await this.paymentGateway.refund({
         orderSn: order!.orderSn,
         refundSn,
         refundAmount: order!.payAmount,
@@ -414,11 +415,11 @@ export class StoreOrderService {
       });
 
       this.logger.log(
-        `微信退款成功: 订单=${orderId}, 退款单=${refundResult.refundSn}, 微信退款单=${refundResult.refundId}`,
+        `退款成功: 订单=${orderId}, 退款单=${refundResult.refundSn}, 第三方退款单=${refundResult.refundId}`,
       );
     } catch (error) {
-      this.logger.error(`微信退款失败: 订单=${orderId}`, error);
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '微信退款失败，请稍后重试');
+      this.logger.error(`退款失败: 订单=${orderId}`, getErrorMessage(error));
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '退款失败，请稍后重试');
     }
 
     // 更新订单状态
@@ -513,7 +514,7 @@ export class StoreOrderService {
     try {
       const refundSn = `REFUND_${order!.orderSn}_${Date.now()}`;
 
-      const refundResult = await this.wechatPayService.refund({
+      const refundResult = await this.paymentGateway.refund({
         orderSn: order!.orderSn,
         refundSn,
         refundAmount: refundAmount.toString(),
@@ -522,11 +523,11 @@ export class StoreOrderService {
       });
 
       this.logger.log(
-        `微信部分退款成功: 订单=${dto.orderId}, 退款金额=${refundAmount.toString()}, 微信退款单=${refundResult.refundId}`,
+        `部分退款成功: 订单=${dto.orderId}, 退款金额=${refundAmount.toString()}, 第三方退款单=${refundResult.refundId}`,
       );
     } catch (error) {
-      this.logger.error(`微信部分退款失败: 订单=${dto.orderId}`, error);
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '微信退款失败，请稍后重试');
+      this.logger.error(`部分退款失败: 订单=${dto.orderId}`, getErrorMessage(error));
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '退款失败，请稍后重试');
     }
 
     // 6. 计算退款比例（用于佣金和优惠券/积分的按比例退还）
@@ -754,4 +755,89 @@ export class StoreOrderService {
 
     this.logger.log(`导出订单数据: ${exportData.length} 条`);
   }
+
+  /**
+   * 批量核销
+   * @param dto 批量核销DTO
+   * @param operatorId 操作人ID
+   * @returns 批量操作结果
+   */
+  async batchVerify(dto: { orderIds: string[]; remark?: string }, operatorId: string) {
+    const results: Array<{ orderId: string; success: boolean; error?: string }> = [];
+    let successCount = 0;
+    let failCount = 0;
+
+    // 逐个处理订单（避免一个失败影响全部）
+    for (const orderId of dto.orderIds) {
+      try {
+        await this.verifyService({ orderId, remark: dto.remark }, operatorId);
+        results.push({ orderId, success: true });
+        successCount++;
+      } catch (error) {
+        // 从 BusinessException 中提取错误信息
+        let errorMessage = '未知错误';
+        if (error instanceof BusinessException) {
+          const response = error.getResponse() as any;
+          errorMessage = response.msg || error.message;
+        } else {
+          errorMessage = getErrorMessage(error);
+        }
+        results.push({ orderId, success: false, error: errorMessage });
+        failCount++;
+        this.logger.error(`批量核销失败: 订单=${orderId}, 错误=${errorMessage}`);
+      }
+    }
+
+    return Result.ok(
+      {
+        successCount,
+        failCount,
+        details: results,
+      },
+      `批量核销完成: 成功 ${successCount} 个, 失败 ${failCount} 个`,
+    );
+  }
+
+  /**
+   * 批量退款
+   * @param dto 批量退款DTO
+   * @param operatorId 操作人ID
+   * @returns 批量操作结果
+   */
+  async batchRefund(dto: { orderIds: string[]; remark?: string }, operatorId: string) {
+    const results: Array<{ orderId: string; success: boolean; error?: string }> = [];
+    let successCount = 0;
+    let failCount = 0;
+
+    // 逐个处理订单（避免一个失败影响全部）
+    for (const orderId of dto.orderIds) {
+      try {
+        await this.refundOrder(orderId, dto.remark || '', operatorId);
+        results.push({ orderId, success: true });
+        successCount++;
+      } catch (error) {
+        // 从 BusinessException 中提取错误信息
+        let errorMessage = '未知错误';
+        if (error instanceof BusinessException) {
+          const response = error.getResponse() as any;
+          errorMessage = response.msg || error.message;
+        } else {
+          errorMessage = getErrorMessage(error);
+        }
+        results.push({ orderId, success: false, error: errorMessage });
+        failCount++;
+        this.logger.error(`批量退款失败: 订单=${orderId}, 错误=${errorMessage}`);
+      }
+    }
+
+    return Result.ok(
+      {
+        successCount,
+        failCount,
+        details: results,
+      },
+      `批量退款完成: 成功 ${successCount} 个, 失败 ${failCount} 个`,
+    );
+  }
+
 }

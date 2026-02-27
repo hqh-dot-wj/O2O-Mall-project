@@ -1,5 +1,5 @@
+import { isEmpty, isNotEmpty, listToTree } from '@libs/common-utils';
 import { AcceptType } from '@/enum/business';
-import { listToTree, isEmpty, isNotEmpty } from '@libs/common-utils';
 import { $t } from '@/locales';
 /**
  * Transform record to option

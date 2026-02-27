@@ -7,7 +7,6 @@ import { BusinessException } from 'src/common/exceptions';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { CommissionService } from 'src/module/finance/commission/commission.service';
 import { RiskService } from 'src/module/risk/risk.service';
-import { MessageService } from 'src/module/admin/system/message/message.service';
 import { ClientInfoDto } from 'src/common/decorators/common.decorator';
 import { CreateOrderDto, ListOrderDto, CancelOrderDto } from './dto/order.dto';
 import { OrderDetailVo, OrderListItemVo } from './vo/order.vo';
@@ -32,7 +31,6 @@ export class OrderService {
     private readonly prisma: PrismaService,
     private readonly commissionService: CommissionService,
     private readonly riskService: RiskService,
-    private readonly messageService: MessageService,
     @InjectQueue('ORDER_NOTIFICATION') private readonly notificationQueue: Queue,
     @InjectQueue('ORDER_DELAY') private readonly orderDelayQueue: Queue,
     // [NEW] Repositories & Services

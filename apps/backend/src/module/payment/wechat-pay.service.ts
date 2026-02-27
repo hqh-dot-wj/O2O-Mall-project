@@ -143,13 +143,11 @@ export class WechatPayService implements IPaymentProvider, OnModuleInit {
   /**
    * 创建支付订单
    *
-   * TODO: [第三方API] 对接微信 JSAPI 统一下单接口
-   * - 对接步骤：
-   *   1. 调用 this.wxpay.transactions_jsapi() 创建订单
-   *   2. 返回 prepay_id 和小程序支付参数
-   *   3. 处理支付回调通知
-   * - 预估工时：1-2d
-   * - 优先级：P2（当前订单流程暂不需要）
+   * TODO: [第三方] 对接微信 JSAPI 统一下单 | P1 | 1-2d | payment-service-task-list T-9
+   * 对接步骤：
+   * 1. 调用 this.wxpay.transactions_jsapi({ appid, mchid, description, out_trade_no, notify_url, amount, payer: { openid } })
+   * 2. 对返回的 prepay_id 生成前端 5 参数 (timeStamp, nonceStr, package, signType, paySign)
+   * 3. 参考: https://pay.weixin.qq.com/docs/merchant/apis/jsapi-payment/direct-jsons/jsapi-prepay.html
    */
   async createOrder(params: CreatePaymentOrderParams): Promise<CreatePaymentOrderResult> {
     this.logger.log(`创建支付订单: ${params.orderSn}, 金额: ${params.amount}`);
@@ -173,12 +171,8 @@ export class WechatPayService implements IPaymentProvider, OnModuleInit {
   /**
    * 查询订单状态
    *
-   * TODO: [第三方API] 对接微信查询订单接口
-   * - 对接步骤：
-   *   1. 调用 this.wxpay.query() 查询订单
-   *   2. 映射微信订单状态到系统状态
-   * - 预估工时：0.5d
-   * - 优先级：P2
+   * TODO: [第三方] 对接微信查询订单接口 | P2 | 0.5d | payment-service-task-list T-9
+   * 对接步骤：1. 调用 this.wxpay.query(out_trade_no) 2. 映射 trade_state 到 PaymentOrderStatus
    */
   async queryOrder(orderSn: string): Promise<QueryPaymentOrderResult> {
     this.logger.log(`查询订单状态: ${orderSn}`);
@@ -266,12 +260,8 @@ export class WechatPayService implements IPaymentProvider, OnModuleInit {
   /**
    * 查询退款状态
    *
-   * TODO: [第三方API] 对接微信查询退款接口
-   * - 对接步骤：
-   *   1. 调用 this.wxpay.refunds_query() 查询退款
-   *   2. 映射微信退款状态到系统状态
-   * - 预估工时：0.5d
-   * - 优先级：P2
+   * TODO: [第三方] 对接微信查询退款接口 | P2 | 0.5d | payment-service-task-list T-12
+   * 对接步骤：1. 调用 this.wxpay.refunds_query(out_refund_no) 2. 映射 status 到 RefundStatus
    */
   async queryRefund(refundSn: string): Promise<QueryRefundResult> {
     this.logger.log(`查询退款状态: ${refundSn}`);

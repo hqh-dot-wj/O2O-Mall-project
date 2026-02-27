@@ -15,6 +15,7 @@ import { TenantAuditModule } from './tenant-audit/tenant-audit.module';
 
 import { FileManagerModule } from './file-manager/file-manager.module';
 import { MessageModule } from './message/message.module';
+import { NotificationModule } from 'src/module/notification/notification.module';
 
 @Global()
 @Module({
@@ -24,7 +25,8 @@ import { MessageModule } from './message/message.module';
     DeptModule,
     DictModule,
     MenuModule,
-    MessageModule, // 消息通知
+    MessageModule, // 消息通知（站内信 CRUD）
+    NotificationModule, // 通用通知服务（多渠道 + 记录查询）
     NoticeModule,
     PostModule,
     RoleModule,

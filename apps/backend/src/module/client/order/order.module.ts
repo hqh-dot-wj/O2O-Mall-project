@@ -3,7 +3,7 @@ import { OrderController } from './order.controller';
 import { OrderIntegrationController } from './order-integration.controller';
 import { OrderService } from './order.service';
 import { FinanceModule } from 'src/module/finance/finance.module';
-import { MessageModule } from 'src/module/admin/system/message/message.module';
+import { NotificationModule } from 'src/module/notification/notification.module';
 import { MarketingModule } from 'src/module/marketing/marketing.module';
 import { BullModule } from '@nestjs/bull';
 import { NotificationProcessor } from './notification.processor';
@@ -21,7 +21,7 @@ import { ClientCartModule } from '../cart/cart.module';
 @Module({
   imports: [
     FinanceModule,
-    MessageModule,
+    NotificationModule,
     forwardRef(() => MarketingModule),
     ClientAddressModule, // For AddressRepository
     ClientCartModule, // For CartService

@@ -26,4 +26,12 @@ export const BusinessConstants = {
   REDIS_LOCK: {
     SETTLEMENT_TTL: 300, // 结算任务锁保持 5分钟
   },
+
+  /**
+   * 门店商品库存预警
+   */
+  STOCK_ALERT: {
+    DEFAULT_THRESHOLD: 10, // 默认低库存阈值
+    CONFIG_KEY: 'store.product.stockAlertThreshold',
+  },
 };
