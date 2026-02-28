@@ -17,9 +17,7 @@
     "naive-ui-admin",
     "UnoCSS"
   ],
-  "contributors": [
-    "linlingqin77"
-  ],
+  "contributors": ["linlingqin77"],
   "engines": {
     "node": ">=20.19.0",
     "pnpm": ">=10.5.0"

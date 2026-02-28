@@ -69,7 +69,7 @@ describe('LevelScheduler', () => {
       await scheduler.processUpgrade();
 
       expect(mockPrismaService.sysTenant.findMany).toHaveBeenCalledWith({
-        where: { status: '0' },
+        where: { status: 'NORMAL' },
         select: { tenantId: true, companyName: true },
       });
       expect(mockLevelService.batchProcessUpgrade).toHaveBeenCalledTimes(2);
@@ -112,7 +112,7 @@ describe('LevelScheduler', () => {
       await scheduler.processUpgrade();
 
       expect(mockPrismaService.sysTenant.findMany).toHaveBeenCalledWith({
-        where: { status: '0' },
+        where: { status: 'NORMAL' },
         select: { tenantId: true, companyName: true },
       });
     });
@@ -132,7 +132,7 @@ describe('LevelScheduler', () => {
       await scheduler.processDowngrade();
 
       expect(mockPrismaService.sysTenant.findMany).toHaveBeenCalledWith({
-        where: { status: '0' },
+        where: { status: 'NORMAL' },
         select: { tenantId: true, companyName: true },
       });
       expect(mockLevelService.batchProcessDowngrade).toHaveBeenCalledTimes(2);

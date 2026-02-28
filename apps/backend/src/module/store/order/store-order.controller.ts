@@ -21,7 +21,7 @@ import {
  * Store端订单管理控制器
  */
 @ApiTags('Store-订单管理')
-@Controller('order')
+@Controller('store/order')
 export class StoreOrderController {
   constructor(private readonly storeOrderService: StoreOrderService) {}
 

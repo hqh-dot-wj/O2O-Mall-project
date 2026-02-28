@@ -2,11 +2,7 @@
 import { computed } from 'vue';
 
 interface Props {
-  data?: {
-    totalCount: number;
-    totalAmount: number;
-    percentage: number;
-  };
+  data?: Api.Store.OrderStats;
   loading?: boolean;
 }
 

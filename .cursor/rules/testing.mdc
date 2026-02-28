@@ -10,6 +10,40 @@ alwaysApply: false
 
 ---
 
+## 0. 测试类型与必要性
+
+### 0.1 项目已具备的测试
+
+| 类型 | 工具 | 说明 |
+|------|------|------|
+| 单元测试 | Jest (backend)、Vitest (admin-web) | `*.spec.ts` 与源文件同目录 |
+| 集成测试 | Jest | `test/integration/*.integration.spec.ts` |
+| E2E 测试 | Jest e2e、Playwright | Backend: `test/*.e2e-spec.ts`；Admin: `e2e/*.spec.ts` |
+| 静态分析 | ESLint、vue-tsc | `pnpm lint`、`pnpm typecheck` |
+
+### 0.2 必要性分级
+
+| 必要性 | 测试类型 | 说明 |
+|--------|----------|------|
+| **必要** | 单元测试、集成测试、E2E 冒烟、ESLint、typecheck | CI 门禁，PR 必过 |
+| **建议** | 组件测试、关键流程 E2E | 核心业务/复杂组件优先补 |
+| **可选** | 快照、视觉回归、性能测试 | 按需求引入，引入前需与团队约定 |
+
+### 0.3 对接完成必做：执行对应测试
+
+**对接完一个页面或接口后，必须执行与之对应的测试：**
+
+| 完成内容 | 必须执行 |
+|----------|----------|
+| **新增/修改 API 接口**（`service/api/**/*.ts`） | 补充或更新 `*.spec.ts`，覆盖各接口的 url/method/params；运行 `pnpm test -- src/service/api/对应模块` |
+| **新增/修改后端 Controller/Service** | 补充或更新 `*.spec.ts`；运行 `pnpm --filter @apps/backend test -- 对应路径` |
+| **新增页面或路由** | 若为关键路由，补充 E2E 冒烟（`e2e/*.spec.ts`）；运行 `pnpm --filter @apps/admin-web test:e2e` |
+| **修改核心业务逻辑** | 确保相关单测/集成测通过；运行 `pnpm test` |
+
+**流程**：编写/修改代码 → 补充/更新对应测试 → 本地运行测试并通过 → 再提交 PR。
+
+---
+
 ## 1. 命名约定
 
 | 类型 | 命名 | 说明 |

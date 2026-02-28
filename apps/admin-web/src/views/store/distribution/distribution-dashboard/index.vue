@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { fetchGetDistributionDashboard } from '@/service/api/distribution';
+import { $t } from '@/locales';
 import DistributorStats from './modules/distributor-stats.vue';
 import OrderStats from './modules/order-stats.vue';
 import CommissionTrend from './modules/commission-trend.vue';
@@ -10,25 +11,40 @@ defineOptions({
 });
 
 const loading = ref(false);
-const dashboardData = ref<Api.Store.Dashboard>();
+const dashboardData = ref<Api.Store.Dashboard | undefined>(undefined);
 
-const queryParams = reactive<Api.Store.GetDashboardDto>({
-  startDate: undefined,
-  endDate: undefined
+const dateRange = reactive<{ start: number | null; end: number | null }>({
+  start: null,
+  end: null
 });
 
-async function getDashboardData() {
+function buildQueryParams(): Api.Store.GetDashboardDto {
+  const params: Api.Store.GetDashboardDto = {};
+  if (dateRange.start) {
+    params.startDate = new Date(dateRange.start).toISOString().slice(0, 10);
+  }
+  if (dateRange.end) {
+    params.endDate = new Date(dateRange.end).toISOString().slice(0, 10);
+  }
+  return params;
+}
+
+async function getDashboardData(): Promise<void> {
   loading.value = true;
   try {
-    const { data } = await fetchGetDistributionDashboard(queryParams);
-    if (data) {
-      dashboardData.value = data;
+    const res = await fetchGetDistributionDashboard(buildQueryParams());
+    if (res.data) {
+      dashboardData.value = res.data;
     }
-  } catch (error) {
-    console.error(error);
+  } catch {
+    window.$message?.error($t('common.error'));
   } finally {
     loading.value = false;
   }
+}
+
+function handleDateChange(): void {
+  getDashboardData();
 }
 
 onMounted(() => {
@@ -38,6 +54,30 @@ onMounted(() => {
 
 <template>
   <div class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
+    <!-- 时间筛选 -->
+    <NCard :bordered="false" size="small" class="card-wrapper">
+      <div class="flex items-center gap-16px">
+        <span class="text-gray-500">时间范围</span>
+        <NDatePicker
+          v-model:value="dateRange.start"
+          type="date"
+          placeholder="开始日期"
+          clearable
+          @update:value="handleDateChange"
+        />
+        <span class="text-gray-400">至</span>
+        <NDatePicker
+          v-model:value="dateRange.end"
+          type="date"
+          placeholder="结束日期"
+          clearable
+          @update:value="handleDateChange"
+        />
+        <NButton type="primary" :loading="loading" @click="getDashboardData">
+          {{ $t('common.search') }}
+        </NButton>
+      </div>
+    </NCard>
     <!-- 头部统计 -->
     <DistributorStats :data="dashboardData?.distributorStats" :loading="loading" />
 

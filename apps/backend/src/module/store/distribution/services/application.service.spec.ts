@@ -68,7 +68,7 @@ describe('ApplicationService', () => {
       mockPrismaService.umsMember.findUnique.mockResolvedValue({
         levelId: 0,
         createTime: new Date(),
-        phone: '13800138000',
+        mobile: '13800138000',
       });
 
       mockPrismaService.sysDistApplication.findFirst.mockResolvedValue(null);
@@ -108,7 +108,7 @@ describe('ApplicationService', () => {
       mockPrismaService.umsMember.findUnique.mockResolvedValue({
         levelId: 0,
         createTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30天前注册
-        phone: '13800138000',
+        mobile: '13800138000',
       });
 
       mockPrismaService.sysDistApplication.findFirst.mockResolvedValue(null);
@@ -159,7 +159,7 @@ describe('ApplicationService', () => {
       mockPrismaService.umsMember.findUnique.mockResolvedValue({
         levelId: 1, // 已是分销员
         createTime: new Date(),
-        phone: '13800138000',
+        mobile: '13800138000',
       });
 
       await expect(service.createApplication(tenantId, memberId, dto)).rejects.toThrow();
@@ -173,7 +173,7 @@ describe('ApplicationService', () => {
       mockPrismaService.umsMember.findUnique.mockResolvedValue({
         levelId: 0,
         createTime: new Date(),
-        phone: '13800138000',
+        mobile: '13800138000',
       });
 
       mockPrismaService.sysDistApplication.findFirst.mockResolvedValue({

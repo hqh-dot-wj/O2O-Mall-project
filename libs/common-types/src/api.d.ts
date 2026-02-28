@@ -27205,6 +27205,16 @@ export interface operations {
     DistributionController_getLevelList: {
         parameters: {
             query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
                 /** @description 是否激活 */
                 isActive?: boolean;
             };

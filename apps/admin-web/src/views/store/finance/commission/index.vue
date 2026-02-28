@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { onMounted, ref } from 'vue';
 import { NGrid, NGridItem, NStatistic, NTag } from 'naive-ui';
-import { fetchGetCommissionList, fetchGetCommissionStats } from '@/service/api/finance';
+import { fetchGetCommissionList, fetchGetCommissionStats } from '@/service/api/store/finance';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableProps } from '@/hooks/common/table';
 import { $t } from '@/locales';

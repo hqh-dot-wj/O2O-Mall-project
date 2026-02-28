@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { ref, watch } from 'vue';
 import { NGrid, NGridItem, NSpin, NStatistic, NTag } from 'naive-ui';
-import { fetchGetLedger, fetchGetLedgerStats } from '@/service/api/finance';
+import { fetchGetLedger, fetchGetLedgerStats } from '@/service/api/store/finance';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableProps } from '@/hooks/common/table';
 import { useDownload } from '@/hooks/business/download';
@@ -238,7 +238,7 @@ watch(searchParams, () => {
 
 // 导出数据
 function handleExport() {
-  download('/finance/ledger/export', searchParams, `门店流水_${new Date().getTime()}.xlsx`);
+  download('/store/finance/ledger/export', searchParams, `门店流水_${new Date().getTime()}.xlsx`);
 }
 
 // 快捷筛选标签

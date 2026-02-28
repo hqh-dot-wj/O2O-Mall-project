@@ -15,7 +15,7 @@ import {
   NTimeline,
   NTimelineItem
 } from 'naive-ui';
-import { fetchGetOrderDetail } from '@/service/api/order';
+import { fetchGetOrderDetail } from '@/service/api/store/order';
 
 defineOptions({
   name: 'OrderDetail'
@@ -63,7 +63,7 @@ async function loadOrderDetail() {
 
 // 返回列表
 function handleBack() {
-  router.push({ path: 'order_list' });
+  router.push({ name: 'store_order_list' });
 }
 
 onMounted(() => {

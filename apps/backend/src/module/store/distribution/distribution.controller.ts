@@ -19,7 +19,6 @@ import { UpdateLevelDto } from './dto/update-level.dto';
 import { ListLevelDto } from './dto/list-level.dto';
 import { UpdateMemberLevelDto } from './dto/update-member-level.dto';
 import { ListMemberLevelLogDto } from './dto/list-member-level-log.dto';
-import { CreateApplicationDto } from './dto/create-application.dto';
 import { ListApplicationDto } from './dto/list-application.dto';
 import { ReviewApplicationDto } from './dto/review-application.dto';
 import { BatchReviewDto } from './dto/batch-review.dto';
@@ -29,7 +28,7 @@ import { ProductConfigVo } from './vo/product-config.vo';
 import { DashboardVo } from './vo/dashboard.vo';
 import { LevelVo, MemberLevelLogVo } from './vo/level.vo';
 import { LevelCheckVo } from './vo/level-check.vo';
-import { ApplicationVo, ApplicationStatusVo, ReviewConfigVo } from './vo/application.vo';
+import { ApplicationVo, ReviewConfigVo } from './vo/application.vo';
 import { CurrentTenant } from 'src/common/tenant/tenant.decorator';
 import { ClientInfo, ClientInfoDto } from 'src/common/decorators/common.decorator';
 
@@ -171,7 +170,8 @@ export class DistributionController {
   @Get('level/list')
   @Api({ summary: '查询等级列表', type: LevelVo, isArray: true })
   async getLevelList(@CurrentTenant() tenantId: string, @Query() query: ListLevelDto) {
-    return this.levelService.findAll(tenantId, query);
+    const levels = await this.levelService.findAll(tenantId, query);
+    return { rows: levels, total: levels.length };
   }
 
   @Get('level/:id')

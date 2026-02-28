@@ -177,7 +177,7 @@ describe('LevelConditionService', () => {
       expect(mockPrismaService.finCommission.aggregate).toHaveBeenCalledWith({
         where: {
           tenantId,
-          memberId,
+          beneficiaryId: memberId,
           status: 'SETTLED',
         },
         _sum: {
@@ -214,7 +214,7 @@ describe('LevelConditionService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId,
-            memberId,
+            beneficiaryId: memberId,
             status: 'SETTLED',
             settleTime: expect.objectContaining({
               gte: expect.any(Date),
@@ -238,7 +238,7 @@ describe('LevelConditionService', () => {
       expect(mockPrismaService.omsOrder.count).toHaveBeenCalledWith({
         where: {
           tenantId,
-          OR: [{ distributorId: memberId }, { indirectDistributorId: memberId }],
+          OR: [{ shareUserId: memberId }, { referrerId: memberId }],
           status: {
             in: ['PAID', 'SHIPPED', 'COMPLETED'],
           },

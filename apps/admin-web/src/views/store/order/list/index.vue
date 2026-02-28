@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { useRouter } from 'vue-router';
 import { NDivider, NTag } from 'naive-ui';
-import { fetchGetOrderList } from '@/service/api/order';
+import { fetchGetOrderList } from '@/service/api/store/order';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
@@ -186,7 +186,7 @@ const { checkedRowKeys } = useTableOperate(data, getData);
 
 /** 查看订单详情 */
 function handleViewDetail(orderId: string) {
-  router.push({ path: 'order_detail', query: { id: orderId } });
+  router.push({ name: 'store_order_detail', query: { id: orderId } });
 }
 </script>
 

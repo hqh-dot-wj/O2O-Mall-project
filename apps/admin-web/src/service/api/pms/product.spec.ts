@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fetchBatchDeleteGlobalProduct,
   fetchCreateGlobalProduct,
   fetchDeleteGlobalProduct,
   fetchGetGlobalProduct,
@@ -51,6 +52,25 @@ describe('PMS Product API', () => {
     });
   });
 
+  it('fetchUpdateGlobalProduct should have correct config', async () => {
+    const productId = '123';
+    const data: Api.Pms.ProductOperateParams = {
+      name: 'Updated',
+      categoryId: 1,
+      type: 'REAL',
+      mainImages: [],
+      specDef: [],
+      skus: [],
+      attrs: []
+    };
+    const res = await fetchUpdateGlobalProduct(productId, data);
+    expect(res.data).toMatchObject({
+      url: `/admin/pms/product/${productId}`,
+      method: 'put',
+      data
+    });
+  });
+
   it('fetchUpdateGlobalProductStatus should have correct config', async () => {
     const productId = '123';
     const status: Api.Pms.PublishStatus = 'ON_SHELF';
@@ -67,6 +87,15 @@ describe('PMS Product API', () => {
     const res = await fetchDeleteGlobalProduct(productId);
     expect(res.data).toMatchObject({
       url: `/admin/pms/product/${productId}`,
+      method: 'delete'
+    });
+  });
+
+  it('fetchBatchDeleteGlobalProduct should have correct config', async () => {
+    const productIds = ['id1', 'id2', 'id3'];
+    const res = await fetchBatchDeleteGlobalProduct(productIds);
+    expect(res.data).toMatchObject({
+      url: '/admin/pms/product/id1,id2,id3',
       method: 'delete'
     });
   });

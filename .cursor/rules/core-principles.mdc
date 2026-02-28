@@ -41,4 +41,7 @@ alwaysApply: true
 pnpm verify-monorepo  # 结构校验（必须通过）
 pnpm lint            # 代码规范
 pnpm typecheck       # 类型检查
+pnpm test            # 对接完页面/接口后必须运行
 ```
+
+**对接完成必做**：新增或修改页面/接口后，必须补充对应测试并运行通过。详见 `testing.mdc` §0.3。

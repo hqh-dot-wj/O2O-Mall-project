@@ -35,5 +35,9 @@ export default defineConfig(
     rules: {
       'no-console': 'off'
     }
+  },
+  {
+    // typings 中部分为 unplugin 生成或业务扩展，跳过 lint
+    ignores: ['src/typings/**/*.d.ts']
   }
 );

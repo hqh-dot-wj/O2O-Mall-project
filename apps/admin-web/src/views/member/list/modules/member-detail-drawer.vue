@@ -15,8 +15,8 @@ import {
   NTabs
 } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
-import { fetchGetOrderList } from '@/service/api/order';
-import { fetchGetLedger } from '@/service/api/finance';
+import { fetchGetOrderList } from '@/service/api/store/order';
+import { fetchGetLedger } from '@/service/api/store/finance';
 import { fetchGetMemberPointHistory } from '@/service/api/member';
 import { useTable } from '@/hooks/common/table';
 import MemberPointOperateDrawer from './member-point-operate-drawer.vue';

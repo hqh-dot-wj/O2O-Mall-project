@@ -125,5 +125,200 @@ declare namespace Api {
       operator: string;
       createTime: string;
     }
+
+    // ==================== 分销员等级体系 ====================
+
+    interface Level {
+      id: number;
+      tenantId: string;
+      levelId: number;
+      levelName: string;
+      levelIcon?: string;
+      level1Rate: string;
+      level2Rate: string;
+      upgradeCondition?: LevelUpgradeCondition;
+      maintainCondition?: LevelUpgradeCondition;
+      benefits?: string;
+      sort: number;
+      isActive: boolean;
+      createBy: string;
+      createTime: string;
+      updateBy: string;
+      updateTime: string;
+    }
+
+    interface LevelUpgradeCondition {
+      minOrderCount?: number;
+      minOrderAmount?: number;
+      minSelfAmount?: number;
+      minDirectSubCount?: number;
+      minTeamCount?: number;
+    }
+
+    interface CreateLevelDto {
+      levelId: number;
+      levelName: string;
+      levelIcon?: string;
+      level1Rate: number;
+      level2Rate: number;
+      upgradeCondition?: LevelUpgradeCondition;
+      maintainCondition?: LevelUpgradeCondition;
+      benefits?: string;
+      sort?: number;
+      isActive?: boolean;
+    }
+
+    interface UpdateLevelDto extends Partial<CreateLevelDto> {}
+
+    interface ListLevelDto {
+      isActive?: boolean;
+    }
+
+    /** 等级列表搜索参数（含分页，供 useTable + LevelSearch 使用） */
+    interface LevelSearchParams extends Common.PaginatingCommonParams {
+      isActive?: boolean | null | undefined;
+    }
+
+    interface UpdateMemberLevelDto {
+      memberId: string;
+      targetLevel: number;
+      reason: string;
+    }
+
+    interface MemberLevelLog {
+      id: number;
+      memberId: string;
+      oldLevelId: number;
+      newLevelId: number;
+      reason: string;
+      operator: string;
+      createTime: string;
+    }
+
+    interface ListMemberLevelLogDto extends Common.PaginatingCommonParams {
+      memberId?: string;
+    }
+
+    interface LevelCheck {
+      currentLevelId: number;
+      nextLevelId?: number;
+      isUpgradable: boolean;
+      progress: Record<string, any>;
+    }
+
+    // ==================== 分销员申请/审核 ====================
+
+    interface Application {
+      id: number;
+      memberId: string;
+      member?: {
+        nickname: string;
+        avatar?: string;
+        mobile?: string;
+      };
+      status: 'PENDING' | 'APPROVED' | 'REJECTED';
+      reason?: string;
+      createTime: string;
+      auditTime?: string;
+      auditor?: string;
+    }
+
+    interface ListApplicationDto extends Common.PaginatingCommonParams {
+      memberId?: string;
+      status?: 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+      startTime?: string;
+      endTime?: string;
+    }
+
+    interface ReviewApplicationDto {
+      status: 'APPROVED' | 'REJECTED';
+      reason?: string;
+    }
+
+    interface BatchReviewDto {
+      ids: number[];
+      status: '1' | '2';
+      remark?: string;
+    }
+
+    interface ReviewConfig {
+      enableAutoAudit: boolean;
+      autoAuditCondition?: {
+        minOrderCount?: number;
+        minOrderAmount?: number;
+      };
+    }
+
+    interface UpdateReviewConfigDto extends ReviewConfig {}
+
+    // ==================== 看板/预期 ====================
+
+    interface GetDashboardDto {
+      startDate?: string;
+      endDate?: string;
+    }
+
+    interface DistributorStats {
+      total: number;
+      newCount: number;
+      activeCount: number;
+    }
+
+    interface OrderStats {
+      totalCount: number;
+      totalAmount: number;
+      percentage: number;
+    }
+
+    interface CommissionStats {
+      totalAmount: number;
+      pendingAmount: number;
+      settledAmount: number;
+      trend: Array<{ date: string; amount: number }>;
+    }
+
+    interface Dashboard {
+      distributorStats: DistributorStats;
+      orderStats: OrderStats;
+      commissionStats: CommissionStats;
+    }
+
+    interface CommissionPreviewDto {
+      productId: string;
+      orderAmount: number;
+    }
+
+    interface CommissionPreview {
+      level1Commission: number;
+      level2Commission: number;
+      totalCommission: number;
+    }
+
+    // ==================== 商品配置 ====================
+    interface ProductConfig {
+      id: number;
+      productId: string;
+      enableCustom: boolean;
+      level1Rate?: number;
+      level2Rate?: number;
+      createTime: string;
+    }
+
+    interface CreateProductConfigDto {
+      productId: string;
+      enableCustom: boolean;
+      level1Rate?: number;
+      level2Rate?: number;
+    }
+
+    interface UpdateProductConfigDto extends Partial<CreateProductConfigDto> {}
+
+    interface ProductConfigSearchParams extends Common.PaginatingCommonParams {
+      productId?: string;
+    }
+
+    interface BatchImportProductConfigDto {
+      productConfigs: CreateProductConfigDto[];
+    }
   }
 }

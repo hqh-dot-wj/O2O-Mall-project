@@ -13,7 +13,7 @@ import { ListCommissionDto, ListWithdrawalDto, AuditWithdrawalDto, ListLedgerDto
  * Store端财务管理控制器
  */
 @ApiTags('Store-财务管理')
-@Controller('finance')
+@Controller('store/finance')
 export class StoreFinanceController {
   constructor(private readonly storeFinanceService: StoreFinanceService) {}
 

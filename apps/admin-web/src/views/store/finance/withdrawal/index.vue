@@ -14,7 +14,7 @@ import {
   NTag
 } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
-import { fetchAuditWithdrawal, fetchGetWithdrawalList } from '@/service/api/finance';
+import { fetchAuditWithdrawal, fetchGetWithdrawalList } from '@/service/api/store/finance';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableProps } from '@/hooks/common/table';
 import { $t } from '@/locales';

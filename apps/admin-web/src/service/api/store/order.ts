@@ -1,11 +1,13 @@
 import { request } from '@/service/request';
 
+const BASE = '/store/order';
+
 /**
  * 获取订单列表
  */
 export function fetchGetOrderList(params: Api.Order.SearchParams) {
   return request<Api.Order.ListResult>({
-    url: '/order/list',
+    url: `${BASE}/list`,
     method: 'get',
     params
   });
@@ -16,7 +18,7 @@ export function fetchGetOrderList(params: Api.Order.SearchParams) {
  */
 export function fetchGetOrderDetail(id: string) {
   return request<Api.Order.DetailResult>({
-    url: `/order/detail/${id}`,
+    url: `${BASE}/detail/${id}`,
     method: 'get'
   });
 }
@@ -26,7 +28,7 @@ export function fetchGetOrderDetail(id: string) {
  */
 export function fetchGetDispatchList(params: Api.Order.SearchParams) {
   return request<Api.Order.ListResult>({
-    url: '/order/dispatch/list',
+    url: `${BASE}/dispatch/list`,
     method: 'get',
     params
   });
@@ -37,7 +39,7 @@ export function fetchGetDispatchList(params: Api.Order.SearchParams) {
  */
 export function fetchReassignWorker(data: { orderId: string; newWorkerId: number }) {
   return request<void>({
-    url: '/order/reassign',
+    url: `${BASE}/reassign`,
     method: 'post',
     data
   });
@@ -48,7 +50,7 @@ export function fetchReassignWorker(data: { orderId: string; newWorkerId: number
  */
 export function fetchVerifyService(data: { orderId: string; remark?: string }) {
   return request<void>({
-    url: '/order/verify',
+    url: `${BASE}/verify`,
     method: 'post',
     data
   });

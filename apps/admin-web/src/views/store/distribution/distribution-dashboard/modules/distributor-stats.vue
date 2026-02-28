@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import { useAppStore } from '@/store/modules/app';
-import { $t } from '@/locales';
+import { computed } from 'vue';
 
 interface Props {
-  data?: {
-    total: number;
-    newCount: number;
-    activeCount: number;
-  };
+  data?: Api.Store.DistributorStats;
   loading?: boolean;
 }
 

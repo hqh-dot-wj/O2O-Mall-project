@@ -14,7 +14,7 @@ export function fetchGetDistributionConfig() {
  * 更新分销规则配置
  * @param data 配置数据
  */
-export function fetchUpdateDistributionConfig(data: Api.Store.UpdateDistributionConfigDto) {
+export function fetchUpdateDistributionConfig(data: Api.Store.DistributionConfigUpdateParams) {
   return request({
     url: '/store/distribution/config',
     method: 'post',
@@ -26,7 +26,7 @@ export function fetchUpdateDistributionConfig(data: Api.Store.UpdateDistribution
  * 获取分销规则变更历史
  * @param params 分页参数
  */
-export function fetchGetDistributionConfigLogs(params: Api.Store.DistributionConfigLogSearchParams) {
+export function fetchGetDistributionConfigLogs(params?: Api.Common.PaginatingCommonParams) {
   return request<Api.Common.PaginatingQueryRecord<Api.Store.DistributionConfigLog>>({
     url: '/store/distribution/config/logs',
     method: 'get',
@@ -160,9 +160,9 @@ export function fetchDeleteLevel(id: number) {
 }
 
 /**
- * 查询等级列表
+ * 查询等级列表（后端返回 { rows, total }）
  */
-export function fetchGetLevelList(params: Api.Store.ListLevelDto) {
+export function fetchGetLevelList(params?: Api.Store.LevelSearchParams) {
   return request<Api.Common.PaginatingQueryRecord<Api.Store.Level>>({
     url: '/store/distribution/level/list',
     method: 'get',
