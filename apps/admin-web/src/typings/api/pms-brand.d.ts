@@ -1,21 +1,13 @@
 declare namespace Api {
   namespace Pms {
-    type Brand = Common.CommonRecord<{
-      brandId: number;
-      name: string;
-      logo?: string;
-    }>;
+    type Brand = import('@libs/common-types').components['schemas']['BrandVo'];
 
     type BrandList = Common.PaginatingQueryRecord<Brand>;
 
-    interface BrandSearchParams extends Common.CommonSearchParams {
-      name?: string | null;
-    }
+    type BrandSearchParams = CommonType.RecordNullable<Pick<Brand, 'name'> & Api.Common.CommonSearchParams>;
 
-    interface BrandOperateParams {
+    type BrandOperateParams = import('@libs/common-types').components['schemas']['CreateBrandDto'] & {
       brandId?: number;
-      name: string;
-      logo?: string;
-    }
+    };
   }
 }

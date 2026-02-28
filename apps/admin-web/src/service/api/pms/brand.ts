@@ -9,6 +9,14 @@ export function fetchGetBrandList(params?: Api.Pms.BrandSearchParams) {
   });
 }
 
+/** Get Brand Detail */
+export function fetchGetBrand(id: number) {
+  return request<Api.Pms.Brand>({
+    url: `/admin/pms/brand/${id}`,
+    method: 'get'
+  });
+}
+
 /** Add Brand */
 export function fetchAddBrand(data: Api.Pms.BrandOperateParams) {
   return request<Api.Pms.Brand>({

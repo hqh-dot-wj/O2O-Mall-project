@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/admin/system/tenant-audit/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 审计日志-列表 */
+        get: operations["TenantAuditController_findPage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/system/tenant-audit/cross-tenant-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 跨租户访问统计 */
+        get: operations["TenantAuditController_getCrossTenantStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/system/tenant-audit/anomalies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 异常访问分析 */
+        get: operations["TenantAuditController_analyzeAnomalies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/login": {
         parameters: {
             query?: never;
@@ -172,8 +223,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 获取加密公钥 - GET /auth/publicKey
-         *     用于前端加密数据
+         * 获取加密公钥
          * @description 获取RSA公钥用于数据加密
          */
         get: operations["AuthController_getPublicKey"];
@@ -193,8 +243,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 获取租户列表 - GET /auth/tenant/list
-         *     对应前端: fetchTenantList()
+         * 获取租户列表
          * @description 获取系统中所有可用的租户列表，用于登录时选择租户
          */
         get: operations["AuthController_getTenantList"];
@@ -214,8 +263,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 获取验证码 - GET /auth/code
-         *     对应前端: fetchCaptchaCode()
+         * 获取验证码
          * @description 获取登录/注册所需的图形验证码
          */
         get: operations["AuthController_getCaptchaCode"];
@@ -237,8 +285,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 用户登录 - POST /auth/login
-         *     对应前端: fetchLogin()
+         * 用户登录
          * @description 用户登录接口，支持租户、验证码验证
          */
         post: operations["AuthController_login"];
@@ -258,8 +305,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 用户注册 - POST /auth/register
-         *     对应前端: fetchRegister()
+         * 用户注册
          * @description 新用户注册接口
          */
         post: operations["AuthController_register"];
@@ -279,8 +325,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 退出登录 - POST /auth/logout
-         *     对应前端: fetchLogout()
+         * 退出登录
          * @description 退出当前登录状态
          */
         post: operations["AuthController_logout"];
@@ -300,8 +345,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 社交登录回调 - POST /auth/social/callback
-         *     对应前端: fetchSocialLoginCallback()
+         * 社交登录回调
          * @description 第三方社交平台登录回调处理
          */
         post: operations["AuthController_socialCallback"];
@@ -1034,6 +1078,23 @@ export interface paths {
         post?: never;
         /** 删除消息 */
         delete: operations["MessageController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/notification/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 通知记录列表 */
+        get: operations["NotificationController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2144,8 +2205,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 获取当前登录用户信息 - 供 Soybean 前端调用
-         *     GET /system/user/getInfo
+         * 获取当前用户信息
          * @description 获取当前登录用户的详细信息、角色和权限
          */
         get: operations["UserController_getInfo"];
@@ -3534,6 +3594,318 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/distribution/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取分销规则配置 */
+        get: operations["DistributionController_getConfig"];
+        put?: never;
+        /** 更新分销规则配置 */
+        post: operations["DistributionController_updateConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/config/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取分销规则变更历史 */
+        get: operations["DistributionController_getConfigLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/commission/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 佣金预估 (前端提示用) */
+        post: operations["DistributionController_getCommissionPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/product-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建商品级分佣配置 */
+        post: operations["DistributionController_createProductConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/product-config/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询单个商品级分佣配置 */
+        get: operations["DistributionController_getProductConfig"];
+        /** 更新商品级分佣配置 */
+        put: operations["DistributionController_updateProductConfig"];
+        post?: never;
+        /** 删除商品级分佣配置 */
+        delete: operations["DistributionController_deleteProductConfig"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/product-config/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询商品级分佣配置列表 */
+        get: operations["DistributionController_getProductConfigList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/product-config/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量导入商品级分佣配置 */
+        post: operations["DistributionController_batchImportProductConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取分销数据看板 */
+        get: operations["DistributionController_getDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建等级配置 */
+        post: operations["DistributionController_createLevel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/level/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询等级详情 */
+        get: operations["DistributionController_getLevel"];
+        /** 更新等级配置 */
+        put: operations["DistributionController_updateLevel"];
+        post?: never;
+        /** 删除等级配置 */
+        delete: operations["DistributionController_deleteLevel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/level/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询等级列表 */
+        get: operations["DistributionController_getLevelList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/member-level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 手动调整会员等级 */
+        post: operations["DistributionController_updateMemberLevel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/member-level/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询会员等级变更日志 */
+        get: operations["DistributionController_getMemberLevelLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/level/check/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 检查会员升级条件 */
+        get: operations["DistributionController_checkLevelUpgrade"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/application/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询申请列表（管理端） */
+        get: operations["DistributionController_listApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/application/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核申请（管理端） */
+        post: operations["DistributionController_reviewApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/application/batch-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量审核（管理端） */
+        post: operations["DistributionController_batchReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/distribution/application/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取审核配置（管理端） */
+        get: operations["DistributionController_getReviewConfig"];
+        /** 更新审核配置（管理端） */
+        put: operations["DistributionController_updateReviewConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/common/upload": {
         parameters: {
             query?: never;
@@ -3584,7 +3956,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 文件分片上传
+         * 文件切片上传
          * @description 上传文件分片
          */
         post: operations["UploadController_chunkFileUpload"];
@@ -3604,7 +3976,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 文件分片合并
+         * 合并切片
          * @description 合并所有分片为完整文件
          */
         post: operations["UploadController_chunkMergeFile"];
@@ -3622,7 +3994,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 获取切片上传任务结果
+         * 获取切片上传结果
          * @description 查询切片上传任务的状态
          */
         get: operations["UploadController_getChunkUploadResult"];
@@ -3642,7 +4014,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 获取cos授权
+         * 获取COS上传密钥
          * @description 获取腾讯云COS上传临时授权密钥
          */
         get: operations["UploadController_getAuthorization"];
@@ -3852,57 +4224,6 @@ export interface paths {
         put?: never;
         /** 调整会员积分 */
         post: operations["MemberController_adjustMemberPoints"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/balance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询积分余额 */
-        get: operations["PointsAccountClientController_getBalance"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询积分明细 */
-        get: operations["PointsAccountClientController_getTransactions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/expiring": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询即将过期的积分 */
-        get: operations["PointsAccountClientController_getExpiringPoints"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4131,6 +4452,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/client/worker-auth/check-login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 师傅端-静默登录检查 */
+        post: operations["WorkerAuthController_checkLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/worker-auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 师傅端-注册/登录 */
+        post: operations["WorkerAuthController_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/worker-auth/register-mobile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 师傅端-手机号一键登录/注册 */
+        post: operations["WorkerAuthController_registerMobile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/worker-auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 师傅端-退出登录 */
+        get: operations["WorkerAuthController_logout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/client/user/info": {
         parameters: {
             query?: never;
@@ -4223,13 +4612,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 获取所有可用玩法列表
-         *
-         *     @description
-         *     返回系统中所有已注册的营销玩法元数据。
-         *     前端可以基于此接口动态生成玩法选择器。
-         */
+        /** 获取所有可用玩法列表 */
         get: operations["PlayController_getAllPlayTypes"];
         put?: never;
         post?: never;
@@ -4246,13 +4629,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 获取指定玩法的元数据
-         *
-         *     @description
-         *     根据玩法代码获取该玩法的详细元数据。
-         *     前端可以基于此接口动态生成规则配置表单。
-         */
+        /** 获取指定玩法的元数据 */
         get: operations["PlayController_getPlayType"];
         put?: never;
         post?: never;
@@ -4269,12 +4646,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 检查玩法是否存在
-         *
-         *     @description
-         *     检查指定的玩法代码是否已注册。
-         */
+        /** 检查玩法是否存在 */
         get: operations["PlayController_checkPlayExists"];
         put?: never;
         post?: never;
@@ -4291,13 +4663,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 获取玩法特性信息
-         *
-         *     @description
-         *     获取指定玩法的特性信息（是否有实例、是否可失败等）。
-         *     用于前端根据玩法特性动态调整 UI 和业务逻辑。
-         */
+        /** 获取玩法特性信息 */
         get: operations["PlayController_getPlayFeatures"];
         put?: never;
         post?: never;
@@ -4331,12 +4697,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 获取课程考勤信息
-         *
-         *     @description
-         *     获取指定课程实例的考勤记录。
-         */
+        /** 获取课程考勤信息 */
         get: operations["PlayController_getCourseAttendances"];
         put?: never;
         post?: never;
@@ -4355,12 +4716,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * 标记学员出勤
-         *
-         *     @description
-         *     标记指定学员在指定日期的出勤情况。
-         */
+        /** 标记学员出勤 */
         post: operations["PlayController_markAttendance"];
         delete?: never;
         options?: never;
@@ -4375,12 +4731,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 获取学员出勤率
-         *
-         *     @description
-         *     获取指定学员的出勤率统计。
-         */
+        /** 获取学员出勤率 */
         get: operations["PlayController_getAttendanceRate"];
         put?: never;
         post?: never;
@@ -4454,7 +4805,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** 手动触发状态流转 (通常由系统内部或其他模块回调触发) */
+        /** 更新实例状态 */
         patch: operations["PlayInstanceController_updateStatus"];
         trace?: never;
     };
@@ -4550,7 +4901,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 获取订单列表 */
+        /** 订单列表 */
         get: operations["OrderController_getOrderList"];
         put?: never;
         post?: never;
@@ -4567,7 +4918,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 获取订单详情 */
+        /** 订单详情 */
         get: operations["OrderController_getOrderDetail"];
         put?: never;
         post?: never;
@@ -4605,6 +4956,23 @@ export interface paths {
         put?: never;
         /** 确认收货 */
         post: operations["OrderController_confirmReceipt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/order/calculate-discount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 计算订单优惠 */
+        post: operations["OrderIntegrationController_calculateDiscount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4814,7 +5182,8 @@ export interface paths {
         /** 更新商品 */
         put: operations["PmsProductController_update"];
         post?: never;
-        delete?: never;
+        /** 删除商品 */
+        delete: operations["PmsProductController_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4835,6 +5204,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/pms/product/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新商品发布状态 */
+        patch: operations["PmsProductController_updateStatus"];
         trace?: never;
     };
     "/api/admin/pms/attribute/template/list": {
@@ -5030,6 +5416,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/market/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 选品中心列表 */
+        post: operations["StoreProductController_getMarketList"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/market/detail/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 选品中心-商品详情 */
+        get: operations["StoreProductController_getMarketDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 导入商品 */
+        post: operations["StoreProductController_importProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/import/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量导入商品 */
+        post: operations["StoreProductController_batchImportProducts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 店铺商品列表 */
+        post: operations["StoreProductController_findAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/update-price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 更新商品价格 */
+        post: operations["StoreProductController_updateProductPrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/update-price/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量调价 */
+        post: operations["StoreProductController_batchUpdateProductPrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/update-base": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 更新商品基础信息 */
+        post: operations["StoreProductController_updateProductBase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 移除店铺商品 */
+        post: operations["StoreProductController_removeProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/product/stock-alert/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取库存预警阈值 */
+        get: operations["StoreProductController_getStockAlertConfig"];
+        put?: never;
+        /** 设置库存预警阈值 */
+        post: operations["StoreProductController_setStockAlertConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/api/marketing/rule/validate": {
         parameters: {
             query?: never;
@@ -5041,17 +5598,6 @@ export interface paths {
         put?: never;
         /**
          * 校验规则配置
-         *
-         *     @description
-         *     对单个活动的规则配置进行完整校验，包括：
-         *     1. 字段类型校验（基于 class-validator）
-         *     2. 字段约束校验（最小值、最大值、长度等）
-         *     3. 业务逻辑校验（基于玩法策略）
-         *
-         *     使用场景：
-         *     - 运营后台创建/编辑活动时的实时校验
-         *     - 保存前的最终校验
-         *     - 批量导入前的预校验
          * @description 对营销活动的规则配置进行完整校验，包括字段类型、约束和业务逻辑校验
          */
         post: operations["RuleController_validateRule"];
@@ -5070,21 +5616,6 @@ export interface paths {
         };
         /**
          * 获取规则表单 Schema
-         *
-         *     @description
-         *     根据玩法代码获取该玩法的规则表单 Schema。
-         *     前端可以基于此 Schema 动态生成表单组件，实现配置界面的自动化。
-         *
-         *     Schema 包含：
-         *     - 字段名称、类型、标签
-         *     - 是否必填
-         *     - 默认值
-         *     - 校验规则（最小值、最大值、长度、正则等）
-         *
-         *     使用场景：
-         *     - 前端动态表单生成
-         *     - 表单验证规则配置
-         *     - API 文档生成
          * @description 根据玩法代码获取该玩法的规则表单 Schema，用于前端动态表单生成
          */
         get: operations["RuleController_getRuleFormSchema"];
@@ -5103,16 +5634,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 查询优惠券模板列表
-         *     支持分页、筛选和排序
-         */
+        /** 查询优惠券模板列表 */
         get: operations["CouponTemplateController_findAll"];
         put?: never;
-        /**
-         * 创建优惠券模板
-         *     验证模板配置的合法性
-         */
+        /** 创建优惠券模板 */
         post: operations["CouponTemplateController_create"];
         delete?: never;
         options?: never;
@@ -5127,21 +5652,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * 查询优惠券模板详情
-         *     包含统计信息（已发放数量、已使用数量、核销率）
-         */
+        /** 查询优惠券模板详情 */
         get: operations["CouponTemplateController_findOne"];
-        /**
-         * 更新优惠券模板
-         *     如果模板已发放，则不允许修改关键配置
-         */
+        /** 更新优惠券模板 */
         put: operations["CouponTemplateController_update"];
         post?: never;
-        /**
-         * 停用优惠券模板
-         *     将模板状态设置为 INACTIVE
-         */
+        /** 停用优惠券模板 */
         delete: operations["CouponTemplateController_deactivate"];
         options?: never;
         head?: never;
@@ -5161,7 +5677,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** 更新优惠券模板状态（启用/停用） */
+        /** 更新优惠券模板状态 */
         patch: operations["CouponTemplateController_updateStatus"];
         trace?: never;
     };
@@ -5174,51 +5690,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * 手动发放优惠券（管理端）
-         *     批量发放优惠券给指定用户
-         */
+        /** 手动发放优惠券 */
         post: operations["CouponDistributionController_distributeManually"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/coupon/claim/{templateId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 用户领取优惠券（C端）
-         *     用户主动领取指定模板的优惠券
-         */
-        post: operations["CouponDistributionController_claimCoupon"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/coupon/available": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询可领取的优惠券列表（C端）
-         *     返回当前用户可以领取的所有优惠券模板
-         */
-        get: operations["CouponDistributionController_getAvailableCoupons"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5232,7 +5705,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 查询用户优惠券列表（管理端） */
+        /** 查询用户优惠券列表 */
         get: operations["CouponManagementController_getUserCoupons"];
         put?: never;
         post?: never;
@@ -5249,7 +5722,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 查询优惠券使用记录（管理端） */
+        /** 查询优惠券使用记录 */
         get: operations["CouponManagementController_getUsageRecords"];
         put?: never;
         post?: never;
@@ -5266,7 +5739,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 查询优惠券统计数据（管理端） */
+        /** 查询优惠券统计数据 */
         get: operations["CouponManagementController_getStatistics"];
         put?: never;
         post?: never;
@@ -5283,59 +5756,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 导出优惠券使用记录（管理端，返回 xlsx 文件流） */
+        /** 导出优惠券使用记录 */
         get: operations["CouponManagementController_exportUsageRecords"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/coupon/my-coupons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询我的优惠券（C端） */
-        get: operations["CouponManagementController_getMyCoupons"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/signin": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 用户签到 */
-        post: operations["PointsSigninController_signin"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/signin/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询签到状态 */
-        get: operations["PointsSigninController_checkSigninStatus"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5375,57 +5797,6 @@ export interface paths {
         post?: never;
         /** 删除积分任务 */
         delete: operations["PointsTaskAdminController_deleteTask"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询可用任务列表 */
-        get: operations["PointsTaskClientController_findAvailableTasks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/tasks/{taskKey}/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 完成任务 */
-        post: operations["PointsTaskClientController_completeTask"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/marketing/points/tasks/my-completions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询我的任务完成记录 */
-        get: operations["PointsTaskClientController_getMyCompletions"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5533,23 +5904,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/client/order/calculate-discount": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 计算订单优惠 */
-        post: operations["OrderIntegrationController_calculateDiscount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/client/address/list": {
         parameters: {
             query?: never;
@@ -5646,7 +6000,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 添加商品到购物车 */
+        /** 添加到购物车 */
         post: operations["CartController_addToCart"];
         delete?: never;
         options?: never;
@@ -5679,7 +6033,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** 更新购物车商品数量 */
+        /** 更新购物车数量 */
         put: operations["CartController_updateQuantity"];
         post?: never;
         delete?: never;
@@ -5729,7 +6083,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 获取购物车商品数量 (用于 Tabbar 角标) */
+        /** 获取购物车数量 */
         get: operations["CartController_getCartCount"];
         put?: never;
         post?: never;
@@ -5763,7 +6117,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 获取附近租户列表 (用于手动切换) */
+        /** 获取附近租户列表 */
         get: operations["ClientLocationController_getNearbyTenants"];
         put?: never;
         post?: never;
@@ -6028,6 +6382,193 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/client/marketing/coupon/claim/{templateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 用户领取优惠券 */
+        post: operations["ClientCouponController_claimCoupon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/coupon/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询可领取的优惠券列表 */
+        get: operations["ClientCouponController_getAvailableCoupons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/coupon/my-coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的优惠券 */
+        get: operations["ClientCouponController_getMyCoupons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询积分余额 */
+        get: operations["ClientPointsAccountController_getBalance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询积分明细 */
+        get: operations["ClientPointsAccountController_getTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/expiring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询即将过期的积分 */
+        get: operations["ClientPointsAccountController_getExpiringPoints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/signin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 用户签到 */
+        post: operations["ClientPointsSigninController_signin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/signin/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询签到状态 */
+        get: operations["ClientPointsSigninController_checkSigninStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询可用任务列表 */
+        get: operations["ClientPointsTaskController_findAvailableTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/tasks/{taskKey}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 完成任务 */
+        post: operations["ClientPointsTaskController_completeTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/marketing/points/tasks/my-completions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的任务完成记录 */
+        get: operations["ClientPointsTaskController_getMyCompletions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/stock/list": {
         parameters: {
             query?: never;
@@ -6062,7 +6603,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/store/market/list": {
+    "/api/store/stock/batch/update": {
         parameters: {
             query?: never;
             header?: never;
@@ -6071,143 +6612,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 选品中心列表 */
-        post: operations["StoreProductController_getMarketList"];
+        /** 批量调整库存 */
+        post: operations["StockController_batchUpdate"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/store/market/detail/{productId}": {
+    "/api/store/stock/export": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 选品中心-商品详情 */
-        get: operations["StoreProductController_getMarketDetail"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/product/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 导入商品 */
-        post: operations["StoreProductController_importProduct"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/product/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 店铺商品列表 */
-        post: operations["StoreProductController_findAll"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/product/update-price": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 更新商品价格 */
-        post: operations["StoreProductController_updateProductPrice"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/product/update-base": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 更新商品基础信息 */
-        post: operations["StoreProductController_updateProductBase"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/distribution/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取分销规则配置 */
-        get: operations["DistributionController_getConfig"];
-        put?: never;
-        /** 更新分销规则配置 */
-        post: operations["DistributionController_updateConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/distribution/config/logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取分销规则变更历史 */
-        get: operations["DistributionController_getConfigLogs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/store/distribution/commission/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 佣金预估 (前端提示用) */
-        get: operations["DistributionController_getCommissionPreview"];
+        /** 导出库存数据 */
+        get: operations["StockController_exportStock"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6295,6 +6716,91 @@ export interface paths {
         put?: never;
         /** 强制核销 */
         post: operations["StoreOrderController_verifyService"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/order/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 订单退款 */
+        post: operations["StoreOrderController_refundOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/order/refund/partial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 部分退款 */
+        post: operations["StoreOrderController_partialRefundOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/order/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 导出订单数据 */
+        get: operations["StoreOrderController_exportOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/order/batch/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量核销 */
+        post: operations["StoreOrderController_batchVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/order/batch/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量退款 */
+        post: operations["StoreOrderController_batchRefund"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6424,6 +6930,94 @@ export interface components {
             /** @description 响应数据 */
             data: Record<string, never>;
         };
+        TenantAuditVo: {
+            /** @description 审计日志ID */
+            id: string;
+            /** @description 用户ID */
+            userId: string;
+            /** @description 用户名 */
+            userName: string;
+            /** @description 用户类型 */
+            userType: string;
+            /** @description 请求租户ID */
+            requestTenantId: string;
+            /** @description 访问租户ID */
+            accessTenantId: string;
+            /** @description 操作 */
+            action: string;
+            /** @description 模型名称 */
+            modelName: string;
+            /** @description 操作类型 */
+            operation: string;
+            /** @description 是否超级管理员 */
+            isSuperTenant: boolean;
+            /** @description 是否忽略租户 */
+            isIgnoreTenant: boolean;
+            /** @description 是否跨租户访问 */
+            isCrossTenant: boolean;
+            /** @description IP地址 */
+            ip: string;
+            /** @description User Agent */
+            userAgent: string;
+            /** @description 请求路径 */
+            requestPath: string;
+            /** @description 请求方法 */
+            requestMethod: string;
+            /** @description 追踪ID */
+            traceId: string;
+            /** @description 耗时(ms) */
+            duration: number;
+            /** @description 状态 */
+            status: string;
+            /** @description 错误信息 */
+            errorMessage: string;
+            /**
+             * Format: date-time
+             * @description 创建时间
+             */
+            createTime: string;
+        };
+        DateRangeDto: {
+            /**
+             * @description 开始时间
+             * @example 2024-01-01
+             */
+            beginTime?: string;
+            /**
+             * @description 结束时间
+             * @example 2024-12-31
+             */
+            endTime?: string;
+        };
+        CrossTenantStatsVo: {
+            /** @description 总次数 */
+            totalCount: number;
+            /** @description 今日次数 */
+            todayCount: number;
+            /** @description 访问最多的用户 */
+            topUsers: string[];
+            /** @description 访问最多的模型 */
+            topModels: string[];
+        };
+        AnomalyAccessVo: {
+            /** @description 用户ID */
+            userId: string;
+            /** @description 用户名 */
+            userName: string;
+            /** @description 异常模式 */
+            pattern: string;
+            /** @description 严重程度 */
+            severity: string;
+            /** @description 描述 */
+            description: string;
+            /** @description 发生次数 */
+            count: number;
+            /**
+             * Format: date-time
+             * @description 最后发生时间
+             */
+            lastOccurrence: string;
+        };
         LoginVo: {
             /** @description JWT访问令牌 */
             token: string;
@@ -6517,10 +7111,8 @@ export interface components {
              * @description 更新时间
              */
             updateTime: string;
-            dept?: {
-                deptId: number;
-                deptName: string;
-            };
+            /** @description 部门信息 */
+            dept?: Record<string, never>;
             /** @description 角色列表 */
             roles?: components["schemas"]["RoleInfoVo"][];
         };
@@ -6586,7 +7178,7 @@ export interface components {
             /** @description 企业名称 */
             companyName: string;
             /** @description 域名 */
-            domain?: string;
+            domain: string;
         };
         LoginTenantVo: {
             /** @description 是否开启租户 */
@@ -6598,25 +7190,25 @@ export interface components {
             /** @description 是否开启验证码 */
             captchaEnabled: boolean;
             /** @description 验证码唯一标识 */
-            uuid?: string;
+            uuid: string;
             /** @description 验证码图片(Base64) */
-            img?: string;
+            img: string;
         };
         LoginTokenVo: {
             /** @description 授权令牌 */
             access_token: string;
             /** @description 刷新令牌 */
-            refresh_token?: string;
+            refresh_token: string;
             /** @description 令牌有效期(秒) */
             expire_in: number;
             /** @description 刷新令牌有效期(秒) */
-            refresh_expire_in?: number;
+            refresh_expire_in: number;
             /** @description 客户端ID */
-            client_id?: string;
+            client_id: string;
             /** @description 令牌权限 */
-            scope?: string;
+            scope: string;
             /** @description 用户openid */
-            openid?: string;
+            openid: string;
         };
         AuthLoginDto: {
             /**
@@ -6727,18 +7319,6 @@ export interface components {
             /** @description 总数量 */
             total: number;
         };
-        DateRangeDto: {
-            /**
-             * @description 开始时间
-             * @example 2024-01-01
-             */
-            beginTime?: string;
-            /**
-             * @description 结束时间
-             * @example 2024-12-31
-             */
-            endTime?: string;
-        };
         UpdateConfigDto: {
             /** @description 参数名称 */
             configName: string;
@@ -6792,10 +7372,7 @@ export interface components {
             leader?: string;
             /** @description 联系电话 */
             phone?: string;
-            /**
-             * Format: email
-             * @description 邮箱
-             */
+            /** @description 邮箱 */
             email?: string;
             status?: components["schemas"]["StatusEnum"];
         };
@@ -6846,10 +7423,7 @@ export interface components {
             leader?: string;
             /** @description 联系电话 */
             phone?: string;
-            /**
-             * Format: email
-             * @description 邮箱
-             */
+            /** @description 邮箱 */
             email?: string;
             status?: components["schemas"]["StatusEnum"];
             /** @description 部门ID */
@@ -6977,7 +7551,6 @@ export interface components {
             /** @description 总数量 */
             total: number;
         };
-        Object: Record<string, never>;
         ListDictType: {
             /**
              * @description 页码
@@ -7070,26 +7643,14 @@ export interface components {
             /** @description 菜单图标 */
             icon?: string;
             menuType?: components["schemas"]["MenuTypeEnum"];
-            /**
-             * @description 是否缓存（0缓存 1不缓存）
-             * @enum {string}
-             */
-            isCache?: "0" | "1";
-            /**
-             * @description 是否为外链（0是 1否）
-             * @enum {string}
-             */
-            isFrame: "0" | "1";
-            /**
-             * @description 菜单状态（0正常 1停用）
-             * @enum {string}
-             */
-            status?: "0" | "1";
-            /**
-             * @description 显示状态（0显示 1隐藏）
-             * @enum {string}
-             */
-            visible?: "0" | "1";
+            /** @description 是否缓存（0缓存 1不缓存） */
+            isCache?: string;
+            /** @description 是否为外链（0是 1否） */
+            isFrame: string;
+            /** @description 菜单状态（0正常 1停用） */
+            status?: string;
+            /** @description 显示状态（0显示 1隐藏） */
+            visible?: string;
             /** @description 权限标识 */
             perms?: string;
             /** @description 备注 */
@@ -7125,26 +7686,14 @@ export interface components {
             /** @description 菜单图标 */
             icon?: string;
             menuType?: components["schemas"]["MenuTypeEnum"];
-            /**
-             * @description 是否缓存（0缓存 1不缓存）
-             * @enum {string}
-             */
-            isCache?: "0" | "1";
-            /**
-             * @description 是否为外链（0是 1否）
-             * @enum {string}
-             */
-            isFrame: "0" | "1";
-            /**
-             * @description 菜单状态（0正常 1停用）
-             * @enum {string}
-             */
-            status?: "0" | "1";
-            /**
-             * @description 显示状态（0显示 1隐藏）
-             * @enum {string}
-             */
-            visible?: "0" | "1";
+            /** @description 是否缓存（0缓存 1不缓存） */
+            isCache?: string;
+            /** @description 是否为外链（0是 1否） */
+            isFrame: string;
+            /** @description 菜单状态（0正常 1停用） */
+            status?: string;
+            /** @description 显示状态（0显示 1隐藏） */
+            visible?: string;
             /** @description 权限标识 */
             perms?: string;
             /** @description 备注 */
@@ -7158,7 +7707,7 @@ export interface components {
             /** @description 标题 */
             title: string;
             /** @description 内容 */
-            content?: string;
+            content: string;
             /** @description 类型 */
             type: string;
             /** @description 接收人ID */
@@ -7538,10 +8087,8 @@ export interface components {
             longitude?: number;
             /** @description 纬度 */
             latitude?: number;
-            fence?: {
-                type: string;
-                coordinates?: number[][][];
-            };
+            /** @description 电子围栏 (GeoJSON Polygon) */
+            fence?: Record<string, never>;
             /** @description 行政区划代码 */
             regionCode?: string;
             /**
@@ -7561,28 +8108,28 @@ export interface components {
             /** @description 租户编号 */
             tenantId: string;
             /** @description 联系人 */
-            contactUserName?: string;
+            contactUserName: string;
             /** @description 联系电话 */
-            contactPhone?: string;
+            contactPhone: string;
             /** @description 企业名称 */
             companyName: string;
             /** @description 统一社会信用代码 */
-            licenseNumber?: string;
+            licenseNumber: string;
             /** @description 地址 */
-            address?: string;
+            address: string;
             /** @description 企业简介 */
-            intro?: string;
+            intro: string;
             /** @description 域名 */
-            domain?: string;
+            domain: string;
             /** @description 租户套餐ID */
-            packageId?: number;
+            packageId: number;
             /** @description 租户套餐名称 */
-            packageName?: string;
+            packageName: string;
             /**
              * Format: date-time
              * @description 过期时间
              */
-            expireTime?: string;
+            expireTime: string;
             /** @description 账号数量 */
             accountCount: number;
             /** @description 状态(0正常 1停用) */
@@ -7602,7 +8149,7 @@ export interface components {
              */
             updateTime: string;
             /** @description 备注 */
-            remark?: string;
+            remark: string;
         };
         TenantListVo: {
             rows: components["schemas"]["TenantVo"][];
@@ -7640,10 +8187,8 @@ export interface components {
             longitude?: number;
             /** @description 纬度 */
             latitude?: number;
-            fence?: {
-                type: string;
-                coordinates?: number[][][];
-            };
+            /** @description 电子围栏 (GeoJSON Polygon) */
+            fence?: Record<string, never>;
             /** @description 行政区划代码 */
             regionCode?: string;
             /**
@@ -7690,7 +8235,7 @@ export interface components {
             /** @description 企业名称 */
             companyName?: string;
             /** @description 状态(0正常 1停用) */
-            status?: Record<string, never>;
+            status?: string;
             /**
              * Format: date-time
              * @description 开始时间
@@ -7719,7 +8264,7 @@ export interface components {
             /** @description 套餐名称 */
             packageName: string;
             /** @description 关联的菜单ID */
-            menuIds?: string;
+            menuIds: string;
             /** @description 菜单树选择项是否关联显示 */
             menuCheckStrictly: boolean;
             /** @description 状态(0正常 1停用) */
@@ -7739,7 +8284,7 @@ export interface components {
              */
             updateTime: string;
             /** @description 备注 */
-            remark?: string;
+            remark: string;
         };
         TenantPackageListVo: {
             rows: components["schemas"]["TenantPackageVo"][];
@@ -7788,7 +8333,7 @@ export interface components {
             /** @description 套餐名称 */
             packageName?: string;
             /** @description 状态(0正常 1停用) */
-            status?: Record<string, never>;
+            status?: string;
         };
         TableName: {
             /** @description 表名称列表 */
@@ -7824,7 +8369,7 @@ export interface components {
             /** @description 最后登录IP */
             loginIp: string;
             /** @description 最后登录时间 */
-            loginDate: string | null;
+            loginDate: string;
             /** @description 备注 */
             remark: string;
             /** @description 创建时间 */
@@ -7833,26 +8378,15 @@ export interface components {
             updateTime: string;
             /** @description 部门名称 */
             deptName?: string;
-            dept?: {
-                deptId: number;
-                parentId: number;
-                deptName: string;
-                orderNum: number;
-                leader: string;
-                phone: string;
-                email: string;
-                status: string;
-            };
+            /** @description 部门信息 */
+            dept?: Record<string, never>;
             /** @description 角色列表 */
             roles?: components["schemas"]["RoleVo"][];
         };
         UpdateProfileDto: {
             /** @description 用户昵称 */
             nickName: string;
-            /**
-             * Format: email
-             * @description 邮箱地址
-             */
+            /** @description 邮箱地址 */
             email: string;
             /** @description 手机号码 */
             phonenumber: string;
@@ -8042,11 +8576,11 @@ export interface components {
             /** @description cron执行表达式 */
             cronExpression: string;
             /** @description 计划执行错误策略（1立即执行 2执行一次 3放弃执行） */
-            misfirePolicy?: string;
+            misfirePolicy: string;
             /** @description 是否并发执行（0允许 1禁止） */
-            concurrent?: string;
+            concurrent: string;
             /** @description 状态（0正常 1暂停） */
-            status: Record<string, never>;
+            status: string;
             /** @description 备注信息 */
             remark?: string;
         };
@@ -8075,7 +8609,7 @@ export interface components {
             /** @description 任务组名 */
             jobGroup?: string;
             /** @description 状态（0正常 1暂停） */
-            status?: Record<string, never>;
+            status?: string;
         };
         ListJobLogDto: {
             /**
@@ -8098,41 +8632,21 @@ export interface components {
             /** @description 时间范围 */
             params?: components["schemas"]["DateRangeDto"];
             /** @description 任务名称 */
-            jobName?: string;
+            jobName: string;
             /** @description 任务组名 */
-            jobGroup?: string;
+            jobGroup: string;
             /** @description 状态（0正常 1暂停） */
-            status?: Record<string, never>;
+            status: string;
         };
         ServerInfoVo: {
-            cpu: {
-                cpuNum: number;
-                total: number;
-                sys: number;
-                used: number;
-                wait: number;
-                free: number;
-            };
-            mem: {
-                total: number;
-                used: number;
-                free: number;
-                usage: number;
-            };
-            jvm: {
-                total: number;
-                max: number;
-                free: number;
-                version: string;
-                home: string;
-            };
-            sys: {
-                computerName: string;
-                computerIp: string;
-                userDir: string;
-                osName: string;
-                osArch: string;
-            };
+            /** @description CPU信息 */
+            cpu: Record<string, never>;
+            /** @description 内存信息 */
+            mem: Record<string, never>;
+            /** @description JVM信息 */
+            jvm: Record<string, never>;
+            /** @description 系统信息 */
+            sys: Record<string, never>;
             /** @description 磁盘信息 */
             sysFiles: string[];
         };
@@ -8347,11 +8861,11 @@ export interface components {
             /** @description 用户ID */
             memberId: string;
             /** @description 用户昵称 */
-            memberName?: string;
+            memberName: string;
             /** @description 用户头像 */
-            memberAvatar?: string;
+            memberAvatar: string;
             /** @description 用户手机号 */
-            memberMobile?: string;
+            memberMobile: string;
             /** @description 提现金额 */
             amount: string;
             /** @description 提现方式 */
@@ -8364,15 +8878,454 @@ export interface components {
             /** @description 真实姓名 */
             realName: string;
             /** @description 审核人 */
-            auditBy?: string;
+            auditBy: string;
             /** @description 审核时间 */
-            auditTime?: string;
+            auditTime: string;
             /** @description 审核备注 */
-            auditRemark?: string;
+            auditRemark: string;
             /** @description 支付单号 */
-            paymentNo?: string;
+            paymentNo: string;
             /** @description 申请时间 */
             createTime: string;
+        };
+        DistConfigVo: {
+            /** @description 配置ID */
+            id: number;
+            /** @description 一级分佣比例 (0-100) */
+            level1Rate: number;
+            /** @description 二级分佣比例 (0-100) */
+            level2Rate: number;
+            /** @description 是否允许普通用户分销 */
+            enableLV0: boolean;
+            /** @description 是否允许外店推荐人获取佣金 */
+            enableCrossTenant: boolean;
+            /** @description 跨店分佣折扣 (0-100) */
+            crossTenantRate: number;
+            /** @description 跨店佣金日限额 (元) */
+            crossMaxDaily: number;
+            /** @description 分佣基数类型 */
+            commissionBaseType: string;
+            /** @description 熔断保护比例 (0-100) */
+            maxCommissionRate: number;
+            /** @description 创建时间 */
+            createTime: string;
+        };
+        UpdateDistConfigDto: {
+            /**
+             * @description 一级分佣比例 (0-100)
+             * @example 60
+             */
+            level1Rate: number;
+            /**
+             * @description 二级分佣比例 (0-100)
+             * @example 40
+             */
+            level2Rate: number;
+            /**
+             * @description 是否允许普通用户分销
+             * @example true
+             */
+            enableLV0: boolean;
+            /**
+             * @description 是否允许外店推荐人获取佣金
+             * @example false
+             */
+            enableCrossTenant?: boolean;
+            /**
+             * @description 跨店分佣折扣 (0-100, 100=不打折)
+             * @example 80
+             */
+            crossTenantRate?: number;
+            /**
+             * @description 跨店佣金日限额 (元)
+             * @example 500
+             */
+            crossMaxDaily?: number;
+            /**
+             * @description 分佣基数类型
+             * @enum {string}
+             */
+            commissionBaseType?: "ORIGINAL_PRICE" | "ACTUAL_PAID" | "ZERO";
+            /**
+             * @description 熔断保护比例 (0-100，如50表示50%)
+             * @example 50
+             */
+            maxCommissionRate?: number;
+        };
+        DistConfigLogVo: {
+            /** @description 日志ID */
+            id: number;
+            /** @description 配置ID */
+            configId: number;
+            /** @description 一级分佣比例 (0-100) */
+            level1Rate: number;
+            /** @description 二级分佣比例 (0-100) */
+            level2Rate: number;
+            /** @description 是否允许普通用户分销 */
+            enableLV0: boolean;
+            /** @description 是否允许外店推荐人获取佣金 */
+            enableCrossTenant?: boolean;
+            /** @description 跨店分佣折扣 (0-100) */
+            crossTenantRate?: number;
+            /** @description 跨店佣金日限额 (元) */
+            crossMaxDaily?: number;
+            /** @description 分佣基数类型 */
+            commissionBaseType?: string;
+            /** @description 熔断保护比例 (0-100) */
+            maxCommissionRate?: number;
+            /** @description 操作人 */
+            operator: string;
+            /** @description 创建时间 */
+            createTime: string;
+        };
+        CommissionPreviewVo: {
+            /** @description 门店名称 */
+            tenantName: string;
+            /** @description 佣金比例 */
+            commissionRate: string;
+            /** @description 是否本店推荐人 */
+            isLocalReferrer: boolean;
+            /** @description 门店是否开启跨店分销 */
+            isCrossEnabled: boolean;
+            /** @description 预估佣金金额 */
+            estimatedAmount: number;
+            /** @description 提示文案 (跨店时显示) */
+            notice?: string;
+        };
+        CommissionPreviewItemDto: {
+            /** @description SKU ID */
+            skuId: string;
+            /**
+             * @description 购买数量
+             * @example 1
+             */
+            quantity: number;
+        };
+        CommissionPreviewDto: {
+            /** @description 下单门店ID */
+            tenantId: string;
+            /** @description 商品SKU列表 */
+            items: components["schemas"]["CommissionPreviewItemDto"][];
+            /** @description 分享人ID (可选) */
+            shareUserId?: string;
+        };
+        ProductConfigVo: {
+            /** @description 配置ID */
+            id: number;
+            /** @description 商品ID */
+            productId?: string;
+            /** @description 品类ID */
+            categoryId?: string;
+            /** @description 一级分佣比例 (0-100) */
+            level1Rate?: number;
+            /** @description 二级分佣比例 (0-100) */
+            level2Rate?: number;
+            /** @description 佣金基数类型 */
+            commissionBaseType?: string;
+            /** @description 是否启用 */
+            isActive: boolean;
+            /** @description 创建人 */
+            createBy: string;
+            /** @description 创建时间 */
+            createTime: string;
+            /** @description 更新人 */
+            updateBy: string;
+            /** @description 更新时间 */
+            updateTime: string;
+        };
+        CreateProductConfigDto: {
+            /** @description 商品ID (与categoryId二选一) */
+            productId?: string;
+            /** @description 品类ID (与productId二选一) */
+            categoryId?: string;
+            /** @description 一级分佣比例 (0-100) */
+            level1Rate?: number;
+            /** @description 二级分佣比例 (0-100) */
+            level2Rate?: number;
+            /**
+             * @description 佣金基数类型
+             * @enum {string}
+             */
+            commissionBaseType?: "ORIGINAL_PRICE" | "ACTUAL_PAID" | "ZERO";
+        };
+        UpdateProductConfigDto: {
+            /** @description 商品ID (与categoryId二选一) */
+            productId?: string;
+            /** @description 品类ID (与productId二选一) */
+            categoryId?: string;
+            /** @description 一级分佣比例 (0-100) */
+            level1Rate?: number;
+            /** @description 二级分佣比例 (0-100) */
+            level2Rate?: number;
+            /**
+             * @description 佣金基数类型
+             * @enum {string}
+             */
+            commissionBaseType?: "ORIGINAL_PRICE" | "ACTUAL_PAID" | "ZERO";
+        };
+        ProductConfigItemDto: {
+            /** @description 商品ID (与categoryId二选一) */
+            productId?: string;
+            /** @description 品类ID (与productId二选一) */
+            categoryId?: string;
+            /** @description 一级分佣比例 (0-100) */
+            level1Rate?: number;
+            /** @description 二级分佣比例 (0-100) */
+            level2Rate?: number;
+            /**
+             * @description 佣金基数类型
+             * @enum {string}
+             */
+            commissionBaseType?: "ORIGINAL_PRICE" | "ACTUAL_PAID" | "ZERO";
+        };
+        BatchImportProductConfigDto: {
+            /** @description 配置列表 */
+            items: components["schemas"]["ProductConfigItemDto"][];
+        };
+        DistributorStatsVo: {
+            /** @description 总分销员数 */
+            total: number;
+            /** @description 新增分销员数（时间范围内） */
+            newCount: number;
+            /** @description 活跃分销员数（时间范围内有佣金记录） */
+            activeCount: number;
+        };
+        OrderStatsVo: {
+            /** @description 分销订单总数 */
+            totalCount: number;
+            /** @description 分销订单总金额 */
+            totalAmount: number;
+            /** @description 分销订单占比（%） */
+            percentage: number;
+        };
+        CommissionTrendItemVo: {
+            /** @description 日期 */
+            date: string;
+            /** @description 佣金金额 */
+            amount: number;
+        };
+        CommissionStatsVo: {
+            /** @description 佣金支出总额 */
+            totalAmount: number;
+            /** @description 待结算佣金 */
+            pendingAmount: number;
+            /** @description 已结算佣金 */
+            settledAmount: number;
+            /** @description 佣金趋势（按日） */
+            trend: components["schemas"]["CommissionTrendItemVo"][];
+        };
+        DashboardVo: {
+            /** @description 分销员统计 */
+            distributorStats: components["schemas"]["DistributorStatsVo"];
+            /** @description 订单统计 */
+            orderStats: components["schemas"]["OrderStatsVo"];
+            /** @description 佣金统计 */
+            commissionStats: components["schemas"]["CommissionStatsVo"];
+        };
+        LevelVo: {
+            /** @description 主键ID */
+            id: number;
+            /** @description 租户ID */
+            tenantId: string;
+            /** @description 等级编号 */
+            levelId: number;
+            /** @description 等级名称 */
+            levelName: string;
+            /** @description 等级图标URL */
+            levelIcon?: string;
+            /** @description 一级佣金比例 */
+            level1Rate: string;
+            /** @description 二级佣金比例 */
+            level2Rate: string;
+            /** @description 升级条件 */
+            upgradeCondition?: Record<string, never>;
+            /** @description 保级条件 */
+            maintainCondition?: Record<string, never>;
+            /** @description 等级权益描述 */
+            benefits?: string;
+            /** @description 排序 */
+            sort: number;
+            /** @description 是否激活 */
+            isActive: boolean;
+            /** @description 创建人 */
+            createBy: string;
+            /**
+             * Format: date-time
+             * @description 创建时间
+             */
+            createTime: string;
+            /** @description 更新人 */
+            updateBy: string;
+            /**
+             * Format: date-time
+             * @description 更新时间
+             */
+            updateTime: string;
+        };
+        CreateLevelDto: {
+            /** @description 等级编号（1-10） */
+            levelId: number;
+            /** @description 等级名称 */
+            levelName: string;
+            /** @description 等级图标URL */
+            levelIcon?: string;
+            /** @description 一级佣金比例（0-100） */
+            level1Rate: number;
+            /** @description 二级佣金比例（0-100） */
+            level2Rate: number;
+            /** @description 升级条件 */
+            upgradeCondition?: Record<string, never>;
+            /** @description 保级条件 */
+            maintainCondition?: Record<string, never>;
+            /** @description 等级权益描述 */
+            benefits?: string;
+            /** @description 排序 */
+            sort?: number;
+            /** @description 是否激活 */
+            isActive?: boolean;
+        };
+        UpdateLevelDto: {
+            /** @description 等级编号（1-10） */
+            levelId?: number;
+            /** @description 等级名称 */
+            levelName?: string;
+            /** @description 等级图标URL */
+            levelIcon?: string;
+            /** @description 一级佣金比例（0-100） */
+            level1Rate?: number;
+            /** @description 二级佣金比例（0-100） */
+            level2Rate?: number;
+            /** @description 升级条件 */
+            upgradeCondition?: Record<string, never>;
+            /** @description 保级条件 */
+            maintainCondition?: Record<string, never>;
+            /** @description 等级权益描述 */
+            benefits?: string;
+            /** @description 排序 */
+            sort?: number;
+            /** @description 是否激活 */
+            isActive?: boolean;
+        };
+        UpdateMemberLevelDto: {
+            /** @description 会员 ID */
+            memberId: string;
+            /** @description 目标等级 (0: 普通, 1: C1, 2: C2) */
+            levelId: number;
+        };
+        MemberLevelLogVo: {
+            /** @description 主键ID */
+            id: number;
+            /** @description 租户ID */
+            tenantId: string;
+            /** @description 会员ID */
+            memberId: string;
+            /** @description 原等级 */
+            fromLevel: number;
+            /** @description 目标等级 */
+            toLevel: number;
+            /** @description 变更类型 */
+            changeType: string;
+            /** @description 变更原因 */
+            reason?: string;
+            /** @description 操作人 */
+            operator?: string;
+            /**
+             * Format: date-time
+             * @description 创建时间
+             */
+            createTime: string;
+        };
+        ConditionResultVo: {
+            /** @description 字段名 */
+            field: string;
+            /** @description 要求值 */
+            required: number;
+            /** @description 实际值 */
+            actual: number;
+            /** @description 是否通过 */
+            passed: boolean;
+        };
+        LevelCheckVo: {
+            /** @description 当前等级 */
+            currentLevel: number;
+            /** @description 可升级到的等级 */
+            eligibleLevel: number;
+            /** @description 是否满足升级条件 */
+            canUpgrade: boolean;
+            /** @description 升级条件检查结果 */
+            conditionResults: components["schemas"]["ConditionResultVo"][];
+        };
+        ApplicationVo: {
+            /** @description 申请ID */
+            id: number;
+            /** @description 会员ID */
+            memberId: string;
+            /** @description 申请理由 */
+            applyReason: string;
+            /** @description 状态 */
+            status: string;
+            /** @description 审核人ID */
+            reviewerId: string;
+            /** @description 审核时间 */
+            reviewTime: string;
+            /** @description 审核备注 */
+            reviewRemark: string;
+            /** @description 是否自动审核 */
+            autoReviewed: boolean;
+            /** @description 创建时间 */
+            createTime: string;
+        };
+        ReviewApplicationDto: {
+            /**
+             * @description 审核结果
+             * @enum {string}
+             */
+            result: "APPROVED" | "REJECTED";
+            /** @description 审核备注 */
+            remark?: string;
+        };
+        BatchReviewDto: {
+            /** @description 申请ID列表 */
+            ids: string[];
+            /**
+             * @description 审核结果
+             * @enum {string}
+             */
+            result: "APPROVED" | "REJECTED";
+            /** @description 审核备注 */
+            remark?: string;
+        };
+        ReviewConfigVo: {
+            /** @description 配置ID */
+            id: number;
+            /** @description 是否启用自动审核 */
+            enableAutoReview: boolean;
+            /** @description 最小注册天数 */
+            minRegisterDays: number;
+            /** @description 最小订单数 */
+            minOrderCount: number;
+            /** @description 最小消费金额 */
+            minOrderAmount: number;
+            /** @description 是否要求实名 */
+            requireRealName: boolean;
+            /** @description 是否要求手机号 */
+            requirePhone: boolean;
+            /** @description 创建时间 */
+            createTime: string;
+        };
+        UpdateReviewConfigDto: {
+            /** @description 是否启用自动审核 */
+            enableAutoReview: boolean;
+            /** @description 最小注册天数 */
+            minRegisterDays: number;
+            /** @description 最小订单数 */
+            minOrderCount: number;
+            /** @description 最小消费金额 */
+            minOrderAmount: number;
+            /** @description 是否要求实名 */
+            requireRealName: boolean;
+            /** @description 是否要求手机号 */
+            requirePhone: boolean;
         };
         ChunkMergeFileDto: {
             /** @description 上传标识ID */
@@ -8403,11 +9356,34 @@ export interface components {
             /** @description 状态 (0: 正常, 1: 禁用) */
             status: string;
         };
-        UpdateMemberLevelDto: {
+        PointHistoryVo: {
+            /** @description 记录 ID */
+            id: string;
             /** @description 会员 ID */
             memberId: string;
-            /** @description 目标等级 (0: 普通, 1: C1, 2: C2) */
-            levelId: number;
+            /** @description 变动积分（正增负减） */
+            changePoints: number;
+            /** @description 变动后积分 */
+            afterPoints: number;
+            /** @description 变动类型 */
+            type: string;
+            /** @description 类型描述 */
+            typeName?: string;
+            /** @description 备注 */
+            remark?: string;
+            /**
+             * Format: date-time
+             * @description 创建时间
+             */
+            createTime: string;
+        };
+        AdjustMemberPointsDto: {
+            /** @description 会员 ID */
+            memberId: string;
+            /** @description 变动积分（正数增加，负数扣减，不能为 0） */
+            amount: number;
+            /** @description 备注/调整原因 */
+            remark?: string;
         };
         AddPointsDto: {
             /** @description 用户ID */
@@ -8501,7 +9477,7 @@ export interface components {
         };
         ApproveUpgradeDto: {
             /** @description 操作: approve/reject */
-            action: Record<string, never>;
+            action: string;
             /** @description 驳回原因 */
             reason?: string;
         };
@@ -8560,11 +9536,11 @@ export interface components {
             /** @description 商品名称 */
             name: string;
             /** @description 商品副标题 */
-            subTitle?: string;
+            subTitle: string;
             /** @description 商品主图 */
             mainImages: string[];
             /** @description 商品封面图 */
-            coverImage?: string;
+            coverImage: string;
             /** @description 商品类型: REAL-实物, SERVICE-服务 */
             type: string;
             /** @description 价格 */
@@ -8572,19 +9548,7 @@ export interface components {
             /** @description 分类ID */
             categoryId: number;
             /** @description 分类名称 */
-            categoryName?: string;
-        };
-        ClientSkuVo: {
-            /** @description SKU ID */
-            skuId: string;
-            /** @description 规格值 */
-            specValues: {
-                [key: string]: unknown;
-            };
-            /** @description SKU图片 */
-            skuImage?: string;
-            /** @description 价格 */
-            price: number;
+            categoryName: string;
         };
         ClientProductDetailVo: {
             /** @description 商品ID */
@@ -8592,11 +9556,11 @@ export interface components {
             /** @description 商品名称 */
             name: string;
             /** @description 商品副标题 */
-            subTitle?: string;
+            subTitle: string;
             /** @description 商品主图 */
             mainImages: string[];
             /** @description 商品封面图 */
-            coverImage?: string;
+            coverImage: string;
             /** @description 商品类型: REAL-实物, SERVICE-服务 */
             type: string;
             /** @description 价格 */
@@ -8604,19 +9568,19 @@ export interface components {
             /** @description 分类ID */
             categoryId: number;
             /** @description 分类名称 */
-            categoryName?: string;
+            categoryName: string;
             /** @description 详情页HTML */
-            detailHtml?: string;
+            detailHtml: string;
             /** @description 是否包邮 */
-            isFreeShip?: boolean;
+            isFreeShip: boolean;
             /** @description 服务时长(分钟) */
-            serviceDuration?: number;
+            serviceDuration: number;
             /** @description 服务半径(km) */
-            serviceRadius?: number;
+            serviceRadius: number;
             /** @description 是否需要预约 */
-            needBooking?: boolean;
+            needBooking: boolean;
             /** @description SKU列表 */
-            skus?: components["schemas"]["ClientSkuVo"][];
+            skus: string[];
         };
         ClientCategoryVo: {
             /** @description 分类ID */
@@ -8624,13 +9588,13 @@ export interface components {
             /** @description 分类名称 */
             name: string;
             /** @description 图标 */
-            icon?: string;
+            icon: string;
             /** @description 父级ID */
-            parentId?: number;
+            parentId: number;
             /** @description 排序 */
-            sort?: number;
+            sort: number;
             /** @description 子分类 */
-            children?: components["schemas"]["ClientCategoryVo"][];
+            children: components["schemas"]["ClientCategoryVo"][];
         };
         PlayInstanceVo: {
             /** @description 记录ID */
@@ -8644,7 +9608,7 @@ export interface components {
             /** @description 玩法模板编码 */
             templateCode: string;
             /** @description 订单号 */
-            orderSn?: string;
+            orderSn: string;
             /** @description 实例动态数据 */
             instanceData: Record<string, never>;
             /**
@@ -8653,7 +9617,7 @@ export interface components {
              */
             status: "PENDING_PAY" | "PAID" | "ACTIVE" | "SUCCESS" | "TIMEOUT" | "FAILED" | "REFUNDED";
             /** @description 前端显示数据 (增强字段) */
-            displayData?: Record<string, never>;
+            displayData: Record<string, never>;
             /** @description 创建时间 */
             createTime: string;
             /** @description 更新时间 */
@@ -8682,7 +9646,7 @@ export interface components {
              * @description 状态
              * @enum {string}
              */
-            status?: "PENDING_PAY" | "PAID" | "ACTIVE" | "SUCCESS" | "TIMEOUT" | "FAILED" | "REFUNDED";
+            status: "PENDING_PAY" | "PAID" | "ACTIVE" | "SUCCESS" | "TIMEOUT" | "FAILED" | "REFUNDED";
         };
         UserAssetVo: {
             /** @description 资产ID */
@@ -8731,7 +9695,7 @@ export interface components {
             /** @description SKU ID */
             skuId: string;
             /** @description 规格数据 */
-            specData: Record<string, never> | null;
+            specData: Record<string, never>;
             /** @description 单价 */
             price: number;
             /** @description 数量 */
@@ -8750,17 +9714,12 @@ export interface components {
             discountAmount: number;
             /** @description 应付金额 */
             payAmount: number;
-            defaultAddress?: {
-                name: string;
-                phone: string;
-                address: string;
-                lat?: number;
-                lng?: number;
-            };
+            /** @description 默认收货地址 */
+            defaultAddress?: Record<string, never>;
             /** @description 是否包含服务商品 */
             hasService: boolean;
             /** @description 是否超出服务范围 */
-            outOfRange?: boolean;
+            outOfRange: boolean;
         };
         OrderItemDto: {
             /** @description SKU ID */
@@ -8876,6 +9835,14 @@ export interface components {
             orderId: string;
             /** @description 取消原因 */
             reason?: string;
+        };
+        CalculateDiscountDto: {
+            /** @description 订单商品列表 */
+            items: components["schemas"]["OrderItemDto"][];
+            /** @description 用户优惠券ID */
+            userCouponId?: string;
+            /** @description 使用积分数量 */
+            pointsUsed?: number;
         };
         PlayTemplateVo: {
             /** @description 模板ID */
@@ -9005,7 +9972,7 @@ export interface components {
              * @description 上下架状态
              * @enum {string}
              */
-            status?: "OFF_SHELF" | "ON_SHELF";
+            status: "OFF_SHELF" | "ON_SHELF";
         };
         UpdateStorePlayConfigDto: {
             /** @description 门店ID */
@@ -9022,7 +9989,7 @@ export interface components {
             /** @description 营销规则配置 */
             rules?: Record<string, never>;
             /** @description 规则历史版本 */
-            rulesHistory?: Record<string, never>[];
+            rulesHistory?: string[];
             /**
              * @description 库存策略
              * @enum {string}
@@ -9033,6 +10000,43 @@ export interface components {
              * @enum {string}
              */
             status?: "OFF_SHELF" | "ON_SHELF";
+        };
+        ProductVo: {
+            /** @description 商品ID */
+            productId: string;
+            /** @description 商品名称 */
+            name: string;
+            /** @description 商品分类ID */
+            categoryId: number;
+            /** @description 品牌ID */
+            brandId: number;
+            /** @description 副标题 */
+            subTitle: string;
+            /** @description 商品主图 */
+            mainImages: string[];
+            /** @description 商品相册(兼容字段) */
+            albumPics: string;
+            /** @description 详情页HTML */
+            detailHtml: string;
+            /**
+             * @description 商品类型
+             * @enum {string}
+             */
+            type: "REAL" | "SERVICE";
+            /** @description 重量(g) */
+            weight: number;
+            /** @description 是否包邮 */
+            isFreeShip: boolean;
+            /** @description 服务时长(Service Types) */
+            serviceDuration: number;
+            /** @description 服务半径 */
+            serviceRadius: number;
+            /** @description 是否需要预约 */
+            needBooking: boolean;
+            /** @description 上架状态: 0-下架, 1-上架 */
+            publishStatus: string;
+            /** @description 价格(起) */
+            price: number;
         };
         CreateSkuDto: {
             /** @description SKU ID (更新时必传) */
@@ -9048,6 +10052,8 @@ export interface components {
             skuImage?: string;
             /** @description 指导价 */
             guidePrice: number;
+            /** @description 成本价 */
+            costPrice?: number;
             /**
              * @description 分销模式
              * @enum {string}
@@ -9092,7 +10098,8 @@ export interface components {
             serviceDuration?: number;
             /** @description 服务半径(km) */
             serviceRadius?: number;
-            specDef: Record<string, never>[][];
+            /** @description 规格定义 */
+            specDef: unknown[][];
             /** @description SKU列表 */
             skus: components["schemas"]["CreateSkuDto"][];
             /** @description 属性列表 */
@@ -9103,21 +10110,97 @@ export interface components {
              */
             publishStatus?: "OFF_SHELF" | "ON_SHELF";
         };
-        AttributeItemDto: {
-            attrId?: number;
-            name: string;
-            /** @enum {string} */
-            usageType: "PARAM" | "SPEC";
-            /** @enum {number} */
-            applyType: 0 | 1 | 2;
-            /** @enum {number} */
-            inputType: 0 | 1;
-            inputList?: string;
-            sort: number;
+        UpdateProductDto: {
+            /** @description 分类ID */
+            categoryId?: number;
+            /** @description 品牌ID */
+            brandId?: number;
+            /** @description 商品名称 */
+            name?: string;
+            /** @description 副标题 */
+            subTitle?: string;
+            /** @description 商品主图列表 */
+            mainImages?: string[];
+            /** @description 详情页HTML */
+            detailHtml?: string;
+            /**
+             * @description 商品类型
+             * @enum {string}
+             */
+            type?: "REAL" | "SERVICE";
+            /** @description 重量(g) */
+            weight?: number;
+            /** @description 是否包邮 */
+            isFreeShip?: boolean;
+            /** @description 服务时长(分钟) */
+            serviceDuration?: number;
+            /** @description 服务半径(km) */
+            serviceRadius?: number;
+            /** @description 规格定义 */
+            specDef?: unknown[][];
+            /** @description SKU列表 */
+            skus?: components["schemas"]["CreateSkuDto"][];
+            /** @description 属性列表 */
+            attrs?: components["schemas"]["CreateAttrValueDto"][];
+            /**
+             * @description 上架状态
+             * @enum {string}
+             */
+            publishStatus?: "OFF_SHELF" | "ON_SHELF";
         };
-        CreateTemplateDto: {
+        UpdateProductStatusDto: {
+            /**
+             * @description 发布状态
+             * @enum {string}
+             */
+            publishStatus: "OFF_SHELF" | "ON_SHELF";
+        };
+        CreateTemplateDto: Record<string, never>;
+        CategoryVo: {
+            /**
+             * @description 分类ID
+             * @example 1
+             */
+            catId: number;
+            /**
+             * @description 父级分类ID
+             * @example 0
+             */
+            parentId: number;
+            /**
+             * @description 分类名称
+             * @example 电子产品
+             */
             name: string;
-            attributes: components["schemas"]["AttributeItemDto"][];
+            /**
+             * @description 分类图标
+             * @example icon-electronics
+             */
+            icon: string;
+            /**
+             * @description 排序
+             * @example 0
+             */
+            sort: number;
+            /**
+             * @description 属性模板ID
+             * @example 1
+             */
+            attrTemplateId: number;
+            /**
+             * Format: date-time
+             * @description 创建时间
+             * @example 2024-01-01T00:00:00.000Z
+             */
+            createTime: string;
+            /**
+             * Format: date-time
+             * @description 更新时间
+             * @example 2024-01-01T00:00:00.000Z
+             */
+            updateTime: string;
+            /** @description 子分类列表 */
+            children?: components["schemas"]["CategoryVo"][];
         };
         CreateCategoryDto: {
             /**
@@ -9177,6 +10260,40 @@ export interface components {
              */
             attrTemplateId?: number;
         };
+        BrandVo: {
+            /**
+             * @description 品牌ID
+             * @example 1
+             */
+            brandId: number;
+            /**
+             * @description 品牌名称
+             * @example 苹果
+             */
+            name: string;
+            /**
+             * @description 品牌Logo
+             * @example https://example.com/logo.png
+             */
+            logo: string;
+            /**
+             * @description 排序
+             * @example 0
+             */
+            sort: number;
+            /**
+             * Format: date-time
+             * @description 创建时间
+             * @example 2024-01-01T00:00:00.000Z
+             */
+            createTime: string;
+            /**
+             * Format: date-time
+             * @description 更新时间
+             * @example 2024-01-01T00:00:00.000Z
+             */
+            updateTime: string;
+        };
         CreateBrandDto: {
             /**
              * @description 品牌名称
@@ -9212,6 +10329,277 @@ export interface components {
              * @example 0
              */
             sort: number;
+        };
+        MarketProductVo: {
+            /** @description 商品ID */
+            productId: string;
+            /** @description 商品名称 */
+            name: string;
+            /** @description 商品主图 */
+            albumPics: string;
+            /**
+             * @description 商品类型
+             * @enum {string}
+             */
+            type: "REAL" | "SERVICE";
+            /**
+             * @deprecated
+             * @description 是否有SKU
+             */
+            hasSku: boolean;
+            /** @description 价格(起) */
+            price: number;
+            /** @description 是否已引入 */
+            isImported: boolean;
+        };
+        ListMarketProductDto: {
+            /**
+             * @description 页码
+             * @default 1
+             */
+            pageNum: number;
+            /**
+             * @description 每页条数
+             * @default 10
+             */
+            pageSize: number;
+            /** @description 排序字段 */
+            orderByColumn?: string;
+            /**
+             * @description 排序方向
+             * @enum {string}
+             */
+            isAsc?: "asc" | "desc";
+            /** @description 时间范围 */
+            params?: components["schemas"]["DateRangeDto"];
+            /** @description 商品名称 */
+            name?: string;
+            /** @description 分类ID */
+            categoryId?: number;
+            /**
+             * @description 商品类型
+             * @enum {string}
+             */
+            type?: "REAL" | "SERVICE";
+        };
+        GlobalSkuVo: {
+            /** @description 全局SKU ID */
+            skuId: string;
+            /** @description 关联产品ID */
+            productId: string;
+            /**
+             * @description 规格值JSON
+             * @example {
+             *       "颜色": "红色",
+             *       "尺寸": "XL"
+             *     }
+             */
+            specValues: {
+                [key: string]: string;
+            };
+            /** @description 图片 */
+            skuImage: string;
+            /** @description 指导价格 */
+            guidePrice: number;
+            /** @description 指导分销比例 */
+            guideRate: number;
+            /** @description 分销模式 */
+            distMode: string;
+            /** @description 成本价 */
+            costPrice: number;
+        };
+        MarketProductDetailVo: {
+            /** @description 商品ID */
+            productId: string;
+            /** @description 商品名称 */
+            name: string;
+            /** @description 商品主图 */
+            albumPics: string;
+            /**
+             * @description 商品类型
+             * @enum {string}
+             */
+            type: "REAL" | "SERVICE";
+            /**
+             * @deprecated
+             * @description 是否有SKU
+             */
+            hasSku: boolean;
+            /** @description 价格(起) */
+            price: number;
+            /** @description 是否已引入 */
+            isImported: boolean;
+            /** @description 全局SKU列表 */
+            globalSkus: components["schemas"]["GlobalSkuVo"][];
+            /** @description 服务半径 */
+            serviceRadius: number;
+        };
+        ImportSkuDto: {
+            /** @description Global SKU ID */
+            globalSkuId: string;
+            /** @description Store Sale Price */
+            price: number;
+            /** @description Stock or Daily Capacity */
+            stock: number;
+            /** @description Distribution Rate */
+            distRate?: number;
+            /**
+             * @description Distribution Mode
+             * @enum {string}
+             */
+            distMode?: "RATIO" | "FIXED" | "NONE";
+        };
+        ImportProductDto: {
+            /** @description Global Product ID */
+            productId: string;
+            /** @description Override Service Radius (Meters) */
+            overrideRadius?: number;
+            /** @description SKU Configurations */
+            skus: components["schemas"]["ImportSkuDto"][];
+        };
+        BatchImportProductDto: {
+            /** @description 批量导入商品列表 */
+            items: components["schemas"]["ImportProductDto"][];
+        };
+        StoreSkuVo: {
+            /** @description 店铺SKU ID */
+            id: string;
+            /** @description 售价 */
+            price: number;
+            /** @description 库存/日接单量 */
+            stock: number;
+            /**
+             * @description 分佣模式
+             * @enum {string}
+             */
+            distMode: "RATIO" | "FIXED" | "NONE";
+            /** @description 分佣比例/金额 */
+            distRate: number;
+            /** @description 是否有效 */
+            isActive: boolean;
+            /**
+             * @description 规格值
+             * @example {
+             *       "颜色": "红色",
+             *       "尺寸": "XL"
+             *     }
+             */
+            specValues: {
+                [key: string]: string;
+            };
+            /** @description 成本价 */
+            costPrice: number;
+            /** @description 总部指导价 */
+            guidePrice: number;
+        };
+        StoreProductVo: {
+            /** @description 店铺商品ID */
+            id: string;
+            /** @description 商品ID(全局) */
+            productId: string;
+            /** @description 商品名称(关联) */
+            name: string;
+            /** @description 商品图片(关联) */
+            albumPics: string;
+            /**
+             * @description 产品类型
+             * @enum {string}
+             */
+            type: "REAL" | "SERVICE";
+            /**
+             * @description 上架状态
+             * @enum {string}
+             */
+            status: "OFF_SHELF" | "ON_SHELF";
+            /** @description 是否热销 */
+            isHot: boolean;
+            /** @description 售价(起) */
+            price: number;
+            /** @description 自定义标题 */
+            customTitle: string;
+            /** @description 覆盖服务半径 */
+            overrideRadius: number;
+            /** @description SKU列表 */
+            skus: components["schemas"]["StoreSkuVo"][];
+        };
+        ListStoreProductDto: {
+            /**
+             * @description 页码
+             * @default 1
+             */
+            pageNum: number;
+            /**
+             * @description 每页条数
+             * @default 10
+             */
+            pageSize: number;
+            /** @description 排序字段 */
+            orderByColumn?: string;
+            /**
+             * @description 排序方向
+             * @enum {string}
+             */
+            isAsc?: "asc" | "desc";
+            /** @description 时间范围 */
+            params?: components["schemas"]["DateRangeDto"];
+            /** @description 商品名称/自定义标题 */
+            name?: string;
+            /**
+             * @description 商品类型
+             * @enum {string}
+             */
+            type?: "REAL" | "SERVICE";
+            /**
+             * @description 上架状态
+             * @enum {string}
+             */
+            status?: "OFF_SHELF" | "ON_SHELF";
+            /** @description 指定门店ID(仅HQ可用) */
+            storeId?: string;
+        };
+        UpdateProductPriceDto: {
+            /** @description 店铺SKU ID */
+            tenantSkuId: string;
+            /** @description 售价 */
+            price: number;
+            /** @description 库存/日接单量 */
+            stock: number;
+            /** @description 分销费率/金额 */
+            distRate: number;
+            /**
+             * @description 分销模式
+             * @enum {string}
+             */
+            distMode?: "RATIO" | "FIXED" | "NONE";
+            /** @description 积分获得比例（0-100，默认100表示正常获得积分） */
+            pointsRatio?: number;
+            /** @description 是否营销活动商品 */
+            isPromotionProduct?: boolean;
+        };
+        BatchUpdateProductPriceDto: {
+            /** @description 批量调价列表 */
+            items: components["schemas"]["UpdateProductPriceDto"][];
+        };
+        UpdateProductBaseDto: {
+            /** @description 店铺商品ID (SPU ID) */
+            id: string;
+            /**
+             * @description 上架状态
+             * @enum {string}
+             */
+            status: "OFF_SHELF" | "ON_SHELF";
+            /** @description 门店自定义标题 */
+            customTitle?: string;
+            /** @description 服务半径 */
+            overrideRadius?: number;
+        };
+        RemoveProductDto: {
+            /** @description 店铺商品ID */
+            id: string;
+        };
+        StockAlertConfigDto: {
+            /** @description 低库存阈值，库存低于此值时触发预警 */
+            threshold: number;
         };
         ValidateRuleDto: Record<string, never>;
         CouponTemplateListVo: {
@@ -9571,10 +10959,7 @@ export interface components {
             limitPerUser: number;
         };
         ManualDistributionDto: {
-            /**
-             * Format: uuid
-             * @description 优惠券模板ID
-             */
+            /** @description 优惠券模板ID */
             templateId: string;
             /** @description 用户ID列表 */
             memberIds: string[];
@@ -9601,19 +10986,19 @@ export interface components {
              * @description 完成条件（JSON格式）
              * @example {}
              */
-            completionCondition?: Record<string, never>;
+            completionCondition: Record<string, never>;
             /**
              * @description 是否可重复完成
              * @example false
              */
-            isRepeatable?: boolean;
+            isRepeatable: boolean;
             /** @description 最多完成次数 */
             maxCompletions?: number;
             /**
              * @description 是否启用
              * @example true
              */
-            isEnabled?: boolean;
+            isEnabled: boolean;
         };
         UpdatePointsTaskDto: {
             /** @description 任务名称 */
@@ -9630,14 +11015,6 @@ export interface components {
             maxCompletions?: number;
             /** @description 是否启用 */
             isEnabled?: boolean;
-        };
-        CalculateDiscountDto: {
-            /** @description 订单商品列表 */
-            items: components["schemas"]["OrderItemDto"][];
-            /** @description 用户优惠券ID */
-            userCouponId?: string;
-            /** @description 使用积分数量 */
-            pointsUsed?: number;
         };
         CreateAddressDto: {
             /** @description 收货人姓名 */
@@ -9698,7 +11075,7 @@ export interface components {
             /** @description 商品图片 */
             productImg: string;
             /** @description 规格数据 */
-            specData: Record<string, never> | null;
+            specData: Record<string, never>;
             /** @description 加购时价格 */
             addPrice: components["schemas"]["i"];
             /** @description 当前价格 */
@@ -9794,9 +11171,9 @@ export interface components {
              */
             method: string;
             /** @description 真实姓名(选填) */
-            realName?: string;
+            realName: string;
             /** @description 账号(选填) */
-            accountNo?: string;
+            accountNo: string;
         };
         ApplyUpgradeDto: {
             /** @description 目标等级: 1=C1团长, 2=C2股东 */
@@ -9815,8 +11192,16 @@ export interface components {
             skuCode: string;
             /** @description 当前库存 */
             stock: number;
-            /** @description 规格信息 */
-            specs: Record<string, never>;
+            /**
+             * @description 规格信息
+             * @example {
+             *       "颜色": "红色",
+             *       "尺寸": "XL"
+             *     }
+             */
+            specs: {
+                [key: string]: string;
+            };
         };
         ListStockDto: {
             /**
@@ -9844,349 +11229,22 @@ export interface components {
         UpdateStockDto: {
             /** @description SKU ID */
             skuId: string;
-            /** @description 库存变动值 */
+            /** @description 库存变动值（正数增加，负数减少） */
             stockChange: number;
+            /** @description 变动原因（如：进货补货、盘点调整、损耗报废） */
+            reason?: string;
         };
-        MarketProductVo: {
-            /** @description 商品ID */
-            productId: string;
-            /** @description 商品名称 */
-            name: string;
-            /** @description 商品主图 */
-            albumPics: string;
-            /**
-             * @description 商品类型
-             * @enum {string}
-             */
-            type: "REAL" | "SERVICE";
-            /**
-             * @deprecated
-             * @description 是否有SKU
-             */
-            hasSku: boolean;
-            /** @description 价格(起) */
-            price: number;
-            /** @description 是否已引入 */
-            isImported: boolean;
-        };
-        ListMarketProductDto: {
-            /**
-             * @description 页码
-             * @default 1
-             */
-            pageNum: number;
-            /**
-             * @description 每页条数
-             * @default 10
-             */
-            pageSize: number;
-            /** @description 排序字段 */
-            orderByColumn?: string;
-            /**
-             * @description 排序方向
-             * @enum {string}
-             */
-            isAsc?: "asc" | "desc";
-            /** @description 时间范围 */
-            params?: components["schemas"]["DateRangeDto"];
-            /** @description 商品名称 */
-            name?: string;
-            /** @description 分类ID */
-            categoryId?: number;
-            /**
-             * @description 商品类型
-             * @enum {string}
-             */
-            type?: "REAL" | "SERVICE";
-        };
-        GlobalSkuVo: {
-            /** @description 全局SKU ID */
+        BatchUpdateStockItemDto: {
+            /** @description SKU ID */
             skuId: string;
-            /** @description 关联产品ID */
-            productId: string;
-            /** @description 规格值JSON */
-            specValues: Record<string, never>;
-            /** @description 图片 */
-            skuImage: string;
-            /** @description 指导价格 */
-            guidePrice: number;
-            /** @description 指导分销比例 */
-            guideRate: number;
-            /** @description 分销模式 */
-            distMode: Record<string, never>;
-            /** @description 成本价 */
-            costPrice: number;
+            /** @description 库存变动值（正数增加，负数减少） */
+            stockChange: number;
+            /** @description 变动原因 */
+            reason?: string;
         };
-        MarketProductDetailVo: {
-            /** @description 商品ID */
-            productId: string;
-            /** @description 商品名称 */
-            name: string;
-            /** @description 商品主图 */
-            albumPics: string;
-            /**
-             * @description 商品类型
-             * @enum {string}
-             */
-            type: "REAL" | "SERVICE";
-            /**
-             * @deprecated
-             * @description 是否有SKU
-             */
-            hasSku: boolean;
-            /** @description 价格(起) */
-            price: number;
-            /** @description 是否已引入 */
-            isImported: boolean;
-            /** @description 全局SKU列表 */
-            globalSkus: components["schemas"]["GlobalSkuVo"][];
-            /** @description 服务半径 */
-            serviceRadius?: number;
-        };
-        ImportSkuDto: {
-            /** @description Global SKU ID */
-            globalSkuId: string;
-            /** @description Store Sale Price */
-            price: number;
-            /** @description Stock or Daily Capacity */
-            stock: number;
-            /** @description Distribution Rate */
-            distRate?: number;
-            /**
-             * @description Distribution Mode
-             * @enum {string}
-             */
-            distMode?: "RATIO" | "FIXED" | "NONE";
-        };
-        ImportProductDto: {
-            /** @description Global Product ID */
-            productId: string;
-            /** @description Override Service Radius (Meters) */
-            overrideRadius?: number;
-            /** @description SKU Configurations */
-            skus: components["schemas"]["ImportSkuDto"][];
-        };
-        StoreSkuVo: {
-            /** @description 店铺SKU ID */
-            id: string;
-            /** @description 售价 */
-            price: number;
-            /** @description 库存/日接单量 */
-            stock: number;
-            /**
-             * @description 分佣模式
-             * @enum {string}
-             */
-            distMode: "RATIO" | "FIXED" | "NONE";
-            /** @description 分佣比例/金额 */
-            distRate: number;
-            /** @description 是否有效 */
-            isActive: boolean;
-            /** @description 规格值 */
-            specValues: {
-                [key: string]: unknown;
-            };
-            /** @description 成本价 */
-            costPrice: number;
-            /** @description 总部指导价 */
-            guidePrice: number;
-        };
-        StoreProductVo: {
-            /** @description 店铺商品ID */
-            id: string;
-            /** @description 商品ID(全局) */
-            productId: string;
-            /** @description 商品名称(关联) */
-            name: string;
-            /** @description 商品图片(关联) */
-            albumPics: string;
-            /**
-             * @description 产品类型
-             * @enum {string}
-             */
-            type: "REAL" | "SERVICE";
-            /**
-             * @description 上架状态
-             * @enum {string}
-             */
-            status: "OFF_SHELF" | "ON_SHELF";
-            /** @description 是否热销 */
-            isHot: boolean;
-            /** @description 售价(起) */
-            price: number;
-            /** @description 自定义标题 */
-            customTitle?: string;
-            /** @description 覆盖服务半径 */
-            overrideRadius?: number;
-            /** @description SKU列表 */
-            skus: components["schemas"]["StoreSkuVo"][];
-        };
-        ListStoreProductDto: {
-            /**
-             * @description 页码
-             * @default 1
-             */
-            pageNum: number;
-            /**
-             * @description 每页条数
-             * @default 10
-             */
-            pageSize: number;
-            /** @description 排序字段 */
-            orderByColumn?: string;
-            /**
-             * @description 排序方向
-             * @enum {string}
-             */
-            isAsc?: "asc" | "desc";
-            /** @description 时间范围 */
-            params?: components["schemas"]["DateRangeDto"];
-            /** @description 商品名称/自定义标题 */
-            name?: string;
-            /**
-             * @description 商品类型
-             * @enum {string}
-             */
-            type?: "REAL" | "SERVICE";
-            /**
-             * @description 上架状态
-             * @enum {string}
-             */
-            status?: "OFF_SHELF" | "ON_SHELF";
-            /** @description 指定门店ID(仅HQ可用) */
-            storeId?: string;
-        };
-        UpdateProductPriceDto: {
-            /** @description 店铺SKU ID */
-            tenantSkuId: string;
-            /** @description 售价 */
-            price: number;
-            /** @description 库存/日接单量 */
-            stock: number;
-            /** @description 分销费率/金额 */
-            distRate: number;
-            /**
-             * @description 分销模式
-             * @enum {string}
-             */
-            distMode?: "RATIO" | "FIXED" | "NONE";
-            /** @description 积分获得比例（0-100，默认100表示正常获得积分） */
-            pointsRatio?: number;
-            /** @description 是否营销活动商品 */
-            isPromotionProduct?: boolean;
-        };
-        UpdateProductBaseDto: {
-            /** @description 店铺商品ID (SPU ID) */
-            id: string;
-            /**
-             * @description 上架状态
-             * @enum {string}
-             */
-            status: "OFF_SHELF" | "ON_SHELF";
-            /** @description 门店自定义标题 */
-            customTitle?: string;
-            /** @description 服务半径 */
-            overrideRadius?: number;
-        };
-        DistConfigVo: {
-            /** @description 配置ID */
-            id: number;
-            /** @description 一级分佣比例 (0-100) */
-            level1Rate: number;
-            /** @description 二级分佣比例 (0-100) */
-            level2Rate: number;
-            /** @description 是否允许普通用户分销 */
-            enableLV0: boolean;
-            /** @description 是否允许外店推荐人获取佣金 */
-            enableCrossTenant: boolean;
-            /** @description 跨店分佣折扣 (0-100) */
-            crossTenantRate: number;
-            /** @description 跨店佣金日限额 (元) */
-            crossMaxDaily: number;
-            /** @description 分佣基数类型 */
-            commissionBaseType?: string;
-            /** @description 熔断保护比例 (0-100) */
-            maxCommissionRate?: number;
-            /** @description 创建时间 */
-            createTime: string;
-        };
-        UpdateDistConfigDto: {
-            /**
-             * @description 一级分佣比例 (0-100)
-             * @example 60
-             */
-            level1Rate: number;
-            /**
-             * @description 二级分佣比例 (0-100)
-             * @example 40
-             */
-            level2Rate: number;
-            /**
-             * @description 是否允许普通用户分销
-             * @example true
-             */
-            enableLV0: boolean;
-            /**
-             * @description 是否允许外店推荐人获取佣金
-             * @example false
-             */
-            enableCrossTenant?: boolean;
-            /**
-             * @description 跨店分佣折扣 (0-100, 100=不打折)
-             * @example 80
-             */
-            crossTenantRate?: number;
-            /**
-             * @description 跨店佣金日限额 (元)
-             * @example 500
-             */
-            crossMaxDaily?: number;
-            /**
-             * @description 分佣基数类型
-             * @enum {string}
-             */
-            commissionBaseType?: "ORIGINAL_PRICE" | "ACTUAL_PAID" | "ZERO";
-            /**
-             * @description 熔断保护比例 (0-100，如50表示50%)
-             * @example 50
-             */
-            maxCommissionRate?: number;
-        };
-        DistConfigLogVo: {
-            /** @description 日志ID */
-            id: number;
-            /** @description 配置ID */
-            configId: number;
-            /** @description 一级分佣比例 (0-100) */
-            level1Rate: number;
-            /** @description 二级分佣比例 (0-100) */
-            level2Rate: number;
-            /** @description 是否允许普通用户分销 */
-            enableLV0: boolean;
-            /** @description 是否允许外店推荐人获取佣金 */
-            enableCrossTenant?: boolean;
-            /** @description 跨店分佣折扣 (0-100) */
-            crossTenantRate?: number;
-            /** @description 跨店佣金日限额 (元) */
-            crossMaxDaily?: number;
-            /** @description 操作人 */
-            operator: string;
-            /** @description 创建时间 */
-            createTime: string;
-        };
-        CommissionPreviewVo: {
-            /** @description 门店名称 */
-            tenantName: string;
-            /** @description 佣金比例 */
-            commissionRate: string;
-            /** @description 是否本店推荐人 */
-            isLocalReferrer: boolean;
-            /** @description 门店是否开启跨店分销 */
-            isCrossEnabled: boolean;
-            /** @description 预估佣金金额 */
-            estimatedAmount: number;
-            /** @description 提示文案 (跨店时显示) */
-            notice?: string;
+        BatchUpdateStockDto: {
+            /** @description 库存调整项列表 */
+            items: components["schemas"]["BatchUpdateStockItemDto"][];
         };
         ReassignWorkerDto: {
             /** @description 订单ID */
@@ -10198,6 +11256,38 @@ export interface components {
             /** @description 订单ID */
             orderId: string;
             /** @description 核销备注 */
+            remark?: string;
+        };
+        RefundOrderDto: {
+            /** @description 订单ID */
+            orderId: string;
+            /** @description 退款原因 */
+            remark?: string;
+        };
+        PartialRefundItemDto: {
+            /** @description 订单项ID */
+            itemId: number;
+            /** @description 退款数量 */
+            quantity: number;
+        };
+        PartialRefundOrderDto: {
+            /** @description 订单ID */
+            orderId: string;
+            /** @description 退款订单项列表 */
+            items: components["schemas"]["PartialRefundItemDto"][];
+            /** @description 退款原因 */
+            remark?: string;
+        };
+        BatchVerifyDto: {
+            /** @description 订单ID列表 */
+            orderIds: string[];
+            /** @description 核销备注 */
+            remark?: string;
+        };
+        BatchRefundDto: {
+            /** @description 订单ID列表 */
+            orderIds: string[];
+            /** @description 退款原因 */
             remark?: string;
         };
         AuditWithdrawalDto: {
@@ -10253,6 +11343,242 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    TenantAuditController_findPage: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 用户ID */
+                userId?: string;
+                /** @description 用户名 */
+                userName?: string;
+                /** @description 请求租户ID */
+                requestTenantId?: string;
+                /** @description 访问租户ID */
+                accessTenantId?: string;
+                /** @description 模型名称 */
+                modelName?: string;
+                /** @description 操作类型 */
+                operation?: string;
+                /** @description 是否跨租户访问 */
+                isCrossTenant?: boolean;
+                /** @description 是否超级管理员 */
+                isSuperTenant?: boolean;
+                /** @description 是否忽略租户 */
+                isIgnoreTenant?: boolean;
+                /** @description 开始时间 */
+                startTime?: string;
+                /** @description 结束时间 */
+                endTime?: string;
+                /** @description 状态 */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["TenantAuditVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    TenantAuditController_getCrossTenantStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["CrossTenantStatsVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    TenantAuditController_analyzeAnomalies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["AnomalyAccessVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
     MainController_login: {
         parameters: {
             query?: never;
@@ -11406,12 +12732,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -11928,12 +13248,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -13317,7 +14631,7 @@ export interface operations {
                 /** @description 字典类型 */
                 dictType?: string;
                 /** @description 状态（0正常 1停用） */
-                status?: components["schemas"]["Object"];
+                status?: string;
             };
             header?: never;
             path?: never;
@@ -13480,12 +14794,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -13559,12 +14867,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -13781,12 +15083,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -13840,7 +15136,7 @@ export interface operations {
                 /** @description 菜单名称 */
                 menuName?: string;
                 /** @description 菜单状态 */
-                status?: components["schemas"]["Object"];
+                status?: string;
                 /** @description 父菜单ID */
                 parentId?: number;
                 /** @description 菜单类型（M目录 C菜单 F按钮） */
@@ -14474,6 +15770,38 @@ export interface operations {
             };
         };
     };
+    NotificationController_list: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 渠道 */
+                channel?: string;
+                /** @description 状态 */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     NoticeController_update: {
         parameters: {
             query?: never;
@@ -14574,12 +15902,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -14954,12 +16276,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -15403,12 +16719,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -15556,12 +16866,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -16543,12 +17847,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -16697,12 +17995,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -16772,7 +18064,7 @@ export interface operations {
                 /** @description 企业名称 */
                 companyName?: string;
                 /** @description 状态(0正常 1停用) */
-                status?: components["schemas"]["Object"];
+                status?: string;
                 /** @description 开始时间 */
                 beginTime?: string;
                 /** @description 结束时间 */
@@ -17366,12 +18658,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -17615,12 +18901,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -17684,7 +18964,7 @@ export interface operations {
                 /** @description 套餐名称 */
                 packageName?: string;
                 /** @description 状态(0正常 1停用) */
-                status?: components["schemas"]["Object"];
+                status?: string;
             };
             header?: never;
             path?: never;
@@ -18061,12 +19341,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -18372,12 +19646,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -19106,12 +20374,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -19400,12 +20662,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -20216,12 +21472,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -20369,12 +21619,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -20752,12 +21996,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -20831,12 +22069,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -21053,12 +22285,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -21277,12 +22503,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -21721,12 +22941,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -21943,12 +23157,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -22084,7 +23292,7 @@ export interface operations {
                 /** @description 任务组名 */
                 jobGroup?: string;
                 /** @description 状态（0正常 1暂停） */
-                status?: components["schemas"]["Object"];
+                status?: string;
             };
             header?: never;
             path?: never;
@@ -22322,12 +23530,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -22616,12 +23818,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -22671,7 +23867,7 @@ export interface operations {
     };
     JobLogController_list: {
         parameters: {
-            query?: {
+            query: {
                 /** @description 页码 */
                 pageNum?: number;
                 /** @description 每页条数 */
@@ -22683,11 +23879,11 @@ export interface operations {
                 /** @description 时间范围 */
                 params?: components["schemas"]["DateRangeDto"];
                 /** @description 任务名称 */
-                jobName?: string;
+                jobName: string;
                 /** @description 任务组名 */
-                jobGroup?: string;
+                jobGroup: string;
                 /** @description 状态（0正常 1暂停） */
-                status?: components["schemas"]["Object"];
+                status: string;
             };
             header?: never;
             path?: never;
@@ -22852,12 +24048,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -23797,12 +24987,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -24351,12 +25535,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -24887,11 +26065,1767 @@ export interface operations {
                     };
                 };
             };
-            201: {
+            /** @description 未登录或登录已过期 */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["DistConfigVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_updateConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDistConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getConfigLogs: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["DistConfigLogVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getCommissionPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommissionPreviewDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["CommissionPreviewVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_createProductConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProductConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ProductConfigVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getProductConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ProductConfigVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_updateProductConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ProductConfigVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_deleteProductConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getProductConfigList: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 商品ID */
+                productId?: string;
+                /** @description 品类ID */
+                categoryId?: string;
+                /** @description 是否启用 */
+                isActive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ProductConfigVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_batchImportProductConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchImportProductConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getDashboard: {
+        parameters: {
+            query?: {
+                /** @description 开始日期 */
+                startDate?: string;
+                /** @description 结束日期 */
+                endDate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["DashboardVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_createLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLevelDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LevelVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LevelVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_updateLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLevelDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LevelVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_deleteLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getLevelList: {
+        parameters: {
+            query?: {
+                /** @description 是否激活 */
+                isActive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LevelVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_updateMemberLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemberLevelDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getMemberLevelLogs: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 会员ID */
+                memberId?: string;
+                /** @description 变更类型 */
+                changeType?: "UPGRADE" | "DOWNGRADE" | "MANUAL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["MemberLevelLogVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_checkLevelUpgrade: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LevelCheckVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_listApplications: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 状态 */
+                status?: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED" | "CANCELLED";
+                /** @description 会员ID */
+                memberId?: string;
+                /** @description 开始时间 */
+                startTime?: string;
+                /** @description 结束时间 */
+                endTime?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ApplicationVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_reviewApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewApplicationDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_batchReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchReviewDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_getReviewConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ReviewConfigVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DistributionController_updateReviewConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReviewConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -25406,9 +28340,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -25598,10 +28530,19 @@ export interface operations {
     };
     MemberController_getPointHistory: {
         parameters: {
-            query: {
-                pageNum: number;
-                pageSize: number;
-                memberId: string;
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 会员 ID */
+                memberId?: string;
             };
             header?: never;
             path?: never;
@@ -25609,12 +28550,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            rows?: components["schemas"]["PointHistoryVo"][];
+                            /** @default 0 */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
                 };
             };
         };
@@ -25626,79 +28619,70 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustMemberPointsDto"];
             };
         };
-    };
-    PointsAccountClientController_getBalance: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
             };
-        };
-    };
-    PointsAccountClientController_getTransactions: {
-        parameters: {
-            query?: {
-                /** @description 会员ID（管理端筛选） */
-                memberId?: string;
-                /** @description 交易类型 */
-                type?: "EARN_ORDER" | "EARN_SIGNIN" | "EARN_TASK" | "EARN_ADMIN" | "USE_ORDER" | "USE_COUPON" | "USE_PRODUCT" | "FREEZE" | "UNFREEZE" | "EXPIRE" | "REFUND" | "DEDUCT_ADMIN";
-                /** @description 开始时间 */
-                startTime?: string;
-                /** @description 结束时间 */
-                endTime?: string;
-                /** @description 页码 */
-                pageNum?: number;
-                /** @description 每页数量 */
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description 未登录或登录已过期 */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
-        };
-    };
-    PointsAccountClientController_getExpiringPoints: {
-        parameters: {
-            query: {
-                days: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description 无权限访问 */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -25933,12 +28917,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -26009,12 +28987,6 @@ export interface operations {
                         data?: components["schemas"]["LoginResultVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -26090,12 +29062,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -26167,12 +29133,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -26236,6 +29196,291 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    WorkerAuthController_checkLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckLoginDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LoginResultVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    WorkerAuthController_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LoginResultVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    WorkerAuthController_registerMobile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LoginResultVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    WorkerAuthController_logout: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -27044,12 +30289,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -27348,14 +30587,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -27645,12 +30876,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -27717,12 +30942,6 @@ export interface operations {
                         data?: components["schemas"]["CheckoutPreviewVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -27797,12 +31016,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -28021,12 +31234,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -28097,12 +31304,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -28147,6 +31348,27 @@ export interface operations {
                         data?: Record<string, never> | null;
                     };
                 };
+            };
+        };
+    };
+    OrderIntegrationController_calculateDiscount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalculateDiscountDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -28469,12 +31691,6 @@ export interface operations {
                         data?: components["schemas"]["PlayTemplateVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -28845,12 +32061,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -29067,12 +32277,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -29217,11 +32421,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ProductVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29236,11 +32490,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["ProductVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29255,15 +32559,140 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateProductDto"];
+                "application/json": components["schemas"]["UpdateProductDto"];
             };
         };
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PmsProductController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29280,11 +32709,140 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PmsProductController_updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductStatusDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29415,11 +32973,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["CategoryVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29447,11 +33055,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["CategoryVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29466,11 +33124,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["CategoryVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29489,11 +33197,64 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29508,11 +33269,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29529,11 +33343,64 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29559,11 +33426,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["BrandVo"][];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29578,11 +33495,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["BrandVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29601,11 +33568,64 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29620,11 +33640,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29641,11 +33714,863 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_getMarketList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListMarketProductDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["MarketProductVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_getMarketDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["MarketProductDetailVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_importProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportProductDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_batchImportProducts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchImportProductDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListStoreProductDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["StoreProductVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_updateProductPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductPriceDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_batchUpdateProductPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchUpdateProductPriceDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_updateProductBase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductBaseDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_removeProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveProductDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_getStockAlertConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreProductController_setStockAlertConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockAlertConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -29674,14 +34599,6 @@ export interface operations {
                             value: boolean;
                         } | null;
                     };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
                 };
             };
             /** @description 未登录或登录已过期 */
@@ -29910,12 +34827,6 @@ export interface operations {
                         data?: components["schemas"]["CouponTemplateVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -30277,160 +35188,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    CouponDistributionController_claimCoupon: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                templateId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    CouponDistributionController_getAvailableCoupons: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -30777,114 +35534,6 @@ export interface operations {
             };
         };
     };
-    CouponManagementController_getMyCoupons: {
-        parameters: {
-            query: {
-                status: string;
-                pageNum: number;
-                pageSize: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    PointsSigninController_signin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsSigninController_checkSigninStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     PointsTaskAdminController_findAll: {
         parameters: {
             query?: {
@@ -30960,62 +35609,6 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsTaskClientController_findAvailableTasks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsTaskClientController_completeTask: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taskKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsTaskClientController_getMyCompletions: {
-        parameters: {
-            query: {
-                pageNum: number;
-                pageSize: number;
-            };
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -31139,27 +35732,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    OrderIntegrationController_calculateDiscount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CalculateDiscountDto"];
-            };
-        };
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -31323,12 +35895,6 @@ export interface operations {
                         data?: components["schemas"]["CartItemVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -31760,12 +36326,6 @@ export interface operations {
                         data?: components["schemas"]["MatchTenantVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -32207,6 +36767,378 @@ export interface operations {
             };
         };
     };
+    ClientCouponController_claimCoupon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                templateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    ClientCouponController_getAvailableCoupons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    ClientCouponController_getMyCoupons: {
+        parameters: {
+            query: {
+                status: string;
+                pageNum: number;
+                pageSize: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    ClientPointsAccountController_getBalance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsAccountController_getTransactions: {
+        parameters: {
+            query?: {
+                /** @description 会员ID（管理端筛选） */
+                memberId?: string;
+                /** @description 交易类型 */
+                type?: "EARN_ORDER" | "EARN_SIGNIN" | "EARN_TASK" | "EARN_ADMIN" | "USE_ORDER" | "USE_COUPON" | "USE_PRODUCT" | "FREEZE" | "UNFREEZE" | "EXPIRE" | "REFUND" | "DEDUCT_ADMIN";
+                /** @description 开始时间 */
+                startTime?: string;
+                /** @description 结束时间 */
+                endTime?: string;
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页数量 */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsAccountController_getExpiringPoints: {
+        parameters: {
+            query: {
+                days: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsSigninController_signin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsSigninController_checkSigninStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsTaskController_findAvailableTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsTaskController_completeTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPointsTaskController_getMyCompletions: {
+        parameters: {
+            query: {
+                pageNum: number;
+                pageSize: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     StockController_getList: {
         parameters: {
             query?: never;
@@ -32230,12 +37162,6 @@ export interface operations {
                         data?: components["schemas"]["StockVo"];
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -32311,12 +37237,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -32364,7 +37284,7 @@ export interface operations {
             };
         };
     };
-    StoreProductController_getMarketList: {
+    StockController_batchUpdate: {
         parameters: {
             query?: never;
             header?: never;
@@ -32373,153 +37293,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ListMarketProductDto"];
-            };
-        };
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: components["schemas"]["MarketProductVo"];
-                    };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    StoreProductController_getMarketDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                productId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: components["schemas"]["MarketProductDetailVo"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    StoreProductController_importProduct: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportProductDto"];
+                "application/json": components["schemas"]["BatchUpdateStockDto"];
             };
         };
         responses: {
@@ -32537,12 +37311,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -32590,462 +37358,21 @@ export interface operations {
             };
         };
     };
-    StoreProductController_findAll: {
+    StockController_exportStock: {
         parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ListStoreProductDto"];
-            };
-        };
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: components["schemas"]["StoreProductVo"];
-                    };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    StoreProductController_updateProductPrice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProductPriceDto"];
-            };
-        };
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    StoreProductController_updateProductBase: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProductBaseDto"];
-            };
-        };
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    DistributionController_getConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: components["schemas"]["DistConfigVo"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    DistributionController_updateConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDistConfigDto"];
-            };
-        };
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    DistributionController_getConfigLogs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: components["schemas"]["DistConfigLogVo"][];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    DistributionController_getCommissionPreview: {
-        parameters: {
-            query: {
-                tenantId: string;
-                shareUserId: string;
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 商品名称 */
+                productName?: string;
             };
             header?: never;
             path?: never;
@@ -33060,7 +37387,10 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result"] & {
-                        data?: components["schemas"]["CommissionPreviewVo"];
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
                     };
                 };
             };
@@ -33392,12 +37722,6 @@ export interface operations {
                     };
                 };
             };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 未登录或登录已过期 */
             401: {
                 headers: {
@@ -33472,11 +37796,392 @@ export interface operations {
                     };
                 };
             };
-            201: {
+            /** @description 未登录或登录已过期 */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreOrderController_refundOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundOrderDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreOrderController_partialRefundOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartialRefundOrderDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreOrderController_exportOrders: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 订单号 */
+                orderSn?: string;
+                /** @description 收货人手机号 */
+                receiverPhone?: string;
+                /** @description 订单状态 */
+                status?: "PENDING_PAY" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED" | "REFUNDED";
+                /** @description 会员ID */
+                memberId?: string;
+                /** @description 订单类型 */
+                orderType?: "PRODUCT" | "SERVICE" | "MIXED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreOrderController_batchVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVerifyDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreOrderController_batchRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchRefundDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
             };
             /** @description 未登录或登录已过期 */
             401: {
@@ -33966,12 +38671,6 @@ export interface operations {
                         } | null;
                     };
                 };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description 未登录或登录已过期 */
             401: {

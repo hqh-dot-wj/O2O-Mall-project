@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, IsIn } from 'class-validator';
-import { PageQueryDto } from 'src/common/dto/page-query.dto';
+import { PageQueryDto } from 'src/common/dto/base.dto';
 
 export class ListNotificationDto extends PageQueryDto {
   @ApiProperty({ required: false, description: '渠道' })

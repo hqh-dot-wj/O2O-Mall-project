@@ -93,13 +93,14 @@ async function handleSubmit() {
       // ensure skus have numbers and remove read-only fields
       skus: formModel.skus.map(s => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { productId: _skuProductId, costPrice: _costPrice, ...validSkuData } = s;
+        const { productId: _skuProductId, ...validSkuData } = s;
         return {
           ...validSkuData,
           guidePrice: Number(validSkuData.guidePrice),
           guideRate: Number(validSkuData.guideRate),
           minDistRate: Number(validSkuData.minDistRate || 0),
-          maxDistRate: Number(validSkuData.maxDistRate || 50)
+          maxDistRate: Number(validSkuData.maxDistRate || 50),
+          costPrice: Number(validSkuData.costPrice || 0)
         };
       })
     } as any;

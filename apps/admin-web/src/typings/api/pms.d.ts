@@ -1,86 +1,30 @@
 declare namespace Api {
   namespace Pms {
-    type DistributionMode = 'RATIO' | 'FIXED' | 'NONE';
-    type ProductType = 'REAL' | 'SERVICE';
-    type PublishStatus = 'OFF_SHELF' | 'ON_SHELF';
+    type DistributionMode = import('@libs/common-types').components['schemas']['CreateSkuDto']['distMode'];
+    type ProductType = import('@libs/common-types').components['schemas']['CreateProductDto']['type'];
+    type PublishStatus = NonNullable<
+      import('@libs/common-types').components['schemas']['CreateProductDto']['publishStatus']
+    >;
 
-    type Product = Common.CommonRecord<{
-      productId: string;
-      name: string;
-      subTitle?: string;
-      categoryId: number;
-      brandId?: number;
-      albumPics?: string;
-      description?: string;
-      publishStatus: PublishStatus;
-      price: number;
-      detailHtml: string;
-      globalSkus: GlobalSku[];
-    }>;
+    /** Product Vo from backend */
+    type Product = import('@libs/common-types').components['schemas']['ProductVo'];
 
-    interface GlobalSku {
-      skuId: string;
-      productId: string;
-      skuCode?: string;
-      price?: number;
-      stock?: number;
-      pic?: string;
-      specValues: any;
-      guidePrice: number; // 零售指导价
-      guideRate: number; // 指导费率
-      minDistRate: number; // 最低比例
-      maxDistRate: number; // 最高比例
-      distMode: DistributionMode;
-      costPrice: number; // 成本价
-    }
-
-    interface ProductOperateParams {
-      productId?: string;
-      // Common
-      name: string;
-      categoryId: number;
-      brandId?: number;
-      subTitle?: string;
-      description?: string; // minimal desc
-      detailHtml?: string; // rich text
-      pic?: string; // main pic
-      albumPics?: string[]; // strings
-      publishStatus?: PublishStatus;
-      sort?: number;
-
-      // Type
-      type: 'REAL' | 'SERVICE';
-
-      // Real fields
-      weight?: number;
-      isFreeShip?: boolean;
-
-      // Service fields
-      serviceDuration?: number;
-      serviceRadius?: number;
-
-      // Complex
-      specDef?: any[]; // Array<{ name: string; values: string[] }>
-      skus: GlobalSkuOperate[];
-      attrs?: { attrId: number; value: string }[];
-    }
-
-    interface GlobalSkuOperate {
-      specValues: any;
-      guidePrice: number;
-      guideRate: number;
-      minDistRate: number;
-      maxDistRate: number;
-      distMode: DistributionMode;
-      stock?: number;
-      skuImage?: string;
-      skuCode?: string;
-      pic?: string;
-      costPrice?: number;
-      // Read-only fields (returned from backend in edit mode, but filtered out on submit)
+    /** Sku Vo from backend or SKU create/edit object */
+    type GlobalSku = import('@libs/common-types').components['schemas']['CreateSkuDto'] & {
       skuId?: string;
       productId?: string;
-    }
+    };
+
+    /** Create/Update Product Dto */
+    type ProductOperateParams = import('@libs/common-types').components['schemas']['CreateProductDto'] & {
+      productId?: string;
+    };
+
+    /** SKU Operate object used in frontend forms */
+    type GlobalSkuOperate = import('@libs/common-types').components['schemas']['CreateSkuDto'] & {
+      skuId?: string;
+      productId?: string;
+    };
 
     type ProductList = Common.PaginatingQueryRecord<Product>;
 

@@ -140,10 +140,10 @@ export interface CountResult {
 }
 
 /**
- * 订单列表项类型
+ * 订单列表项类型（Finance 模块）
  * 用于订单列表查询结果
  */
-export interface OrderListItem {
+export interface FinanceOrderListItem {
   /** 订单ID */
   id: string;
   /** 订单号 */

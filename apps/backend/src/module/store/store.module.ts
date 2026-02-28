@@ -4,8 +4,6 @@ import { StoreProductModule } from './product/product.module';
 import { DistributionModule } from './distribution/distribution.module';
 import { StoreOrderModule } from './order/store-order.module';
 import { StoreFinanceModule } from './finance/store-finance.module';
-import { BullModule } from '@nestjs/bull';
-import { PRODUCT_SYNC_QUEUE, ProductSyncProducer, ProductSyncConsumer } from './product/product-sync.queue';
 
 @Module({
   imports: [
@@ -14,12 +12,9 @@ import { PRODUCT_SYNC_QUEUE, ProductSyncProducer, ProductSyncConsumer } from './
     DistributionModule,
     StoreOrderModule,
     StoreFinanceModule,
-    BullModule.registerQueue({
-      name: PRODUCT_SYNC_QUEUE,
-    }),
   ],
   controllers: [],
-  providers: [ProductSyncProducer, ProductSyncConsumer],
+  providers: [],
   exports: [],
 })
 export class StoreModule {}

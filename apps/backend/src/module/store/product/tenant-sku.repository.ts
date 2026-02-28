@@ -80,6 +80,13 @@ export class TenantSkuRepository extends BaseRepository<
   }
 
   /**
+   * Upsert 租户 SKU（按 tenantProductId+globalSkuId 唯一约束）
+   */
+  async upsert(args: Prisma.PmsTenantSkuUpsertArgs) {
+    return (this.delegate as Prisma.PmsTenantSkuDelegate).upsert(args);
+  }
+
+  /**
    * 根据全局SKU ID查询租户SKU
    *
    * @description
@@ -117,6 +124,12 @@ export class TenantSkuRepository extends BaseRepository<
     });
   }
 
+  /** 库存列表查询返回类型（含 globalSku、tenantProd 关联） */
+  private static readonly STOCK_LIST_INCLUDE = {
+    globalSku: true,
+    tenantProd: { include: { product: true } },
+  } as const;
+
   /**
    * 库存列表分页查询(按租户、商品名称)
    *
@@ -127,7 +140,14 @@ export class TenantSkuRepository extends BaseRepository<
   async findStockList(
     tenantId: string,
     options: { skip: number; take: number; productName?: string },
-  ): Promise<[PmsTenantSku[], number]> {
+  ): Promise<
+    [
+      Prisma.PmsTenantSkuGetPayload<{
+        include: typeof TenantSkuRepository.STOCK_LIST_INCLUDE;
+      }>[],
+      number,
+    ]
+  > {
     const where: Prisma.PmsTenantSkuWhereInput = {
       tenantProd: {
         tenantId,
@@ -139,10 +159,7 @@ export class TenantSkuRepository extends BaseRepository<
         where,
         skip: options.skip,
         take: options.take,
-        include: {
-          tenantProd: { include: { product: true } },
-          globalSku: true,
-        },
+        include: TenantSkuRepository.STOCK_LIST_INCLUDE,
       }),
       this.delegate.count({ where }),
     ]);

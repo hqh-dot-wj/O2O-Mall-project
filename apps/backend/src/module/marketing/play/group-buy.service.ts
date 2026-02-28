@@ -124,20 +124,6 @@ export class GroupBuyService implements IMarketingStrategy {
   }
 
   /**
-   * 5. 前端展示增强数据
-   */
-  async getDisplayData(config: StorePlayConfig): Promise<any> {
-    const rules = config.rules as any;
-    return {
-      price: rules.price,
-      minCount: rules.minCount || 2,
-      maxCount: rules.maxCount,
-      validDays: rules.validDays || 24,
-      skus: rules.skus || [],
-    };
-  }
-
-  /**
    * @deprecated Legacy method, kept for reference or internal use
    */
   async joinGroup(memberId: string, configId: string, groupId?: string): Promise<Record<string, unknown> | null> {

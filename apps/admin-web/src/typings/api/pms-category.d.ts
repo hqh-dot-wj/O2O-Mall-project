@@ -1,37 +1,17 @@
 declare namespace Api {
   namespace Pms {
-    type Category = Common.CommonRecord<{
-      catId: number;
-      parentId?: number | null;
-      name: string;
-      level: number;
-      icon?: string;
-      sort: number;
-      children?: Category[];
-      bindType: 'REAL' | 'SERVICE' | null;
-      attrTemplateId?: number | null;
-      attrTemplate?: { name: string };
-    }>;
+    type Category = import('@libs/common-types').components['schemas']['CategoryVo'];
 
     type CategoryTree = Category[];
 
     type CategoryList = Common.PaginatingQueryRecord<Category>;
 
-    interface CategorySearchParams extends Common.CommonSearchParams {
-      name?: string | null;
-      parentId?: number | null;
-      deptId?: string | null;
-    }
+    type CategorySearchParams = CommonType.RecordNullable<
+      Pick<Category, 'name' | 'parentId'> & Api.Common.CommonSearchParams
+    >;
 
-    interface CategoryOperateParams {
+    type CategoryOperateParams = import('@libs/common-types').components['schemas']['CreateCategoryDto'] & {
       catId?: number;
-      parentId?: number | null;
-      name: string;
-      level: number;
-      icon?: string;
-      sort: number;
-      bindType?: 'REAL' | 'SERVICE' | null;
-      attrTemplateId?: number | null;
-    }
+    };
   }
 }

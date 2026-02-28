@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Status } from '@prisma/client';
 import { LevelService } from '../services/level.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -27,7 +28,7 @@ export class LevelScheduler {
     try {
       // 查询所有租户
       const tenants = await this.prisma.sysTenant.findMany({
-        where: { status: '0' }, // 只处理正常状态的租户
+        where: { status: Status.NORMAL },
         select: { tenantId: true, companyName: true },
       });
 
@@ -73,7 +74,7 @@ export class LevelScheduler {
     try {
       // 查询所有租户
       const tenants = await this.prisma.sysTenant.findMany({
-        where: { status: '0' },
+        where: { status: Status.NORMAL },
         select: { tenantId: true, companyName: true },
       });
 
@@ -116,7 +117,7 @@ export class LevelScheduler {
     try {
       // 查询所有租户
       const tenants = await this.prisma.sysTenant.findMany({
-        where: { status: '0' },
+        where: { status: Status.NORMAL },
         select: { tenantId: true },
       });
 

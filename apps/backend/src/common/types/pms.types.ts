@@ -5,6 +5,9 @@
  */
 
 import { Decimal } from '@prisma/client/runtime/library';
+import type { SpecValues } from './product.types';
+
+export type { SpecValues };
 
 /**
  * SKU 创建输入
@@ -33,13 +36,6 @@ export interface SkuUpdateInput {
   barcode?: string;
   weight?: number;
   volume?: number;
-}
-
-/**
- * 规格值映射
- */
-export interface SpecValues {
-  [key: string]: string | number | boolean;
 }
 
 /**

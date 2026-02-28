@@ -46,26 +46,10 @@ export class CommissionCalculatorService {
    */
   @Transactional({ isolationLevel: IsolationLevel.RepeatableRead })
   async calculateCommission(orderId: string, tenantId: string) {
-    // 1. 获取订单详情（包含商品信息）
+    // 1. 获取订单详情（包含商品明细，OmsOrderItem 无 tenantSku 关联，使用 productId）
     const order = await this.prisma.omsOrder.findUnique({
       where: { id: orderId },
-      include: {
-        items: {
-          include: {
-            tenantSku: {
-              include: {
-                globalSku: {
-                  include: {
-                    product: {
-                      select: { categoryId: true },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      include: { items: true },
     });
 
     if (!order) {
@@ -115,13 +99,13 @@ export class CommissionCalculatorService {
     const planSettleTime = this.calculateSettleTime(order.orderType);
     const records: CommissionRecord[] = [];
 
-    // 提取商品信息用于查询商品级配置
-    const orderItems = order.items.map(item => ({
+    // 提取商品信息用于查询商品级配置（OmsOrderItem 有 productId，无 categoryId 需单独查询）
+    const orderItems = order.items.map((item: { skuId: string; productId: string; quantity: number; price: unknown }) => ({
       skuId: item.skuId,
-      productId: item.tenantSku?.globalSku?.productId || '',
-      categoryId: item.tenantSku?.globalSku?.product?.categoryId || '',
+      productId: item.productId || '',
+      categoryId: '', // 无关联时留空，getEffectiveConfig 会回退到租户默认
       quantity: item.quantity,
-      price: item.price,
+      price: item.price instanceof Decimal ? item.price : new Decimal(String(item.price)),
     }));
 
     // 6. 计算 L1 佣金 (直接推荐: 分享人优先，否则绑定的parentId)

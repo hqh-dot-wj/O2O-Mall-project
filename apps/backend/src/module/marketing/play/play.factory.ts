@@ -31,12 +31,12 @@ export class PlayStrategyFactory implements OnModuleInit {
   onModuleInit() {
     // 在模块初始化时注册所有策略
     // 注意：这里需要手动注册所有已实现的策略服务
-    // 也可以通过装饰器自动扫描，但手动注册更显式且易于调试
-    this.register(GroupBuyService);
-    this.register(CourseGroupBuyService);
-    this.register(MemberUpgradeService);
-    this.register(FlashSaleService);
-    this.register(FullReductionService);
+    // 策略类构造函数参数由 Nest DI 注入，此处使用类型断言绕过构造签名检查
+    this.register(GroupBuyService as new (...args: unknown[]) => IMarketingStrategy);
+    this.register(CourseGroupBuyService as new (...args: unknown[]) => IMarketingStrategy);
+    this.register(MemberUpgradeService as new (...args: unknown[]) => IMarketingStrategy);
+    this.register(FlashSaleService as new (...args: unknown[]) => IMarketingStrategy);
+    this.register(FullReductionService as new (...args: unknown[]) => IMarketingStrategy);
   }
 
   /**

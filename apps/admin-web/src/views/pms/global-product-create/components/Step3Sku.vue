@@ -255,6 +255,20 @@ const columns = computed(() => {
       }
     },
     {
+      title: '成本价',
+      key: 'costPrice',
+      render(row: any, idx: number) {
+        return h(NInputNumber, {
+          value: row.costPrice,
+          onUpdateValue: (v: number | null) => (props.formModel.skus[idx].costPrice = v || 0),
+          min: 0,
+          precision: 2,
+          size: 'small',
+          showButton: false
+        });
+      }
+    },
+    {
       title: '库存',
       key: 'stock',
       render(row: any, idx: number) {

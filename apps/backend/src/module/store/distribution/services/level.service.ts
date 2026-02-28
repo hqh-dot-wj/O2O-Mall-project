@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
-import { ResponseCode } from 'src/common/constants/response-code';
+import { ResponseCode } from 'src/common/response';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { CreateLevelDto } from '../dto/create-level.dto';
 import { UpdateLevelDto } from '../dto/update-level.dto';
@@ -242,8 +242,7 @@ export class LevelService {
    * 查询会员等级变更日志
    */
   async getMemberLevelLogs(tenantId: string, dto: ListMemberLevelLogDto) {
-    const { pageNum = 1, pageSize = 10 } = dto;
-    const { skip, take } = PaginationHelper.getPagination(pageNum, pageSize);
+    const { skip, take } = PaginationHelper.getPagination(dto);
 
     const where = {
       tenantId,

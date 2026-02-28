@@ -197,7 +197,7 @@ export class StoreProductService {
     }
 
     // 4. 使用 upsert 创建或更新店铺商品(防止并发重复导入)
-    const tenantProduct = await this.tenantProductRepo.delegate.upsert({
+    const tenantProduct = await this.tenantProductRepo.upsert({
       where: { tenantId_productId: { tenantId, productId } },
       create: {
         tenantId,
@@ -215,7 +215,7 @@ export class StoreProductService {
     if (skus && skus.length > 0) {
       await Promise.all(
         skus.map((sku) =>
-          this.tenantSkuRepo.delegate.upsert({
+          this.tenantSkuRepo.upsert({
             where: {
               tenantProductId_globalSkuId: {
                 tenantProductId: tenantProduct.id,
@@ -342,7 +342,10 @@ export class StoreProductService {
       this.tenantProductRepo.countWithConditions(where),
     ]);
 
-    const formatted = list.map((item) => ({
+    type ListItem = Prisma.PmsTenantProductGetPayload<{
+      include: { product: true; skus: { include: { globalSku: true } } };
+    }>;
+    const formatted = list.map((item: ListItem) => ({
       id: item.id,
       productId: item.productId,
       name: item.product.name,
@@ -353,7 +356,7 @@ export class StoreProductService {
       price: Number(item.skus?.[0]?.price || 0),
       customTitle: item.customTitle,
       overrideRadius: item.overrideRadius,
-      skus: item.skus.map((sku) => ({
+      skus: item.skus.map((sku: ListItem['skus'][number]) => ({
         id: sku.id,
         price: Number(sku.price),
         stock: sku.stock,
@@ -403,8 +406,8 @@ export class StoreProductService {
   async updateProductPrice(tenantId: string, dto: UpdateProductPriceDto) {
     const { tenantSkuId, price, stock, distRate, distMode, pointsRatio, isPromotionProduct } = dto;
 
-    // 1. 获取店铺 SKU (包含当前版本号)
-    const tenantSku = await this.tenantSkuRepo.delegate.findUnique({
+    // 1. 获取店铺 SKU (包含当前版本号、租户商品、全局SKU)
+    const tenantSku = await this.prisma.pmsTenantSku.findUnique({
       where: { id: tenantSkuId },
       include: {
         tenantProd: true,
@@ -424,7 +427,7 @@ export class StoreProductService {
 
     // 3. 使用乐观锁更新数据库
     // updateMany 返回 { count: number },如果 count=0 说明版本号不匹配(被其他请求修改了)
-    const affected = await this.tenantSkuRepo.delegate.updateMany({
+    const affected = await this.prisma.pmsTenantSku.updateMany({
       where: {
         id: tenantSkuId,
         version: tenantSku.version, // 乐观锁条件: 版本号必须匹配
@@ -447,7 +450,7 @@ export class StoreProductService {
     }
 
     // 5. 查询最新数据返回
-    const updated = await this.tenantSkuRepo.delegate.findUnique({
+    const updated = await this.prisma.pmsTenantSku.findUnique({
       where: { id: tenantSkuId },
       include: { globalSku: true },
     });

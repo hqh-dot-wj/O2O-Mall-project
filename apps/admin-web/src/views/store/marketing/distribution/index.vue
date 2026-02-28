@@ -15,7 +15,11 @@ import {
   NSpace,
   NSwitch
 } from 'naive-ui';
-import { fetchGetDistConfig, fetchGetDistConfigLogs, fetchUpdateDistConfig } from '@/service/api/store/distribution';
+import {
+  fetchGetDistributionConfig,
+  fetchGetDistributionConfigLogs,
+  fetchUpdateDistributionConfig
+} from '@/service/api/distribution';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -25,7 +29,7 @@ defineOptions({
 const loading = ref(false);
 const submitting = ref(false);
 
-const model = reactive<Api.Store.DistributionConfigUpdateParams>({
+const model = reactive<Api.Store.UpdateDistributionConfigDto>({
   level1Rate: 60,
   level2Rate: 40,
   enableLV0: true,
@@ -67,20 +71,22 @@ const columns = [
 async function init() {
   loading.value = true;
   try {
-    const { data } = await fetchGetDistConfig();
+    const { data } = await fetchGetDistributionConfig();
     if (data) {
-      model.level1Rate = data.level1Rate;
-      model.level2Rate = data.level2Rate;
-      model.enableLV0 = data.enableLV0;
-      model.enableCrossTenant = data.enableCrossTenant ?? false;
-      model.crossTenantRate = data.crossTenantRate ?? 1;
-      model.crossMaxDaily = data.crossMaxDaily ?? 500;
-      model.commissionBaseType = (data.commissionBaseType as any) ?? 'ORIGINAL_PRICE';
-      model.maxCommissionRate = data.maxCommissionRate ?? 50;
+      Object.assign(model, {
+        level1Rate: data.level1Rate,
+        level2Rate: data.level2Rate,
+        enableLV0: data.enableLV0,
+        enableCrossTenant: data.enableCrossTenant ?? false,
+        crossTenantRate: data.crossTenantRate ?? 1,
+        crossMaxDaily: data.crossMaxDaily ?? 500,
+        commissionBaseType: data.commissionBaseType ?? 'ORIGINAL_PRICE',
+        maxCommissionRate: data.maxCommissionRate ?? 50
+      });
     }
-    const { data: logs } = await fetchGetDistConfigLogs();
-    if (logs) {
-      history.value = logs;
+    const { data: logData } = await fetchGetDistributionConfigLogs({ pageNum: 1, pageSize: 5 });
+    if (logData) {
+      history.value = logData.rows;
     }
   } catch (error) {
     console.error(error);
@@ -92,7 +98,7 @@ async function init() {
 async function handleSubmit() {
   submitting.value = true;
   try {
-    await fetchUpdateDistConfig(model);
+    await fetchUpdateDistributionConfig(model);
     window.$message?.success($t('common.updateSuccess'));
     await init();
   } catch (error) {
@@ -220,7 +226,6 @@ onMounted(() => {
         <NGridItem :span="10">
           <NCard :title="$t('page.store_distribution.graphTitle')" :bordered="false" size="small" class="card-wrapper">
             <div class="flex-center rounded-8px bg-gray-50/50 p-20px">
-              <!-- Placeholder for Mermaid or visual graph -->
               <div class="text-14px leading-6">
                 <div class="mb-12px text-center text-primary font-bold">佣金基数 (Commission Base)</div>
                 <div class="flex items-center justify-between gap-20px">
@@ -255,34 +260,5 @@ onMounted(() => {
 
 .card-wrapper:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.control-panel {
-  background: linear-gradient(to right, rgba(115, 103, 240, 0.05), rgba(115, 103, 240, 0.01));
-}
-
-.info-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.chart-card {
-  min-height: 420px;
-}
-
-@media (max-width: 768px) {
-  .flex-wrap {
-    flex-wrap: wrap;
-  }
-
-  .chart-card {
-    min-height: 360px;
-  }
-}
-
-@media (max-width: 480px) {
-  .chart-card {
-    min-height: 300px;
-  }
 }
 </style>

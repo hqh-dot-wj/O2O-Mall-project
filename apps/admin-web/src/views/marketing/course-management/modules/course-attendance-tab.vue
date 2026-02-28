@@ -135,10 +135,13 @@ const columns = [
     align: 'center' as const,
     width: 120,
     render: (row: CourseAttendance) => (
-      <NButton type="primary" ghost size="small" onClick={() => viewAttendanceRate(row.memberId)}>
-        <template #icon>
-          <icon-mdi-chart-line />
-        </template>
+      <NButton
+        type="primary"
+        ghost
+        size="small"
+        onClick={() => viewAttendanceRate(row.memberId)}
+        v-slots={{ icon: () => <icon-mdi-chart-line /> }}
+      >
         出勤率
       </NButton>
     )

@@ -34,7 +34,8 @@ export class CategoryService {
   @Cacheable(CacheEnum.PMS_CATEGORY_TREE, 'tree')
   async findTree() {
     const categories = await this.categoryRepo.findAllForTree();
-    return Result.ok(this.buildTree(categories));
+    const nodes = categories.map((c) => ({ ...c, id: c.catId, status: '0', children: undefined as CategoryTreeNode[] | undefined }));
+    return Result.ok(this.buildTree(nodes as CategoryTreeNode[]));
   }
 
   /**
@@ -116,22 +117,19 @@ export class CategoryService {
   @CacheEvict(CacheEnum.PMS_CATEGORY_TREE, '*')
   @Transactional()
   async update(id: number, dto: UpdateCategoryDto) {
-    // 如果更新了父级，重新计算层级
+    let level: number | undefined;
     if (dto.parentId !== undefined) {
-      // parentId为null表示移到顶级
       if (dto.parentId === null) {
-        dto.level = 1;
+        level = 1;
       } else {
-        // 检查是否会形成循环引用（不能将分类移到自己的子分类下）
         BusinessException.throwIf(dto.parentId === id, '不能将分类移到自己下面', ResponseCode.BUSINESS_ERROR);
-
         const parent = await this.categoryRepo.findById(dto.parentId);
         BusinessException.throwIf(!parent, '父分类不存在', ResponseCode.NOT_FOUND);
-        dto.level = parent.level + 1;
+        level = parent.level + 1;
       }
     }
 
-    const category = await this.categoryRepo.update(id, dto);
+    const category = await this.categoryRepo.update(id, { ...dto, ...(level !== undefined && { level }) });
     return Result.ok(category);
   }
 

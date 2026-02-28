@@ -1,7 +1,8 @@
 <script setup lang="tsx">
-import { ref, onMounted, computed } from 'vue';
-import { NButton, NCard, NDataTable, NTag, NSpace, NSelect, NSpin } from 'naive-ui';
-import { fetchCourseSchedules, type CourseSchedule } from '@/service/api/course-group-buy';
+import { computed, onMounted, ref } from 'vue';
+import { NButton, NCard, NDataTable, NSelect, NSpace, NSpin, NTag } from 'naive-ui';
+import { type CourseSchedule, fetchCourseSchedules } from '@/service/api/course-group-buy';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 
 interface Props {
   instanceId: string;
@@ -49,7 +50,9 @@ const columns = [
     render: (row: CourseSchedule) => (
       <div class="flex items-center justify-center gap-1">
         <icon-mdi-clock-outline class="text-primary" />
-        <span>{row.startTime} - {row.endTime}</span>
+        <span>
+          {row.startTime} - {row.endTime}
+        </span>
       </div>
     )
   },
@@ -79,7 +82,7 @@ const columns = [
       return (
         <NTag type={status.type}>
           <div class="flex items-center gap-1">
-            <icon-local={status.icon} />
+            <SvgIcon icon={status.icon} class="text-icon" />
             <span>{status.text}</span>
           </div>
         </NTag>
@@ -132,9 +135,7 @@ const statistics = computed(() => {
   const completed = schedules.value.filter(s => s.status === 'COMPLETED').length;
   const cancelled = schedules.value.filter(s => s.status === 'CANCELLED').length;
   const totalLessons = schedules.value.reduce((sum, s) => sum + s.lessons, 0);
-  const completedLessons = schedules.value
-    .filter(s => s.status === 'COMPLETED')
-    .reduce((sum, s) => sum + s.lessons, 0);
+  const completedLessons = schedules.value.filter(s => s.status === 'COMPLETED').reduce((sum, s) => sum + s.lessons, 0);
 
   return {
     total,
@@ -155,41 +156,41 @@ onMounted(() => {
 <template>
   <div class="h-full flex-col">
     <!-- 统计卡片 -->
-    <div class="mb-4 grid grid-cols-4 gap-4">
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+    <div class="grid grid-cols-4 mb-4 gap-4">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-primary">{{ statistics.total }}</div>
+            <div class="text-2xl text-primary font-bold">{{ statistics.total }}</div>
             <div class="mt-1 text-sm text-gray-600">总排课数</div>
           </div>
           <icon-mdi-calendar-multiple class="text-4xl text-primary opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-success">{{ statistics.completed }}</div>
+            <div class="text-2xl text-success font-bold">{{ statistics.completed }}</div>
             <div class="mt-1 text-sm text-gray-600">已完成</div>
           </div>
           <icon-mdi-check-circle class="text-4xl text-success opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-warning">{{ statistics.scheduled }}</div>
+            <div class="text-2xl text-warning font-bold">{{ statistics.scheduled }}</div>
             <div class="mt-1 text-sm text-gray-600">待上课</div>
           </div>
           <icon-mdi-calendar-clock class="text-4xl text-warning opacity-20" />
         </div>
       </NCard>
 
-      <NCard size="small" :bordered="false" class="shadow-sm hover:shadow-md transition-shadow">
+      <NCard size="small" :bordered="false" class="shadow-sm transition-shadow hover:shadow-md">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-2xl font-bold text-purple-600">{{ statistics.progress }}%</div>
+            <div class="text-2xl text-purple-600 font-bold">{{ statistics.progress }}%</div>
             <div class="mt-1 text-sm text-gray-600">
               课时进度 ({{ statistics.completedLessons }}/{{ statistics.totalLessons }})
             </div>

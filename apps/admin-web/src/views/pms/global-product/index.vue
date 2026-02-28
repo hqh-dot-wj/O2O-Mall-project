@@ -1,10 +1,14 @@
 <script setup lang="tsx">
 import { h, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { NAvatar, NButton, NCard, NDataTable, NEllipsis, NEmpty, NInput, NSpin, NTag, NTree } from 'naive-ui';
+import { NAvatar, NButton, NCard, NDataTable, NEllipsis, NEmpty, NInput, NSpin, NSwitch, NTag, NTree } from 'naive-ui';
 import type { TreeOption } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
-import { fetchBatchDeleteGlobalProduct, fetchGetGlobalProductList } from '@/service/api/pms/product';
+import {
+  fetchDeleteGlobalProduct,
+  fetchGetGlobalProductList,
+  fetchUpdateGlobalProductStatus
+} from '@/service/api/pms/product';
 import { fetchGetCategoryTree } from '@/service/api/pms/category';
 import { useAppStore } from '@/store/modules/app';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
@@ -110,18 +114,23 @@ const {
       key: 'publishStatus',
       title: '发布状态',
       align: 'center',
-      width: 100,
+      width: 120,
       render: row => {
-        const typeMap: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
-          '0': 'default',
-          '1': 'success'
-        };
-        const labelMap: Record<string, string> = {
-          '0': '下架',
-          '1': '上架'
-        };
+        const publishStatus = row.publishStatus as Api.Pms.PublishStatus;
         return (
-          <NTag type={typeMap[row.publishStatus] || 'default'}>{labelMap[row.publishStatus] || row.publishStatus}</NTag>
+          <NSwitch
+            value={publishStatus === 'ON_SHELF'}
+            onUpdateValue={async value => {
+              const newStatus: Api.Pms.PublishStatus = value ? 'ON_SHELF' : 'OFF_SHELF';
+              await fetchUpdateGlobalProductStatus(row.productId, newStatus);
+              getData();
+            }}
+          >
+            {{
+              checked: () => '上架',
+              unchecked: () => '下架'
+            }}
+          </NSwitch>
         );
       }
     },
@@ -165,7 +174,9 @@ function editProduct(id: string) {
 
 async function handleBatchDelete() {
   try {
+    // If backend only supports single delete, we might need to loop, but here assuming batch works or implemented separately
     await fetchBatchDeleteGlobalProduct(checkedRowKeys.value as string[]);
+    window.$message?.success($t('common.deleteSuccess'));
     onBatchDeleted();
   } catch {
     // error handled by request interceptor
@@ -174,7 +185,8 @@ async function handleBatchDelete() {
 
 async function handleDelete(productId: string) {
   try {
-    await fetchBatchDeleteGlobalProduct([productId]);
+    await fetchDeleteGlobalProduct(productId);
+    window.$message?.success($t('common.deleteSuccess'));
     onDeleted();
   } catch {
     // error handled by request interceptor

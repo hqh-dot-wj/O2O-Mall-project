@@ -5,14 +5,16 @@ import { MarketingEvent, MarketingEventType } from './marketing-event.types';
 
 /**
  * 营销事件发射器单元测试
- * 
+ *
  * @description
  * 测试事件发射器的核心功能：
  * - 同步事件发送
  * - 异步事件发送
  * - 事件日志记录
  * - 异常处理（事件发送失败不影响主流程）
- * 
+ *
+ * @注意 部分用例会故意 mock 事件发送失败，运行时会输出 ERROR 日志，属预期行为。
+ *
  * @验证需求 FR-4.2
  */
 describe('MarketingEventEmitter', () => {
@@ -127,7 +129,7 @@ describe('MarketingEventEmitter', () => {
       );
     });
 
-    it('事件发送失败不应该抛出异常', async () => {
+    it('事件发送失败不应该抛出异常（会输出 ERROR 日志，属预期）', async () => {
       const event: MarketingEvent = {
         type: MarketingEventType.INSTANCE_CREATED,
         instanceId: 'instance-123',
@@ -162,7 +164,7 @@ describe('MarketingEventEmitter', () => {
       expect(loggerSpy).toHaveBeenCalled();
     });
 
-    it('应该记录事件发送失败的错误日志', async () => {
+    it('应该记录事件发送失败的错误日志（会输出 ERROR 日志，属预期）', async () => {
       const event: MarketingEvent = {
         type: MarketingEventType.INSTANCE_CREATED,
         instanceId: 'instance-123',
@@ -233,7 +235,7 @@ describe('MarketingEventEmitter', () => {
       expect(loggerSpy).toHaveBeenCalled();
     });
 
-    it('异步事件发送失败不应该抛出异常', async () => {
+    it('异步事件发送失败不应该抛出异常（会输出 ERROR 日志，属预期）', async () => {
       const event: MarketingEvent = {
         type: MarketingEventType.INSTANCE_CREATED,
         instanceId: 'instance-123',

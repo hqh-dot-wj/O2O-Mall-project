@@ -17,6 +17,14 @@ export function fetchGetCategoryList(params?: Api.Pms.CategorySearchParams) {
   });
 }
 
+/** Get Category Detail */
+export function fetchGetCategory(id: number) {
+  return request<Api.Pms.Category>({
+    url: `/admin/pms/category/${id}`,
+    method: 'get'
+  });
+}
+
 /** Add Category */
 export function fetchAddCategory(data: Api.Pms.CategoryOperateParams) {
   return request<Api.Pms.Category>({

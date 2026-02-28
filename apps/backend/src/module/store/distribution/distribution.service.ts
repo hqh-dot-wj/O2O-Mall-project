@@ -268,7 +268,7 @@ export class DistributionService {
         // 获取该商品的有效配置（商品级 > 品类级 > 租户默认）
         const productId = sku.id;
         const categoryId = sku.globalSku.product.categoryId;
-        const effectiveConfig = await this.productConfigService.getEffectiveConfig(tenantId, String(productId), categoryId);
+        const effectiveConfig = await this.productConfigService.getEffectiveConfig(tenantId, String(productId), String(categoryId));
 
         if (!effectiveConfig) continue;
 

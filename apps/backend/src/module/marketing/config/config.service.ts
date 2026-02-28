@@ -105,7 +105,7 @@ export class StorePlayConfigService {
     // 1.1 策略级参数校验 (New)
     const strategy = this.strategyFactory.getStrategy(dto.templateCode);
     if (strategy.validateConfig) {
-      await strategy.validateConfig(dto);
+      await strategy.validateConfig({ ...dto, code: template.code, name: template.name });
     }
 
     // 2. 校验商品存在性 (支持 SPU ID 或 SKU ID)

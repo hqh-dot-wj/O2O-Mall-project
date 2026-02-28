@@ -2,9 +2,11 @@ import { Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe, Query } 
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto, ListCategoryDto } from './dto';
+import { CategoryVo } from './vo';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
+import { Api } from 'src/common/decorators/api.decorator';
 
 /**
  * 分类管理控制器
@@ -16,6 +18,7 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @ApiOperation({ summary: '获取分类树' })
+  @Api({ summary: '获取分类树', type: CategoryVo, isArray: true })
   @RequirePermission('pms:category:list')
   @Get('tree')
   async getTree() {
@@ -23,6 +26,7 @@ export class CategoryController {
   }
 
   @ApiOperation({ summary: '查询分类列表' })
+  @Api({ summary: '查询分类列表', type: CategoryVo, isArray: true })
   @RequirePermission('pms:category:list')
   @Get('list')
   async list(@Query() query: ListCategoryDto) {
@@ -30,6 +34,7 @@ export class CategoryController {
   }
 
   @ApiOperation({ summary: '查询分类详情' })
+  @Api({ summary: '查询分类详情', type: CategoryVo })
   @RequirePermission('pms:category:query')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
@@ -37,6 +42,7 @@ export class CategoryController {
   }
 
   @ApiOperation({ summary: '创建分类' })
+  @Api({ summary: '创建分类', body: CreateCategoryDto })
   @RequirePermission('pms:category:create')
   @Operlog({ businessType: BusinessType.INSERT })
   @Post()
@@ -45,6 +51,7 @@ export class CategoryController {
   }
 
   @ApiOperation({ summary: '更新分类' })
+  @Api({ summary: '更新分类', body: UpdateCategoryDto })
   @RequirePermission('pms:category:update')
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put(':id')
@@ -53,6 +60,7 @@ export class CategoryController {
   }
 
   @ApiOperation({ summary: '删除分类' })
+  @Api({ summary: '删除分类' })
   @RequirePermission('pms:category:delete')
   @Operlog({ businessType: BusinessType.DELETE })
   @Delete(':id')

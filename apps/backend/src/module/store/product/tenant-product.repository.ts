@@ -122,6 +122,13 @@ export class TenantProductRepository extends BaseRepository<
   }
 
   /**
+   * Upsert 租户商品（按 tenantId+productId 唯一约束）
+   */
+  async upsert(args: Prisma.PmsTenantProductUpsertArgs) {
+    return (this.delegate as Prisma.PmsTenantProductDelegate).upsert(args);
+  }
+
+  /**
    * 根据全局商品ID查询租户商品
    *
    * @description

@@ -2,8 +2,10 @@ import { expect, test } from '@playwright/test';
 
 /**
  * 冒烟 E2E：访问首页与登录页，确保应用可打开
- * 实际登录与业务流程测试可在此基础上扩展
+ * 使用空 storageState 以测试未登录态
  */
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Smoke', () => {
   test('home / login page is reachable', async ({ page }) => {
     await page.goto('/');

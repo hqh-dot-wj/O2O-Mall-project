@@ -72,17 +72,26 @@ export interface DistributionLogItem {
 }
 
 /**
- * 订单列表项
+ * 订单列表项（列表/导出用，含 Prisma include 的关联数据）
  */
 export interface OrderListItem {
   id: string;
   orderSn: string;
   status: string;
   totalAmount: Decimal;
-  actualPaid: Decimal;
+  /** 实付金额（Prisma 字段为 payAmount） */
+  payAmount?: Decimal;
+  actualPaid?: Decimal;
   createTime: Date;
   payTime?: Date;
-  items: OrderItemSummary[];
+  orderType?: string;
+  freightAmount?: Decimal;
+  discountAmount?: Decimal;
+  receiverName?: string;
+  receiverPhone?: string;
+  receiverAddress?: string;
+  items?: Array<OrderItemSummary | { productImg?: string; productName?: string }>;
+  tenant?: { companyName?: string };
 }
 
 /**

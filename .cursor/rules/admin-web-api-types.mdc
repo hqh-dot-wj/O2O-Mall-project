@@ -1,0 +1,73 @@
+---
+description: Admin-Web 开发前端页面时，API 类型必须从 @libs/common-types 引用，禁止手写；开发前先执行 generate-types
+globs: apps/admin-web/**/*
+alwaysApply: false
+---
+
+# Admin-Web API 类型规范（执行型）
+
+编辑 `apps/admin-web` 且涉及 **API 调用、请求/响应类型** 时，必须遵循本规则。用于偿还「手写 API 类型」技术债，确保类型与后端 OpenAPI 一致。
+
+## 1. 触发条件
+
+以下任一情况触发本规则：
+
+- 开发新前端页面，需要调用后端 API
+- 修改已有页面的 API 调用或类型
+- 在 `src/typings/api/*.d.ts` 中新增或修改类型
+- 用户明确要求「补充前端页面」且后端接口已就绪
+
+## 2. 前置步骤（必须执行）
+
+在编写或修改涉及 API 的代码**之前**，按顺序执行：
+
+1. **确保类型最新**：在项目根目录执行 `pnpm generate-types`（会先构建 backend 产出 openApi.json，再生成 `@libs/common-types` 的 api.d.ts）
+2. **检查类型来源**：在 `libs/common-types/src/api.d.ts` 或 `libs/common-types/src/index.ts` 中查找所需类型（如 `components["schemas"]["XxxVo"]`、`paths`、业务别名）
+3. **若 common-types 中无对应类型**：确认 backend 是否已暴露该接口；若已暴露，重新执行 `pnpm generate-types`；若仍无，在 `libs/common-types/src/index.ts` 添加业务别名（如 `export type Xxx = components["schemas"]["XxxVo"]`）
+
+## 3. 禁止行为
+
+- **禁止**在 `apps/admin-web/src/typings/api/*.d.ts` 中手写与后端 VO/DTO 重复的类型定义
+- **禁止**在业务代码中直接写 `interface Xxx { ... }` 作为 API 请求/响应类型
+- **禁止**用 `any` 或占位类型替代应从 common-types 引用的类型
+
+## 4. 正确做法
+
+### 4.1 在 typings 中引用 common-types
+
+参考 `system.api.d.ts` 的写法，通过 `import('@libs/common-types')` 引用：
+
+```ts
+declare namespace Api {
+  namespace Order {
+    type OrderItem = import('@libs/common-types').components['schemas']['OrderListItemVo'];
+    type SearchParams = import('@libs/common-types').RequestParams<'/api/order/list', 'get'>;
+    type ListResult = import('@libs/common-types').ApiPageResult<OrderItem>;
+  }
+}
+```
+
+### 4.2 在业务代码中直接导入
+
+若 `@libs/common-types` 已导出业务别名，可直接导入：
+
+```ts
+import type { OrderDetail, CreateOrderParams } from '@libs/common-types';
+```
+
+### 4.3 顺带偿还技术债
+
+若本次改动涉及 `src/typings/api/*.d.ts` 中已有手写类型，**顺带**迁移为从 `@libs/common-types` 引用；不强制一次性全量迁移。
+
+## 5. 类型生成流程（参考）
+
+```
+后端新增/修改接口 → 构建 backend 生成 openApi.json → pnpm generate-types → 更新 libs/common-types
+```
+
+- 常用实体可在 `libs/common-types/src/index.ts` 添加别名
+- 前端通过 `@libs/common-types` 或 `Api.[Module].*`（typings 中引用 common-types）使用
+
+## 6. 与 monorepo 规范的关系
+
+本规则与 `monorepo.mdc` 中「API 类型来源」「类型生成顺序」一致，是对 admin-web 场景的**执行型细化**，确保 AI 在开发前端页面时主动执行上述步骤。

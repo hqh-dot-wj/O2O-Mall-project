@@ -43,11 +43,11 @@ export class CreateLevelDto {
   @Max(100)
   level2Rate: number;
 
-  @ApiProperty({ description: '升级条件', required: false, type: 'object' })
+  @ApiProperty({ description: '升级条件', required: false })
   @IsOptional()
   upgradeCondition?: UpgradeCondition;
 
-  @ApiProperty({ description: '保级条件', required: false, type: 'object' })
+  @ApiProperty({ description: '保级条件', required: false })
   @IsOptional()
   maintainCondition?: UpgradeCondition;
 

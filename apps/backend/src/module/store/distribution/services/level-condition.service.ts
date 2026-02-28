@@ -98,7 +98,7 @@ export class LevelConditionService {
     const result = await this.prisma.finCommission.aggregate({
       where: {
         tenantId,
-        memberId,
+        beneficiaryId: memberId,
         status: 'SETTLED', // 只统计已结算的佣金
       },
       _sum: {
@@ -119,7 +119,7 @@ export class LevelConditionService {
     const result = await this.prisma.finCommission.aggregate({
       where: {
         tenantId,
-        memberId,
+        beneficiaryId: memberId,
         status: 'SETTLED',
         settleTime: {
           gte: startDate,
@@ -137,13 +137,13 @@ export class LevelConditionService {
    * 获取累计订单数
    */
   private async getTotalOrders(tenantId: string, memberId: string): Promise<number> {
-    // 统计该会员作为推荐人的订单数
+    // 统计该会员作为推荐人的订单数（shareUserId 分享人 / referrerId 推荐人）
     const count = await this.prisma.omsOrder.count({
       where: {
         tenantId,
         OR: [
-          { distributorId: memberId }, // 直接推荐人
-          { indirectDistributorId: memberId }, // 间接推荐人
+          { shareUserId: memberId },
+          { referrerId: memberId },
         ],
         status: {
           in: ['PAID', 'SHIPPED', 'COMPLETED'], // 只统计已支付及之后的订单
@@ -164,7 +164,7 @@ export class LevelConditionService {
     const count = await this.prisma.omsOrder.count({
       where: {
         tenantId,
-        OR: [{ distributorId: memberId }, { indirectDistributorId: memberId }],
+        OR: [{ shareUserId: memberId }, { referrerId: memberId }],
         status: {
           in: ['PAID', 'SHIPPED', 'COMPLETED'],
         },

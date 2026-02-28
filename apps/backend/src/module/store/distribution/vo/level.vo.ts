@@ -23,10 +23,10 @@ export class LevelVo {
   @ApiProperty({ description: '二级佣金比例' })
   level2Rate: string;
 
-  @ApiProperty({ description: '升级条件', required: false, type: 'object' })
+  @ApiProperty({ description: '升级条件', required: false })
   upgradeCondition?: UpgradeCondition;
 
-  @ApiProperty({ description: '保级条件', required: false, type: 'object' })
+  @ApiProperty({ description: '保级条件', required: false })
   maintainCondition?: UpgradeCondition;
 
   @ApiProperty({ description: '等级权益描述', required: false })
