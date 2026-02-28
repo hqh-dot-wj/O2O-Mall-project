@@ -1,6 +1,6 @@
 import { get } from 'lodash';
 
-function getArgs(func: Function) {
+function getArgs(func: (...args: unknown[]) => unknown) {
   const funcString = func.toString();
   return funcString.slice(funcString.indexOf('(') + 1, funcString.indexOf(')')).match(/([^\s,]+)/g);
 }

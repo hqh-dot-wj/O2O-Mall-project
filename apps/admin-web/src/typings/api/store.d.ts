@@ -25,7 +25,7 @@ declare namespace Api {
       distRate: number;
       distMode: Pms.DistributionMode;
       isActive: boolean;
-      specValues: any;
+      specValues: unknown;
       costPrice: number;
       guidePrice: number;
     }
@@ -168,7 +168,7 @@ declare namespace Api {
       isActive?: boolean;
     }
 
-    interface UpdateLevelDto extends Partial<CreateLevelDto> {}
+    type UpdateLevelDto = Partial<CreateLevelDto>;
 
     interface ListLevelDto {
       isActive?: boolean;
@@ -203,7 +203,7 @@ declare namespace Api {
       currentLevelId: number;
       nextLevelId?: number;
       isUpgradable: boolean;
-      progress: Record<string, any>;
+      progress: Record<string, unknown>;
     }
 
     // ==================== 分销员申请/审核 ====================
@@ -249,7 +249,7 @@ declare namespace Api {
       };
     }
 
-    interface UpdateReviewConfigDto extends ReviewConfig {}
+    type UpdateReviewConfigDto = ReviewConfig;
 
     // ==================== 看板/预期 ====================
 
@@ -311,7 +311,7 @@ declare namespace Api {
       level2Rate?: number;
     }
 
-    interface UpdateProductConfigDto extends Partial<CreateProductConfigDto> {}
+    type UpdateProductConfigDto = Partial<CreateProductConfigDto>;
 
     interface ProductConfigSearchParams extends Common.PaginatingCommonParams {
       productId?: string;

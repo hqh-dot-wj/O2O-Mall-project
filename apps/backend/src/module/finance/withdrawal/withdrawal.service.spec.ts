@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { Test, TestingModule } from '@nestjs/testing';
 import { WithdrawalService } from './withdrawal.service';
 import { PrismaService } from 'src/prisma/prisma.service';

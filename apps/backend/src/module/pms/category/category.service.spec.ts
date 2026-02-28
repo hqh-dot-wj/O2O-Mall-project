@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CategoryService } from './category.service';
 import { CategoryRepository } from './category.repository';

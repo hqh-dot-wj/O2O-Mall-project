@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfitValidator } from './profit-validator';
 import { DistributionMode } from '@prisma/client';

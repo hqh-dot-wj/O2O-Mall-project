@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { Test, TestingModule } from '@nestjs/testing';
 import { LevelService } from './level.service';
 import { LevelConditionService } from './level-condition.service';

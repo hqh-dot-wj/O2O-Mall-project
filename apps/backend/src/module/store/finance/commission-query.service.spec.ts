@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { Test, TestingModule } from '@nestjs/testing';
 import { StoreCommissionQueryService } from './commission-query.service';
 import { CommissionRepository } from 'src/module/finance/commission/commission.repository';

@@ -332,11 +332,12 @@ export const indexScriptDicts = (columns: any[]) => {
   return script;
 };
 const handlerExport = (moduleName: string, businessName: string) => {
+  const timeExpr = '${new Date().getTime()}'; // 生成代码中保留为模板，运行时求值
   let h = '';
   h += `const  handleExport = () =>{`;
   h += ` proxy.download('${moduleName}/${businessName}/export', {`;
   h += `...queryParams.value`;
-  h += `}, \`${businessName}_\$\{new Date().getTime()\}.xlsx\`)}`;
+  h += `}, \`${businessName}_\${timeExpr}.xlsx\`)}`;
 
   return h;
 };

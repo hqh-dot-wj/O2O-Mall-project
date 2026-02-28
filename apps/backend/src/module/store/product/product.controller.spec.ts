@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { StoreProductController } from './product.controller';
 
 /**

@@ -30,15 +30,6 @@ export default [
     },
   },
   {
-    // Prisma seed 由脚本自动生成，允许 @ts-nocheck 与 console
-    files: ['prisma/seed.ts'],
-    rules: {
-      '@typescript-eslint/ban-ts-comment': 'off',
-      'no-console': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
-  },
-  {
     ignores: ['dist/**', 'coverage/**', 'scripts/**/*.cjs'],
   },
 ];

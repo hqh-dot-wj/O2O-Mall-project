@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommissionCalculatorService } from './commission-calculator.service';
 import { L1CalculatorService } from './l1-calculator.service';
