@@ -1,13 +1,23 @@
 <script setup lang="tsx">
-import { NButton, NCard, NDataTable, NSpace, NTag } from 'naive-ui';
-import { fetchGetStoreProductList } from '@/service/api/store/product';
+import { computed, ref } from 'vue';
+import { NButton, NCard, NDataTable, NPopconfirm, NSpace, NTag, useMessage } from 'naive-ui';
+import { fetchGetStoreProductList, fetchRemoveProduct } from '@/service/api/store/product';
 import { useAppStore } from '@/store/modules/app';
+import { useAuth } from '@/hooks/business/auth';
 import { useTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import ProductSearch from './modules/product-search.vue';
 import ProductOperateDrawer from './modules/product-operate-drawer.vue';
+import StockAlertConfigModal from './modules/stock-alert-config-modal.vue';
+import BatchPriceModal from './modules/batch-price-modal.vue';
 
 const appStore = useAppStore();
+const message = useMessage();
+const { hasAuth } = useAuth();
+
+const stockAlertVisible = ref(false);
+const batchPriceVisible = ref(false);
+const batchRemoveLoading = ref(false);
 
 const {
   columns,
@@ -126,12 +136,26 @@ const {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 130,
+      width: 180,
       render: row => (
         <NSpace justify="center">
-          <NButton type="primary" ghost size="small" onClick={() => edit(row)}>
-            经营配置
-          </NButton>
+          {hasAuth('store:product:update') && (
+            <>
+              <NButton type="primary" ghost size="small" onClick={() => edit(row)}>
+                经营配置
+              </NButton>
+              <NPopconfirm onPositiveClick={() => handleRemove(row.id)}>
+                {{
+                  default: () => '确定从店铺移除此商品？',
+                  trigger: () => (
+                    <NButton type="error" ghost size="small">
+                      移除
+                    </NButton>
+                  )
+                }}
+              </NPopconfirm>
+            </>
+          )}
         </NSpace>
       )
     }
@@ -142,6 +166,57 @@ const { drawerVisible, operateType, editingData, edit, checkedRowKeys } = useTab
   data,
   getData
 );
+
+const selectedProducts = computed(() => {
+  if (!checkedRowKeys.value.length) return [];
+  return data.value.filter(row => checkedRowKeys.value.includes(row.id));
+});
+
+const hasSelectedWithSkus = computed(() =>
+  selectedProducts.value.some(p => p.skus && p.skus.length > 0)
+);
+
+async function handleRemove(id: string) {
+  try {
+    await fetchRemoveProduct({ id });
+    message.success('已移除');
+    getData();
+  } catch {
+    // error handled by request
+  }
+}
+
+async function handleBatchRemove() {
+  const ids = checkedRowKeys.value as string[];
+  batchRemoveLoading.value = true;
+  let ok = 0;
+  let fail = 0;
+  for (const id of ids) {
+    try {
+      await fetchRemoveProduct({ id });
+      ok++;
+    } catch {
+      fail++;
+    }
+  }
+  batchRemoveLoading.value = false;
+  if (fail > 0) {
+    message.warning(`移除完成: 成功 ${ok} 个, 失败 ${fail} 个`);
+  } else {
+    message.success(`已移除 ${ok} 个商品`);
+  }
+  checkedRowKeys.value = [];
+  getData();
+}
+
+function openBatchPrice() {
+  batchPriceVisible.value = true;
+}
+
+function handleBatchPriceSubmitted() {
+  checkedRowKeys.value = [];
+  getData();
+}
 </script>
 
 <template>
@@ -149,7 +224,49 @@ const { drawerVisible, operateType, editingData, edit, checkedRowKeys } = useTab
     <ProductSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getDataByPage" />
     <NCard title="我的商品" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" @refresh="getData" />
+        <TableHeaderOperation
+          v-model:columns="columnChecks"
+          :loading="loading"
+          :show-add="false"
+          :show-delete="false"
+          @refresh="getData"
+        >
+          <template #after>
+            <NButton
+              v-if="hasAuth('store:product:query')"
+              size="small"
+              ghost
+              @click="stockAlertVisible = true"
+            >
+              库存预警
+            </NButton>
+            <template v-if="hasAuth('store:product:update')">
+              <NButton
+                size="small"
+                ghost
+                type="primary"
+                :disabled="!hasSelectedWithSkus"
+                @click="openBatchPrice"
+              >
+                批量调价
+              </NButton>
+              <NPopconfirm @positive-click="handleBatchRemove">
+                <template #trigger>
+                  <NButton
+                    size="small"
+                    ghost
+                    type="error"
+                    :loading="batchRemoveLoading"
+                    :disabled="checkedRowKeys.length === 0"
+                  >
+                    批量移除
+                  </NButton>
+                </template>
+                确定移除选中的 {{ checkedRowKeys.length }} 个商品？
+              </NPopconfirm>
+            </template>
+          </template>
+        </TableHeaderOperation>
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"
@@ -169,6 +286,12 @@ const { drawerVisible, operateType, editingData, edit, checkedRowKeys } = useTab
         :operate-type="operateType"
         :row-data="editingData"
         @submitted="getData"
+      />
+      <StockAlertConfigModal v-model:visible="stockAlertVisible" />
+      <BatchPriceModal
+        v-model:visible="batchPriceVisible"
+        :products="selectedProducts"
+        @submitted="handleBatchPriceSubmitted"
       />
     </NCard>
   </div>

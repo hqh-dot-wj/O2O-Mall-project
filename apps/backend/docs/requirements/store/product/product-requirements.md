@@ -60,15 +60,18 @@ graph LR
         UC7[全局商品下架同步]
     end
 
-    subgraph 待建设功能
+    subgraph 已实现扩展
         UC8[批量导入商品]
-        UC9[商品搜索/排序<br/>按销量/热度]
-        UC10[店铺级分类管理]
-        UC11[库存预警/低库存通知]
-        UC12[商品评价管理]
-        UC13[商品数据分析<br/>浏览量/转化率]
         UC14[从店铺移除商品]
         UC15[批量调价]
+    end
+
+    subgraph 待建设功能
+        UC9[商品搜索/排序<br/>按销量/热度]
+        UC10[店铺级分类管理]
+        UC11[库存预警通知]
+        UC12[商品评价管理]
+        UC13[商品数据分析<br/>浏览量/转化率]
     end
 
     SA --> UC1
@@ -81,23 +84,20 @@ graph LR
 
     UC7 -.->|Bull 队列| UC6
 
-    SA -.-> UC8
+    SA --> UC8
+    SA --> UC14
+    SA --> UC15
     SA -.-> UC9
     SA -.-> UC10
     SA -.-> UC11
     SA -.-> UC12
     SA -.-> UC13
-    SA -.-> UC14
-    SA -.-> UC15
 
-    style UC8 stroke-dasharray: 5 5
     style UC9 stroke-dasharray: 5 5
     style UC10 stroke-dasharray: 5 5
     style UC11 stroke-dasharray: 5 5
     style UC12 stroke-dasharray: 5 5
     style UC13 stroke-dasharray: 5 5
-    style UC14 stroke-dasharray: 5 5
-    style UC15 stroke-dasharray: 5 5
 ```
 
 > 虚线框为当前未实现、市面主流门店商品系统普遍具备的功能。HQ 总部管理员可通过 `storeId` 参数跨店查看商品列表。
@@ -220,7 +220,7 @@ stateDiagram-v2
     end note
 ```
 
-**说明**：当前门店商品仅有 `ON_SHELF`（上架）和 `OFF_SHELF`（下架）两种状态。不支持从店铺移除商品（无删除功能），已导入的商品只能在上架/下架之间切换。
+**说明**：当前门店商品仅有 `ON_SHELF`（上架）和 `OFF_SHELF`（下架）两种状态。已支持从店铺移除商品（`removeProduct` 接口）。
 
 ---
 
@@ -228,14 +228,19 @@ stateDiagram-v2
 
 ### 5.1 接口清单
 
-| 接口         | 方法 | 路径                              | 权限          | 说明                             |
-| ------------ | ---- | --------------------------------- | ------------- | -------------------------------- |
-| 选品中心列表 | POST | `/store/market/list`              | ⚠️ 无权限校验 | 查询全局上架商品，标记是否已引入 |
-| 选品中心详情 | GET  | `/store/market/detail/:productId` | ⚠️ 无权限校验 | 查看商品详情含全局SKU列表        |
-| 导入商品     | POST | `/store/product/import`           | ⚠️ 无权限校验 | 导入全局商品到本店，含利润校验   |
-| 店铺商品列表 | POST | `/store/product/list`             | ⚠️ 无权限校验 | 查询已引入商品，支持HQ跨店查询   |
-| 更新商品价格 | POST | `/store/product/update-price`     | ⚠️ 无权限校验 | 更新售价/库存/分销配置，含乐观锁 |
-| 更新基础信息 | POST | `/store/product/update-base`      | ⚠️ 无权限校验 | 更新状态/自定义标题/服务半径     |
+| 接口             | 方法 | 路径                                | 权限                   | 说明                             |
+| ---------------- | ---- | ----------------------------------- | ---------------------- | -------------------------------- |
+| 选品中心列表     | POST | `/store/market/list`                | `store:product:list`   | 查询全局上架商品，标记是否已引入 |
+| 选品中心详情     | GET  | `/store/market/detail/:productId`   | `store:product:query`  | 查看商品详情含全局SKU列表        |
+| 导入商品         | POST | `/store/product/import`             | `store:product:import` | 导入全局商品到本店，含利润校验   |
+| 批量导入商品     | POST | `/store/product/import/batch`       | `store:product:import` | 批量导入多个商品                 |
+| 店铺商品列表     | POST | `/store/product/list`               | `store:product:list`   | 查询已引入商品，支持HQ跨店查询   |
+| 更新商品价格     | POST | `/store/product/update-price`       | `store:product:update` | 更新售价/库存/分销配置，含乐观锁 |
+| 批量调价         | POST | `/store/product/update-price/batch` | `store:product:update` | 批量更新多个 SKU 价格/库存/分销  |
+| 更新基础信息     | POST | `/store/product/update-base`        | `store:product:update` | 更新状态/自定义标题/服务半径     |
+| 移除店铺商品     | POST | `/store/product/remove`             | `store:product:update` | 从店铺移除已导入商品             |
+| 获取库存预警阈值 | GET  | `/store/product/stock-alert/config` | `store:product:query`  | 获取低库存预警阈值               |
+| 设置库存预警阈值 | POST | `/store/product/stock-alert/config` | `store:product:update` | 设置低库存预警阈值               |
 
 ### 5.2 利润风控校验器（ProfitValidator）
 
@@ -277,28 +282,28 @@ stateDiagram-v2
 
 ### 6.1 代码层面缺陷
 
-| 编号 | 问题                                                                                      | 严重度 | 详述                                                                                                                                                                                                                 |
-| ---- | ----------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D-1  | 所有 Controller 端点缺少 `@RequirePermission` 装饰器                                      | 🟡 P1  | 6 个接口均无权限校验，任何已登录用户均可操作商品管理功能。应按功能添加 `store:product:list`、`store:product:import`、`store:product:update` 等权限标识。                                                             |
-| D-2  | `importProduct` 使用 `prisma.$transaction` 而非 `@Transactional()` 装饰器                 | 🟡 P1  | 项目约定使用 `@Transactional()` 装饰器管理事务（基于 CLS 上下文传播）。直接使用 `prisma.$transaction` 回调与项目其他模块风格不一致，且无法与 CLS 事务上下文联动。                                                    |
-| D-3  | `findAll` 允许 `storeId` 参数覆盖租户隔离                                                 | 🟡 P1  | `where.tenantId = storeId \|\| tenantId`，任何门店管理员传入其他门店的 `storeId` 即可查看其商品列表。HQ 跨店查询场景应增加角色/权限校验（如 `@RequireRole('superadmin')`）。                                         |
-| D-4  | 列表查询接口使用 POST 方法                                                                | 🟢 P2  | `getMarketList` 和 `findAll` 使用 `@Post` 进行列表查询，不符合 RESTful 规范（查询应为 GET）。可能是为了支持复杂查询体，但应在文档中说明原因。                                                                        |
-| D-5  | `importProduct` 的 SKU 创建使用 `skipDuplicates` 但不更新已有 SKU                         | 🟢 P2  | 重新导入同一商品时，`createMany({ skipDuplicates: true })` 会跳过已存在的 SKU。若全局 SKU 价格已变更，门店 SKU 不会同步更新。应改为 `upsert` 或提供单独的同步机制。                                                  |
-| D-6  | `ProductSyncProducer` 已定义但未在 `product.module.ts` 中注册 Bull 队列                   | 🟢 P2  | `product.module.ts` 未导入 `BullModule.registerQueue({ name: PRODUCT_SYNC_QUEUE })`，也未将 `ProductSyncProducer` 和 `ProductSyncConsumer` 注册为 providers。队列功能实际不可用。                                    |
-| D-7  | `updateProductPrice` 乐观锁更新与返回查询之间存在竞态窗口                                 | 🟢 P2  | `updateMany`（乐观锁）成功后，通过单独的 `findUnique` 查询最新数据返回。在两次操作之间，数据可能被其他请求修改，导致返回的数据与实际更新的版本不一致。应在同一事务内完成或使用 `update`（非 `updateMany`）直接返回。 |
-| D-8  | 无从店铺移除商品的功能                                                                    | 🟢 P2  | 已导入的商品只能上架/下架，无法从店铺中删除。长期使用后会积累大量无用商品数据。                                                                                                                                      |
-| D-9  | `TenantProductRepository` 和 `TenantSkuRepository` 已注册但未被 `product.service.ts` 使用 | 🟢 P2  | Service 直接使用 `PrismaService` 操作数据库，未通过 Repository 层。Repository 中封装的 `findWithRelations`、`updatePriceWithVersion` 等方法未被调用，违反项目分层约定。                                              |
+| 编号 | 问题                                                                                      | 严重度 | 状态      | 详述                                                                        |
+| ---- | ----------------------------------------------------------------------------------------- | ------ | --------- | --------------------------------------------------------------------------- |
+| D-1  | 所有 Controller 端点缺少 `@RequirePermission` 装饰器                                      | 🟡 P1  | ✅ 已修复 | 所有接口已添加 `@RequirePermission` 权限校验。                              |
+| D-2  | `importProduct` 使用 `prisma.$transaction` 而非 `@Transactional()` 装饰器                 | 🟡 P1  | ⏳ 待处理 | 项目约定使用 `@Transactional()` 装饰器管理事务（基于 CLS 上下文传播）。     |
+| D-3  | `findAll` 允许 `storeId` 参数覆盖租户隔离                                                 | 🟡 P1  | ⏳ 待处理 | HQ 跨店查询场景应增加角色/权限校验（如 `@RequireRole('superadmin')`）。     |
+| D-4  | 列表查询接口使用 POST 方法                                                                | 🟢 P2  | ⏳ 待处理 | `getMarketList` 和 `findAll` 使用 `@Post`，为支持复杂查询体。               |
+| D-5  | `importProduct` 的 SKU 创建使用 `skipDuplicates` 但不更新已有 SKU                         | 🟢 P2  | ⏳ 待处理 | 重新导入同一商品时，已有 SKU 不更新。应改为 `upsert` 或提供单独的同步机制。 |
+| D-6  | `ProductSyncProducer` 已定义但未在 `product.module.ts` 中注册 Bull 队列                   | 🟢 P2  | ✅ 已修复 | `product.module.ts` 已注册 Bull 队列及 Producer/Consumer。                  |
+| D-7  | `updateProductPrice` 乐观锁更新与返回查询之间存在竞态窗口                                 | 🟢 P2  | ⏳ 待处理 | 两次操作之间数据可能被其他请求修改。                                        |
+| D-8  | 无从店铺移除商品的功能                                                                    | 🟢 P2  | ✅ 已修复 | 已提供 `removeProduct` 接口。                                               |
+| D-9  | `TenantProductRepository` 和 `TenantSkuRepository` 已注册但未被 `product.service.ts` 使用 | 🟢 P2  | ⏳ 待处理 | Service 直接使用 `PrismaService`，未通过 Repository 层。                    |
 
 ### 6.2 架构层面不足
 
-| 编号 | 问题                          | 详述                                                                 |
-| ---- | ----------------------------- | -------------------------------------------------------------------- |
-| A-1  | 无批量导入能力                | 门店只能逐个导入商品，无法一次性从选品中心批量选择多个商品导入。     |
-| A-2  | 无商品搜索排序（按销量/热度） | 选品中心仅支持按名称、分类、类型筛选，不支持按销量、评分、热度排序。 |
-| A-3  | 无店铺级商品分类管理          | 门店无法自定义商品分类，只能使用全局分类体系。                       |
-| A-4  | 无库存预警/低库存通知         | 库存降至阈值时无自动提醒机制，需管理员手动检查。                     |
-| A-5  | 无商品评价管理                | 门店无法查看和回复用户对商品的评价。                                 |
-| A-6  | 无商品数据分析                | 无商品浏览量、转化率、销量趋势等数据统计。                           |
+| 编号 | 问题                          | 状态        | 详述                                                                                       |
+| ---- | ----------------------------- | ----------- | ------------------------------------------------------------------------------------------ |
+| A-1  | 无批量导入能力                | ✅ 已解决   | 已支持批量导入（`/store/product/import/batch`）。                                          |
+| A-2  | 无商品搜索排序（按销量/热度） | ⏳ 待建设   | 选品中心仅支持按名称、分类、类型筛选。                                                     |
+| A-3  | 无店铺级商品分类管理          | ⏳ 待建设   | 门店无法自定义商品分类，只能使用全局分类体系。                                             |
+| A-4  | 无库存预警/低库存通知         | ⚠️ 部分解决 | 已支持库存预警阈值配置（GET/POST `/store/product/stock-alert/config`）；低库存通知待建设。 |
+| A-5  | 无商品评价管理                | ⏳ 待建设   | 门店无法查看和回复用户对商品的评价。                                                       |
+| A-6  | 无商品数据分析                | ⏳ 待建设   | 无商品浏览量、转化率、销量趋势等数据统计。                                                 |
 
 ---
 
@@ -306,34 +311,32 @@ stateDiagram-v2
 
 ### 7.1 功能对比矩阵
 
-| 功能                  | 本系统 | 有赞商家后台 | 美团商家版 | Shopify Admin | 差距评估         |
-| --------------------- | ------ | ------------ | ---------- | ------------- | ---------------- |
-| 选品中心浏览          | ✅     | ✅           | ✅         | ✅            | 持平             |
-| 商品导入（含SKU配置） | ✅     | ✅           | ✅         | ✅            | 持平             |
-| 利润风控校验          | ✅     | ❌           | ❌         | ❌            | 领先             |
-| 乐观锁并发控制        | ✅     | ✅           | ✅         | ✅            | 持平             |
-| 全局下架自动同步      | ✅     | ✅           | ✅         | ✅            | 持平             |
-| 自定义标题/服务半径   | ✅     | ✅           | ✅         | —             | 持平（O2O 特有） |
-| HQ 跨店查看           | ✅     | ✅           | ✅         | ✅            | 持平             |
-| 权限控制              | ❌     | ✅           | ✅         | ✅            | 缺失（P1）       |
-| 批量导入              | ❌     | ✅           | ✅         | ✅            | 缺失（中优）     |
-| 批量调价              | ❌     | ✅           | ✅         | ✅            | 缺失（中优）     |
-| 商品移除/删除         | ❌     | ✅           | ✅         | ✅            | 缺失（中优）     |
-| 按销量/热度排序       | ❌     | ✅           | ✅         | ✅            | 缺失（低优）     |
-| 店铺级分类            | ❌     | ✅           | ✅         | ✅            | 缺失（低优）     |
-| 库存预警              | ❌     | ✅           | ✅         | ✅            | 缺失（中优）     |
-| 商品数据分析          | ❌     | ✅           | ✅         | ✅            | 缺失（低优）     |
-| 商品评价管理          | ❌     | ✅           | ✅         | ✅            | 缺失（低优）     |
-| SKU 重新同步/更新     | ❌     | ✅           | ✅         | ✅            | 缺失（中优）     |
+| 功能                  | 本系统  | 有赞商家后台 | 美团商家版 | Shopify Admin | 差距评估                   |
+| --------------------- | ------- | ------------ | ---------- | ------------- | -------------------------- |
+| 选品中心浏览          | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 商品导入（含SKU配置） | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 利润风控校验          | ✅      | ❌           | ❌         | ❌            | 领先                       |
+| 乐观锁并发控制        | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 全局下架自动同步      | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 自定义标题/服务半径   | ✅      | ✅           | ✅         | —             | 持平（O2O 特有）           |
+| HQ 跨店查看           | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 权限控制              | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 批量导入              | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 批量调价              | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 商品移除/删除         | ✅      | ✅           | ✅         | ✅            | 持平                       |
+| 按销量/热度排序       | ❌      | ✅           | ✅         | ✅            | 缺失（低优）               |
+| 店铺级分类            | ❌      | ✅           | ✅         | ✅            | 缺失（低优）               |
+| 库存预警              | ⚠️ 部分 | ✅           | ✅         | ✅            | 阈值配置已实现，通知待建设 |
+| 商品数据分析          | ❌      | ✅           | ✅         | ✅            | 缺失（低优）               |
+| 商品评价管理          | ❌      | ✅           | ✅         | ✅            | 缺失（低优）               |
+| SKU 重新同步/更新     | ❌      | ✅           | ✅         | ✅            | 缺失（中优）               |
 
 ### 7.2 差距总结
 
-本系统在利润风控校验方面具有差异化优势（有赞/美团/Shopify 均无内置利润校验）。主要差距集中在：
+本系统在利润风控校验方面具有差异化优势（有赞/美团/Shopify 均无内置利润校验）。已完成：权限控制、批量导入、批量调价、商品移除、库存预警阈值配置。当前主要差距集中在：
 
-1. 权限缺失：所有接口无 `@RequirePermission`，P1 级别安全隐患
-2. 批量操作：不支持批量导入和批量调价，影响运营效率
-3. 商品移除：已导入商品无法删除，数据会持续膨胀
-4. SKU 同步：重新导入不更新已有 SKU，全局价格变更无法同步到门店
+1. SKU 同步：重新导入不更新已有 SKU，全局价格变更无法同步到门店
+2. 库存预警通知：阈值可配置，但低库存时的自动通知待建设
 
 ---
 
@@ -349,10 +352,10 @@ stateDiagram-v2
 | AC-6  | 导入商品默认状态为 `OFF_SHELF`                                         | ✅ 已通过        |
 | AC-7  | 价格更新使用乐观锁（version 字段），并发冲突时返回明确错误信息         | ✅ 已通过        |
 | AC-8  | 店铺商品列表支持按名称、类型、状态筛选                                 | ✅ 已通过        |
-| AC-9  | 所有接口有 `@RequirePermission` 权限校验                               | ❌ 未实现（D-1） |
-| AC-10 | HQ 跨店查询有角色/权限校验                                             | ❌ 未实现（D-3） |
-| AC-11 | Bull 队列正确注册并可处理全局下架同步                                  | ❌ 未实现（D-6） |
-| AC-12 | Service 通过 Repository 层访问数据库                                   | ❌ 未实现（D-9） |
+| AC-9  | 所有接口有 `@RequirePermission` 权限校验                               | ✅ 已通过        |
+| AC-10 | HQ 跨店查询有角色/权限校验                                             | ⏳ 待实现（D-3） |
+| AC-11 | Bull 队列正确注册并可处理全局下架同步                                  | ✅ 已通过        |
+| AC-12 | Service 通过 Repository 层访问数据库                                   | ⏳ 待实现（D-9） |
 
 ---
 
@@ -360,24 +363,24 @@ stateDiagram-v2
 
 ### 9.1 短期（1-2 周）— 修复现有缺陷
 
-| 编号 | 任务                                                                         | 对应缺陷 | 预估工时 |
-| ---- | ---------------------------------------------------------------------------- | -------- | -------- |
-| T-1  | 为 6 个 Controller 端点添加 `@RequirePermission` 装饰器                      | D-1      | 1h       |
-| T-2  | `importProduct` 改用 `@Transactional()` 装饰器                               | D-2      | 1h       |
-| T-3  | `findAll` 的 `storeId` 参数增加 HQ 角色校验                                  | D-3      | 1h       |
-| T-4  | `product.module.ts` 注册 `BullModule.registerQueue` 和 Producer/Consumer     | D-6      | 1h       |
-| T-5  | `product.service.ts` 改用 `TenantProductRepository` 和 `TenantSkuRepository` | D-9      | 2h       |
-| T-6  | `updateProductPrice` 乐观锁更新改为事务内完成或使用 `update` 直接返回        | D-7      | 1h       |
+| 编号 | 任务                                                                  | 对应缺陷 | 状态      |
+| ---- | --------------------------------------------------------------------- | -------- | --------- |
+| T-1  | 为 Controller 端点添加 `@RequirePermission` 装饰器                    | D-1      | ✅ 已完成 |
+| T-2  | `importProduct` 改用 `@Transactional()` 装饰器                        | D-2      | ⏳ 待处理 |
+| T-3  | `findAll` 的 `storeId` 参数增加 HQ 角色校验                           | D-3      | ⏳ 待处理 |
+| T-4  | `product.module.ts` 注册 Bull 队列和 Producer/Consumer                | D-6      | ✅ 已完成 |
+| T-5  | `product.service.ts` 改用 Repository 层                               | D-9      | ⏳ 待处理 |
+| T-6  | `updateProductPrice` 乐观锁更新改为事务内完成或使用 `update` 直接返回 | D-7      | ⏳ 待处理 |
 
 ### 9.2 中期（1-2 月）— 补齐核心功能
 
-| 编号 | 任务                                           | 对应差距 | 预估工时 |
-| ---- | ---------------------------------------------- | -------- | -------- |
-| T-7  | 批量导入商品（选品中心多选 → 批量导入）        | A-1      | 2-3d     |
-| T-8  | 从店铺移除商品（软删除 + 关联 SKU 清理）       | D-8      | 1-2d     |
-| T-9  | SKU 重新同步（重新导入时 upsert 更新已有 SKU） | D-5      | 1d       |
-| T-10 | 批量调价（选择多个 SKU 统一调整价格/分销配置） | —        | 2d       |
-| T-11 | 库存预警（低库存阈值配置 + 消息通知）          | A-4      | 2-3d     |
+| 编号 | 任务                                           | 对应差距 | 状态                      |
+| ---- | ---------------------------------------------- | -------- | ------------------------- |
+| T-7  | 批量导入商品（选品中心多选 → 批量导入）        | A-1      | ✅ 已完成                 |
+| T-8  | 从店铺移除商品                                 | D-8      | ✅ 已完成                 |
+| T-9  | SKU 重新同步（重新导入时 upsert 更新已有 SKU） | D-5      | ⏳ 待处理                 |
+| T-10 | 批量调价                                       | —        | ✅ 已完成                 |
+| T-11 | 库存预警（低库存阈值配置 + 消息通知）          | A-4      | ⚠️ 阈值已实现，通知待建设 |
 
 ### 9.3 长期（3-6 月）— 竞争力建设
 

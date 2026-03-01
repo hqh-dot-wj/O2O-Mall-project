@@ -1,14 +1,22 @@
 <script setup lang="ts">
-import { NButton, NCard, NImage, NTag } from 'naive-ui';
+import { NButton, NCard, NCheckbox, NImage, NTag } from 'naive-ui';
 
 interface Props {
   product: Api.Store.MarketProduct;
+  /** 是否处于批量选择模式 */
+  selectable?: boolean;
+  /** 是否被选中 */
+  selected?: boolean;
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  selectable: false,
+  selected: false
+});
 
 defineEmits<{
   (e: 'import', product: Api.Store.MarketProduct): void;
+  (e: 'update:selected', value: boolean): void;
 }>();
 </script>
 
@@ -16,6 +24,13 @@ defineEmits<{
   <NCard hoverable class="h-full flex flex-col cursor-pointer transition-all hover:shadow-lg">
     <template #cover>
       <div class="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+        <div v-if="selectable" class="absolute left-2 top-2 z-10">
+          <NCheckbox
+            :checked="selected"
+            :disabled="product.isImported"
+            @update:checked="(v: boolean) => $emit('update:selected', v)"
+          />
+        </div>
         <NImage
           :src="product.albumPics?.split(',')[0]"
           class="h-full w-full object-cover transition-transform duration-300 hover:scale-110"

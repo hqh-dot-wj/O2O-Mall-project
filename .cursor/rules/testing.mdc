@@ -133,6 +133,10 @@ Backend 提供类型安全测试辅助，位于 `src/common/types/test-helpers.t
 
 PR 时新增逻辑应有对应单测，核心/资金类逻辑建议主路径与异常分支兼备。
 
+### 5.1 流程规约驱动测试
+
+涉及状态机、并发、金额计算、幂等性的 Service，必须先编写 Process Spec（`docs/process-specs/`），为每条规则分配 Rule ID，再按 Rule ID 编写测试。测试命名使用 Given/When/Then 格式。详见 `process-testing.mdc`。
+
 ---
 
 ## 6. 覆盖率

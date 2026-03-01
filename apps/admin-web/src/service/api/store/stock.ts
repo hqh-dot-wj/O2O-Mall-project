@@ -11,8 +11,17 @@ export function fetchGetStockList(data: Api.Store.StockSearchParams) {
 
 /** Update Stock */
 export function fetchUpdateStock(data: Api.Store.StockUpdateParams) {
-  return request<boolean>({
+  return request<Api.Store.StockSku>({
     url: '/store/stock/update',
+    method: 'post',
+    data
+  });
+}
+
+/** Batch Update Stock */
+export function fetchBatchUpdateStock(data: Api.Store.BatchUpdateStockParams) {
+  return request<Api.Store.BatchUpdateStockResult>({
+    url: '/store/stock/batch/update',
     method: 'post',
     data
   });

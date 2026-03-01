@@ -1,12 +1,29 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
-import { NButton, NCard, NEmpty, NGrid, NGridItem, NInput, NPagination, NSpin, NTabPane, NTabs, NTree } from 'naive-ui';
+import {
+  NButton,
+  NCard,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NInput,
+  NPagination,
+  NSpin,
+  NTabPane,
+  NTabs,
+  NTree,
+  useMessage
+} from 'naive-ui';
 import { fetchGetCategoryTree } from '@/service/api/pms/category';
-import { fetchGetProductMarketList } from '@/service/api/store/product';
+import { fetchBatchImportProducts, fetchGetMarketProductDetail, fetchGetProductMarketList } from '@/service/api/store/product';
 import ProductMarketCard from './components/ProductMarketCard.vue';
 import ImportDialog from './components/ImportDialog.vue';
 
 defineOptions({ name: 'ProductSelectionCenter' });
+
+const message = useMessage();
+const selectedIds = ref<Set<string>>(new Set());
+const batchImportLoading = ref(false);
 
 // --- Category Tree ---
 const treeLoading = ref(false);
@@ -91,6 +108,63 @@ function handleImportSuccess() {
   getData();
 }
 
+function toggleSelect(productId: string, checked: boolean) {
+  if (checked) {
+    selectedIds.value.add(productId);
+  } else {
+    selectedIds.value.delete(productId);
+  }
+  selectedIds.value = new Set(selectedIds.value);
+}
+
+function isSelected(productId: string) {
+  return selectedIds.value.has(productId);
+}
+
+async function handleBatchImport() {
+  const ids = Array.from(selectedIds.value);
+  if (ids.length === 0) {
+    message.warning('请先选择要导入的商品');
+    return;
+  }
+
+  batchImportLoading.value = true;
+  try {
+    const details = await Promise.all(
+      ids.map(id => fetchGetMarketProductDetail(id).then(r => r.data))
+    );
+
+    const items = details
+      .filter((d): d is NonNullable<typeof d> => Boolean(d?.globalSkus?.length))
+      .map(d => ({
+        productId: d.productId,
+        overrideRadius: d.serviceRadius ?? undefined,
+        skus: d.globalSkus!.map(s => ({
+          globalSkuId: s.skuId,
+          price: Number(s.guidePrice),
+          stock: 0,
+          distRate: Number(s.guideRate ?? 0),
+          distMode: s.distMode
+        }))
+      }));
+
+    if (items.length === 0) {
+      message.warning('所选商品无可导入的 SKU');
+      batchImportLoading.value = false;
+      return;
+    }
+
+    await fetchBatchImportProducts({ items });
+    message.success(`成功导入 ${items.length} 个商品`);
+    selectedIds.value = new Set();
+    getData();
+  } catch {
+    // error handled by request
+  } finally {
+    batchImportLoading.value = false;
+  }
+}
+
 onMounted(() => {
   getCategoryTree();
   getData();
@@ -140,6 +214,14 @@ onMounted(() => {
           </NTabs>
 
           <div class="flex items-center gap-2">
+            <NButton
+              type="primary"
+              :loading="batchImportLoading"
+              :disabled="selectedIds.size === 0"
+              @click="handleBatchImport"
+            >
+              批量导入 ({{ selectedIds.size }})
+            </NButton>
             <NInput v-model:value="searchParams.name" placeholder="搜索商品名称" clearable @keyup.enter="handleSearch">
               <template #prefix>
                 <div class="i-icon-park-outline:search" />
@@ -156,7 +238,13 @@ onMounted(() => {
           <template v-if="data.length > 0">
             <NGrid :x-gap="16" :y-gap="16" cols="1 s:2 m:3 l:4 xl:5" responsive="screen">
               <NGridItem v-for="item in data" :key="item.productId">
-                <ProductMarketCard :product="item" @import="openImportDialog" />
+                <ProductMarketCard
+                  :product="item"
+                  :selectable="true"
+                  :selected="isSelected(item.productId)"
+                  @import="openImportDialog"
+                  @update:selected="(v: boolean) => toggleSelect(item.productId, v)"
+                />
               </NGridItem>
             </NGrid>
 

@@ -1,7 +1,7 @@
 ---
-description: Admin-Web 前端开发规范（目录结构、命名、布局、性能、CSS、TypeScript 类型安全、测试）
+description: Admin-Web 前端开发规范（目录结构、命名、布局、性能、CSS、TypeScript 类型安全、API 类型）
 globs: apps/admin-web/**/*
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Admin-Web 前端开发规范（Coding Rules & Conventions）
@@ -192,40 +192,32 @@ const emit = defineEmits<Emits>();
 
 ## 10. 测试规范
 
-- **单元/组件测试**：Vitest + `@vue/test-utils`，用例放在 `src/**/*.spec.{ts,tsx,vue}`，配置在 `vitest.config.ts`、入口 `src/test/setup.ts`。
-- **E2E 测试**：Playwright，用例放在 `e2e/*.spec.ts`，配置在 `playwright.config.ts`。
+> 详见 `testing.mdc`。对接完页面/接口后必须补测并运行通过。
 
-### 10.0 对接完成必做（强制）
+## 11. API 类型规范
 
-**对接完一个页面或接口后，必须执行对应测试：**
+涉及 API 调用时，类型**必须**来自 `@libs/common-types`，禁止手写重复类型。
 
-| 完成内容 | 必须执行 |
-|----------|----------|
-| 新增/修改 API（`service/api/**/*.ts`） | 补充或更新同目录 `*.spec.ts`，覆盖各接口；运行 `pnpm test -- src/service/api/对应模块` |
-| 新增页面/路由 | 关键路由补充 E2E 冒烟；运行 `pnpm test:e2e` |
-| 修改核心业务逻辑 | 确保相关单测通过；运行 `pnpm test` |
+### 前置步骤
 
-流程：编写代码 → 补充/更新测试 → 本地运行通过 → 再提交。
+1. 执行 `pnpm generate-types`（先构建 backend → 生成 common-types）
+2. 在 `libs/common-types/src/api.d.ts` 查找所需类型
+3. 若无对应类型，确认 backend 是否已暴露接口，重新生成
 
-### 10.1 可直接编写（简单）
+### 正确做法
 
-以下情况**无需先问**，可直接补充或修改测试：
+```ts
+// 在 src/typings/api/*.d.ts 中引用 common-types
+declare namespace Api {
+  namespace Order {
+    type OrderItem = import('@libs/common-types').components['schemas']['OrderListItemVo'];
+    type SearchParams = import('@libs/common-types').RequestParams<'/api/order/list', 'get'>;
+  }
+}
+```
 
-- **工具函数**：`src/utils`、`src/constants` 等纯函数，无全局依赖或仅简单 mock。
-- **简单组件**：无路由/Pinia/复杂 Naive 依赖，或 mock 方式明确（如仅需 `$t`、`$message`）。
-- **冒烟 E2E**：访问某路由、页面可见、基础可点击（如已有 `e2e/smoke.spec.ts` 风格）。
-- **与本次改动强相关**：新增/修改了某函数或小组件，顺带补同文件的 `*.spec.ts` 或单用例。
+### 禁止行为
 
-编写时遵守：单测用 `describe`/`it`/`expect`，组件用 `mount` + 断言 DOM 或 emit；E2E 用 `page.goto`、`page.locator`、`expect`，不依赖未约定的环境（如固定账号密码）。
-
-### 10.2 需先询问（有难度）
-
-以下情况**先与用户确认**再实现，不擅自写复杂或易失效的用例：
-
-- **复杂 mock**：需 mock 路由、Pinia、多层级 Naive 组件、请求拦截范围与返回值等，方案不唯一。
-- **强依赖环境/权限的 E2E**：登录态、多角色、特定后端数据或环境变量，需约定账号、数据或是否用 mock 接口。
-- **大范围/长流程 E2E**：跨多页、多步骤的关键业务流程（如下单、审批），需确认覆盖范围与可维护性。
-- **历史遗留或第三方逻辑**：被测代码难以理解或强耦合，需确认是否值得补测、优先级与粒度。
-- **性能/快照类测试**：如 Vitest 快照、Playwright 视觉回归、性能阈值，需确认是否引入、阈值与 CI 策略。
-
-询问时尽量给出：可选方案（例如「只测 happy path」或「加 mock 登录」）、工作量粗估、对现有流水线的影响；由用户选择后再写。
+- 禁止在 `typings/api/*.d.ts` 中手写与后端 VO/DTO 重复的类型
+- 禁止用 `any` 占位替代应从 common-types 引用的类型
+- 修改已有手写类型时，顺带迁移为 common-types 引用

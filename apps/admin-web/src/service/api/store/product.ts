@@ -52,3 +52,57 @@ export function fetchGetMarketProductDetail(productId: string) {
     method: 'get'
   });
 }
+
+/** Batch Import Products */
+export function fetchBatchImportProducts(data: { items: Api.Store.ProductImportParams[] }) {
+  return request<boolean>({
+    url: '/store/product/import/batch',
+    method: 'post',
+    data
+  });
+}
+
+/** Batch Update Product Price */
+export function fetchBatchUpdateProductPrice(data: {
+  items: Array<{
+    tenantSkuId: string;
+    price: number;
+    stock: number;
+    distRate: number;
+    distMode?: Api.Pms.DistributionMode;
+    pointsRatio?: number;
+    isPromotionProduct?: boolean;
+  }>;
+}) {
+  return request<boolean>({
+    url: '/store/product/update-price/batch',
+    method: 'post',
+    data
+  });
+}
+
+/** Remove Product from Store */
+export function fetchRemoveProduct(data: { id: string }) {
+  return request<boolean>({
+    url: '/store/product/remove',
+    method: 'post',
+    data
+  });
+}
+
+/** Get Stock Alert Config */
+export function fetchGetStockAlertConfig() {
+  return request<{ threshold: number }>({
+    url: '/store/product/stock-alert/config',
+    method: 'get'
+  });
+}
+
+/** Set Stock Alert Config */
+export function fetchSetStockAlertConfig(data: { threshold: number }) {
+  return request<boolean>({
+    url: '/store/product/stock-alert/config',
+    method: 'post',
+    data
+  });
+}

@@ -26,6 +26,24 @@ declare namespace Api {
     interface StockUpdateParams {
       skuId: string;
       stockChange: number; // positive for add, negative for reduce
+      reason?: string;
     }
+
+    /** 批量调整单项 */
+    interface BatchUpdateStockItem {
+      skuId: string;
+      stockChange: number;
+      reason?: string;
+    }
+
+    interface BatchUpdateStockParams {
+      items: BatchUpdateStockItem[];
+    }
+
+    type BatchUpdateStockResult = {
+      successCount: number;
+      failCount: number;
+      details: Array<{ skuId: string; success: boolean; error?: string }>;
+    };
   }
 }

@@ -1,0 +1,122 @@
+---
+description: 流程规约驱动测试（Process-Spec-Driven Testing）— Rule ID 体系、Process Spec 分级、测试映射、Service 方法分解
+globs: apps/backend/**/*.ts, apps/backend/docs/process-specs/**/*.md
+alwaysApply: false
+---
+
+# 流程规约驱动测试
+
+每个业务操作编写 Process Spec，为每条规则分配 Rule ID，每个 Rule ID 至少映射一条测试用例，Service 方法按规则类别分解。
+
+## 1. 适用范围与分级
+
+| 级别 | 适用场景 | 要求的 Spec 章节 |
+|------|---------|-----------------|
+| **Lite** | CRUD、查询、配置类 | Meta + Input + PreConditions + TestMapping（4 章） |
+| **Full** | 状态机、并发、金额、支付、库存 | 全部 10 章（含 StateMachine / Exception / Idempotency / Observability） |
+
+**判断标准**：涉及状态转换、Decimal 计算、分布式锁、幂等性中**任意一项**即 Full。
+
+## 2. Rule ID 命名规范
+
+格式：`R-{CATEGORY}-{DOMAIN}-{SEQ}`
+
+| 前缀 | 含义 | 示例 |
+|------|------|------|
+| `R-IN` | 输入校验 | `R-IN-ORDER-01` |
+| `R-PRE` | 前置条件 | `R-PRE-STOCK-01` |
+| `R-FLOW` | 主干流程 | `R-FLOW-CREATE-01` |
+| `R-BRANCH` | 分支规则 | `R-BRANCH-ZERO-01` |
+| `R-STATE` | 状态机 | `R-STATE-TRANS-01` |
+| `R-CONCUR` | 并发/锁 | `R-CONCUR-STOCK-01` |
+| `R-TXN` | 事务/回滚 | `R-TXN-ROLLBACK-01` |
+| `R-RESP` | 返回/序列化 | `R-RESP-AMOUNT-01` |
+| `R-LOG` | 可观测性 | `R-LOG-AMOUNT-01` |
+
+- DOMAIN 使用大写短名（ORDER、STOCK、COUPON、POINTS 等）
+- SEQ 为两位数字，从 01 开始
+
+## 3. Process Spec 位置与命名
+
+- 目录：`apps/backend/docs/process-specs/{domain}/`
+- 文件名：`{action}.process-spec.md`（kebab-case）
+- 模板：`_template-lite.md`（Lite）、`_template-full.md`（Full）
+
+示例：
+- `docs/process-specs/order/create-order.process-spec.md`
+- `docs/process-specs/stock/lock-stock.process-spec.md`
+- `docs/process-specs/coupon/claim-coupon.process-spec.md`
+
+## 4. 测试映射规则（强制）
+
+### 4.1 完整性要求
+
+- **没有 Rule ID 的流程规则，视为不完整**
+- 每个 Rule ID 至少 1 条测试用例
+- 测试文件中用注释标注对应的 Rule ID
+
+### 4.2 测试命名
+
+禁止泛化命名，使用 Given/When/Then 描述：
+
+```typescript
+// R-IN-ORDER-01: Decimal 输入兼容性
+it('Given price=0.1+0.2, When createOrder, Then DB amount=Decimal(0.3)', async () => { ... });
+
+// R-PRE-STOCK-01: 库存校验
+it('Given stock=0, When createOrder, Then 409 库存不足', async () => { ... });
+
+// R-BRANCH-ZERO-01: 0 元订单
+it('Given totalAmount=0, When createOrder, Then state=PAID and no payment record', async () => { ... });
+```
+
+### 4.3 测试映射表格式（在 Process Spec 中）
+
+| Rule ID | 测试类型 | Given | When | Then |
+|---------|---------|-------|------|------|
+| R-IN-ORDER-01 | 边界 | price=0.1+0.2 | createOrder | DB amount=Decimal(0.3) |
+| R-PRE-STOCK-01 | 边界 | stock=0 | createOrder | 409 库存不足 |
+
+## 5. Service 方法分解约定
+
+业务方法按规则类别分解为 private 子方法，主入口仅做协调：
+
+```typescript
+async createOrder(dto: CreateOrderDto): Promise<Order> {
+  this.validateCreateInput(dto);              // R-IN-*
+  await this.checkCreatePreConditions(dto);   // R-PRE-*
+  const order = await this.doCreateOrder(dto); // R-FLOW-*
+  await this.applyPostCreateRules(order);     // R-BRANCH-*
+  return order;
+}
+```
+
+| 子方法前缀 | 规则类别 | 职责 |
+|-----------|---------|------|
+| `validate*` | R-IN-* | 输入格式、类型、精度校验 |
+| `check*` | R-PRE-* | 业务前置条件（存在性、状态、库存） |
+| `do*` | R-FLOW-* | 主干逻辑（创建、计算、持久化） |
+| `apply*Rules` | R-BRANCH-* | 分支判断（0 元跳过支付、虚拟商品自动发货） |
+| `transition*State` | R-STATE-* | 状态机转换 |
+
+**核心原则**：一个 private 方法 = 一类规则 = 可独立单测。
+
+## 6. 完整性检查（PR 必查）
+
+| 检查项 | 要求 |
+|--------|------|
+| Process Spec 存在 | 新增/修改业务方法时，对应 Spec 已创建或更新 |
+| Rule ID 已分配 | Spec 中每条规则有唯一 Rule ID |
+| 测试覆盖 | 每个 Rule ID 在 `*.spec.ts` 中有至少 1 条测试 |
+| 方法分解 | Service 方法已按 validate/check/do/apply 分解 |
+| 测试命名 | 使用 Given/When/Then 格式，禁止 `should xxx` |
+
+## 7. Process Spec 章节速查
+
+### Lite（4 章）
+
+0-Meta / 2-Input / 3-PreConditions / 10-TestMapping
+
+### Full（10 章）
+
+0-Meta / 1-Why / 2-Input / 3-PreConditions / 4-HappyPath / 5-BranchRules / 6-StateMachine / 7-ExceptionStrategy / 8-Idempotency / 9-Observability / 10-TestMapping
