@@ -43,10 +43,12 @@ alwaysApply: false
 
 ## 3. 样式规范
 
-- **布局单位**：优先 rpx；避免 px（仅 1px 边框等固定像素时用）；安全区用 `env(safe-area-inset-*)` 或 UnoCSS `p-safe`、`pt-safe`、`pb-safe`
-- **UnoCSS**：配置在 `uno.config.ts`，优先原子类；颜色用 `text-primary`、`bg-gray-100`；主题色 `var(--wot-color-theme)`
-- **SCSS**：`<style lang="scss" scoped>`；平台差异样式用条件编译
+- **Design Token**：所有色值、字号、间距、圆角定义在 `src/style/design-tokens.scss`，UnoCSS 主题已同步。**禁止在业务代码中硬编码色值或尺寸**，必须使用 CSS 变量或 UnoCSS 原子类
+- **布局单位**：优先 rpx；避免 px（仅 1px 边框等固定像素时用）；间距使用 8pt 网格（`space-xs/sm/md/lg/xl`）；安全区用 `env(safe-area-inset-*)` 或 UnoCSS `p-safe`、`pt-safe`、`pb-safe`
+- **UnoCSS**：配置在 `uno.config.ts`，优先原子类；颜色用 `text-primary`、`text-ink`(主文字)、`text-ink-light`(副文字)、`text-price`(价格)、`bg-fill`(页面背景)、`bg-surface`(卡片) 等语义化类名；字号用 `text-title-md`、`text-body-lg` 等阶梯类名
+- **SCSS**：`<style lang="scss" scoped>`；平台差异样式用条件编译；自定义样式中颜色/间距/圆角必须引用 Design Token CSS 变量
 - **颜色兼容**：避免 `oklch`、`rgb(255 0 0)` 等新语法；使用 `presetLegacyCompat`
+- **详细 UI/UX 规范**：参见 `miniapp-ui-spec.mdc`（Design Token 速查表、组件规范、交互规范）和 `miniapp-d2c.mdc`（D2C 组件映射与代码生成策略）
 
 ---
 

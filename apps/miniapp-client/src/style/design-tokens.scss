@@ -1,0 +1,82 @@
+// ============================================================
+// Design Tokens — 小程序 UI 视觉基础规范
+// 基于 8pt 网格系统，所有间距/尺寸为 8rpx 的倍数
+// 严禁在业务代码中硬编码色值、字号、间距，必须使用变量
+// ============================================================
+
+:root,
+page {
+  // ======================== 品牌色 ========================
+  --color-brand-primary: #00C250;
+  --color-brand-hover: #00A642;
+  --color-brand-light: #E6F8EB;
+  --color-brand-gradient-start: #2DD16B;
+  --color-brand-gradient-end: #00B846;
+
+  // ======================== 功能语义色 ========================
+  --color-func-error: #FF4D4F;
+  --color-func-warning: #FF9C00;
+  --color-func-success: #00C250;
+  --color-func-link: #00698E;
+  --color-price: #FF3B30;
+
+  // ======================== 中性色阶 ========================
+  --color-text-primary: #111111;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-border-default: #E5E5E5;
+  --color-bg-body: #F5F5F5;
+  --color-bg-surface: #FFFFFF;
+
+  // ======================== 间距系统 (8pt Grid) ========================
+  --space-xs: 8rpx;
+  --space-sm: 16rpx;
+  --space-md: 24rpx;
+  --space-lg: 32rpx;
+  --space-xl: 48rpx;
+
+  // ======================== 圆角 ========================
+  --radius-sm: 8rpx;
+  --radius-card: 16rpx;
+  --radius-popup: 24rpx;
+  --radius-pill: 999rpx;
+
+  // ======================== 字号阶梯 ========================
+  --font-display-large: 64rpx;
+  --font-display-medium: 48rpx;
+  --font-title-large: 36rpx;
+  --font-title-medium: 32rpx;
+  --font-body-large: 28rpx;
+  --font-body-medium: 26rpx;
+  --font-caption: 24rpx;
+  --font-micro: 20rpx;
+
+  // ======================== 行高 ========================
+  --lh-tight: 1.1;
+  --lh-snug: 1.2;
+  --lh-normal: 1.4;
+  --lh-relaxed: 1.5;
+
+  // ======================== 阴影 ========================
+  --shadow-card: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  --shadow-popup: 0 -4rpx 24rpx rgba(0, 0, 0, 0.08);
+
+  // ======================== 层级 (z-index) ========================
+  --z-sticky: 10;
+  --z-fixed: 50;
+  --z-cart-bar: 100;
+  --z-popup: 200;
+  --z-toast: 300;
+
+  // ======================== 点击热区最小尺寸 ========================
+  --tap-target-min: 88rpx;
+
+  // ======================== 动画时长 ========================
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  // ======================== 覆盖 wot-design-uni 主题色 ========================
+  --wot-color-theme: var(--color-brand-primary);
+  --wot-button-primary-bg-color: var(--color-brand-primary);
+}

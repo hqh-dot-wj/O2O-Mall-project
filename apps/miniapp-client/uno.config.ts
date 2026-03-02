@@ -85,13 +85,58 @@ export default defineConfig({
   ],
   theme: {
     colors: {
-      /** 主题色，用法如: text-primary */
-      primary: 'var(--wot-color-theme,#0957DE)',
+      /** 品牌色 — text-primary / bg-primary */
+      primary: 'var(--color-brand-primary, #00C250)',
+      'primary-light': 'var(--color-brand-light, #E6F8EB)',
+      'primary-hover': 'var(--color-brand-hover, #00A642)',
+      /** 功能色 — text-error / text-warning / text-price 等 */
+      error: 'var(--color-func-error, #FF4D4F)',
+      warning: 'var(--color-func-warning, #FF9C00)',
+      success: 'var(--color-func-success, #00C250)',
+      link: 'var(--color-func-link, #00698E)',
+      price: 'var(--color-price, #FF3B30)',
+      /** 文字色 — text-ink / text-ink-light / text-ink-lighter */
+      ink: 'var(--color-text-primary, #111111)',
+      'ink-light': 'var(--color-text-secondary, #666666)',
+      'ink-lighter': 'var(--color-text-tertiary, #999999)',
+      /** 边框色 — border-line */
+      line: 'var(--color-border-default, #E5E5E5)',
+      /** 背景色 — bg-fill / bg-surface */
+      fill: 'var(--color-bg-body, #F5F5F5)',
+      surface: 'var(--color-bg-surface, #FFFFFF)',
     },
     fontSize: {
-      /** 提供更小号的字体，用法如：text-2xs */
+      /** 字号阶梯 — text-display-lg / text-title-md 等 */
+      'display-lg': ['64rpx', { lineHeight: '1.1' }],
+      'display-md': ['48rpx', { lineHeight: '1.2' }],
+      'title-lg': ['36rpx', { lineHeight: '1.4' }],
+      'title-md': ['32rpx', { lineHeight: '1.4' }],
+      'body-lg': ['28rpx', { lineHeight: '1.5' }],
+      'body-md': ['26rpx', { lineHeight: '1.5' }],
+      'caption': ['24rpx', { lineHeight: '1.4' }],
+      'micro': ['20rpx', { lineHeight: '1.2' }],
+      /** 兼容旧的小字号类名 */
       '2xs': ['20rpx', '28rpx'],
       '3xs': ['18rpx', '26rpx'],
+    },
+    spacing: {
+      /** 8pt 网格间距 — p-space-xs / m-space-lg 等 */
+      'space-xs': '8rpx',
+      'space-sm': '16rpx',
+      'space-md': '24rpx',
+      'space-lg': '32rpx',
+      'space-xl': '48rpx',
+    },
+    borderRadius: {
+      /** 圆角 — rounded-card / rounded-pill 等 */
+      'sm': '8rpx',
+      'card': '16rpx',
+      'popup': '24rpx',
+      'pill': '999rpx',
+    },
+    boxShadow: {
+      'card': '0 4rpx 12rpx rgba(0, 0, 0, 0.04)',
+      'popup': '0 -4rpx 24rpx rgba(0, 0, 0, 0.08)',
     },
   },
   // windows 系统会报错：[plugin:unocss:transformers:pre] Cannot overwrite a zero-length range - use append Left or prependRight instead.

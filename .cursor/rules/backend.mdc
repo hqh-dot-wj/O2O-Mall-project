@@ -150,21 +150,109 @@ xxx/
 
 ---
 
-## 🧪 9. 测试规范
+## 📝 9. 代码注释规范
+
+### 9.1 必须写 JSDoc 的场景
+
+| 场景 | 必须包含 |
+|------|----------|
+| Service **public** 方法 | `@description`、`@param`、`@returns`、`@throws` |
+| Repository 自定义方法（非基类 CRUD） | `@param`、`@returns` |
+| 工具函数 / Helper（`common/utils/`） | `@param`、`@returns` |
+| 废弃方法 | `@deprecated` + 替代方案 |
+
+### 9.2 不必写 JSDoc 的场景
+
+| 场景 | 原因 |
+|------|------|
+| Controller 方法 | Swagger 装饰器（`@Api`、`@ApiProperty`）已充当文档 |
+| private 方法（命名清晰时） | 好的命名 > 冗余注释；命名不够清晰时仍应补 JSDoc |
+| getter / setter | 类型签名已说明 |
+| 逐行翻译代码 | 代码本身应该可读，注释应回答"为什么"而非"做了什么" |
+
+### 9.3 JSDoc 示例
+
+```typescript
+/**
+ * 根据条件分页查询会员列表，支持按姓名模糊搜索和状态筛选
+ *
+ * @param query - 分页参数与筛选条件
+ * @param tenantId - 当前租户 ID
+ * @returns 分页会员列表（含总数）
+ * @throws BusinessException 当分页偏移超过 5000 时抛出
+ */
+async findAll(query: ListMemberDto, tenantId: string): Promise<PaginatedResult<MemberVo>> {
+```
+
+```typescript
+/**
+ * @deprecated 使用 OrderService.createWithValidation 替代，本方法缺少库存校验
+ */
+async createOrder(dto: CreateOrderDto): Promise<Order> {
+```
+
+### 9.4 业务逻辑注释：写 Why，不写 What
+
+```typescript
+// 先扣库存再创建订单，避免超卖（乐观锁在 Repository 层）
+await this.stockRepository.deduct(skuId, qty);
+await this.orderRepository.create(orderData);
+
+// 金额为 0 时跳过支付流程，直接标记已支付
+// 业务规则：全额优惠券 / 积分全抵 场景
+if (order.payableAmount === 0) {
+  return this.completeZeroAmountOrder(order);
+}
+```
+
+**反面示例**（禁止）：
+
+```typescript
+// 获取用户       ← 代码已经写了 findUser()，不需要复述
+const user = await this.findUser(id);
+// 设置状态为启用  ← 下一行 status = StatusEnum.NORMAL 已经说明了
+user.status = StatusEnum.NORMAL;
+```
+
+### 9.5 TODO / FIXME / HACK 格式
+
+```typescript
+// TODO(zhangsan): 2026-Q2 迁移到事件驱动，当前同步调用存在耦合
+// FIXME(lisi): 并发场景下可能重复扣款，需加分布式锁
+// HACK: 临时绕过第三方 SDK 类型错误，等 v3.0 发布后移除
+```
+
+格式：`// 标记(负责人): 描述`。TODO 必须带负责人，建议带目标时间。
+
+与技术债标记（§17）的区别：TODO/FIXME 用于代码行级标注，TECH-DEBT 用于模块级记录。
+
+### 9.6 速查
+
+| 场景 | 写什么 |
+|------|--------|
+| Service public 方法 | JSDoc：description + param + returns + throws |
+| 非显而易见的业务规则 | Why 注释：为什么这么做，而非做了什么 |
+| 临时方案 / 已知问题 | TODO/FIXME(负责人): 描述 |
+| 废弃方法 | `@deprecated` + 替代方案 |
+| 代码已经自解释的地方 | **不写** |
+
+---
+
+## 🧪 10. 测试规范
 
 > 详见 `testing.mdc`。对接完 Controller/Service 后必须补测并运行 `pnpm --filter @apps/backend test -- 对应模块` 通过。
 
 ---
 
-## 🚀 10. 接口与大表性能规范（PR 必答）
+## 🚀 11. 接口与大表性能规范（PR 必答）
 
 **原则**：接口要对「数据增长 + 访问增长」负责。
 
-### 10.1 设计三问
+### 11.1 设计三问
 
 1. 会不会高频访问？2. 会不会访问大表？3. 数据/QPS 翻 10 倍是否可控？
 
-### 10.2 QPS 分级（按档位评估即可）
+### 11.2 QPS 分级（按档位评估即可）
 
 | 档位 | QPS      | 典型           | 要求                           |
 | ---- | -------- | -------------- | ------------------------------ |
@@ -174,11 +262,11 @@ xxx/
 
 **必评估 QPS**：大表、流水、订单、日志、高频列表。其余可默认「低」。
 
-### 10.3 大表名单（默认按大表设计）
+### 11.3 大表名单（默认按大表设计）
 
 订单、流水（支付/钱包/积分）、操作日志、明细表、历史表、消息表。
 
-### 10.4 数据量级
+### 11.4 数据量级
 
 | 级别 | 数据量           | 要求                              |
 | ---- | ---------------- | --------------------------------- |
@@ -187,22 +275,22 @@ xxx/
 | D3   | 100 万 ~ 1000 万 | 禁止 offset > 5000、游标/时间分页 |
 | D4   | > 1000 万        | 分表、读写分离、ES、归档          |
 
-### 10.5 禁止项
+### 11.5 禁止项
 
 - offset > 5000
 - order by 非索引字段
 - 大表 `like %xxx%`（buildStringFilter 用 contains，大表慎用）
 - 单接口返回 > 1000 条（导出须分页或异步）
 
-### 10.6 流水表
+### 11.6 流水表
 
 只允许 insert，禁止 update/delete。查询必须带时间范围。如需状态修正，仅允许新增「状态/修正原因」等审计字段，禁止改金额等核心字段。
 
-### 10.7 升级红线
+### 11.7 升级红线
 
 单表 > 500 万、QPS > 200、P95 > 500ms、全表扫描、offset > 5000。
 
-### 10.8 PR 必答
+### 11.8 PR 必答
 
 - QPS 档位（低/中/高）
 - 是否大表
@@ -212,55 +300,55 @@ xxx/
 
 ---
 
-## 🛡️ 11. 安全与稳定性规范
+## 🛡️ 12. 安全与稳定性规范
 
-### 11.1 幂等性（P0）
+### 12.1 幂等性（P0）
 
 支付/下单/创建类接口必须幂等。实现：唯一约束、Redis SetNX、分布式锁、状态机。
 
-### 11.2 防重复提交（P0）
+### 12.2 防重复提交（P0）
 
 表单/下单等短时拦截。后端 Redis 记录 `userId+业务key`，TTL 3–5 秒。
 
-### 11.3 敏感数据脱敏（P0）
+### 12.3 敏感数据脱敏（P0）
 
 日志和接口返回禁止明文：手机号、身份证、银行卡、密码。脱敏示例：`138****1234`。
 
-### 11.4 限流（P1）
+### 12.4 限流（P1）
 
 高 QPS 接口必须限流。维度：IP、用户、接口。实现：令牌桶、Nginx、Gateway、Redis。
 
-### 11.5 调用超时与弱依赖（P1）
+### 12.5 调用超时与弱依赖（P1）
 
 RPC/HTTP 必须设超时（如 3–5s）。非核心依赖做弱依赖：超时/失败不影响主流程。
 
-### 11.6 熔断与降级（P2）
+### 12.6 熔断与降级（P2）
 
 下游异常/超时比例高时熔断。降级：默认值、缓存、简化逻辑。重点：支付、短信、第三方 API。
 
-### 11.7 错误信息隐藏（P1）
+### 12.7 错误信息隐藏（P1）
 
 生产环境不向前端返回堆栈、SQL、内部路径。统一错误码 + 通用文案，详情写日志。
 
-### 11.8 参数白名单（P2）
+### 12.8 参数白名单（P2）
 
 orderBy、where 条件白名单，禁止前端随意传入任意字段。防注入、控性能。
 
-### 11.9 签名防篡改（P2）
+### 12.9 签名防篡改（P2）
 
 金额等关键字段签名（参数+时间戳+密钥）。支付/资金类接口建议使用。
 
-### 11.10 可观测性（P3）
+### 12.10 可观测性（P3）
 
 核心接口监控：QPS、P95 耗时、错误率。日志含 traceId、userId、关键参数（脱敏）。
 
 ---
 
-## 🏢 12. 多租户与接口分类
+## 🏢 13. 多租户与接口分类
 
 Backend 同时服务 **Admin 后台**（system/*）与 **Miniapp 小程序**（client/*）。接口分为「按租户隔离」与「不按租户隔离」两类，新增/修改接口时必须先区分并标明。
 
-### 12.1 三种接口类型
+### 13.1 三种接口类型
 
 | 类型 | 说明 | 示例 |
 |------|------|------|
@@ -268,26 +356,26 @@ Backend 同时服务 **Admin 后台**（system/*）与 **Miniapp 小程序**（c
 | **PlatformOnly** | 不按租户隔离，仅平台或超管可调；必须配 `RequirePermission` 或角色校验。 | 租户管理、租户套餐、同步字典、监控。 |
 | **TenantAgnostic** | 不依赖当前登录租户；租户由参数或返回值决定。 | `client/location/match-tenant`、`nearby-tenants`。 |
 
-### 12.2 路径与调用方约定
+### 13.2 路径与调用方约定
 
 - **system/tenant、system/tenant-package** → 一律 **PlatformOnly**。
 - **client/location** 下「根据坐标/位置解析或列出租户」的接口 → **TenantAgnostic**。
 - **client/** 下订单、购物车、商品、钱包等 → **TenantScoped**（租户来自 header 或 body，与前端约定一致）。
 - **system/** 下其余业务（用户、角色、部门等）→ **TenantScoped**。
 
-### 12.3 标明方式（必做）
+### 13.3 标明方式（必做）
 
 - 在 Controller 类或方法上用 JSDoc 标明：`/** @tenantScope TenantScoped */` 或 `PlatformOnly` 或 `TenantAgnostic`。
 - 与路径约定不一致时必须在类或方法上显式注释。
 
-### 12.4 新增接口前自检
+### 13.4 新增接口前自检
 
 1. 主要调用方：admin / miniapp / both？
 2. 是否按租户隔离？→ 是则 TenantScoped，否则 PlatformOnly 或 TenantAgnostic。
 3. PlatformOnly 是否已加权限？
 4. Miniapp 且 TenantScoped 时，租户来源是 header 还是 body/query？在注释或文档写明。
 
-### 12.5 数据层要求
+### 13.5 数据层要求
 
 - 租户内接口：访问租户隔离表必须通过继承 BaseRepository/SoftDeleteRepository 的 Repository；禁止手写 `prisma.xxx.findMany()` 且不加租户条件（除非显式跨租户且已加权限）。
 - 创建租户隔离数据：禁止由前端传入 `tenantId` 落库；从 `TenantContext.getTenantId()` 或 `this.cls.get('tenantId')` 取。
@@ -295,11 +383,11 @@ Backend 同时服务 **Admin 后台**（system/*）与 **Miniapp 小程序**（c
 
 ---
 
-## 📁 13. Client 与能力域模块职责划分
+## 📁 14. Client 与能力域模块职责划分
 
 **通用原则**：`client` 目录 = 小程序 C 端接口全集；能力域目录 = Service、Repository、规则配置，仅通过 admin 暴露配置接口，C 端能力由 `client` 薄 Controller 调用。
 
-### 13.1 通用职责约定
+### 14.1 通用职责约定
 
 | 角色 | 目录 | 职责 | 路径约定 |
 |------|------|------|----------|
@@ -308,20 +396,20 @@ Backend 同时服务 **Admin 后台**（system/*）与 **Miniapp 小程序**（c
 
 适用于：marketing、finance、store 等可被 C 端调用的能力域。依赖方向：`client` → 能力域，**禁止**能力域 → client。
 
-### 13.2 强制规则（通用）
+### 14.2 强制规则（通用）
 
 - **client 下必须包含**：所有 `client/*` 路径的 Controller，包括各能力域的 C 端接口。
 - **能力域下禁止**：直接使用 `@Controller('client/*')`。C 端能力通过 Service 对外提供，由 `module/client/{domain}/` 的 Controller 调用。
 - **依赖方向**：`client` → 能力域，禁止能力域依赖 client。
 
-### 13.3 能力域清单与路径（按需扩展）
+### 14.3 能力域清单与路径（按需扩展）
 
 | 能力域 | 目录 | admin 路径 | client 子路径 |
 |--------|------|------------|---------------|
 | Marketing | `module/marketing/` | `admin/marketing/*` | `client/marketing/*` |
 | （未来可扩展 finance、wallet 等） | — | — | — |
 
-### 13.4 以 Marketing 为例的目录结构
+### 14.4 以 Marketing 为例的目录结构
 
 ```
 module/client/
@@ -343,22 +431,22 @@ module/marketing/
 └── ...
 ```
 
-### 13.5 新增 C 端能力域接口时（通用流程）
+### 14.5 新增 C 端能力域接口时（通用流程）
 
 1. 在 `module/client/{能力域}/` 下新增或扩展 Controller。
 2. 注入并调用对应能力域模块导出的 Service。
 3. 路径使用 `client/{能力域}/xxx`，守卫使用 `MemberAuthGuard`，装饰器使用 `@Member()`。
 
-### 13.6 Marketing 迁移指引
+### 14.6 Marketing 迁移指引
 
 若当前 C 端营销接口仍在 `module/marketing` 中，需将 Controller 迁移至 `module/client/marketing/`，使结构符合本节约定。
 
 
 ---
 
-## 🏛️ 14. 架构守护规则
+## 🏛️ 15. 架构守护规则
 
-### 14.1 模块依赖方向（必须遵守）
+### 15.1 模块依赖方向（必须遵守）
 
 ```
 client → [finance, marketing, store, pms] → common
@@ -368,7 +456,7 @@ client → [finance, marketing, store, pms] → common
 
 跨模块通信：通过 Module exports 的 Service 或 EventEmitter2，禁止直接 import 其他模块内部文件。
 
-### 14.2 Service 复杂度限制
+### 15.2 Service 复杂度限制
 
 | 指标 | 阈值 |
 |------|------|
@@ -376,7 +464,7 @@ client → [finance, marketing, store, pms] → common
 | 单个方法行数 | ≤ 50 行 |
 | 构造函数依赖数 | ≤ 6 个 |
 
-### 14.3 禁止的代码模式
+### 15.3 禁止的代码模式
 
 | 模式 | 替代方案 |
 |------|----------|
@@ -388,7 +476,7 @@ client → [finance, marketing, store, pms] → common
 
 ---
 
-## 📊 15. SLO 接口分级
+## 📊 16. SLO 接口分级
 
 | 接口类别 | P99 延迟 | 示例 |
 |----------|----------|------|
@@ -401,7 +489,7 @@ client → [finance, marketing, store, pms] → common
 
 ---
 
-## 🔧 16. 技术债标记
+## 🔧 17. 技术债标记
 
 ```typescript
 // TECH-DEBT: [类型] [优先级] [预估工时] 描述
@@ -412,17 +500,17 @@ client → [finance, marketing, store, pms] → common
 
 ---
 
-## 📋 17. 文档规范
+## 📋 18. 文档规范
 
 > 详见 `documentation.mdc`。新增/修改模块时必须同步更新 `docs/requirements/` 和 `docs/design/` 下对应文档。
 
 ---
 
-## 🔌 18. 第三方 API 对接
+## 🔌 19. 第三方 API 对接
 
 > 详见 `backend-third-party.mdc`。核心要求：Adapter/Port 模式隔离、HttpModule 统一 HTTP 客户端、韧性设计（超时/重试/熔断/降级）。
 
 ---
 
-**规范版本**: 1.4
+**规范版本**: 1.5
 **最后更新**: 2026-03-01

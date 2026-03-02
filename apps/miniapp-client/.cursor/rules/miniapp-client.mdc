@@ -91,11 +91,16 @@ import { mpApi } from '@/utils/mp'
 - **避免 px**：仅在需要 1px 边框等固定物理像素时使用
 - **安全区**：使用 `env(safe-area-inset-*)` 或 UnoCSS 的 `p-safe`、`pt-safe`、`pb-safe`
 
-### 6. UnoCSS 原子化
+### 6. UnoCSS 原子化 + Design Token
 
 - 配置在 `uno.config.ts`，优先使用原子类
-- 颜色：`text-primary`、`bg-gray-100` 等，主题色使用 `var(--wot-color-theme)`
-- 字体：`text-2xs`、`text-3xs` 适配小屏
+- **Design Token** 定义在 `src/style/design-tokens.scss`，UnoCSS 主题已同步
+- 颜色：`text-primary`、`bg-primary-light`、`text-price`、`text-error`、`text-ink`(主文字)、`text-ink-light`(副文字)、`text-ink-lighter`(辅助文字)、`bg-fill`(页面背景)、`bg-surface`(卡片背景)、`border-line`(分割线)
+- 字号阶梯：`text-display-lg`(64rpx)、`text-title-md`(32rpx)、`text-body-lg`(28rpx)、`text-caption`(24rpx) 等
+- 间距（8pt 网格）：`p-space-xs`(8rpx)、`p-space-sm`(16rpx)、`p-space-md`(24rpx)、`p-space-lg`(32rpx)、`p-space-xl`(48rpx)
+- 圆角：`rounded-card`(16rpx)、`rounded-pill`(999rpx)、`rounded-popup`(24rpx)
+- 阴影：`shadow-card`、`shadow-popup`
+- **禁止硬编码色值**：不要写 `#00C250`，用 `text-primary` 或 `var(--color-brand-primary)`
 
 ### 7. SCSS 与 scoped
 

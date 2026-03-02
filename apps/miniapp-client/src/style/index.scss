@@ -1,28 +1,10 @@
-// 测试用的 iconfont，可生效
-// @import './iconfont.css';
-
-.test {
-  // 可以通过 @apply 多个样式封装整体样式
-  @apply mt-4 ml-4;
-
-  padding-top: 4px;
-  color: red;
-}
+@import './design-tokens';
 
 :root,
 page {
-  // 修改按主题色
-  // --wot-color-theme: #37c2bc;
-
-  // 修改按钮背景色
-  // --wot-button-primary-bg-color: green;
-
   // ========== Tabbar 布局变量 ==========
-  // 自定义 tabbar 高度（与 tabbar/config.ts 中的 height 保持一致）
   --tabbar-height: 50px;
-  // 安全区域底部间距（适配 iPhone X 等有底部安全区的设备）
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  // tabbar 总高度 = tabbar高度 + 安全区域
   --tabbar-total-height: calc(var(--tabbar-height) + var(--safe-bottom));
 }
 

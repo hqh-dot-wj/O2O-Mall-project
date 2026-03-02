@@ -123,20 +123,128 @@ src/views/[module]/[entity_name]/
 19. **a11y**：按钮/链接有文案或 aria-label；表单项关联 label。
 20. **响应式**：用 Naive responsive 或断点，避免魔法数字。
 
-## 9. TypeScript 类型安全（强制）
+## 9. 代码注释规范
+
+### 9.1 必须写 JSDoc 的场景
+
+| 场景 | 必须包含 |
+|------|----------|
+| Composable / Hook 导出函数 | `@description`、`@param`、`@returns` |
+| Service API 函数（`@/service/api/`） | `@param`、`@returns` |
+| 工具函数（`@/utils/`） | `@param`、`@returns` |
+| 复杂 computed / watcher | Why 注释（为什么需要这个计算/监听） |
+| 废弃函数 | `@deprecated` + 替代方案 |
+
+### 9.2 不必写 JSDoc 的场景
+
+| 场景 | 原因 |
+|------|------|
+| 组件 Props / Emits | TypeScript interface 已充当文档 |
+| 简单 ref / reactive 声明 | 类型签名已说明 |
+| 模板中的事件绑定 | 命名清晰即可（`@click="handleSubmit"`） |
+| 逐行翻译代码 | 代码本身应该可读 |
+
+### 9.3 JSDoc 示例
+
+Composable / Hook：
+
+```typescript
+/**
+ * 封装角色列表的表格操作，包含搜索、分页、增删改
+ *
+ * @param fetchList - 获取列表数据的 API 函数
+ * @returns table 数据、分页状态、操作方法
+ */
+export function useRoleTable(fetchList: FetchListFn) {
+```
+
+API Service：
+
+```typescript
+/**
+ * 根据角色 ID 获取已分配的菜单 ID 列表
+ *
+ * @param roleId - 角色 ID
+ * @returns 该角色拥有的菜单 ID 数组
+ */
+export function fetchGetRoleMenuIds(roleId: string): Promise<string[]> {
+```
+
+### 9.4 业务逻辑注释：写 Why，不写 What
+
+```vue
+<script setup lang="ts">
+// 树形选中节点变化时重新加载右侧表格
+// 同时清空搜索条件，避免筛选残留导致用户看到空表格却不知道原因
+watch(selectedKeys, (keys) => {
+  resetSearchParams();
+  searchParams.deptId = keys[0] ?? undefined;
+  getData();
+});
+
+// 金额输入限制两位小数，防止后端精度丢失
+const priceRule = { pattern: /^\d+(\.\d{1,2})?$/, message: '最多两位小数' };
+</script>
+```
+
+**反面示例**（禁止）：
+
+```typescript
+// 定义 visible 变量        ← ref<boolean> 已经说明了
+const visible = ref<boolean>(false);
+// 调用获取列表方法         ← 下一行 fetchList() 已经说明了
+await fetchList();
+```
+
+### 9.5 TODO / FIXME / HACK 格式
+
+```typescript
+// TODO(zhangsan): 2026-Q2 表格列配置改为用户可自定义持久化
+// FIXME(lisi): Safari 下日期选择器偶现样式错位
+// HACK: NDataTable 虚拟滚动与固定列冲突，等 Naive UI 修复后移除此 workaround
+```
+
+格式：`// 标记(负责人): 描述`。TODO 必须带负责人，建议带目标时间。
+
+### 9.6 组件文件顶部注释（可选，推荐复杂组件）
+
+对于逻辑较复杂的组件（> 200 行），可在 `<script setup>` 顶部用一句话说明组件职责：
+
+```vue
+<script setup lang="ts">
+/**
+ * 商品编辑抽屉：支持 SKU 动态增减、规格联动、图片上传
+ * 业务规则：编辑时不允许修改已有 SKU 的规格组合
+ */
+```
+
+### 9.7 速查
+
+| 场景 | 写什么 |
+|------|--------|
+| Composable / Hook 导出函数 | JSDoc：description + param + returns |
+| API Service 函数 | JSDoc：param + returns |
+| 非显而易见的业务规则 | Why 注释 |
+| 临时方案 / 已知问题 | TODO/FIXME(负责人): 描述 |
+| 复杂组件（> 200 行） | 文件顶部一句话说明职责 |
+| 代码已经自解释的地方 | **不写** |
+
+---
+
+## 10. TypeScript 类型安全（强制）
 
 前端为 TypeScript，**类型安全强制**，禁止放宽。
 
-### 9.1 禁止 any
+### 10.1 禁止 any
 
 - 禁止 `any`、`as any`、`@ts-ignore`。无法推断时用 `unknown` + 类型收窄。
 - 优先使用 `src/typings/` 下类型（如 `Api.System.Role`、`Api.System.RoleSearchParams`）。
 
-### 9.2 API 必须带类型
+### 10.2 API 必须带类型
 
 - 请求参数、响应体使用 `Api.[Module].*`；新接口先在 typings 补充类型再写业务，不得用 `any` 占位。
 
-### 9.3 Props / Emits 显式类型
+### 10.3 Props / Emits 显式类型
 
 - Props/Emits 用 interface 或 type；`defineModel<T>` 带泛型；`defineEmits` 类型化签名。
 
@@ -154,27 +262,27 @@ interface Emits {
 const emit = defineEmits<Emits>();
 ```
 
-### 9.4 ref / reactive 带类型
+### 10.4 ref / reactive 带类型
 
 - `ref<Api.System.Role[]>([])`、`reactive<RoleOperateParams>({...})`；禁止无泛型 `ref([])`。
 
-### 9.5 函数入参与返回值声明类型
+### 10.5 函数入参与返回值声明类型
 
 - 函数/箭头函数入参、返回值显式类型；async 返回 `Promise<T>`。
 
-### 9.6 表格列与表单 rules 带类型
+### 10.6 表格列与表单 rules 带类型
 
 - columns：`DataTableColumns<Api.System.Role>`；rules 的 key 与 model 字段一致。
 
-### 9.7 严格空值
+### 10.7 严格空值
 
 - 可能为空用 `?.`、默认值用 `??`；类型用 `?`、`| null`。
 
-### 9.8 类型导入
+### 10.8 类型导入
 
 - 仅类型用 `import type`。
 
-### 9.9 速查
+### 10.9 速查
 
 | 场景         | 要求                           |
 | ------------ | ------------------------------ |
@@ -190,11 +298,11 @@ const emit = defineEmits<Emits>();
 
 ---
 
-## 10. 测试规范
+## 11. 测试规范
 
 > 详见 `testing.mdc`。对接完页面/接口后必须补测并运行通过。
 
-## 11. API 类型规范
+## 12. API 类型规范
 
 涉及 API 调用时，类型**必须**来自 `@libs/common-types`，禁止手写重复类型。
 

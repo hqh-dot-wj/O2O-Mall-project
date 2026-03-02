@@ -1,0 +1,237 @@
+---
+description: 小程序 C 端 UI/UX 视觉规范与 AI 代码生成约束（Design Token、色彩、排版、间距、组件、交互）
+globs: apps/miniapp-client/**/*.vue,apps/miniapp-client/**/*.scss,apps/miniapp-client/**/*.ts
+alwaysApply: false
+---
+
+# 小程序 C 端 UI/UX 规范（AI 代码生成约束）
+
+生成或修改小程序 UI 代码时，**必须**遵循以下规范。这些规则确保像素级还原与代码语义化兼顾。
+
+---
+
+## 1. Design Token 强制约束
+
+所有 Design Token 定义在 `src/style/design-tokens.scss`，UnoCSS 主题已同步。
+
+### 1.1 颜色：禁止硬编码
+
+**永远不要**在组件中直接写 `#00C250`、`#FF4D4F` 等十六进制色值。必须使用以下方式之一：
+
+```vue
+<!-- UnoCSS 原子类（优先） -->
+<view class="text-primary bg-primary-light">品牌色</view>
+<text class="text-ink">主文字</text>
+<text class="text-ink-light">副文字</text>
+<text class="text-price">¥29.90</text>
+<text class="text-error">库存紧张</text>
+<view class="bg-fill">页面背景</view>
+<view class="bg-surface rounded-card">卡片</view>
+
+<!-- CSS 变量（需要自定义样式时） -->
+<style lang="scss" scoped>
+.custom {
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-default);
+}
+</style>
+```
+
+### 1.2 颜色速查表
+
+| 用途 | UnoCSS 类 | CSS 变量 |
+|------|-----------|----------|
+| 品牌主色 | `text-primary` / `bg-primary` | `--color-brand-primary` |
+| 品牌浅色背景 | `bg-primary-light` | `--color-brand-light` |
+| 错误/警示 | `text-error` / `bg-error` | `--color-func-error` |
+| 警告 | `text-warning` | `--color-func-warning` |
+| 价格红色 | `text-price` | `--color-price` |
+| 一级文本（主文字） | `text-ink` | `--color-text-primary` |
+| 二级文本（副文字） | `text-ink-light` | `--color-text-secondary` |
+| 辅助文本（占位符） | `text-ink-lighter` | `--color-text-tertiary` |
+| 分割线/边框 | `border-line` | `--color-border-default` |
+| 页面背景 | `bg-fill` | `--color-bg-body` |
+| 卡片/弹窗背景 | `bg-surface` | `--color-bg-surface` |
+
+### 1.3 字号阶梯
+
+| 场景 | UnoCSS 类 | 尺寸 |
+|------|-----------|------|
+| 促销大标题 | `text-display-lg` | 64rpx / Bold |
+| 商品价格 | `text-display-md` | 48rpx / Bold |
+| 页面/导航标题 | `text-title-lg` | 36rpx / Medium |
+| 商品列表标题 | `text-title-md` | 32rpx / Medium |
+| 标准正文 | `text-body-lg` | 28rpx / Regular |
+| 辅助说明 | `text-body-md` | 26rpx / Regular |
+| 标签/底部导航 | `text-caption` | 24rpx / Regular |
+| 角标/极小标签 | `text-micro` | 20rpx / Medium |
+
+### 1.4 间距系统（8pt 网格）
+
+| 用途 | UnoCSS 类 | 尺寸 |
+|------|-----------|------|
+| 图标与文字间距 | `p-space-xs` / `gap-space-xs` | 8rpx |
+| 标签间距 | `p-space-sm` / `gap-space-sm` | 16rpx |
+| 卡片内边距 | `p-space-md` | 24rpx |
+| 模块间距/页面边距 | `p-space-lg` / `mx-space-lg` | 32rpx |
+| 大模块分隔 | `p-space-xl` / `my-space-xl` | 48rpx |
+
+### 1.5 圆角
+
+| 场景 | UnoCSS 类 | 尺寸 |
+|------|-----------|------|
+| 次级按钮/标签 | `rounded-sm` | 8rpx |
+| 商品卡片 | `rounded-card` | 16rpx |
+| 弹窗 | `rounded-popup` | 24rpx |
+| 主按钮（胶囊形） | `rounded-pill` | 999rpx |
+
+---
+
+## 2. 核心组件规范
+
+### 2.1 商品卡片（双列瀑布流）
+
+```vue
+<template>
+  <view class="bg-surface rounded-card shadow-card overflow-hidden">
+    <!-- 图片区：1:1 -->
+    <image class="w-full aspect-square" mode="aspectFill" :src="item.image" lazy-load />
+    <!-- 内容区 -->
+    <view class="p-space-md">
+      <text class="text-title-md text-ink line-clamp-2">{{ item.title }}</text>
+      <view class="flex gap-space-xs mt-space-xs">
+        <text class="text-micro bg-primary-light text-primary px-space-xs rounded-sm">标签</text>
+      </view>
+      <view class="flex items-center justify-between mt-space-sm">
+        <text class="text-price text-display-md font-bold">¥{{ item.price }}</text>
+        <!-- 加购按钮：圆形 48x48rpx -->
+        <view class="w-48rpx h-48rpx rounded-full bg-primary center">
+          <text class="text-surface text-body-lg">+</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+```
+
+### 2.2 横向列表卡片
+
+- 布局：左图（160x160rpx）右文
+- 信息层级：标题 → 灰色描述 → 标签 → 价格与操作
+- 步进器：减号在数量为 0 时隐藏
+
+### 2.3 底部购物车栏
+
+- 层级：`z-index: var(--z-cart-bar)` (100)
+- 布局：左侧购物车图标（带徽标） + 中间优惠提示 + 右侧双按钮组
+- 按钮组：整体 `rounded-pill`，左"加入购物车"（浅品牌色），右"立即购买"（深品牌色）
+
+### 2.4 底部标签栏
+
+- 高度：98rpx + safe-area-inset-bottom
+- 图标：48x48rpx，未选中线性（`text-ink-lighter`），选中面性（`text-primary`）
+- 购物车徽标：错误色背景，白色文字，`text-micro`
+
+---
+
+## 3. 价格排版规范
+
+电商价格必须遵循"符号小、整数大、小数中"的排版结构：
+
+```vue
+<template>
+  <view class="flex items-baseline text-price">
+    <text class="text-caption">¥</text>
+    <text class="text-display-md font-bold">29</text>
+    <text class="text-body-lg">.90</text>
+  </view>
+</template>
+```
+
+- 颜色：强制使用 `text-price`（#FF3B30）
+- 划线价：`text-ink-lighter line-through text-caption`
+
+---
+
+## 4. 交互与动态规范
+
+### 4.1 按压反馈
+
+所有可点击元素必须有按压态：
+
+```scss
+.clickable {
+  &:active {
+    opacity: 0.8;
+  }
+}
+```
+
+或使用 `hover-class="opacity-80"` 属性。
+
+### 4.2 加载状态
+
+- **禁止**使用旋转菊花/spinner
+- **必须**使用骨架屏（Skeleton Screen），颜色 `#F0F0F0`，匹配卡片圆角
+- wot-design-uni 的 `<wd-skeleton>` 可直接使用
+
+### 4.3 空状态
+
+- 展示插画 + 引导文案 + 行动按钮
+- 场景：购物车为空、搜索无结果、网络错误、列表无数据
+
+### 4.4 Toast
+
+- 轻量级反馈使用 `uni.showToast`
+- 停留 1500ms 后消失
+- 位于屏幕中间
+
+---
+
+## 5. 无障碍与性能
+
+### 5.1 对比度
+
+- 正文文本与背景对比度 ≥ 4.5:1（WCAG AA）
+- 品牌色上使用白色文字时必须 `font-bold`
+
+### 5.2 点击热区
+
+- 所有交互元素最小点击区域：88x88rpx（44x44px）
+- 小图标通过 padding 扩大可点击范围
+
+### 5.3 图片
+
+- 非透明商品图必须使用 WebP 格式
+- 大图放 CDN，不打入包内
+- 商品图 `lazy-load` 懒加载
+
+---
+
+## 6. 渐变与品牌元素
+
+品牌渐变（Banner/通栏按钮）：
+
+```scss
+.brand-gradient {
+  background: linear-gradient(135deg, var(--color-brand-gradient-start), var(--color-brand-gradient-end));
+}
+```
+
+---
+
+## 7. AI 生成代码检查清单
+
+生成 UI 代码后，自查以下项：
+
+- [ ] 颜色全部使用 Design Token（无硬编码色值）
+- [ ] 间距为 8rpx 的倍数（使用 space-* token）
+- [ ] 使用语义化组件（wot-design-uni 优先，非 div 堆叠）
+- [ ] 价格使用"符号小整数大小数中"排版
+- [ ] 卡片使用 `rounded-card` + `shadow-card`
+- [ ] 可点击元素有按压反馈
+- [ ] 点击热区 ≥ 88x88rpx
+- [ ] 图片使用 `lazy-load`
+- [ ] 加载状态使用骨架屏而非 spinner
+- [ ] 字号使用阶梯 token，不硬编码 rpx 值
