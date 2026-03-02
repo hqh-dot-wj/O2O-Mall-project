@@ -251,7 +251,20 @@ describe('OrderIntegrationService', () => {
     });
 
     it('积分发放失败应记录降级不抛错', async () => {
-      const order = {
+      const order: {
+        id: string;
+        memberId: string;
+        userCouponId: string | null;
+        pointsUsed: number;
+        couponDiscount: Decimal;
+        totalAmount: Decimal;
+        items: Array<{
+          skuId: string;
+          price: Decimal;
+          quantity: number;
+          pointsRatio: number;
+        }>;
+      } = {
         id: 'order1',
         memberId: 'm1',
         userCouponId: null,
@@ -261,7 +274,7 @@ describe('OrderIntegrationService', () => {
         items: [
           { skuId: 's1', price: new Decimal(100), quantity: 1, pointsRatio: 100 },
         ],
-      } as any;
+      };
       mockPrisma.omsOrder.findUnique.mockResolvedValue(order);
       mockPointsRuleService.calculateOrderPointsByItems.mockResolvedValue([
         { skuId: 's1', earnedPoints: 10 },
