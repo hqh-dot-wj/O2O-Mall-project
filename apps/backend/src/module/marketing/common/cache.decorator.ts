@@ -5,6 +5,7 @@ import { SetMetadata } from '@nestjs/common';
  */
 export const CACHE_KEY_METADATA = 'cache:key';
 export const CACHE_TTL_METADATA = 'cache:ttl';
+export const CACHE_EVICT_METADATA = 'cache:evict';
 
 /**
  * 缓存装饰器
@@ -44,5 +45,5 @@ export const Cacheable = (key: string, ttl: number = 300) => {
  * ```
  */
 export const CacheEvict = (keys: string[]) => {
-  return SetMetadata('cache:evict', keys);
+  return SetMetadata(CACHE_EVICT_METADATA, keys);
 };

@@ -109,6 +109,12 @@ export enum MarketingEventType {
  */
 export interface MarketingEvent {
   /**
+   * 租户ID（可选）
+   * - 用于多租户隔离的事件消费
+   */
+  tenantId?: string;
+
+  /**
    * 事件类型
    * @see MarketingEventType
    */

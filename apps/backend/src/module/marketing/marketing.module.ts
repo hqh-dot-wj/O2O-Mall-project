@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MarketingTemplateModule } from './template/template.module';
 import { MarketingConfigModule } from './config/config.module';
 import { PlayInstanceModule } from './instance/instance.module';
@@ -13,6 +14,7 @@ import { OrderIntegrationModule } from './integration/integration.module';
 import { ApprovalModule } from './approval/approval.module';
 
 import { MarketingPlayModule } from './play/play.module';
+import { MarketingCacheInterceptor } from './common/cache.interceptor';
 
 /**
  * 营销大模块聚合器 (MaaS Core)
@@ -64,6 +66,12 @@ import { MarketingPlayModule } from './play/play.module';
     ApprovalModule,           // ✅ 导出活动审批模块
 
     forwardRef(() => MarketingPlayModule),
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MarketingCacheInterceptor,
+    },
   ],
 })
 export class MarketingModule {}

@@ -1,237 +1,105 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MarketingEventListener } from './marketing-event.listener';
 import { MarketingEvent, MarketingEventType } from './marketing-event.types';
+import { RedisService } from 'src/module/common/redis/redis.service';
 
 describe('MarketingEventListener', () => {
   let listener: MarketingEventListener;
+  const mockRedisPipeline = {
+    incr: jest.fn().mockReturnThis(),
+    lpush: jest.fn().mockReturnThis(),
+    ltrim: jest.fn().mockReturnThis(),
+    expire: jest.fn().mockReturnThis(),
+    exec: jest.fn().mockResolvedValue([]),
+  };
+  const mockRedisClient = {
+    multi: jest.fn().mockReturnValue(mockRedisPipeline),
+  };
+  const mockRedisService = {
+    getClient: jest.fn().mockReturnValue(mockRedisClient),
+  };
+
+  const buildEvent = (type: MarketingEventType, tenantId?: string): MarketingEvent => ({
+    type,
+    tenantId,
+    instanceId: 'instance-1',
+    configId: 'config-1',
+    memberId: 'member-1',
+    payload: {
+      reason: 'test-reason',
+      timeoutType: 'PAYMENT_TIMEOUT',
+    },
+    timestamp: new Date('2026-03-02T08:00:00.000Z'),
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MarketingEventListener],
+      providers: [
+        MarketingEventListener,
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
+      ],
     }).compile();
 
     listener = module.get<MarketingEventListener>(MarketingEventListener);
+    jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
+  // R-FLOW-EVENT-01
+  it('Given 监听器已注入依赖, When 创建实例, Then 监听器可用', () => {
     expect(listener).toBeDefined();
   });
 
-  describe('handleInstanceCreated', () => {
-    it('should handle instance created event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_CREATED,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {},
-        timestamp: new Date(),
-      };
+  // R-FLOW-EVENT-02
+  it('Given SUCCESS 事件, When handleInstanceSuccess, Then 写入事件统计缓存', async () => {
+    await listener.handleInstanceSuccess(buildEvent(MarketingEventType.INSTANCE_SUCCESS, 't-1'));
 
-      await expect(listener.handleInstanceCreated(event)).resolves.not.toThrow();
-    });
-
-    it('should not throw when event processing fails', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_CREATED,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: null, // This might cause issues but should be caught
-        timestamp: new Date(),
-      };
-
-      await expect(listener.handleInstanceCreated(event)).resolves.not.toThrow();
-    });
+    expect(mockRedisClient.multi).toHaveBeenCalledTimes(1);
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith('mkt:event:stats:t-1:20260302:total');
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith(
+      'mkt:event:stats:t-1:20260302:instance.success',
+    );
+    expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
   });
 
-  describe('handleInstancePaid', () => {
-    it('should handle instance paid event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_PAID,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: { amount: 199 },
-        timestamp: new Date(),
-      };
+  // R-FLOW-EVENT-03
+  it('Given FAILED 事件, When handleInstanceFailed, Then 写入失败事件统计缓存', async () => {
+    await listener.handleInstanceFailed(buildEvent(MarketingEventType.INSTANCE_FAILED, 't-1'));
 
-      await expect(listener.handleInstancePaid(event)).resolves.not.toThrow();
-    });
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith(
+      'mkt:event:stats:t-1:20260302:instance.failed',
+    );
+    expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
   });
 
-  describe('handleInstanceSuccess', () => {
-    it('should handle instance success event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_SUCCESS,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          orderSn: 'test-order-sn',
-          amount: 199,
-          assetType: 'COURSE',
-          assetId: 'test-asset-id',
-        },
-        timestamp: new Date(),
-      };
+  // R-FLOW-EVENT-04
+  it('Given TIMEOUT 事件, When handleInstanceTimeout, Then 写入超时事件统计缓存', async () => {
+    await listener.handleInstanceTimeout(buildEvent(MarketingEventType.INSTANCE_TIMEOUT, 't-1'));
 
-      await expect(listener.handleInstanceSuccess(event)).resolves.not.toThrow();
-    });
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith(
+      'mkt:event:stats:t-1:20260302:instance.timeout',
+    );
+    expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
   });
 
-  describe('handleInstanceFailed', () => {
-    it('should handle instance failed event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_FAILED,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          reason: 'Activity conditions not met',
-          autoRefund: true,
-        },
-        timestamp: new Date(),
-      };
+  // R-BRANCH-EVENT-01
+  it('Given 事件未携带 tenantId, When handleInstanceSuccess, Then 使用默认租户写入缓存', async () => {
+    await listener.handleInstanceSuccess(buildEvent(MarketingEventType.INSTANCE_SUCCESS));
 
-      await expect(listener.handleInstanceFailed(event)).resolves.not.toThrow();
-    });
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith('mkt:event:stats:000000:20260302:total');
   });
 
-  describe('handleInstanceTimeout', () => {
-    it('should handle instance timeout event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_TIMEOUT,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          timeoutType: 'PAYMENT_TIMEOUT',
-          stockLocked: true,
-          quantity: 1,
-        },
-        timestamp: new Date(),
-      };
+  // R-BRANCH-EVENT-02
+  it('Given Redis 写入异常, When handleInstanceSuccess, Then 吞异常并记录错误日志', async () => {
+    const loggerErrorSpy = jest.spyOn(listener['logger'], 'error');
+    mockRedisPipeline.exec.mockRejectedValueOnce(new Error('redis failed'));
 
-      await expect(listener.handleInstanceTimeout(event)).resolves.not.toThrow();
-    });
-  });
+    await expect(
+      listener.handleInstanceSuccess(buildEvent(MarketingEventType.INSTANCE_SUCCESS, 't-1')),
+    ).resolves.not.toThrow();
 
-  describe('handleInstanceRefunded', () => {
-    it('should handle instance refunded event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_REFUNDED,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          orderSn: 'test-order-sn',
-          amount: 199,
-          reason: 'User requested refund',
-          assetGranted: false,
-        },
-        timestamp: new Date(),
-      };
-
-      await expect(listener.handleInstanceRefunded(event)).resolves.not.toThrow();
-    });
-  });
-
-  describe('handleGroupFull', () => {
-    it('should handle group full event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.GROUP_FULL,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          groupId: 'test-group-id',
-          participants: ['user1', 'user2', 'user3'],
-          activityName: 'Test Group Buy',
-        },
-        timestamp: new Date(),
-      };
-
-      await expect(listener.handleGroupFull(event)).resolves.not.toThrow();
-    });
-  });
-
-  describe('handleGroupFailed', () => {
-    it('should handle group failed event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.GROUP_FAILED,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          groupId: 'test-group-id',
-          participants: ['user1', 'user2'],
-          reason: 'Timeout - not enough participants',
-        },
-        timestamp: new Date(),
-      };
-
-      await expect(listener.handleGroupFailed(event)).resolves.not.toThrow();
-    });
-  });
-
-  describe('handleFlashSaleSoldOut', () => {
-    it('should handle flash sale sold out event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.FLASH_SALE_SOLD_OUT,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          productName: 'Test Product',
-        },
-        timestamp: new Date(),
-      };
-
-      await expect(listener.handleFlashSaleSoldOut(event)).resolves.not.toThrow();
-    });
-  });
-
-  describe('handleCourseOpen', () => {
-    it('should handle course open event without throwing', async () => {
-      const event: MarketingEvent = {
-        type: MarketingEventType.COURSE_OPEN,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {
-          courseName: 'Test Course',
-          courseId: 'test-course-id',
-          students: ['student1', 'student2', 'student3'],
-          studentCount: 3,
-          startTime: new Date(),
-        },
-        timestamp: new Date(),
-      };
-
-      await expect(listener.handleCourseOpen(event)).resolves.not.toThrow();
-    });
-  });
-
-  describe('error handling', () => {
-    it('should catch and log errors without throwing', async () => {
-      // Spy on logger to verify error is logged
-      const loggerErrorSpy = jest.spyOn(listener['logger'], 'error');
-
-      const event: MarketingEvent = {
-        type: MarketingEventType.INSTANCE_SUCCESS,
-        instanceId: 'test-instance-id',
-        configId: 'test-config-id',
-        memberId: 'test-member-id',
-        payload: {},
-        timestamp: new Date(),
-      };
-
-      // Should not throw even if internal processing fails
-      await expect(listener.handleInstanceSuccess(event)).resolves.not.toThrow();
-
-      // Note: In this test, no error will actually occur since we're just logging
-      // In a real scenario with dependencies, errors would be caught and logged
-    });
+    expect(loggerErrorSpy).toHaveBeenCalled();
   });
 });

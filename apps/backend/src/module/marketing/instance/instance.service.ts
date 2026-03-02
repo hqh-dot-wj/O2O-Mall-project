@@ -151,6 +151,7 @@ export class PlayInstanceService {
       // 使用 emitAsync() 异步发送，不阻塞主流程
       await this.eventEmitter.emitAsync({
         type: MarketingEventType.INSTANCE_CREATED,
+        tenantId: instance.tenantId,
         instanceId: instance.id,
         configId: instance.configId,
         memberId: instance.memberId,
@@ -302,6 +303,7 @@ export class PlayInstanceService {
     if (eventType) {
       await this.eventEmitter.emitAsync({
         type: eventType,
+        tenantId: instance.tenantId,
         instanceId: instance.id,
         configId: instance.configId,
         memberId: instance.memberId,

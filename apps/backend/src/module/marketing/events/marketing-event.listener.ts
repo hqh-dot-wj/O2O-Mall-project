@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MarketingEvent, MarketingEventType } from './marketing-event.types';
 import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
+import { RedisService } from 'src/module/common/redis/redis.service';
 
 /**
  * 营销事件监听器
@@ -20,6 +21,10 @@ import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 @Injectable()
 export class MarketingEventListener {
   private readonly logger = new Logger(MarketingEventListener.name);
+  private readonly eventStatsTtlSeconds = 7 * 24 * 60 * 60;
+  private readonly recentEventLimit = 100;
+
+  constructor(private readonly redisService: RedisService) {}
 
   /**
    * 处理实例创建事件
@@ -124,6 +129,7 @@ export class MarketingEventListener {
       );
 
       this.logger.debug(`[实例成功详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
 
       // TODO: 扩展点 - 发放权益
       // 根据活动类型发放不同的权益
@@ -187,6 +193,7 @@ export class MarketingEventListener {
       );
 
       this.logger.debug(`[实例失败详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
 
       // TODO: 扩展点 - 触发退款流程
       // 根据活动规则决定是否自动退款
@@ -242,6 +249,7 @@ export class MarketingEventListener {
       );
 
       this.logger.debug(`[实例超时详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
 
       // TODO: 扩展点 - 释放库存
       // 超时后需要释放占用的库存
@@ -502,5 +510,37 @@ export class MarketingEventListener {
         getErrorStack(error),
       );
     }
+  }
+
+  private async recordCriticalEvent(event: MarketingEvent): Promise<void> {
+    const tenantId = event.tenantId || '000000';
+    const dateKey = this.formatDate(event.timestamp);
+    const statsPrefix = `mkt:event:stats:${tenantId}:${dateKey}`;
+    const totalKey = `${statsPrefix}:total`;
+    const typeKey = `${statsPrefix}:${event.type}`;
+    const recentKey = `mkt:event:recent:${tenantId}`;
+    const snapshot = JSON.stringify({
+      type: event.type,
+      instanceId: event.instanceId,
+      configId: event.configId,
+      memberId: event.memberId,
+      timestamp: event.timestamp,
+    });
+
+    const redisClient = this.redisService.getClient();
+    await redisClient
+      .multi()
+      .incr(totalKey)
+      .incr(typeKey)
+      .lpush(recentKey, snapshot)
+      .ltrim(recentKey, 0, this.recentEventLimit - 1)
+      .expire(totalKey, this.eventStatsTtlSeconds)
+      .expire(typeKey, this.eventStatsTtlSeconds)
+      .expire(recentKey, this.eventStatsTtlSeconds)
+      .exec();
+  }
+
+  private formatDate(date: Date): string {
+    return date.toISOString().slice(0, 10).replace(/-/g, '');
   }
 }
