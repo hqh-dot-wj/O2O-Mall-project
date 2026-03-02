@@ -1,4 +1,5 @@
 {
+  "vitest.workspaceConfig": "vitest.workspace.ts",
   "prisma.pinToPrisma6": true,
   "sqltools.connections": [
     {
