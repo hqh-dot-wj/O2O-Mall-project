@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PointsRuleService } from './rule.service';
 import { UpdatePointsRuleDto } from './dto/update-points-rule.dto';
-import { Result } from 'src/common/response/result';
-import { PointsRuleVo } from './vo/points-rule.vo';
+import { Api } from 'src/common/decorators/api.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 
 /**
  * 积分规则控制器
@@ -12,17 +14,21 @@ import { PointsRuleVo } from './vo/points-rule.vo';
  */
 @ApiTags('积分规则')
 @Controller('admin/marketing/points/rules')
+@ApiBearerAuth('Authorization')
 export class PointsRuleController {
   constructor(private readonly ruleService: PointsRuleService) {}
 
   @Get()
-  @ApiOperation({ summary: '获取积分规则配置' })
+  @Api({ summary: '获取积分规则配置' })
+  @RequirePermission('marketing:points:rule:query')
   async getRules() {
     return this.ruleService.getRules();
   }
 
   @Put()
-  @ApiOperation({ summary: '更新积分规则配置' })
+  @Api({ summary: '更新积分规则配置' })
+  @RequirePermission('marketing:points:rule:edit')
+  @Operlog({ businessType: BusinessType.UPDATE })
   async updateRules(@Body() dto: UpdatePointsRuleDto) {
     return this.ruleService.updateRules(dto);
   }

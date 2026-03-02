@@ -232,6 +232,7 @@ describe('PointsAccountService', () => {
         id: 'acc1',
         availablePoints: 5,
         frozenPoints: 0,
+        version: 0,
       });
 
       await expect(
@@ -245,18 +246,24 @@ describe('PointsAccountService', () => {
         memberId: 'm1',
         availablePoints: 100,
         frozenPoints: 0,
+        version: 0,
       };
       mockAccountRepo.findByMemberId.mockResolvedValue(account);
-      mockAccountRepo.update.mockResolvedValue(undefined);
+      mockAccountRepo.updateWithOptimisticLock.mockResolvedValue({
+        ...account,
+        availablePoints: 80,
+        frozenPoints: 20,
+      });
       mockTransactionRepo.create.mockResolvedValue({ id: 'tx1' });
 
       const result = await service.freezePoints('m1', 20, 'order1');
 
-      expect(mockAccountRepo.update).toHaveBeenCalledWith(
+      expect(mockAccountRepo.updateWithOptimisticLock).toHaveBeenCalledWith(
         'acc1',
+        0,
         expect.objectContaining({
-          availablePoints: { decrement: 20 },
-          frozenPoints: { increment: 20 },
+          availablePoints: 80,
+          frozenPoints: 20,
         }),
       );
       expect(result.data).toBeDefined();
@@ -267,7 +274,9 @@ describe('PointsAccountService', () => {
     it('冻结积分不足应抛异常', async () => {
       mockAccountRepo.findByMemberId.mockResolvedValue({
         id: 'acc1',
+        availablePoints: 10,
         frozenPoints: 5,
+        version: 0,
       });
 
       await expect(
@@ -281,18 +290,24 @@ describe('PointsAccountService', () => {
         memberId: 'm1',
         availablePoints: 80,
         frozenPoints: 20,
+        version: 0,
       };
       mockAccountRepo.findByMemberId.mockResolvedValue(account);
-      mockAccountRepo.update.mockResolvedValue(undefined);
+      mockAccountRepo.updateWithOptimisticLock.mockResolvedValue({
+        ...account,
+        availablePoints: 100,
+        frozenPoints: 0,
+      });
       mockTransactionRepo.create.mockResolvedValue({ id: 'tx1' });
 
       const result = await service.unfreezePoints('m1', 20, 'order1');
 
-      expect(mockAccountRepo.update).toHaveBeenCalledWith(
+      expect(mockAccountRepo.updateWithOptimisticLock).toHaveBeenCalledWith(
         'acc1',
+        0,
         expect.objectContaining({
-          availablePoints: { increment: 20 },
-          frozenPoints: { decrement: 20 },
+          availablePoints: 100,
+          frozenPoints: 0,
         }),
       );
       expect(result.data).toBeDefined();

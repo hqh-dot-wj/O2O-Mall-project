@@ -207,45 +207,64 @@ export class PointsAccountService {
    */
   async freezePoints(memberId: string, amount: number, relatedId: string) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
+    const maxRetries = 3;
 
-    // 获取账户
-    const account = await this.accountRepo.findByMemberId(memberId);
-    if (!account) {
-      BusinessException.throw(400, '积分账户不存在');
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // 获取账户
+        const account = await this.accountRepo.findByMemberId(memberId);
+        if (!account) {
+          BusinessException.throw(400, '积分账户不存在');
+        }
+
+        // 检查余额
+        if (account.availablePoints < amount) {
+          BusinessException.throw(400, '积分余额不足');
+        }
+
+        const balanceBefore = account.availablePoints;
+        const balanceAfter = balanceBefore - amount;
+
+        // 使用乐观锁更新账户余额
+        const updated = await this.accountRepo.updateWithOptimisticLock(account.id, account.version, {
+          availablePoints: balanceAfter,
+          frozenPoints: account.frozenPoints + amount,
+        });
+
+        if (!updated) {
+          this.logger.warn(`积分冻结乐观锁冲突，重试 ${attempt + 1}/${maxRetries}`);
+          continue;
+        }
+
+        // 创建交易记录
+        const transaction = await this.transactionRepo.create({
+          tenantId,
+          accountId: account.id,
+          memberId,
+          type: 'FREEZE',
+          amount: -amount,
+          balanceBefore,
+          balanceAfter,
+          status: PointsTransactionStatus.COMPLETED,
+          relatedId,
+          remark: '冻结积分',
+          expireTime: null,
+        } as any);
+
+        this.logger.log(`冻结积分: memberId=${memberId}, amount=${amount}`);
+
+        return Result.ok(FormatDateFields(transaction));
+      } catch (error) {
+        if (error instanceof BusinessException) {
+          throw error;
+        }
+        if (attempt === maxRetries - 1) {
+          throw error;
+        }
+      }
     }
 
-    // 检查余额
-    if (account.availablePoints < amount) {
-      BusinessException.throw(400, '积分余额不足');
-    }
-
-    const balanceBefore = account.availablePoints;
-    const balanceAfter = balanceBefore - amount;
-
-    // 更新账户余额
-    await this.accountRepo.update(account.id, {
-      availablePoints: { decrement: amount },
-      frozenPoints: { increment: amount },
-    } as any);
-
-    // 创建交易记录
-    const transaction = await this.transactionRepo.create({
-      tenantId,
-      accountId: account.id,
-      memberId,
-      type: 'FREEZE',
-      amount: -amount,
-      balanceBefore,
-      balanceAfter,
-      status: PointsTransactionStatus.COMPLETED,
-      relatedId,
-      remark: '冻结积分',
-      expireTime: null,
-    } as any);
-
-    this.logger.log(`冻结积分: memberId=${memberId}, amount=${amount}`);
-
-    return Result.ok(FormatDateFields(transaction));
+    BusinessException.throw(500, '积分冻结失败，请稍后重试');
   }
 
   /**
@@ -258,45 +277,64 @@ export class PointsAccountService {
    */
   async unfreezePoints(memberId: string, amount: number, relatedId: string) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
+    const maxRetries = 3;
 
-    // 获取账户
-    const account = await this.accountRepo.findByMemberId(memberId);
-    if (!account) {
-      BusinessException.throw(400, '积分账户不存在');
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // 获取账户
+        const account = await this.accountRepo.findByMemberId(memberId);
+        if (!account) {
+          BusinessException.throw(400, '积分账户不存在');
+        }
+
+        // 检查冻结余额
+        if (account.frozenPoints < amount) {
+          BusinessException.throw(400, '冻结积分不足');
+        }
+
+        const balanceBefore = account.availablePoints;
+        const balanceAfter = balanceBefore + amount;
+
+        // 使用乐观锁更新账户余额
+        const updated = await this.accountRepo.updateWithOptimisticLock(account.id, account.version, {
+          availablePoints: balanceAfter,
+          frozenPoints: account.frozenPoints - amount,
+        });
+
+        if (!updated) {
+          this.logger.warn(`积分解冻乐观锁冲突，重试 ${attempt + 1}/${maxRetries}`);
+          continue;
+        }
+
+        // 创建交易记录
+        const transaction = await this.transactionRepo.create({
+          tenantId,
+          accountId: account.id,
+          memberId,
+          type: 'UNFREEZE',
+          amount,
+          balanceBefore,
+          balanceAfter,
+          status: PointsTransactionStatus.COMPLETED,
+          relatedId,
+          remark: '解冻积分',
+          expireTime: null,
+        } as any);
+
+        this.logger.log(`解冻积分: memberId=${memberId}, amount=${amount}`);
+
+        return Result.ok(FormatDateFields(transaction));
+      } catch (error) {
+        if (error instanceof BusinessException) {
+          throw error;
+        }
+        if (attempt === maxRetries - 1) {
+          throw error;
+        }
+      }
     }
 
-    // 检查冻结余额
-    if (account.frozenPoints < amount) {
-      BusinessException.throw(400, '冻结积分不足');
-    }
-
-    const balanceBefore = account.availablePoints;
-    const balanceAfter = balanceBefore + amount;
-
-    // 更新账户余额
-    await this.accountRepo.update(account.id, {
-      availablePoints: { increment: amount },
-      frozenPoints: { decrement: amount },
-    } as any);
-
-    // 创建交易记录
-    const transaction = await this.transactionRepo.create({
-      tenantId,
-      accountId: account.id,
-      memberId,
-      type: 'UNFREEZE',
-      amount,
-      balanceBefore,
-      balanceAfter,
-      status: PointsTransactionStatus.COMPLETED,
-      relatedId,
-      remark: '解冻积分',
-      expireTime: null,
-    } as any);
-
-    this.logger.log(`解冻积分: memberId=${memberId}, amount=${amount}`);
-
-    return Result.ok(FormatDateFields(transaction));
+    BusinessException.throw(500, '积分解冻失败，请稍后重试');
   }
 
   /**

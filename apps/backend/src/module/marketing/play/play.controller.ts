@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PlayStrategyFactory } from './play.factory';
 import { PlayMetadata } from './play.registry';
 import { BusinessException } from 'src/common/exceptions/business.exception';
@@ -7,6 +7,9 @@ import { getErrorMessage } from 'src/common/utils/error';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { Api } from 'src/common/decorators/api.decorator';
 import { CourseGroupBuyService } from './course-group-buy.service';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 
 /**
  * 玩法查询控制器
@@ -20,6 +23,7 @@ import { CourseGroupBuyService } from './course-group-buy.service';
  */
 @ApiTags('营销-玩法管理')
 @Controller('api/marketing/play')
+@ApiBearerAuth('Authorization')
 export class PlayController {
   constructor(
     private readonly playFactory: PlayStrategyFactory,
@@ -59,6 +63,7 @@ export class PlayController {
    */
   @Get('types')
   @Api({ summary: '获取所有可用玩法列表' })
+  @RequirePermission('marketing:play:type:list')
   async getAllPlayTypes(): Promise<PlayMetadata[]> {
     return this.playFactory.getAllPlayTypes();
   }
@@ -96,6 +101,7 @@ export class PlayController {
    */
   @Get('types/:code')
   @Api({ summary: '获取指定玩法的元数据' })
+  @RequirePermission('marketing:play:type:query')
   async getPlayType(@Param('code') code: string): Promise<PlayMetadata> {
     try {
       return this.playFactory.getMetadata(code);
@@ -131,6 +137,7 @@ export class PlayController {
    */
   @Get('types/:code/exists')
   @Api({ summary: '检查玩法是否存在' })
+  @RequirePermission('marketing:play:type:query')
   async checkPlayExists(@Param('code') code: string): Promise<{ exists: boolean; code: string }> {
     const exists = this.playFactory.hasStrategy(code);
     return { exists, code };
@@ -164,6 +171,7 @@ export class PlayController {
    */
   @Get('types/:code/features')
   @Api({ summary: '获取玩法特性信息' })
+  @RequirePermission('marketing:play:type:query')
   async getPlayFeatures(@Param('code') code: string): Promise<{
     code: string;
     hasInstance: boolean;
@@ -200,6 +208,7 @@ export class PlayController {
    */
   @Get('course/:instanceId/schedules')
   @Api({ summary: '获取课程排课信息' })
+  @RequirePermission('marketing:play:course:query')
   async getCourseSchedules(@Param('instanceId') instanceId: string) {
     try {
       return await this.courseGroupBuyService.getSchedules(instanceId);
@@ -225,6 +234,7 @@ export class PlayController {
    */
   @Get('course/:instanceId/attendances')
   @Api({ summary: '获取课程考勤信息' })
+  @RequirePermission('marketing:play:course:query')
   async getCourseAttendances(@Param('instanceId') instanceId: string) {
     try {
       return await this.courseGroupBuyService.getAttendances(instanceId);
@@ -252,6 +262,8 @@ export class PlayController {
    */
   @Post('course/:instanceId/attendance')
   @Api({ summary: '标记学员出勤' })
+  @RequirePermission('marketing:play:course:attendance')
+  @Operlog({ businessType: BusinessType.UPDATE })
   async markAttendance(
     @Param('instanceId') instanceId: string,
     @Body() body: { memberId: string; date: string; remark?: string },
@@ -287,6 +299,7 @@ export class PlayController {
    */
   @Get('course/:instanceId/attendance-rate')
   @Api({ summary: '获取学员出勤率' })
+  @RequirePermission('marketing:play:course:query')
   async getAttendanceRate(
     @Param('instanceId') instanceId: string,
     @Query('memberId') memberId: string,

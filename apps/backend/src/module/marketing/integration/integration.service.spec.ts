@@ -4,6 +4,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import { CouponUsageService } from '../coupon/usage/usage.service';
 import { PointsAccountService } from '../points/account/account.service';
 import { PointsRuleService } from '../points/rule/rule.service';
@@ -38,6 +39,15 @@ describe('OrderIntegrationService', () => {
     recordFailure: jest.fn(),
   };
 
+  const mockRedisClient = {
+    set: jest.fn(),
+  };
+
+  const mockRedisService = {
+    getClient: jest.fn(),
+    del: jest.fn(),
+  };
+
   const mockPrisma = {
     mktUserCoupon: { findUnique: jest.fn() },
     omsOrder: {
@@ -46,6 +56,7 @@ describe('OrderIntegrationService', () => {
     },
     omsOrderItem: { updateMany: jest.fn() },
     mktPointsTransaction: { findFirst: jest.fn() },
+    mktPointsAccount: { findFirst: jest.fn() },
   };
 
   const mockCls = { get: jest.fn() };
@@ -56,6 +67,7 @@ describe('OrderIntegrationService', () => {
         OrderIntegrationService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ClsService, useValue: mockCls },
+        { provide: RedisService, useValue: mockRedisService },
         { provide: CouponUsageService, useValue: mockCouponUsageService },
         { provide: PointsAccountService, useValue: mockPointsAccountService },
         { provide: PointsRuleService, useValue: mockPointsRuleService },
@@ -65,6 +77,8 @@ describe('OrderIntegrationService', () => {
 
     service = module.get<OrderIntegrationService>(OrderIntegrationService);
     jest.clearAllMocks();
+    mockRedisService.getClient.mockReturnValue(mockRedisClient);
+    mockRedisClient.set.mockResolvedValue('OK');
   });
 
   it('should be defined', () => {
@@ -160,6 +174,15 @@ describe('OrderIntegrationService', () => {
         'order1',
       );
     });
+
+    it('幂等键已存在时应忽略重复处理', async () => {
+      mockRedisClient.set.mockResolvedValueOnce(null);
+
+      await service.handleOrderCreated('order1', 'm1', 'uc1', 100);
+
+      expect(mockCouponUsageService.lockCoupon).not.toHaveBeenCalled();
+      expect(mockPointsAccountService.freezePoints).not.toHaveBeenCalled();
+    });
   });
 
   describe('handleOrderPaid', () => {
@@ -238,7 +261,7 @@ describe('OrderIntegrationService', () => {
         items: [
           { skuId: 's1', price: new Decimal(100), quantity: 1, pointsRatio: 100 },
         ],
-      };
+      } as any;
       mockPrisma.omsOrder.findUnique.mockResolvedValue(order);
       mockPointsRuleService.calculateOrderPointsByItems.mockResolvedValue([
         { skuId: 's1', earnedPoints: 10 },
@@ -289,6 +312,9 @@ describe('OrderIntegrationService', () => {
       mockPrisma.mktPointsTransaction.findFirst.mockResolvedValue({
         amount: 15,
       });
+      mockPrisma.mktPointsAccount.findFirst.mockResolvedValue({
+        availablePoints: 30,
+      });
       mockPointsAccountService.addPoints.mockResolvedValue({});
       mockPointsAccountService.deductPoints.mockResolvedValue({});
 
@@ -308,6 +334,25 @@ describe('OrderIntegrationService', () => {
           type: PointsTransactionType.DEDUCT_ADMIN,
         }),
       );
+    });
+
+    it('消费积分余额不足时应跳过扣减', async () => {
+      mockPrisma.omsOrder.findUnique.mockResolvedValue({
+        id: 'order1',
+        userCouponId: null,
+        pointsUsed: 0,
+      });
+      mockPrisma.mktPointsTransaction.findFirst.mockResolvedValue({
+        amount: 15,
+      });
+      mockPrisma.mktPointsAccount.findFirst.mockResolvedValue({
+        availablePoints: 10,
+      });
+      mockPointsAccountService.addPoints.mockResolvedValue({});
+
+      await service.handleOrderRefunded('order1', 'm1');
+
+      expect(mockPointsAccountService.deductPoints).not.toHaveBeenCalled();
     });
   });
 });

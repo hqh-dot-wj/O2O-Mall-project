@@ -5,6 +5,8 @@ import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import { CouponUsageService } from '../coupon/usage/usage.service';
 import { PointsAccountService } from '../points/account/account.service';
 import { PointsRuleService } from '../points/rule/rule.service';
@@ -20,10 +22,12 @@ import { getErrorMessage } from 'src/common/utils/error';
 @Injectable()
 export class OrderIntegrationService {
   private readonly logger = new Logger(OrderIntegrationService.name);
+  private readonly idempotencyTtlSeconds = 600;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly cls: ClsService,
+    private readonly redisService: RedisService,
     private readonly couponUsageService: CouponUsageService,
     private readonly pointsAccountService: PointsAccountService,
     private readonly pointsRuleService: PointsRuleService,
@@ -124,28 +128,30 @@ export class OrderIntegrationService {
       `处理订单创建: orderId=${orderId}, memberId=${memberId}, coupon=${userCouponId}, points=${pointsUsed}`,
     );
 
-    try {
-      // 1. 锁定优惠券
-      if (userCouponId) {
-        await this.couponUsageService.lockCoupon(userCouponId, orderId);
-        this.logger.log(`优惠券已锁定: couponId=${userCouponId}`);
-      }
+    return this.executeWithIdempotency('created', orderId, async () => {
+      try {
+        // 1. 锁定优惠券
+        if (userCouponId) {
+          await this.couponUsageService.lockCoupon(userCouponId, orderId);
+          this.logger.log(`优惠券已锁定: couponId=${userCouponId}`);
+        }
 
-      // 2. 冻结积分
-      if (pointsUsed && pointsUsed > 0) {
-        await this.pointsAccountService.freezePoints(
-          memberId,
-          pointsUsed,
-          orderId,
+        // 2. 冻结积分
+        if (pointsUsed && pointsUsed > 0) {
+          await this.pointsAccountService.freezePoints(
+            memberId,
+            pointsUsed,
+            orderId,
+          );
+          this.logger.log(`积分已冻结: points=${pointsUsed}`);
+        }
+      } catch (error) {
+        this.logger.error(
+          `订单创建处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
         );
-        this.logger.log(`积分已冻结: points=${pointsUsed}`);
+        throw error;
       }
-    } catch (error) {
-      this.logger.error(
-        `订单创建处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
-      );
-      throw error;
-    }
+    });
   }
 
   /**
@@ -155,6 +161,7 @@ export class OrderIntegrationService {
    * @param memberId 用户ID
    * @param payAmount 实付金额
    */
+  @Transactional()
   async handleOrderPaid(
     orderId: string,
     memberId: string,
@@ -164,129 +171,131 @@ export class OrderIntegrationService {
       `处理订单支付: orderId=${orderId}, memberId=${memberId}, payAmount=${payAmount}`,
     );
 
-    try {
-      // 查询订单信息（包含订单明细）
-      const order = await this.prisma.omsOrder.findUnique({
-        where: { id: orderId },
-        include: { items: true },
-      });
-
-      if (!order) {
-        BusinessException.throw(404, '订单不存在');
-      }
-
-      // 1. 使用优惠券
-      if (order.userCouponId) {
-        await this.couponUsageService.useCoupon(
-          order.userCouponId,
-          orderId,
-          Number(order.couponDiscount),
-        );
-        this.logger.log(`优惠券已使用: couponId=${order.userCouponId}`);
-      }
-
-      // 2. 扣减冻结的积分
-      if (order.pointsUsed && order.pointsUsed > 0) {
-        // 先解冻
-        await this.pointsAccountService.unfreezePoints(
-          memberId,
-          order.pointsUsed,
-          orderId,
-        );
-
-        // 再扣减
-        await this.pointsAccountService.deductPoints({
-          memberId,
-          amount: order.pointsUsed,
-          type: PointsTransactionType.USE_ORDER,
-          relatedId: orderId,
-          remark: '订单抵扣',
+    return this.executeWithIdempotency('paid', orderId, async () => {
+      try {
+        // 查询订单信息（包含订单明细）
+        const order = await this.prisma.omsOrder.findUnique({
+          where: { id: orderId },
+          include: { items: true },
         });
 
-        this.logger.log(`积分已扣减: points=${order.pointsUsed}`);
-      }
-
-      // 3. 按商品明细计算并发放消费积分（防止积分套利）
-      // 积分计算基数 = 原价 - 优惠券抵扣（不包括积分抵扣）
-      const baseAmount = order.totalAmount.sub(order.couponDiscount);
-
-      const itemsPointsResult = await this.pointsRuleService.calculateOrderPointsByItems(
-        order.items.map(item => ({
-          skuId: item.skuId,
-          price: item.price,
-          quantity: item.quantity,
-          pointsRatio: item.pointsRatio,
-        })),
-        baseAmount,
-        order.totalAmount,
-      );
-
-      // 计算总积分
-      const totalPointsToEarn = itemsPointsResult.reduce(
-        (sum, item) => sum + item.earnedPoints,
-        0,
-      );
-
-      // 更新订单明细的积分字段
-      for (const itemPoints of itemsPointsResult) {
-        await this.prisma.omsOrderItem.updateMany({
-          where: {
-            orderId: orderId,
-            skuId: itemPoints.skuId,
-          },
-          data: {
-            earnedPoints: itemPoints.earnedPoints,
-          },
-        });
-      }
-
-      // 更新订单的总积分
-      await this.prisma.omsOrder.update({
-        where: { id: orderId },
-        data: { pointsEarned: totalPointsToEarn },
-      });
-
-      // 发放积分
-      if (totalPointsToEarn > 0) {
-        try {
-          await this.pointsAccountService.addPoints({
-            memberId,
-            amount: totalPointsToEarn,
-            type: PointsTransactionType.EARN_ORDER,
-            relatedId: orderId,
-            remark: '消费获得',
-          });
-
-          this.logger.log(`消费积分已发放: points=${totalPointsToEarn}`);
-        } catch (error) {
-          // 积分发放失败，记录到降级服务进行重试
-          this.logger.warn({
-            message: '消费积分发放失败，已加入重试队列',
-            orderId,
-            memberId,
-            pointsToEarn: totalPointsToEarn,
-            error: getErrorMessage(error),
-          });
-
-          await this.degradationService.recordFailure({
-            memberId,
-            amount: totalPointsToEarn,
-            type: PointsTransactionType.EARN_ORDER,
-            relatedId: orderId,
-            remark: '消费获得',
-            failureReason: getErrorMessage(error),
-          });
-
-          // 不抛出错误，避免影响订单支付流程
-          // 积分会通过重试队列异步发放
+        if (!order) {
+          BusinessException.throw(404, '订单不存在');
         }
+
+        // 1. 使用优惠券
+        if (order.userCouponId) {
+          await this.couponUsageService.useCoupon(
+            order.userCouponId,
+            orderId,
+            Number(order.couponDiscount),
+          );
+          this.logger.log(`优惠券已使用: couponId=${order.userCouponId}`);
+        }
+
+        // 2. 扣减冻结的积分
+        if (order.pointsUsed && order.pointsUsed > 0) {
+          // 先解冻
+          await this.pointsAccountService.unfreezePoints(
+            memberId,
+            order.pointsUsed,
+            orderId,
+          );
+
+          // 再扣减
+          await this.pointsAccountService.deductPoints({
+            memberId,
+            amount: order.pointsUsed,
+            type: PointsTransactionType.USE_ORDER,
+            relatedId: orderId,
+            remark: '订单抵扣',
+          });
+
+          this.logger.log(`积分已扣减: points=${order.pointsUsed}`);
+        }
+
+        // 3. 按商品明细计算并发放消费积分（防止积分套利）
+        // 积分计算基数 = 原价 - 优惠券抵扣（不包括积分抵扣）
+        const baseAmount = order.totalAmount.sub(order.couponDiscount);
+
+        const itemsPointsResult = await this.pointsRuleService.calculateOrderPointsByItems(
+          order.items.map(item => ({
+            skuId: item.skuId,
+            price: item.price,
+            quantity: item.quantity,
+            pointsRatio: item.pointsRatio,
+          })),
+          baseAmount,
+          order.totalAmount,
+        );
+
+        // 计算总积分
+        const totalPointsToEarn = itemsPointsResult.reduce(
+          (sum, item) => sum + item.earnedPoints,
+          0,
+        );
+
+        // 更新订单明细的积分字段
+        for (const itemPoints of itemsPointsResult) {
+          await this.prisma.omsOrderItem.updateMany({
+            where: {
+              orderId: orderId,
+              skuId: itemPoints.skuId,
+            },
+            data: {
+              earnedPoints: itemPoints.earnedPoints,
+            },
+          });
+        }
+
+        // 更新订单的总积分
+        await this.prisma.omsOrder.update({
+          where: { id: orderId },
+          data: { pointsEarned: totalPointsToEarn },
+        });
+
+        // 发放积分
+        if (totalPointsToEarn > 0) {
+          try {
+            await this.pointsAccountService.addPoints({
+              memberId,
+              amount: totalPointsToEarn,
+              type: PointsTransactionType.EARN_ORDER,
+              relatedId: orderId,
+              remark: '消费获得',
+            });
+
+            this.logger.log(`消费积分已发放: points=${totalPointsToEarn}`);
+          } catch (error) {
+            // 积分发放失败，记录到降级服务进行重试
+            this.logger.warn({
+              message: '消费积分发放失败，已加入重试队列',
+              orderId,
+              memberId,
+              pointsToEarn: totalPointsToEarn,
+              error: getErrorMessage(error),
+            });
+
+            await this.degradationService.recordFailure({
+              memberId,
+              amount: totalPointsToEarn,
+              type: PointsTransactionType.EARN_ORDER,
+              relatedId: orderId,
+              remark: '消费获得',
+              failureReason: getErrorMessage(error),
+            });
+
+            // 不抛出错误，避免影响订单支付流程
+            // 积分会通过重试队列异步发放
+          }
+        }
+      } catch (error) {
+        this.logger.error(
+          `订单支付处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
+        );
+        throw error;
       }
-    } catch (error) {
-      this.logger.error(
-        `订单支付处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
-      );
-      throw error;
-    }
+    });
   }
 
   /**
@@ -300,37 +309,39 @@ export class OrderIntegrationService {
       `处理订单取消: orderId=${orderId}, memberId=${memberId}`,
     );
 
-    try {
-      // 查询订单信息
-      const order = await this.prisma.omsOrder.findUnique({
-        where: { id: orderId },
-      });
+    return this.executeWithIdempotency('cancelled', orderId, async () => {
+      try {
+        // 查询订单信息
+        const order = await this.prisma.omsOrder.findUnique({
+          where: { id: orderId },
+        });
 
-      if (!order) {
-        BusinessException.throw(404, '订单不存在');
-      }
+        if (!order) {
+          BusinessException.throw(404, '订单不存在');
+        }
 
-      // 1. 解锁优惠券
-      if (order.userCouponId) {
-        await this.couponUsageService.unlockCoupon(order.userCouponId);
-        this.logger.log(`优惠券已解锁: couponId=${order.userCouponId}`);
-      }
+        // 1. 解锁优惠券
+        if (order.userCouponId) {
+          await this.couponUsageService.unlockCoupon(order.userCouponId);
+          this.logger.log(`优惠券已解锁: couponId=${order.userCouponId}`);
+        }
 
-      // 2. 解冻积分
-      if (order.pointsUsed && order.pointsUsed > 0) {
-        await this.pointsAccountService.unfreezePoints(
-          memberId,
-          order.pointsUsed,
-          orderId,
+        // 2. 解冻积分
+        if (order.pointsUsed && order.pointsUsed > 0) {
+          await this.pointsAccountService.unfreezePoints(
+            memberId,
+            order.pointsUsed,
+            orderId,
+          );
+          this.logger.log(`积分已解冻: points=${order.pointsUsed}`);
+        }
+      } catch (error) {
+        this.logger.error(
+          `订单取消处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
         );
-        this.logger.log(`积分已解冻: points=${order.pointsUsed}`);
+        throw error;
       }
-    } catch (error) {
-      this.logger.error(
-        `订单取消处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
-      );
-      throw error;
-    }
+    });
   }
 
   /**
@@ -344,59 +355,97 @@ export class OrderIntegrationService {
       `处理订单退款: orderId=${orderId}, memberId=${memberId}`,
     );
 
+    return this.executeWithIdempotency('refunded', orderId, async () => {
+      try {
+        // 查询订单信息
+        const order = await this.prisma.omsOrder.findUnique({
+          where: { id: orderId },
+        });
+
+        if (!order) {
+          BusinessException.throw(404, '订单不存在');
+        }
+
+        // 1. 退还优惠券
+        if (order.userCouponId) {
+          await this.couponUsageService.refundCoupon(order.userCouponId);
+          this.logger.log(`优惠券已退还: couponId=${order.userCouponId}`);
+        }
+
+        // 2. 退还积分
+        if (order.pointsUsed && order.pointsUsed > 0) {
+          await this.pointsAccountService.addPoints({
+            memberId,
+            amount: order.pointsUsed,
+            type: PointsTransactionType.REFUND,
+            relatedId: orderId,
+            remark: '订单退款返还',
+          });
+
+          this.logger.log(`积分已退还: points=${order.pointsUsed}`);
+        }
+
+        // 3. 扣减消费积分（如果已发放）
+        const earnedPoints = await this.prisma.mktPointsTransaction.findFirst({
+          where: {
+            memberId,
+            type: PointsTransactionType.EARN_ORDER,
+            relatedId: orderId,
+          },
+        });
+
+        if (earnedPoints && earnedPoints.amount > 0) {
+          const account = await this.prisma.mktPointsAccount.findFirst({
+            where: { memberId },
+            select: { availablePoints: true },
+          });
+          const availablePoints = account?.availablePoints ?? 0;
+
+          if (availablePoints < earnedPoints.amount) {
+            this.logger.warn(
+              `退款扣减消费积分跳过: orderId=${orderId}, memberId=${memberId}, available=${availablePoints}, required=${earnedPoints.amount}`,
+            );
+            return;
+          }
+
+          await this.pointsAccountService.deductPoints({
+            memberId,
+            amount: earnedPoints.amount,
+            type: PointsTransactionType.DEDUCT_ADMIN,
+            relatedId: orderId,
+            remark: '订单退款扣减消费积分',
+          });
+
+          this.logger.log(`消费积分已扣减: points=${earnedPoints.amount}`);
+        }
+      } catch (error) {
+        this.logger.error(
+          `订单退款处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
+        );
+        throw error;
+      }
+    });
+  }
+
+  private async executeWithIdempotency(
+    eventType: 'created' | 'paid' | 'cancelled' | 'refunded',
+    orderId: string,
+    handler: () => Promise<void>,
+  ): Promise<void> {
+    const key = `idempotency:order:marketing:${eventType}:${orderId}`;
+    const lockResult = await this.redisService
+      .getClient()
+      .set(key, '1', 'EX', this.idempotencyTtlSeconds, 'NX');
+
+    if (lockResult !== 'OK') {
+      this.logger.warn(`重复订单事件已忽略: event=${eventType}, orderId=${orderId}`);
+      return;
+    }
+
     try {
-      // 查询订单信息
-      const order = await this.prisma.omsOrder.findUnique({
-        where: { id: orderId },
-      });
-
-      if (!order) {
-        BusinessException.throw(404, '订单不存在');
-      }
-
-      // 1. 退还优惠券
-      if (order.userCouponId) {
-        await this.couponUsageService.refundCoupon(order.userCouponId);
-        this.logger.log(`优惠券已退还: couponId=${order.userCouponId}`);
-      }
-
-      // 2. 退还积分
-      if (order.pointsUsed && order.pointsUsed > 0) {
-        await this.pointsAccountService.addPoints({
-          memberId,
-          amount: order.pointsUsed,
-          type: PointsTransactionType.REFUND,
-          relatedId: orderId,
-          remark: '订单退款返还',
-        });
-
-        this.logger.log(`积分已退还: points=${order.pointsUsed}`);
-      }
-
-      // 3. 扣减消费积分（如果已发放）
-      const earnedPoints = await this.prisma.mktPointsTransaction.findFirst({
-        where: {
-          memberId,
-          type: PointsTransactionType.EARN_ORDER,
-          relatedId: orderId,
-        },
-      });
-
-      if (earnedPoints && earnedPoints.amount > 0) {
-        await this.pointsAccountService.deductPoints({
-          memberId,
-          amount: earnedPoints.amount,
-          type: PointsTransactionType.DEDUCT_ADMIN,
-          relatedId: orderId,
-          remark: '订单退款扣减消费积分',
-        });
-
-        this.logger.log(`消费积分已扣减: points=${earnedPoints.amount}`);
-      }
+      await handler();
     } catch (error) {
-      this.logger.error(
-        `订单退款处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
-      );
+      await this.redisService.del(key);
       throw error;
     }
   }

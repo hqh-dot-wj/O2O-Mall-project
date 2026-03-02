@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CouponTemplateService } from './template.service';
 import { CreateCouponTemplateDto } from './dto/create-coupon-template.dto';
 import { UpdateCouponTemplateDto } from './dto/update-coupon-template.dto';
@@ -7,6 +7,9 @@ import { ListCouponTemplateDto } from './dto/list-coupon-template.dto';
 import { CouponTemplateVo } from './vo/coupon-template.vo';
 import { CouponTemplateListVo } from './vo/coupon-template-list.vo';
 import { Api } from 'src/common/decorators/api.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 
 /**
  * 优惠券模板控制器
@@ -14,6 +17,7 @@ import { Api } from 'src/common/decorators/api.decorator';
  */
 @ApiTags('营销-优惠券模板')
 @Controller('admin/marketing/coupon/templates')
+@ApiBearerAuth('Authorization')
 export class CouponTemplateController {
   constructor(private readonly service: CouponTemplateService) {}
 
@@ -23,6 +27,7 @@ export class CouponTemplateController {
    */
   @Get()
   @Api({ summary: '查询优惠券模板列表', type: CouponTemplateListVo, isPager: true })
+  @RequirePermission('marketing:coupon:template:list')
   async findAll(@Query() query: ListCouponTemplateDto) {
     return await this.service.findAll(query);
   }
@@ -33,6 +38,7 @@ export class CouponTemplateController {
    */
   @Get(':id')
   @Api({ summary: '查询优惠券模板详情', type: CouponTemplateVo })
+  @RequirePermission('marketing:coupon:template:query')
   async findOne(@Param('id') id: string) {
     return await this.service.findOne(id);
   }
@@ -43,6 +49,8 @@ export class CouponTemplateController {
    */
   @Post()
   @Api({ summary: '创建优惠券模板', type: CouponTemplateVo })
+  @RequirePermission('marketing:coupon:template:add')
+  @Operlog({ businessType: BusinessType.INSERT })
   async create(@Body() dto: CreateCouponTemplateDto) {
     return await this.service.create(dto);
   }
@@ -53,6 +61,8 @@ export class CouponTemplateController {
    */
   @Put(':id')
   @Api({ summary: '更新优惠券模板', type: CouponTemplateVo })
+  @RequirePermission('marketing:coupon:template:edit')
+  @Operlog({ businessType: BusinessType.UPDATE })
   async update(@Param('id') id: string, @Body() dto: UpdateCouponTemplateDto) {
     return await this.service.update(id, dto);
   }
@@ -62,6 +72,8 @@ export class CouponTemplateController {
    */
   @Patch(':id/status')
   @Api({ summary: '更新优惠券模板状态' })
+  @RequirePermission('marketing:coupon:template:status')
+  @Operlog({ businessType: BusinessType.UPDATE })
   async updateStatus(
     @Param('id') id: string,
     @Body() body: { status: 'ACTIVE' | 'INACTIVE' },
@@ -75,6 +87,8 @@ export class CouponTemplateController {
    */
   @Delete(':id')
   @Api({ summary: '停用优惠券模板' })
+  @RequirePermission('marketing:coupon:template:delete')
+  @Operlog({ businessType: BusinessType.DELETE })
   async deactivate(@Param('id') id: string) {
     return await this.service.deactivate(id);
   }

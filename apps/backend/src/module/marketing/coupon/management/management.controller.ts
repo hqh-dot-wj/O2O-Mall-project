@@ -1,11 +1,12 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Result } from 'src/common/response/result';
 import { FormatDateFields } from 'src/common/utils';
 import { CouponStatisticsService } from '../statistics/statistics.service';
 import { UserCouponRepository } from '../distribution/user-coupon.repository';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 
 /**
  * 优惠券管理控制器
@@ -13,6 +14,7 @@ import { UserCouponRepository } from '../distribution/user-coupon.repository';
  */
 @ApiTags('营销-优惠券管理')
 @Controller()
+@ApiBearerAuth('Authorization')
 export class CouponManagementController {
   constructor(
     private readonly statisticsService: CouponStatisticsService,
@@ -24,6 +26,7 @@ export class CouponManagementController {
    */
   @Get('admin/marketing/coupon/user-coupons')
   @Api({ summary: '查询用户优惠券列表' })
+  @RequirePermission('marketing:coupon:user-coupon:list')
   async getUserCoupons(
     @Query('memberId') memberId?: string,
     @Query('status') status?: string,
@@ -39,6 +42,7 @@ export class CouponManagementController {
    */
   @Get('admin/marketing/coupon/usage-records')
   @Api({ summary: '查询优惠券使用记录' })
+  @RequirePermission('marketing:coupon:usage-record:list')
   async getUsageRecords(
     @Query('memberId') memberId?: string,
     @Query('templateId') templateId?: string,
@@ -62,6 +66,7 @@ export class CouponManagementController {
    */
   @Get('admin/marketing/coupon/statistics')
   @Api({ summary: '查询优惠券统计数据' })
+  @RequirePermission('marketing:coupon:statistics:query')
   async getStatistics(@Query('templateId') templateId?: string) {
     if (templateId) {
       return await this.statisticsService.getUsageRate(templateId);
@@ -74,6 +79,7 @@ export class CouponManagementController {
    */
   @Get('admin/marketing/coupon/export')
   @Api({ summary: '导出优惠券使用记录' })
+  @RequirePermission('marketing:coupon:usage-record:export')
   async exportUsageRecords(
     @Res() res: Response,
     @Query('memberId') memberId?: string,

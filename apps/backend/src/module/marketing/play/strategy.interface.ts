@@ -13,7 +13,7 @@ import { StrategyParams, ConfigDto } from 'src/common/types';
 export interface IMarketingStrategy {
   /**
    * 策略唯一标识代码
-   * @description 必须与系统内置的 templateCode 保持一致 (例如: 'GROUP_BUY', 'SECKILL')
+   * @description 必须与系统内置的 templateCode 保持一致 (例如: 'GROUP_BUY', 'FLASH_SALE')
    */
   readonly code: string;
 

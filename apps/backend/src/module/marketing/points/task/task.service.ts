@@ -5,6 +5,7 @@ import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { FormatDateFields } from 'src/common/utils';
+import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PointsAccountService } from '../account/account.service';
 import { PointsTaskRepository } from './task.repository';
@@ -132,6 +133,7 @@ export class PointsTaskService {
    * @param taskKey 任务标识
    * @returns 完成结果
    */
+  @Transactional()
   async completeTask(memberId: string, taskKey: string) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
 

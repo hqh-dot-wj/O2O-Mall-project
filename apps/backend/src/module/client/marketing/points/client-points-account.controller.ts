@@ -1,5 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
+import { Api } from 'src/common/decorators/api.decorator';
 import { Member } from 'src/module/client/common/decorators/member.decorator';
 import { MemberAuthGuard } from 'src/module/client/common/guards/member-auth.guard';
 import { Result } from 'src/common/response/result';
@@ -17,7 +18,7 @@ export class ClientPointsAccountController {
   constructor(private readonly accountService: PointsAccountService) {}
 
   @Get('balance')
-  @ApiOperation({ summary: '查询积分余额' })
+  @Api({ summary: '查询积分余额' })
   async getBalance(
     @Member('memberId') memberId: string,
   ): Promise<Result<PointsBalanceVo>> {
@@ -25,7 +26,7 @@ export class ClientPointsAccountController {
   }
 
   @Get('transactions')
-  @ApiOperation({ summary: '查询积分明细' })
+  @Api({ summary: '查询积分明细' })
   async getTransactions(
     @Member('memberId') memberId: string,
     @Query() query: TransactionQueryDto,
@@ -34,7 +35,7 @@ export class ClientPointsAccountController {
   }
 
   @Get('expiring')
-  @ApiOperation({ summary: '查询即将过期的积分' })
+  @Api({ summary: '查询即将过期的积分' })
   async getExpiringPoints(
     @Member('memberId') memberId: string,
     @Query('days') days?: number,

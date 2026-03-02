@@ -1,8 +1,9 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PointsTransactionType } from '@prisma/client';
-import { Result } from 'src/common/response/result';
 import { PointsStatisticsService } from '../statistics/statistics.service';
+import { Api } from 'src/common/decorators/api.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 
 /**
  * 积分管理控制器
@@ -11,11 +12,13 @@ import { PointsStatisticsService } from '../statistics/statistics.service';
  */
 @ApiTags('积分管理')
 @Controller('admin/marketing/points')
+@ApiBearerAuth('Authorization')
 export class PointsManagementController {
   constructor(private readonly statisticsService: PointsStatisticsService) {}
 
   @Get('statistics/earn')
-  @ApiOperation({ summary: '查询积分发放统计' })
+  @Api({ summary: '查询积分发放统计' })
+  @RequirePermission('marketing:points:statistics:earn')
   async getEarnStatistics(
     @Query('startTime') startTime?: Date,
     @Query('endTime') endTime?: Date,
@@ -24,7 +27,8 @@ export class PointsManagementController {
   }
 
   @Get('statistics/use')
-  @ApiOperation({ summary: '查询积分使用统计' })
+  @Api({ summary: '查询积分使用统计' })
+  @RequirePermission('marketing:points:statistics:use')
   async getUseStatistics(
     @Query('startTime') startTime?: Date,
     @Query('endTime') endTime?: Date,
@@ -33,13 +37,15 @@ export class PointsManagementController {
   }
 
   @Get('statistics/balance')
-  @ApiOperation({ summary: '查询积分余额统计' })
+  @Api({ summary: '查询积分余额统计' })
+  @RequirePermission('marketing:points:statistics:balance')
   async getBalanceStatistics() {
     return this.statisticsService.getBalanceStatistics();
   }
 
   @Get('statistics/expire')
-  @ApiOperation({ summary: '查询积分过期统计' })
+  @Api({ summary: '查询积分过期统计' })
+  @RequirePermission('marketing:points:statistics:expire')
   async getExpireStatistics(
     @Query('startTime') startTime?: Date,
     @Query('endTime') endTime?: Date,
@@ -48,13 +54,15 @@ export class PointsManagementController {
   }
 
   @Get('ranking')
-  @ApiOperation({ summary: '查询积分排行榜' })
+  @Api({ summary: '查询积分排行榜' })
+  @RequirePermission('marketing:points:ranking:list')
   async getRanking(@Query('limit') limit?: number) {
     return this.statisticsService.getRanking(limit);
   }
 
   @Get('export')
-  @ApiOperation({ summary: '导出积分明细' })
+  @Api({ summary: '导出积分明细' })
+  @RequirePermission('marketing:points:transaction:export')
   async exportTransactions(
     @Query('memberId') memberId?: string,
     @Query('type') type?: PointsTransactionType,

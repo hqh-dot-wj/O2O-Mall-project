@@ -1,11 +1,14 @@
 import { Body, Controller, Get, Param, Post, Put, Query, Patch } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PlayInstanceService } from './instance.service';
 import { CreatePlayInstanceDto, ListPlayInstanceDto } from './dto/instance.dto';
 import { PlayInstanceStatus } from '@prisma/client';
 import { Idempotent } from 'src/common/decorators/idempotent.decorator';
 import { PlayInstanceVo, PlayInstanceListVo } from './vo/instance.vo';
 import { Api } from 'src/common/decorators/api.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 
 /**
  * 营销实例接口 (交易流转)
@@ -13,17 +16,20 @@ import { Api } from 'src/common/decorators/api.decorator';
  */
 @ApiTags('营销-玩法实例')
 @Controller('marketing/instance')
+@ApiBearerAuth('Authorization')
 export class PlayInstanceController {
   constructor(private readonly service: PlayInstanceService) {}
 
   @Get('list')
   @Api({ summary: '查询实例列表', type: PlayInstanceListVo })
+  @RequirePermission('marketing:instance:list')
   async findAll(@Query() query: ListPlayInstanceDto) {
     return await this.service.findAll(query);
   }
 
   @Get(':id')
   @Api({ summary: '查询实例详情', type: PlayInstanceVo })
+  @RequirePermission('marketing:instance:query')
   async findOne(@Param('id') id: string) {
     return await this.service.findOne(id);
   }
@@ -31,6 +37,8 @@ export class PlayInstanceController {
   @Post()
   @Idempotent() // ✅ 中文注释：防重逻辑，确保同一请求不会多次创建实例
   @Api({ summary: '参与玩法 (创建实例)', type: PlayInstanceVo })
+  @RequirePermission('marketing:instance:add')
+  @Operlog({ businessType: BusinessType.INSERT })
   async create(@Body() dto: CreatePlayInstanceDto) {
     return await this.service.create(dto);
   }
@@ -40,6 +48,8 @@ export class PlayInstanceController {
    */
   @Patch(':id/status')
   @Api({ summary: '更新实例状态', type: PlayInstanceVo })
+  @RequirePermission('marketing:instance:status')
+  @Operlog({ businessType: BusinessType.UPDATE })
   async updateStatus(
     @Param('id') id: string,
     @Body('status') status: PlayInstanceStatus,

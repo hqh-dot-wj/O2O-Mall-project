@@ -1,7 +1,8 @@
 import { Controller, Post, Get, Body, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RuleValidatorService, ValidationResult } from './rule-validator.service';
 import { Api } from 'src/common/decorators/api.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 
 /**
  * 规则校验请求 DTO
@@ -55,6 +56,7 @@ export class ValidateRuleDto {
  */
 @ApiTags('营销-规则校验')
 @Controller('api/marketing/rule')
+@ApiBearerAuth('Authorization')
 export class RuleController {
   constructor(private readonly validatorService: RuleValidatorService) {}
 
@@ -125,6 +127,7 @@ export class RuleController {
     summary: '校验规则配置',
     description: '对营销活动的规则配置进行完整校验，包括字段类型、约束和业务逻辑校验',
   })
+  @RequirePermission('marketing:rule:validate')
   async validateRule(@Body() dto: ValidateRuleDto): Promise<ValidationResult> {
     return await this.validatorService.validate(dto.templateCode, dto.rules);
   }
@@ -207,6 +210,7 @@ export class RuleController {
     summary: '获取规则表单 Schema',
     description: '根据玩法代码获取该玩法的规则表单 Schema，用于前端动态表单生成',
   })
+  @RequirePermission('marketing:rule:schema:query')
   async getRuleFormSchema(@Param('templateCode') templateCode: string): Promise<any> {
     return this.validatorService.getRuleFormSchema(templateCode);
   }
