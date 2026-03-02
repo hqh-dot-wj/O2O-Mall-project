@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { StorePlayConfig } from '@prisma/client';
+import { DelFlag, Prisma } from '@prisma/client';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
  * 活动审批状态枚举
@@ -128,6 +130,9 @@ export interface ApprovalActionDto {
 @Injectable()
 export class ApprovalService {
   private readonly logger = new Logger(ApprovalService.name);
+  private readonly approvalKey = 'approval';
+
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 提交活动审批
@@ -165,24 +170,21 @@ export class ApprovalService {
   async submitApproval(dto: SubmitApprovalDto): Promise<ApprovalRecord> {
     const { configId, submitterId, remark } = dto;
 
-    this.logger.log(
-      `[提交审批] 活动 ${configId} 由用户 ${submitterId} 提交审批`,
+    const config = await this.getConfigOrThrow(configId);
+    const currentRecord = this.getApprovalRecordFromRules(config.rules);
+    BusinessException.throwIf(
+      !this.isValidTransition(currentRecord.status, ActivityApprovalStatus.PENDING),
+      `当前审批状态 ${currentRecord.status} 不允许提交审批`,
     );
 
-    // TODO: 实际实现需要：
-    // 1. 从数据库查询活动配置
-    // 2. 检查当前审批状态（必须是 DRAFT 或 REJECTED）
-    // 3. 更新审批状态为 PENDING
-    // 4. 记录提交人和提交时间
-    // 5. 保存审批记录到数据库
-
-    // 示例返回（实际需要从数据库获取）
     const approvalRecord: ApprovalRecord = {
       status: ActivityApprovalStatus.PENDING,
-      submitTime: new Date(),
       submitter: submitterId,
-      remark: remark,
+      submitTime: new Date(),
+      remark: this.normalizeString(remark),
     };
+
+    await this.persistApprovalRecord(configId, config.rules, approvalRecord);
 
     this.logger.log(
       `[提交审批] 活动 ${configId} 审批状态已更新为 PENDING`,
@@ -227,25 +229,22 @@ export class ApprovalService {
   async approve(dto: ApprovalActionDto): Promise<ApprovalRecord> {
     const { configId, approverId, remark } = dto;
 
-    this.logger.log(
-      `[审批通过] 活动 ${configId} 由审批人 ${approverId} 批准`,
+    const config = await this.getConfigOrThrow(configId);
+    const currentRecord = this.getApprovalRecordFromRules(config.rules);
+    BusinessException.throwIf(
+      !this.isValidTransition(currentRecord.status, ActivityApprovalStatus.APPROVED),
+      `当前审批状态 ${currentRecord.status} 不允许审批通过`,
     );
 
-    // TODO: 实际实现需要：
-    // 1. 从数据库查询活动配置
-    // 2. 检查当前审批状态（必须是 PENDING）
-    // 3. 更新审批状态为 APPROVED
-    // 4. 记录审批人、审批时间和审批意见
-    // 5. 保存审批记录到数据库
-    // 6. 可选：发送通知给提交人
-
-    // 示例返回（实际需要从数据库获取）
     const approvalRecord: ApprovalRecord = {
+      ...currentRecord,
       status: ActivityApprovalStatus.APPROVED,
       approver: approverId,
       approvalTime: new Date(),
-      remark: remark,
+      remark: this.normalizeString(remark) ?? currentRecord.remark,
     };
+
+    await this.persistApprovalRecord(configId, config.rules, approvalRecord);
 
     this.logger.log(
       `[审批通过] 活动 ${configId} 审批状态已更新为 APPROVED`,
@@ -291,30 +290,25 @@ export class ApprovalService {
   async reject(dto: ApprovalActionDto): Promise<ApprovalRecord> {
     const { configId, approverId, remark } = dto;
 
-    // 驳回必须提供原因
-    if (!remark || remark.trim() === '') {
-      throw new Error('驳回审批必须提供驳回原因');
-    }
+    const rejectReason = this.normalizeString(remark);
+    BusinessException.throwIf(!rejectReason, '驳回审批必须提供驳回原因');
 
-    this.logger.log(
-      `[审批驳回] 活动 ${configId} 由审批人 ${approverId} 驳回，原因：${remark}`,
+    const config = await this.getConfigOrThrow(configId);
+    const currentRecord = this.getApprovalRecordFromRules(config.rules);
+    BusinessException.throwIf(
+      !this.isValidTransition(currentRecord.status, ActivityApprovalStatus.REJECTED),
+      `当前审批状态 ${currentRecord.status} 不允许驳回`,
     );
 
-    // TODO: 实际实现需要：
-    // 1. 从数据库查询活动配置
-    // 2. 检查当前审批状态（必须是 PENDING）
-    // 3. 更新审批状态为 REJECTED
-    // 4. 记录审批人、审批时间和驳回原因
-    // 5. 保存审批记录到数据库
-    // 6. 可选：发送通知给提交人
-
-    // 示例返回（实际需要从数据库获取）
     const approvalRecord: ApprovalRecord = {
+      ...currentRecord,
       status: ActivityApprovalStatus.REJECTED,
       approver: approverId,
       approvalTime: new Date(),
-      remark: remark,
+      remark: rejectReason,
     };
+
+    await this.persistApprovalRecord(configId, config.rules, approvalRecord);
 
     this.logger.log(
       `[审批驳回] 活动 ${configId} 审批状态已更新为 REJECTED`,
@@ -349,17 +343,8 @@ export class ApprovalService {
   async getApprovalStatus(configId: string): Promise<ApprovalRecord> {
     this.logger.debug(`[查询审批状态] 活动 ${configId}`);
 
-    // TODO: 实际实现需要：
-    // 1. 从数据库查询活动配置
-    // 2. 提取审批相关字段
-    // 3. 返回审批记录
-
-    // 示例返回（实际需要从数据库获取）
-    const approvalRecord: ApprovalRecord = {
-      status: ActivityApprovalStatus.DRAFT,
-    };
-
-    return approvalRecord;
+    const config = await this.getConfigOrThrow(configId);
+    return this.getApprovalRecordFromRules(config.rules);
   }
 
   /**
@@ -480,5 +465,117 @@ export class ApprovalService {
     };
 
     return descriptions[status] || '未知状态';
+  }
+
+  private async getConfigOrThrow(configId: string): Promise<{ id: string; rules: Prisma.JsonValue }> {
+    const config = await this.prisma.storePlayConfig.findFirst({
+      where: {
+        id: configId,
+        delFlag: DelFlag.NORMAL,
+      },
+      select: {
+        id: true,
+        rules: true,
+      },
+    });
+
+    BusinessException.throwIfNull(config, '营销配置不存在');
+    return config;
+  }
+
+  private async persistApprovalRecord(
+    configId: string,
+    currentRules: Prisma.JsonValue,
+    approvalRecord: ApprovalRecord,
+  ): Promise<void> {
+    await this.prisma.storePlayConfig.update({
+      where: { id: configId },
+      data: {
+        rules: this.buildRulesWithApproval(currentRules, approvalRecord),
+      },
+    });
+  }
+
+  private getApprovalRecordFromRules(rules: Prisma.JsonValue): ApprovalRecord {
+    const rulesObject = this.toObject(rules);
+    const approvalObject = this.toObject(rulesObject[this.approvalKey]);
+
+    return {
+      status: this.parseStatus(approvalObject.status),
+      submitter: this.normalizeString(approvalObject.submitter),
+      submitTime: this.toDate(approvalObject.submitTime),
+      approver: this.normalizeString(approvalObject.approver),
+      approvalTime: this.toDate(approvalObject.approvalTime),
+      remark: this.normalizeString(approvalObject.remark),
+    };
+  }
+
+  private buildRulesWithApproval(
+    currentRules: Prisma.JsonValue,
+    approvalRecord: ApprovalRecord,
+  ): Prisma.InputJsonValue {
+    const rulesObject = this.toObject(currentRules);
+    const approvalObject: Record<string, Prisma.InputJsonValue> = {
+      status: approvalRecord.status,
+    };
+
+    if (approvalRecord.submitter) {
+      approvalObject.submitter = approvalRecord.submitter;
+    }
+    if (approvalRecord.submitTime) {
+      approvalObject.submitTime = approvalRecord.submitTime.toISOString();
+    }
+    if (approvalRecord.approver) {
+      approvalObject.approver = approvalRecord.approver;
+    }
+    if (approvalRecord.approvalTime) {
+      approvalObject.approvalTime = approvalRecord.approvalTime.toISOString();
+    }
+    if (approvalRecord.remark) {
+      approvalObject.remark = approvalRecord.remark;
+    }
+
+    return {
+      ...rulesObject,
+      [this.approvalKey]: approvalObject,
+    } as Prisma.InputJsonValue;
+  }
+
+  private parseStatus(value: unknown): ActivityApprovalStatus {
+    const statuses: ActivityApprovalStatus[] = [
+      ActivityApprovalStatus.DRAFT,
+      ActivityApprovalStatus.PENDING,
+      ActivityApprovalStatus.APPROVED,
+      ActivityApprovalStatus.REJECTED,
+    ];
+
+    return statuses.includes(value as ActivityApprovalStatus)
+      ? (value as ActivityApprovalStatus)
+      : ActivityApprovalStatus.DRAFT;
+  }
+
+  private toObject(value: unknown): Record<string, unknown> {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      return {};
+    }
+    return value as Record<string, unknown>;
+  }
+
+  private toDate(value: unknown): Date | undefined {
+    const dateString = this.normalizeString(value);
+    if (!dateString) {
+      return undefined;
+    }
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return undefined;
+    }
+
+    return date;
+  }
+
+  private normalizeString(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() !== '' ? value : undefined;
   }
 }

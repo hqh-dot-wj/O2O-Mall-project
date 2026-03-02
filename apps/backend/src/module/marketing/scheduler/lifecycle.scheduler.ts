@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayInstanceStatus, PublishStatus } from '@prisma/client';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import { PlayInstanceService } from '../instance/instance.service';
 import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
@@ -24,10 +25,19 @@ import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 @Injectable()
 export class ActivityLifecycleScheduler {
   private readonly logger = new Logger(ActivityLifecycleScheduler.name);
+  private readonly timeoutLockKey = 'lock:marketing:lifecycle:handle-timeout-instances';
+  private readonly timeoutLockTtlMs = 55 * 1000;
+  private readonly activityStatusLockKey = 'lock:marketing:lifecycle:handle-activity-status';
+  private readonly activityStatusLockTtlMs = 55 * 60 * 1000;
+  private readonly cleanupLockKey = 'lock:marketing:lifecycle:cleanup-expired-data';
+  private readonly cleanupLockTtlMs = 55 * 60 * 1000;
+  private readonly healthLockKey = 'lock:marketing:lifecycle:health-check';
+  private readonly healthLockTtlMs = 4 * 60 * 1000;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly instanceService: PlayInstanceService,
+    private readonly redisService: RedisService,
   ) {}
 
   /**
@@ -42,6 +52,12 @@ export class ActivityLifecycleScheduler {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleTimeoutInstances() {
+    const lockAcquired = await this.redisService.tryLock(this.timeoutLockKey, this.timeoutLockTtlMs);
+    if (!lockAcquired) {
+      this.logger.log('[定时任务] 跳过处理超时实例：已有实例正在执行');
+      return;
+    }
+
     const startTime = Date.now();
     this.logger.log('[定时任务] 开始处理超时实例...');
 
@@ -116,6 +132,12 @@ export class ActivityLifecycleScheduler {
       );
     } catch (error) {
       this.logger.error(`[定时任务] 处理超时实例失败: ${getErrorMessage(error)}`, getErrorStack(error));
+    } finally {
+      try {
+        await this.redisService.unlock(this.timeoutLockKey);
+      } catch (error) {
+        this.logger.warn(`[定时任务] 释放超时实例任务锁失败: ${getErrorMessage(error)}`);
+      }
     }
   }
 
@@ -131,6 +153,15 @@ export class ActivityLifecycleScheduler {
    */
   @Cron(CronExpression.EVERY_HOUR)
   async handleActivityStatus() {
+    const lockAcquired = await this.redisService.tryLock(
+      this.activityStatusLockKey,
+      this.activityStatusLockTtlMs,
+    );
+    if (!lockAcquired) {
+      this.logger.log('[定时任务] 跳过活动状态检查：已有实例正在执行');
+      return;
+    }
+
     const startTime = Date.now();
     this.logger.log('[定时任务] 开始检查活动状态...');
 
@@ -185,6 +216,12 @@ export class ActivityLifecycleScheduler {
       );
     } catch (error) {
       this.logger.error(`[定时任务] 检查活动状态失败: ${getErrorMessage(error)}`, getErrorStack(error));
+    } finally {
+      try {
+        await this.redisService.unlock(this.activityStatusLockKey);
+      } catch (error) {
+        this.logger.warn(`[定时任务] 释放活动状态检查锁失败: ${getErrorMessage(error)}`);
+      }
     }
   }
 
@@ -200,6 +237,12 @@ export class ActivityLifecycleScheduler {
    */
   @Cron('0 0 2 * * *')
   async cleanupExpiredData() {
+    const lockAcquired = await this.redisService.tryLock(this.cleanupLockKey, this.cleanupLockTtlMs);
+    if (!lockAcquired) {
+      this.logger.log('[定时任务] 跳过过期数据清理：已有实例正在执行');
+      return;
+    }
+
     const startTime = Date.now();
     this.logger.log('[定时任务] 开始清理过期数据...');
 
@@ -238,6 +281,12 @@ export class ActivityLifecycleScheduler {
       );
     } catch (error) {
       this.logger.error(`[定时任务] 清理过期数据失败: ${getErrorMessage(error)}`, getErrorStack(error));
+    } finally {
+      try {
+        await this.redisService.unlock(this.cleanupLockKey);
+      } catch (error) {
+        this.logger.warn(`[定时任务] 释放过期数据清理锁失败: ${getErrorMessage(error)}`);
+      }
     }
   }
 
@@ -254,6 +303,12 @@ export class ActivityLifecycleScheduler {
    */
   @Cron('0 */5 * * * *')
   async healthCheck() {
+    const lockAcquired = await this.redisService.tryLock(this.healthLockKey, this.healthLockTtlMs);
+    if (!lockAcquired) {
+      this.logger.log('[定时任务] 跳过健康检查：已有实例正在执行');
+      return;
+    }
+
     try {
       // 统计各状态实例数量
       const statusCounts = await this.prisma.playInstance.groupBy({
@@ -292,6 +347,12 @@ export class ActivityLifecycleScheduler {
       }
     } catch (error) {
       this.logger.error(`[健康检查] 执行失败: ${getErrorMessage(error)}`, getErrorStack(error));
+    } finally {
+      try {
+        await this.redisService.unlock(this.healthLockKey);
+      } catch (error) {
+        this.logger.warn(`[健康检查] 释放健康检查锁失败: ${getErrorMessage(error)}`);
+      }
     }
   }
 }

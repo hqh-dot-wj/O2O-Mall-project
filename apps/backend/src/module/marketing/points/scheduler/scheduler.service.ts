@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PointsTransactionType, PointsTransactionStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
+import { RedisService } from 'src/module/common/redis/redis.service';
 
 /**
  * 积分定时任务服务
@@ -12,8 +13,13 @@ import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 @Injectable()
 export class PointsSchedulerService {
   private readonly logger = new Logger(PointsSchedulerService.name);
+  private readonly lockKey = 'lock:marketing:points:scheduler:process-expired-points';
+  private readonly lockTtlMs = 5 * 60 * 1000;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {}
 
   /**
    * 处理过期积分
@@ -22,6 +28,12 @@ export class PointsSchedulerService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async processExpiredPoints() {
+    const lockAcquired = await this.redisService.tryLock(this.lockKey, this.lockTtlMs);
+    if (!lockAcquired) {
+      this.logger.log('跳过处理过期积分：已有实例正在执行');
+      return;
+    }
+
     this.logger.log('开始处理过期积分...');
 
     try {
@@ -120,6 +132,12 @@ export class PointsSchedulerService {
       );
     } catch (error) {
       this.logger.error(`处理过期积分异常: ${getErrorMessage(error)}`, getErrorStack(error));
+    } finally {
+      try {
+        await this.redisService.unlock(this.lockKey);
+      } catch (error) {
+        this.logger.warn(`释放过期积分任务锁失败: ${getErrorMessage(error)}`);
+      }
     }
   }
 }

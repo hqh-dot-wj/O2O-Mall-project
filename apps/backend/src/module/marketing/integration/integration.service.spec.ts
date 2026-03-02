@@ -153,7 +153,8 @@ describe('OrderIntegrationService', () => {
   });
 
   describe('handleOrderCreated', () => {
-    it('应锁定优惠券并冻结积分', async () => {
+    // R-FLOW-ORDER-01
+    it('Given 有优惠券且有积分抵扣, When handleOrderCreated, Then 锁券并冻结积分', async () => {
       await service.handleOrderCreated('order1', 'm1', 'uc1', 100);
 
       expect(mockCouponUsageService.lockCoupon).toHaveBeenCalledWith('uc1', 'order1');
@@ -164,7 +165,8 @@ describe('OrderIntegrationService', () => {
       );
     });
 
-    it('无优惠券时仅冻结积分', async () => {
+    // R-FLOW-ORDER-01
+    it('Given 无优惠券但有积分抵扣, When handleOrderCreated, Then 仅冻结积分', async () => {
       await service.handleOrderCreated('order1', 'm1', undefined, 50);
 
       expect(mockCouponUsageService.lockCoupon).not.toHaveBeenCalled();
@@ -175,7 +177,8 @@ describe('OrderIntegrationService', () => {
       );
     });
 
-    it('幂等键已存在时应忽略重复处理', async () => {
+    // R-CONCUR-ORDER-01
+    it('Given 订单事件幂等键已存在, When handleOrderCreated, Then 忽略重复处理', async () => {
       mockRedisClient.set.mockResolvedValueOnce(null);
 
       await service.handleOrderCreated('order1', 'm1', 'uc1', 100);
@@ -186,7 +189,8 @@ describe('OrderIntegrationService', () => {
   });
 
   describe('handleOrderPaid', () => {
-    it('订单不存在应抛异常', async () => {
+    // R-PRE-ORDER-01
+    it('Given 订单不存在, When handleOrderPaid, Then 抛出业务异常', async () => {
       mockPrisma.omsOrder.findUnique.mockResolvedValue(null);
       jest.spyOn(service['logger'], 'error').mockImplementation(() => {});
 
@@ -195,7 +199,8 @@ describe('OrderIntegrationService', () => {
       ).rejects.toThrow(BusinessException);
     });
 
-    it('应使用优惠券、扣减积分并发放消费积分', async () => {
+    // R-FLOW-ORDER-02
+    it('Given 订单含券与积分, When handleOrderPaid, Then 核销券并解冻扣减并发放消费积分', async () => {
       const order = {
         id: 'order1',
         memberId: 'm1',
@@ -250,7 +255,8 @@ describe('OrderIntegrationService', () => {
       );
     });
 
-    it('积分发放失败应记录降级不抛错', async () => {
+    // R-BRANCH-ORDER-01
+    it('Given 发放消费积分失败, When handleOrderPaid, Then 记录降级且不抛错', async () => {
       const order: {
         id: string;
         memberId: string;
@@ -297,7 +303,8 @@ describe('OrderIntegrationService', () => {
   });
 
   describe('handleOrderCancelled', () => {
-    it('应解锁优惠券并解冻积分', async () => {
+    // R-FLOW-ORDER-03
+    it('Given 订单已锁券和冻结积分, When handleOrderCancelled, Then 解锁优惠券并解冻积分', async () => {
       mockPrisma.omsOrder.findUnique.mockResolvedValue({
         id: 'order1',
         userCouponId: 'uc1',
@@ -316,7 +323,8 @@ describe('OrderIntegrationService', () => {
   });
 
   describe('handleOrderRefunded', () => {
-    it('应退还优惠券、退还积分并扣减已发放消费积分', async () => {
+    // R-FLOW-ORDER-04
+    it('Given 订单已发放消费积分, When handleOrderRefunded, Then 退券退积分并回收消费积分', async () => {
       mockPrisma.omsOrder.findUnique.mockResolvedValue({
         id: 'order1',
         userCouponId: 'uc1',
@@ -349,7 +357,8 @@ describe('OrderIntegrationService', () => {
       );
     });
 
-    it('消费积分余额不足时应跳过扣减', async () => {
+    // R-BRANCH-ORDER-02
+    it('Given 可用积分小于待回收消费积分, When handleOrderRefunded, Then 跳过扣减', async () => {
       mockPrisma.omsOrder.findUnique.mockResolvedValue({
         id: 'order1',
         userCouponId: null,

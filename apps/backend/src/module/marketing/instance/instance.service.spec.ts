@@ -128,7 +128,8 @@ describe('PlayInstanceService', () => {
     );
   });
 
-  it('STRONG_LOCK 参与时应预扣库存并写入库存锁标记', async () => {
+  // R-FLOW-INSTANCE-02
+  it('Given STRONG_LOCK 配置, When create, Then 先预扣库存并写入库存锁标记', async () => {
     mockPrisma.storePlayConfig.findUnique.mockResolvedValue({
       id: 'cfg-1',
       storeId: 'store-1',
@@ -163,7 +164,8 @@ describe('PlayInstanceService', () => {
     );
   });
 
-  it('预扣库存后创建失败应自动回补库存', async () => {
+  // R-BRANCH-INSTANCE-01
+  it('Given 预扣库存成功, When create 落库失败, Then 自动回补库存', async () => {
     mockPrisma.storePlayConfig.findUnique.mockResolvedValue({
       id: 'cfg-1',
       storeId: 'store-1',
@@ -187,7 +189,8 @@ describe('PlayInstanceService', () => {
     expect(mockStockService.increment).toHaveBeenCalledWith('cfg-1', 2);
   });
 
-  it('流转到终态且库存未释放时应回补库存并标记已释放', async () => {
+  // R-BRANCH-INSTANCE-02
+  it('Given 实例已锁库存且未释放, When 流转到 TIMEOUT, Then 回补库存并标记已释放', async () => {
     mockRepo.findById.mockResolvedValue({
       id: 'ins-1',
       configId: 'cfg-1',
@@ -215,7 +218,8 @@ describe('PlayInstanceService', () => {
     );
   });
 
-  it('批量流转应先做状态机校验，不合法时直接拒绝', async () => {
+  // R-PRE-INSTANCE-04
+  it('Given 批量中存在非法状态流转, When batchTransitStatus, Then 直接拒绝并抛错', async () => {
     mockRepo.findMany.mockResolvedValue([
       {
         id: 'ins-1',
@@ -228,7 +232,8 @@ describe('PlayInstanceService', () => {
     ).rejects.toThrow(BusinessException);
   });
 
-  it('批量流转合法时应逐条复用 transitStatus', async () => {
+  // R-FLOW-INSTANCE-05
+  it('Given 批量流转均合法, When batchTransitStatus, Then 逐条复用 transitStatus', async () => {
     mockRepo.findMany.mockResolvedValue([
       { id: 'ins-1', status: PlayInstanceStatus.PAID },
       { id: 'ins-2', status: PlayInstanceStatus.ACTIVE },

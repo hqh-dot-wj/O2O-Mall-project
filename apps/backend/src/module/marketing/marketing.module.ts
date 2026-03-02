@@ -10,6 +10,7 @@ import { RuleModule } from './rule/rule.module';
 import { CouponModule } from './coupon/coupon.module';
 import { PointsModule } from './points/points.module';
 import { OrderIntegrationModule } from './integration/integration.module';
+import { ApprovalModule } from './approval/approval.module';
 
 import { MarketingPlayModule } from './play/play.module';
 
@@ -44,6 +45,7 @@ import { MarketingPlayModule } from './play/play.module';
     CouponModule,             // ✅ 优惠券模块
     PointsModule,             // ✅ 积分模块
     OrderIntegrationModule,   // ✅ 订单集成模块
+    ApprovalModule,           // ✅ 活动审批模块
 
     forwardRef(() => MarketingPlayModule),
   ],
@@ -59,6 +61,7 @@ import { MarketingPlayModule } from './play/play.module';
     CouponModule,             // ✅ 导出优惠券模块
     PointsModule,             // ✅ 导出积分模块
     OrderIntegrationModule,   // ✅ 导出订单集成模块
+    ApprovalModule,           // ✅ 导出活动审批模块
 
     forwardRef(() => MarketingPlayModule),
   ],

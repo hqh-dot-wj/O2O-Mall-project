@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RuleValidatorService, ValidationResult } from './rule-validator.service';
 import { Api } from 'src/common/decorators/api.decorator';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
 
 /**
  * 规则校验请求 DTO
@@ -128,6 +130,7 @@ export class RuleController {
     description: '对营销活动的规则配置进行完整校验，包括字段类型、约束和业务逻辑校验',
   })
   @RequirePermission('marketing:rule:validate')
+  @Operlog({ businessType: BusinessType.OTHER })
   async validateRule(@Body() dto: ValidateRuleDto): Promise<ValidationResult> {
     return await this.validatorService.validate(dto.templateCode, dto.rules);
   }

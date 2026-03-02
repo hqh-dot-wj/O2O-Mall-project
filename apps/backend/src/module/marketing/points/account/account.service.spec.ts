@@ -147,7 +147,8 @@ describe('PointsAccountService', () => {
   });
 
   describe('deductPoints', () => {
-    it('账户不存在应抛异常', async () => {
+    // R-PRE-POINTS-01
+    it('Given 积分账户不存在, When freezePoints, Then 抛出业务异常', async () => {
       mockAccountRepo.findByMemberId.mockResolvedValue(null);
 
       await expect(
@@ -160,7 +161,8 @@ describe('PointsAccountService', () => {
       ).rejects.toThrow(BusinessException);
     });
 
-    it('余额不足应抛异常', async () => {
+    // R-PRE-POINTS-02
+    it('Given 可用积分不足, When freezePoints, Then 抛出业务异常', async () => {
       mockAccountRepo.findByMemberId.mockResolvedValue({
         id: 'acc1',
         memberId: 'm1',
@@ -240,7 +242,8 @@ describe('PointsAccountService', () => {
       ).rejects.toThrow(BusinessException);
     });
 
-    it('应成功冻结积分', async () => {
+    // R-FLOW-POINTS-01
+    it('Given 账户可用积分充足, When freezePoints, Then 乐观锁更新并生成交易记录', async () => {
       const account = {
         id: 'acc1',
         memberId: 'm1',
@@ -271,7 +274,8 @@ describe('PointsAccountService', () => {
   });
 
   describe('unfreezePoints', () => {
-    it('冻结积分不足应抛异常', async () => {
+    // R-PRE-POINTS-03
+    it('Given 冻结积分不足, When unfreezePoints, Then 抛出业务异常', async () => {
       mockAccountRepo.findByMemberId.mockResolvedValue({
         id: 'acc1',
         availablePoints: 10,
@@ -284,7 +288,8 @@ describe('PointsAccountService', () => {
       ).rejects.toThrow(BusinessException);
     });
 
-    it('应成功解冻积分', async () => {
+    // R-FLOW-POINTS-02
+    it('Given 冻结积分充足, When unfreezePoints, Then 乐观锁更新并生成交易记录', async () => {
       const account = {
         id: 'acc1',
         memberId: 'm1',

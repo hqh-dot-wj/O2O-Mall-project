@@ -101,7 +101,8 @@ describe('PointsTaskService', () => {
   });
 
   describe('updateTask', () => {
-    it('任务不存在应抛异常', async () => {
+    // R-PRE-TASK-01
+    it('Given 任务不存在, When completeTask, Then 抛出业务异常', async () => {
       mockTaskRepo.findById.mockResolvedValue(null);
 
       await expect(
@@ -223,7 +224,8 @@ describe('PointsTaskService', () => {
       ).rejects.toThrow(BusinessException);
     });
 
-    it('任务已停用应抛异常', async () => {
+    // R-PRE-TASK-01
+    it('Given 任务已停用, When completeTask, Then 抛出业务异常', async () => {
       mockTaskRepo.findByTaskKey.mockResolvedValue({
         id: 't1',
         taskKey: 'SIGNIN',
@@ -237,7 +239,8 @@ describe('PointsTaskService', () => {
       ).rejects.toThrow(BusinessException);
     });
 
-    it('应完成任务并发放积分', async () => {
+    // R-FLOW-TASK-01
+    it('Given 任务可完成, When completeTask, Then 发放积分并写入完成记录', async () => {
       const task = {
         id: 't1',
         taskKey: 'SIGNIN',
