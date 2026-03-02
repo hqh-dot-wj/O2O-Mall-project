@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CouponStatus, CouponDistributionType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
+import { ORDER_SERVICE } from 'src/module/client/order/order-service.token';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
 import { CouponTemplateRepository } from '../template/template.repository';
 import { UserCouponRepository } from './user-coupon.repository';
 import { RedisLockService } from './redis-lock.service';
@@ -20,7 +23,14 @@ describe('CouponDistributionService', () => {
 
   const mockPrisma = {
     $transaction: jest.fn(),
-    omsOrder: { findUnique: jest.fn() },
+  };
+
+  const mockOrderService = {
+    findByIdForMarketing: jest.fn(),
+  };
+
+  const mockEventEmitter = {
+    emitAsync: jest.fn(),
   };
 
   const mockRedisLock = {
@@ -33,6 +43,8 @@ describe('CouponDistributionService', () => {
       providers: [
         CouponDistributionService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ORDER_SERVICE, useValue: mockOrderService },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
         { provide: RedisLockService, useValue: mockRedisLock },
         { provide: CouponTemplateRepository, useValue: mockTemplateRepo },
         { provide: UserCouponRepository, useValue: mockUserCouponRepo },
@@ -114,6 +126,8 @@ describe('CouponDistributionService', () => {
         providers: [
           CouponDistributionService,
           { provide: PrismaService, useValue: mockPrisma },
+          { provide: ORDER_SERVICE, useValue: mockOrderService },
+          { provide: MarketingEventEmitter, useValue: mockEventEmitter },
           { provide: RedisLockService, useValue: mockRedisLock },
           { provide: CouponTemplateRepository, useValue: mockTemplateRepo },
           { provide: UserCouponRepository, useValue: mockUserCouponRepo },
@@ -156,10 +170,28 @@ describe('CouponDistributionService', () => {
 
       expect(result.data).toBeDefined();
       expect(result.msg).toContain('领取成功');
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.COUPON_CLAIMED,
+          instanceId: 'uc1',
+          configId: 't1',
+          memberId: 'm1',
+        }),
+      );
     });
   });
 
   describe('distributeManually', () => {
+    it('手动发放超过500人应抛异常', async () => {
+      await expect(
+        service.distributeManually({
+          templateId: 't1',
+          memberIds: Array.from({ length: 501 }, (_, i) => `m${i}`),
+        }),
+      ).rejects.toThrow(BusinessException);
+      expect(mockTemplateRepo.findById).not.toHaveBeenCalled();
+    });
+
     it('模板不存在应抛异常', async () => {
       mockTemplateRepo.findById.mockResolvedValue(null);
 

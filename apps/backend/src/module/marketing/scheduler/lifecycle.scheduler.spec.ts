@@ -11,6 +11,7 @@ describe('ActivityLifecycleScheduler', () => {
     playInstance: {
       findMany: jest.fn(),
       updateMany: jest.fn(),
+      count: jest.fn(),
       groupBy: jest.fn(),
       findFirst: jest.fn(),
     },
@@ -63,6 +64,19 @@ describe('ActivityLifecycleScheduler', () => {
     await scheduler.handleTimeoutInstances();
 
     expect(mockPrisma.playInstance.findMany).toHaveBeenCalledTimes(2);
+    expect(mockRedisService.unlock).toHaveBeenCalledTimes(1);
+  });
+
+  // R-FLOW-MAAS-03
+  it('Given 获得分布式锁, When cleanupExpiredData, Then 统计待归档数量并释放锁', async () => {
+    mockRedisService.tryLock.mockResolvedValue(true);
+    mockPrisma.playInstance.count.mockResolvedValue(3);
+    mockRedisService.unlock.mockResolvedValue(1);
+
+    await scheduler.cleanupExpiredData();
+
+    expect(mockPrisma.playInstance.count).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.playInstance.updateMany).not.toHaveBeenCalled();
     expect(mockRedisService.unlock).toHaveBeenCalledTimes(1);
   });
 });

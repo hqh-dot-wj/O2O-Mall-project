@@ -13,6 +13,7 @@ import { UserTaskCompletionRepository } from './completion.repository';
 import { CreatePointsTaskDto } from './dto/create-points-task.dto';
 import { UpdatePointsTaskDto } from './dto/update-points-task.dto';
 import { PointsTaskQueryDto } from './dto/points-task-query.dto';
+import { PointsErrorCode, PointsErrorMessages } from '../constants/error-codes';
 
 /**
  * 积分任务服务
@@ -43,7 +44,7 @@ export class PointsTaskService {
 
     // 检查任务标识是否已存在
     const existing = await this.taskRepo.findByTaskKey(dto.taskKey);
-    BusinessException.throwIf(existing !== null, '任务标识已存在');
+    BusinessException.throwIf(existing !== null, PointsErrorMessages[PointsErrorCode.TASK_KEY_EXISTS]);
 
     const task = await this.taskRepo.create({
       tenantId,
@@ -74,7 +75,7 @@ export class PointsTaskService {
     const userId = this.cls.get('userId') || 'system';
 
     const task = await this.taskRepo.findById(id);
-    BusinessException.throwIfNull(task, '任务不存在');
+    BusinessException.throwIfNull(task, PointsErrorMessages[PointsErrorCode.TASK_NOT_FOUND]);
 
     const updated = await this.taskRepo.update(id, {
       ...dto,
@@ -117,7 +118,7 @@ export class PointsTaskService {
    */
   async deleteTask(id: string) {
     const task = await this.taskRepo.findById(id);
-    BusinessException.throwIfNull(task, '任务不存在');
+    BusinessException.throwIfNull(task, PointsErrorMessages[PointsErrorCode.TASK_NOT_FOUND]);
 
     await this.taskRepo.delete(id);
 
@@ -139,13 +140,16 @@ export class PointsTaskService {
 
     // 1. 查询任务
     const task = await this.taskRepo.findByTaskKey(taskKey);
-    BusinessException.throwIfNull(task, '任务不存在');
-    BusinessException.throwIf(!task.isEnabled, '任务已停用');
+    BusinessException.throwIfNull(task, PointsErrorMessages[PointsErrorCode.TASK_NOT_FOUND]);
+    BusinessException.throwIf(!task.isEnabled, PointsErrorMessages[PointsErrorCode.TASK_DISABLED]);
 
     // 2. 检查任务资格
     const eligibility = await this.checkTaskEligibility(memberId, task.id);
     if (!eligibility.eligible) {
-      BusinessException.throw(400, eligibility.reason || '不符合任务完成条件');
+      BusinessException.throw(
+        400,
+        eligibility.reason || PointsErrorMessages[PointsErrorCode.TASK_NOT_ELIGIBLE],
+      );
     }
 
     // 3. 使用事务完成任务
@@ -194,11 +198,11 @@ export class PointsTaskService {
   ): Promise<{ eligible: boolean; reason?: string }> {
     const task = await this.taskRepo.findById(taskId);
     if (!task) {
-      return { eligible: false, reason: '任务不存在' };
+      return { eligible: false, reason: PointsErrorMessages[PointsErrorCode.TASK_NOT_FOUND] };
     }
 
     if (!task.isEnabled) {
-      return { eligible: false, reason: '任务已停用' };
+      return { eligible: false, reason: PointsErrorMessages[PointsErrorCode.TASK_DISABLED] };
     }
 
     // 检查完成次数限制
@@ -208,11 +212,11 @@ export class PointsTaskService {
     );
 
     if (!task.isRepeatable && completionCount > 0) {
-      return { eligible: false, reason: '任务已完成，不可重复' };
+      return { eligible: false, reason: PointsErrorMessages[PointsErrorCode.TASK_NOT_REPEATABLE] };
     }
 
     if (task.maxCompletions && completionCount >= task.maxCompletions) {
-      return { eligible: false, reason: '已达到最大完成次数' };
+      return { eligible: false, reason: PointsErrorMessages[PointsErrorCode.TASK_COMPLETION_LIMIT] };
     }
 
     return { eligible: true };
@@ -237,19 +241,30 @@ export class PointsTaskService {
       pageSize,
     );
 
-    // 关联任务信息
-    const completions = await Promise.all(
-      rows.map(async (record) => {
-        const task = await this.taskRepo.findById(record.taskId);
-        return {
-          id: record.id,
-          taskId: record.taskId,
-          taskName: task?.taskName || '未知任务',
-          completionTime: record.completionTime,
-          pointsAwarded: record.pointsAwarded,
-        };
-      }),
-    );
+    const taskIds = [...new Set(rows.map((record) => record.taskId))];
+    const taskMap = new Map<string, { taskName: string }>();
+    if (taskIds.length > 0) {
+      const tasks = await this.taskRepo.findMany({
+        where: {
+          id: {
+            in: taskIds,
+          },
+        },
+        select: {
+          id: true,
+          taskName: true,
+        },
+      });
+      tasks.forEach((task) => taskMap.set(task.id, { taskName: task.taskName }));
+    }
+
+    const completions = rows.map((record) => ({
+      id: record.id,
+      taskId: record.taskId,
+      taskName: taskMap.get(record.taskId)?.taskName || '未知任务',
+      completionTime: record.completionTime,
+      pointsAwarded: record.pointsAwarded,
+    }));
 
     return Result.page(FormatDateFields(completions), total);
   }

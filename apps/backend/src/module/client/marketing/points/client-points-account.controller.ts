@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Member } from 'src/module/client/common/decorators/member.decorator';
 import { MemberAuthGuard } from 'src/module/client/common/guards/member-auth.guard';
@@ -10,8 +10,11 @@ import { PointsBalanceVo } from 'src/module/marketing/points/account/vo/points-a
 
 /**
  * C端积分账户控制器
+ *
+ * @tenantScope TenantBound（依赖会员登录态租户隔离）
  */
 @ApiTags('C端-积分账户')
+@ApiBearerAuth()
 @Controller('client/marketing/points')
 @UseGuards(MemberAuthGuard)
 export class ClientPointsAccountController {

@@ -1,5 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Api } from 'src/common/decorators/api.decorator';
 import { Member } from '../common/decorators/member.decorator';
 import { MemberAuthGuard } from '../common/guards/member-auth.guard';
 import { Result } from 'src/common/response/result';
@@ -9,8 +10,11 @@ import { OrderDiscountVo } from 'src/module/marketing/integration/vo/order-disco
 
 /**
  * C端订单优惠计算控制器
+ *
+ * @tenantScope TenantBound（依赖会员登录态租户隔离）
  */
 @ApiTags('C端-订单')
+@ApiBearerAuth()
 @Controller('client/order')
 @UseGuards(MemberAuthGuard)
 export class OrderIntegrationController {
@@ -19,7 +23,7 @@ export class OrderIntegrationController {
   ) {}
 
   @Post('calculate-discount')
-  @ApiOperation({ summary: '计算订单优惠' })
+  @Api({ summary: '计算订单优惠' })
   async calculateDiscount(
     @Member('memberId') memberId: string,
     @Body() dto: CalculateDiscountDto,

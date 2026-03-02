@@ -7,6 +7,7 @@ import { FormatDateFields } from 'src/common/utils';
 import { TenantContext } from 'src/common/tenant';
 import { PointsRuleRepository } from './rule.repository';
 import { UpdatePointsRuleDto } from './dto/update-points-rule.dto';
+import { PointsErrorCode, PointsErrorMessages } from '../constants/error-codes';
 
 /**
  * 积分规则服务
@@ -184,12 +185,15 @@ export class PointsRuleService {
     const rules = await this.repo.findByTenantId(tenantId);
 
     if (!rules || !rules.pointsRedemptionEnabled || !rules.systemEnabled) {
-      BusinessException.throw(400, '积分抵扣功能未启用');
+      BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.REDEMPTION_DISABLED]);
     }
 
     // 验证单笔订单最多可使用积分数量
     if (rules.maxPointsPerOrder && points > rules.maxPointsPerOrder) {
-      BusinessException.throw(400, `单笔订单最多使用 ${rules.maxPointsPerOrder} 积分`);
+      BusinessException.throw(
+        400,
+        `${PointsErrorMessages[PointsErrorCode.POINTS_EXCEED_LIMIT]}: ${rules.maxPointsPerOrder}`,
+      );
     }
 
     // 验证最大抵扣比例
@@ -198,7 +202,10 @@ export class PointsRuleService {
       const maxDiscount = Number(orderAmount) * (rules.maxDiscountPercentOrder / 100);
 
       if (Number(discount) > maxDiscount) {
-        BusinessException.throw(400, `积分抵扣金额不能超过订单金额的 ${rules.maxDiscountPercentOrder}%`);
+        BusinessException.throw(
+          400,
+          `${PointsErrorMessages[PointsErrorCode.DISCOUNT_EXCEED_LIMIT]}: ${rules.maxDiscountPercentOrder}%`,
+        );
       }
     }
   }
@@ -213,43 +220,43 @@ export class PointsRuleService {
     // 验证消费积分配置
     if (dto.orderPointsEnabled) {
       if (dto.orderPointsBase !== undefined && dto.orderPointsBase <= 0) {
-        BusinessException.throw(400, '消费积分基数必须大于0');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
       if (dto.orderPointsRatio !== undefined && dto.orderPointsRatio < 0) {
-        BusinessException.throw(400, '消费积分比例不能为负数');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
     }
 
     // 验证签到积分配置
     if (dto.signinPointsEnabled) {
       if (dto.signinPointsAmount !== undefined && dto.signinPointsAmount <= 0) {
-        BusinessException.throw(400, '签到积分数量必须大于0');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
     }
 
     // 验证积分有效期配置
     if (dto.pointsValidityEnabled) {
       if (dto.pointsValidityDays !== undefined && dto.pointsValidityDays <= 0) {
-        BusinessException.throw(400, '积分有效天数必须大于0');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
     }
 
     // 验证积分抵扣配置
     if (dto.pointsRedemptionEnabled) {
       if (dto.pointsRedemptionBase !== undefined && dto.pointsRedemptionBase <= 0) {
-        BusinessException.throw(400, '积分抵扣基数必须大于0');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
       if (dto.pointsRedemptionRatio !== undefined && dto.pointsRedemptionRatio < 0) {
-        BusinessException.throw(400, '积分抵扣比例不能为负数');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
       if (dto.maxPointsPerOrder !== undefined && dto.maxPointsPerOrder < 0) {
-        BusinessException.throw(400, '单笔订单最多可使用积分数量不能为负数');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
       if (
         dto.maxDiscountPercentOrder !== undefined &&
         (dto.maxDiscountPercentOrder < 1 || dto.maxDiscountPercentOrder > 100)
       ) {
-        BusinessException.throw(400, '单笔订单最多可抵扣百分比必须在1-100之间');
+        BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.RULE_CONFIG_INVALID]);
       }
     }
   }

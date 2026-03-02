@@ -202,4 +202,65 @@ export class UserCouponRepository extends BaseRepository<
 
     return result.count;
   }
+
+  /**
+   * 分批查询待过期的优惠券 ID
+   */
+  async findExpiredCouponIds(limit: number): Promise<string[]> {
+    const rows = await this.findMany({
+      where: {
+        status: UserCouponStatus.UNUSED,
+        endTime: { lt: new Date() },
+      },
+      select: { id: true },
+      orderBy: { endTime: 'asc' },
+      take: limit,
+    });
+
+    return rows.map((row) => row.id);
+  }
+
+  /**
+   * 按 ID 批量标记优惠券为已过期
+   */
+  async markCouponsExpiredByIds(ids: string[]): Promise<number> {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    const result = await this.updateMany(
+      {
+        id: { in: ids },
+        status: UserCouponStatus.UNUSED,
+      },
+      {
+        status: UserCouponStatus.EXPIRED,
+      },
+    );
+
+    return result.count;
+  }
+
+  /**
+   * 按 ID 查询已过期优惠券（用于事件发送）
+   */
+  async findExpiredCouponsByIds(ids: string[]) {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.findMany({
+      where: {
+        id: { in: ids },
+        status: UserCouponStatus.EXPIRED,
+      },
+      select: {
+        id: true,
+        tenantId: true,
+        memberId: true,
+        templateId: true,
+        endTime: true,
+      },
+    });
+  }
 }

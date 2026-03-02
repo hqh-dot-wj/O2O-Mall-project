@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -18,6 +18,11 @@ import { AttributionService } from './services/attribution.service';
 import { CartService } from '../cart/cart.service';
 import { OrderIntegrationService } from 'src/module/marketing/integration/integration.service';
 import { getErrorMessage } from 'src/common/utils/error';
+
+interface OrderItemPointsUpdate {
+  skuId: string;
+  earnedPoints: number;
+}
 
 /**
  * C端订单服务
@@ -39,6 +44,7 @@ export class OrderService {
     private readonly checkoutService: OrderCheckoutService,
     private readonly attributionService: AttributionService,
     private readonly cartService: CartService,
+    @Inject(forwardRef(() => OrderIntegrationService))
     private readonly orderIntegrationService: OrderIntegrationService,
   ) {}
 
@@ -451,5 +457,41 @@ export class OrderService {
       String(date.getMinutes()).padStart(2, '0'),
     ].join('');
     return `${prefix}${nanoid(8).toUpperCase()}`;
+  }
+
+  /**
+   * 营销模块专用：查询订单（可选包含订单项）
+   */
+  async findByIdForMarketing(orderId: string, includeItems: boolean = false) {
+    return this.prisma.omsOrder.findUnique({
+      where: { id: orderId },
+      include: includeItems ? { items: true } : undefined,
+    });
+  }
+
+  /**
+   * 营销模块专用：更新订单明细积分和订单总积分
+   */
+  async updateOrderPointsEarned(
+    orderId: string,
+    itemPoints: OrderItemPointsUpdate[],
+    totalPoints: number,
+  ): Promise<void> {
+    for (const item of itemPoints) {
+      await this.prisma.omsOrderItem.updateMany({
+        where: {
+          orderId,
+          skuId: item.skuId,
+        },
+        data: {
+          earnedPoints: item.earnedPoints,
+        },
+      });
+    }
+
+    await this.prisma.omsOrder.update({
+      where: { id: orderId },
+      data: { pointsEarned: totalPoints },
+    });
   }
 }

@@ -1,12 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Response } from 'express';
+import { BusinessException } from 'src/common/exceptions/business.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result } from 'src/common/response/result';
 import { FormatDateFields } from 'src/common/utils';
 import { ExportTable, ExportOptions } from 'src/common/utils/export';
+import { MemberRepository } from 'src/module/admin/member/member.repository';
+import { TenantContext } from 'src/common/tenant/tenant.context';
+import { CouponErrorCode, CouponErrorMessages } from '../constants/error-codes';
 import { CouponUsageRepository } from '../usage/usage.repository';
 import { UserCouponRepository } from '../distribution/user-coupon.repository';
 import { CouponTemplateRepository } from '../template/template.repository';
+
+const EXPORT_RECORD_LIMIT = 10000;
 
 /**
  * 优惠券统计服务
@@ -22,6 +29,7 @@ export class CouponStatisticsService {
     private readonly usageRepo: CouponUsageRepository,
     private readonly userCouponRepo: UserCouponRepository,
     private readonly templateRepo: CouponTemplateRepository,
+    private readonly memberRepo: MemberRepository,
   ) {}
 
   /**
@@ -78,7 +86,7 @@ export class CouponStatisticsService {
     const memberIds = [...new Set((rows as any[]).map((r) => r.memberId))];
     const memberMap = new Map<string, { nickname?: string; mobile?: string }>();
     if (memberIds.length > 0) {
-      const members = await this.prisma.umsMember.findMany({
+      const members = await this.memberRepo.findMany({
         where: { memberId: { in: memberIds } },
         select: { memberId: true, nickname: true, mobile: true },
       });
@@ -181,40 +189,57 @@ export class CouponStatisticsService {
    * 获取近7日发放/使用趋势
    */
   private async getLast7DaysTrend(): Promise<{ date: string; distributed: number; used: number }[]> {
-    const result: { date: string; distributed: number; used: number }[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 6);
+    const endDate = new Date(today);
+    const nextDay = new Date(today);
+    nextDay.setDate(nextDay.getDate() + 1);
 
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dayStart = new Date(d);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(d);
-      dayEnd.setHours(23, 59, 59, 999);
+    const tenantId = TenantContext.getTenantId();
+    const tenantFilter =
+      tenantId && tenantId !== TenantContext.SUPER_TENANT_ID
+        ? Prisma.sql` AND tenant_id = ${tenantId}`
+        : Prisma.empty;
 
-      const dateStr = dayStart.toISOString().slice(0, 10);
+    const rows = await this.prisma.$queryRaw<Array<{ date: string; distributed: number; used: number }>>(Prisma.sql`
+      WITH days AS (
+        SELECT generate_series(${startDate}::date, ${endDate}::date, interval '1 day')::date AS day
+      ),
+      distributed AS (
+        SELECT date_trunc('day', receive_time)::date AS day, COUNT(*)::int AS cnt
+        FROM mkt_user_coupon
+        WHERE receive_time >= ${startDate}
+          AND receive_time < ${nextDay}
+          ${tenantFilter}
+        GROUP BY 1
+      ),
+      used AS (
+        SELECT date_trunc('day', used_time)::date AS day, COUNT(*)::int AS cnt
+        FROM mkt_user_coupon
+        WHERE status = 'USED'
+          AND used_time IS NOT NULL
+          AND used_time >= ${startDate}
+          AND used_time < ${nextDay}
+          ${tenantFilter}
+        GROUP BY 1
+      )
+      SELECT
+        to_char(days.day, 'YYYY-MM-DD') AS date,
+        COALESCE(distributed.cnt, 0) AS distributed,
+        COALESCE(used.cnt, 0) AS used
+      FROM days
+      LEFT JOIN distributed ON distributed.day = days.day
+      LEFT JOIN used ON used.day = days.day
+      ORDER BY days.day ASC
+    `);
 
-      const [distributed, used] = await Promise.all([
-        this.userCouponRepo.count({
-          receiveTime: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
-        }),
-        this.userCouponRepo.count({
-          status: 'USED',
-          usedTime: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
-        }),
-      ]);
-
-      result.push({ date: dateStr, distributed, used });
-    }
-
-    return result;
+    return rows.map((row) => ({
+      date: row.date,
+      distributed: Number(row.distributed),
+      used: Number(row.used),
+    }));
   }
 
   /**
@@ -253,6 +278,14 @@ export class CouponStatisticsService {
         where.usedTime.lte = query.endTime;
       }
     }
+
+    const total = await this.prisma.mktCouponUsage.count({
+      where: where as any,
+    });
+    BusinessException.throwIf(
+      total > EXPORT_RECORD_LIMIT,
+      CouponErrorMessages[CouponErrorCode.EXPORT_LIMIT_EXCEEDED],
+    );
 
     const records = await this.prisma.mktCouponUsage.findMany({
       where: where as any,

@@ -14,6 +14,7 @@ import { OrderCheckoutService } from './services/order-checkout.service';
 import { AttributionService } from './services/attribution.service';
 import { ClientAddressModule } from '../address/address.module';
 import { ClientCartModule } from '../cart/cart.module';
+import { ORDER_SERVICE } from './order-service.token';
 
 /**
  * C端订单模块
@@ -41,8 +42,12 @@ import { ClientCartModule } from '../cart/cart.module';
     CartRepository,
     OrderCheckoutService,
     AttributionService,
+    {
+      provide: ORDER_SERVICE,
+      useExisting: OrderService,
+    },
   ],
 
-  exports: [OrderService, OrderRepository],
+  exports: [OrderService, OrderRepository, ORDER_SERVICE],
 })
 export class ClientOrderModule {}

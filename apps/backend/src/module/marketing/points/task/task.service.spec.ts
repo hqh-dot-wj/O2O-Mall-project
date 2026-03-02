@@ -15,6 +15,7 @@ describe('PointsTaskService', () => {
   const mockTaskRepo = {
     findByTaskKey: jest.fn(),
     findById: jest.fn(),
+    findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -274,19 +275,43 @@ describe('PointsTaskService', () => {
   });
 
   describe('getUserCompletions', () => {
-    it('应返回用户完成记录并关联任务名', async () => {
+    // R-FLOW-TASK-02
+    it('Given 多条完成记录, When getUserCompletions, Then 通过批量任务查询返回任务名', async () => {
       mockCompletionRepo.findUserCompletions.mockResolvedValue({
         rows: [
           { id: 'c1', taskId: 't1', completionTime: new Date(), pointsAwarded: 10 },
+          { id: 'c2', taskId: 't2', completionTime: new Date(), pointsAwarded: 20 },
         ],
+        total: 2,
+      });
+      mockTaskRepo.findMany.mockResolvedValue([
+        { id: 't1', taskName: '签到' },
+        { id: 't2', taskName: '首单' },
+      ]);
+
+      const result = await service.getUserCompletions('m1', 1, 10);
+
+      expect(mockTaskRepo.findMany).toHaveBeenCalledTimes(1);
+      expect(mockTaskRepo.findMany).toHaveBeenCalledWith({
+        where: { id: { in: ['t1', 't2'] } },
+        select: { id: true, taskName: true },
+      });
+      expect(result.data?.rows).toHaveLength(2);
+      expect(result.data?.rows[0].taskName).toBe('签到');
+      expect(result.data?.rows[1].taskName).toBe('首单');
+    });
+
+    it('任务信息缺失时应回退为未知任务', async () => {
+      mockCompletionRepo.findUserCompletions.mockResolvedValue({
+        rows: [{ id: 'c1', taskId: 't1', completionTime: new Date(), pointsAwarded: 10 }],
         total: 1,
       });
-      mockTaskRepo.findById.mockResolvedValue({ taskName: '签到' });
+      mockTaskRepo.findMany.mockResolvedValue([]);
 
       const result = await service.getUserCompletions('m1', 1, 10);
 
       expect(result.data?.rows).toHaveLength(1);
-      expect(result.data?.rows[0].taskName).toBe('签到');
+      expect(result.data?.rows[0].taskName).toBe('未知任务');
     });
   });
 });

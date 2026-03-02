@@ -249,27 +249,24 @@ export class ActivityLifecycleScheduler {
     try {
       // === 1. 归档 30 天前的终态实例 ===
       const archiveThreshold = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const archiveWhere = {
+        updateTime: { lt: archiveThreshold },
+        status: {
+          in: [
+            PlayInstanceStatus.SUCCESS,
+            PlayInstanceStatus.FAILED,
+            PlayInstanceStatus.TIMEOUT,
+            PlayInstanceStatus.REFUNDED,
+          ],
+        },
+      };
 
-      const archived = await this.prisma.playInstance.updateMany({
-        where: {
-          updateTime: { lt: archiveThreshold },
-          status: {
-            in: [
-              PlayInstanceStatus.SUCCESS,
-              PlayInstanceStatus.FAILED,
-              PlayInstanceStatus.TIMEOUT,
-              PlayInstanceStatus.REFUNDED,
-            ],
-          },
-          // 假设有 archived 字段，如果没有可以忽略
-          // archived: false,
-        },
-        data: {
-          // archived: true,
-        },
+      // 目前 PlayInstance 模型没有 archived 字段，避免 updateMany(data={}) 运行时报错。
+      const archivedCount = await this.prisma.playInstance.count({
+        where: archiveWhere,
       });
 
-      this.logger.log(`[数据归档] 归档 ${archived.count} 个实例`);
+      this.logger.log(`[数据归档] 待归档终态实例 ${archivedCount} 个（当前模型未启用 archived 字段）`);
 
       // === 2. 清理 Redis 中的过期缓存 ===
       // 注意：Redis 的 TTL 会自动清理，这里可以做额外的清理逻辑
@@ -277,7 +274,7 @@ export class ActivityLifecycleScheduler {
 
       const duration = Date.now() - startTime;
       this.logger.log(
-        `[定时任务] 过期数据清理完成，耗时 ${duration}ms，归档 ${archived.count} 个实例`,
+        `[定时任务] 过期数据清理完成，耗时 ${duration}ms，归档 ${archivedCount} 个实例`,
       );
     } catch (error) {
       this.logger.error(`[定时任务] 清理过期数据失败: ${getErrorMessage(error)}`, getErrorStack(error));

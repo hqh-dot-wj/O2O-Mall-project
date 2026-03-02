@@ -7,6 +7,7 @@ import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PointsAccountService } from '../account/account.service';
 import { PointsRuleService } from '../rule/rule.service';
+import { PointsErrorCode, PointsErrorMessages } from '../constants/error-codes';
 
 /**
  * 积分签到服务
@@ -38,7 +39,7 @@ export class PointsSigninService {
     const rules = rulesResult.data;
 
     if (!rules.signinPointsEnabled || !rules.systemEnabled) {
-      BusinessException.throw(400, '签到功能未启用');
+      BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.SIGNIN_DISABLED]);
     }
 
     // 检查今天是否已签到
@@ -60,7 +61,7 @@ export class PointsSigninService {
     });
 
     if (existingSignin) {
-      BusinessException.throw(400, '今日已签到');
+      BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.ALREADY_SIGNED_TODAY]);
     }
 
     // 发放签到积分
@@ -140,40 +141,48 @@ export class PointsSigninService {
    */
   private async calculateContinuousDays(memberId: string): Promise<number> {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
-    let continuousDays = 0;
-    const checkDate = new Date();
-    checkDate.setHours(0, 0, 0, 0);
+    const maxDays = 100;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const windowStart = new Date(today);
+    windowStart.setDate(windowStart.getDate() - (maxDays - 1));
 
-    // 从今天开始往前查，直到找到没有签到的日期
-    while (true) {
-      const nextDay = new Date(checkDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-
-      const signin = await this.prisma.mktPointsTransaction.findFirst({
-        where: {
-          tenantId,
-          memberId,
-          type: PointsTransactionType.EARN_SIGNIN,
-          createTime: {
-            gte: checkDate,
-            lt: nextDay,
-          },
+    const signins = await this.prisma.mktPointsTransaction.findMany({
+      where: {
+        tenantId,
+        memberId,
+        type: PointsTransactionType.EARN_SIGNIN,
+        createTime: {
+          gte: windowStart,
+          lt: tomorrow,
         },
-      });
+      },
+      select: {
+        createTime: true,
+      },
+    });
 
-      if (!signin) {
+    const signedDaySet = new Set(signins.map((item) => this.toDateKey(item.createTime)));
+    const cursor = new Date(today);
+    let continuousDays = 0;
+
+    for (let i = 0; i < maxDays; i++) {
+      if (!signedDaySet.has(this.toDateKey(cursor))) {
         break;
       }
-
       continuousDays++;
-      checkDate.setDate(checkDate.getDate() - 1);
-
-      // 最多查询100天，防止无限循环
-      if (continuousDays >= 100) {
-        break;
-      }
+      cursor.setDate(cursor.getDate() - 1);
     }
 
     return continuousDays;
+  }
+
+  private toDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

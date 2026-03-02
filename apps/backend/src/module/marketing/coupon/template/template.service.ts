@@ -8,6 +8,7 @@ import { FormatDateFields } from 'src/common/utils';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TenantContext } from 'src/common/tenant';
+import { CouponErrorCode, CouponErrorMessages } from '../constants/error-codes';
 
 /**
  * 优惠券模板服务
@@ -61,7 +62,7 @@ export class CouponTemplateService {
    */
   async findOne(id: string) {
     const template = await this.repo.findById(id);
-    BusinessException.throwIfNull(template, '未找到指定的优惠券模板');
+    BusinessException.throwIfNull(template, CouponErrorMessages[CouponErrorCode.TEMPLATE_NOT_FOUND]);
 
     // 查询统计信息
     const stats = await this.getTemplateStats(id);
@@ -121,11 +122,11 @@ export class CouponTemplateService {
   async update(id: string, dto: UpdateCouponTemplateDto) {
     // 1. 存在性检查
     const template = await this.repo.findById(id);
-    BusinessException.throwIfNull(template, '待更新的模板不存在');
+    BusinessException.throwIfNull(template, CouponErrorMessages[CouponErrorCode.TEMPLATE_NOT_FOUND]);
 
     // 2. 检查是否已开始发放
     const hasDistributed = await this.repo.hasDistributed(id);
-    BusinessException.throwIf(hasDistributed, '已开始发放的模板不能修改');
+    BusinessException.throwIf(hasDistributed, CouponErrorMessages[CouponErrorCode.TEMPLATE_CANNOT_MODIFY]);
 
     // 3. 如果更新了配置，需要验证
     if (dto.type || dto.discountAmount || dto.discountPercent || dto.validityType) {
@@ -165,7 +166,7 @@ export class CouponTemplateService {
    */
   async setStatus(id: string, status: 'ACTIVE' | 'INACTIVE') {
     const template = await this.repo.findById(id);
-    BusinessException.throwIfNull(template, '模板不存在');
+    BusinessException.throwIfNull(template, CouponErrorMessages[CouponErrorCode.TEMPLATE_NOT_FOUND]);
 
     await this.repo.update(id, { status });
 
@@ -188,31 +189,46 @@ export class CouponTemplateService {
   private validateTemplateConfig(dto: CreateCouponTemplateDto | any): void {
     // 满减券验证
     if (dto.type === 'DISCOUNT') {
-      BusinessException.throwIf(!dto.discountAmount || dto.discountAmount <= 0, '满减券必须设置减免金额');
+      BusinessException.throwIf(
+        !dto.discountAmount || dto.discountAmount <= 0,
+        CouponErrorMessages[CouponErrorCode.TEMPLATE_CONFIG_INVALID],
+      );
     }
 
     // 折扣券验证
     if (dto.type === 'PERCENTAGE') {
       BusinessException.throwIf(
         !dto.discountPercent || dto.discountPercent < 1 || dto.discountPercent > 99,
-        '折扣券的折扣百分比必须在1-99之间',
+        CouponErrorMessages[CouponErrorCode.TEMPLATE_CONFIG_INVALID],
       );
     }
 
     // 兑换券验证
     if (dto.type === 'EXCHANGE') {
-      BusinessException.throwIf(!dto.exchangeProductId, '兑换券必须关联可兑换的商品');
+      BusinessException.throwIf(
+        !dto.exchangeProductId,
+        CouponErrorMessages[CouponErrorCode.TEMPLATE_CONFIG_INVALID],
+      );
     }
 
     // 有效期验证
     if (dto.validityType === 'FIXED') {
-      BusinessException.throwIf(!dto.startTime || !dto.endTime, '固定时间段类型必须设置起止时间');
+      BusinessException.throwIf(
+        !dto.startTime || !dto.endTime,
+        CouponErrorMessages[CouponErrorCode.TEMPLATE_CONFIG_INVALID],
+      );
 
       const startTime = new Date(dto.startTime);
       const endTime = new Date(dto.endTime);
-      BusinessException.throwIf(startTime >= endTime, '开始时间必须早于结束时间');
+      BusinessException.throwIf(
+        startTime >= endTime,
+        CouponErrorMessages[CouponErrorCode.TEMPLATE_CONFIG_INVALID],
+      );
     } else if (dto.validityType === 'RELATIVE') {
-      BusinessException.throwIf(!dto.validDays || dto.validDays <= 0, '相对时间类型必须设置有效天数');
+      BusinessException.throwIf(
+        !dto.validDays || dto.validDays <= 0,
+        CouponErrorMessages[CouponErrorCode.TEMPLATE_CONFIG_INVALID],
+      );
     }
   }
 

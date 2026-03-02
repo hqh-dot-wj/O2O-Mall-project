@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
+import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PointsErrorCode, PointsErrorMessages } from '../constants/error-codes';
+
+const EXPORT_RECORD_LIMIT = 10000;
 
 /**
  * 积分统计服务
@@ -295,6 +299,12 @@ export class PointsStatisticsService {
         where.createTime.lte = query.endTime;
       }
     }
+
+    const total = await this.prisma.mktPointsTransaction.count({ where });
+    BusinessException.throwIf(
+      total > EXPORT_RECORD_LIMIT,
+      PointsErrorMessages[PointsErrorCode.EXPORT_LIMIT_EXCEEDED],
+    );
 
     const transactions = await this.prisma.mktPointsTransaction.findMany({
       where,

@@ -262,4 +262,83 @@ describe('PlayInstanceService', () => {
       { source: 'batch' },
     );
   });
+
+  // R-FLOW-MAAS-02
+  it('Given SUCCESS 流转且规则含 giftAssetType, When transitStatus, Then 发放资产类型取 rules.giftAssetType', async () => {
+    mockRepo.findById.mockResolvedValue({
+      id: 'ins-1',
+      configId: 'cfg-1',
+      memberId: 'm-1',
+      tenantId: 't-1',
+      templateCode: 'FLASH_SALE',
+      status: PlayInstanceStatus.ACTIVE,
+      instanceData: { price: 100 },
+    });
+    mockRepo.updateStatus.mockResolvedValue({
+      id: 'ins-1',
+      configId: 'cfg-1',
+      memberId: 'm-1',
+      tenantId: 't-1',
+      templateCode: 'FLASH_SALE',
+      status: PlayInstanceStatus.SUCCESS,
+      instanceData: { price: 100 },
+    });
+    mockPrisma.storePlayConfig.findUnique.mockResolvedValue({
+      id: 'cfg-1',
+      storeId: 'store-1',
+      rules: {
+        giftAssetId: 'asset-1',
+        giftAssetName: '次卡权益',
+        giftAssetType: 'TIMES_CARD',
+        giftCount: 2,
+      },
+    });
+    mockConfigService.getSystemConfigValue.mockResolvedValue('0.02');
+    mockWalletService.getOrCreateWallet.mockResolvedValue({ id: 'wallet-1' });
+    mockWalletService.addBalance.mockResolvedValue(undefined);
+    mockAssetService.grantAsset.mockResolvedValue(undefined);
+
+    await service.transitStatus('ins-1', PlayInstanceStatus.SUCCESS);
+
+    const settleAmount = mockWalletService.addBalance.mock.calls[0][1];
+    expect(settleAmount.toString()).toBe('98');
+    expect(mockAssetService.grantAsset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assetType: 'TIMES_CARD',
+        balance: expect.anything(),
+      }),
+    );
+  });
+
+  // R-PRE-MAAS-01
+  it('Given fee_rate 配置缺失, When SUCCESS 流转触发入账, Then 抛出业务异常', async () => {
+    mockRepo.findById.mockResolvedValue({
+      id: 'ins-1',
+      configId: 'cfg-1',
+      memberId: 'm-1',
+      tenantId: 't-1',
+      templateCode: 'FLASH_SALE',
+      status: PlayInstanceStatus.ACTIVE,
+      instanceData: { price: 100 },
+    });
+    mockRepo.updateStatus.mockResolvedValue({
+      id: 'ins-1',
+      configId: 'cfg-1',
+      memberId: 'm-1',
+      tenantId: 't-1',
+      templateCode: 'FLASH_SALE',
+      status: PlayInstanceStatus.SUCCESS,
+      instanceData: { price: 100 },
+    });
+    mockPrisma.storePlayConfig.findUnique.mockResolvedValue({
+      id: 'cfg-1',
+      storeId: 'store-1',
+      rules: {},
+    });
+    mockConfigService.getSystemConfigValue.mockResolvedValue(null);
+
+    await expect(
+      service.transitStatus('ins-1', PlayInstanceStatus.SUCCESS),
+    ).rejects.toThrow(BusinessException);
+  });
 });

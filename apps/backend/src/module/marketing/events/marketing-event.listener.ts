@@ -343,6 +343,211 @@ export class MarketingEventListener {
   }
 
   /**
+   * 处理优惠券领取事件
+   */
+  @OnEvent(MarketingEventType.COUPON_CLAIMED)
+  async handleCouponClaimed(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[优惠券领取] 用户券ID: ${event.instanceId}, 用户: ${event.memberId}, 模板: ${event.configId}`,
+      );
+      this.logger.debug(`[优惠券领取详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[优惠券领取事件处理失败] 用户券: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理优惠券核销事件
+   */
+  @OnEvent(MarketingEventType.COUPON_USED)
+  async handleCouponUsed(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[优惠券核销] 用户券ID: ${event.instanceId}, 用户: ${event.memberId}, 订单: ${event.payload?.orderId || '未知'}`,
+      );
+      this.logger.debug(`[优惠券核销详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[优惠券核销事件处理失败] 用户券: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理优惠券过期事件
+   */
+  @OnEvent(MarketingEventType.COUPON_EXPIRED)
+  async handleCouponExpired(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[优惠券过期] 用户券ID: ${event.instanceId}, 用户: ${event.memberId}, 模板: ${event.configId}`,
+      );
+      this.logger.debug(`[优惠券过期详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[优惠券过期事件处理失败] 用户券: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理积分获取事件
+   */
+  @OnEvent(MarketingEventType.POINTS_EARNED)
+  async handlePointsEarned(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[积分获取] 交易ID: ${event.instanceId}, 用户: ${event.memberId}, 数量: ${event.payload?.amount || 0}`,
+      );
+      this.logger.debug(`[积分获取详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[积分获取事件处理失败] 交易: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理积分使用事件
+   */
+  @OnEvent(MarketingEventType.POINTS_USED)
+  async handlePointsUsed(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[积分使用] 交易ID: ${event.instanceId}, 用户: ${event.memberId}, 数量: ${event.payload?.amount || 0}`,
+      );
+      this.logger.debug(`[积分使用详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[积分使用事件处理失败] 交易: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理积分过期事件
+   */
+  @OnEvent(MarketingEventType.POINTS_EXPIRED)
+  async handlePointsExpired(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[积分过期] 交易ID: ${event.instanceId}, 用户: ${event.memberId}, 数量: ${event.payload?.amount || 0}`,
+      );
+      this.logger.debug(`[积分过期详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[积分过期事件处理失败] 交易: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理订单集成优惠计算事件
+   */
+  @OnEvent(MarketingEventType.INTEGRATION_ORDER_DISCOUNT_CALCULATED)
+  async handleOrderDiscountCalculated(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[订单优惠计算] 标识: ${event.instanceId}, 用户: ${event.memberId}, 总优惠: ${event.payload?.totalDiscount || 0}`,
+      );
+      this.logger.debug(`[订单优惠计算详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[订单优惠计算事件处理失败] 标识: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理订单创建集成事件
+   */
+  @OnEvent(MarketingEventType.INTEGRATION_ORDER_CREATED)
+  async handleOrderCreated(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[订单创建集成] 订单: ${event.instanceId}, 用户: ${event.memberId}, 券: ${event.payload?.userCouponId || '无'}`,
+      );
+      this.logger.debug(`[订单创建集成详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[订单创建集成事件处理失败] 订单: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理订单支付集成事件
+   */
+  @OnEvent(MarketingEventType.INTEGRATION_ORDER_PAID)
+  async handleOrderPaid(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(
+        `[订单支付集成] 订单: ${event.instanceId}, 用户: ${event.memberId}, 实付: ${event.payload?.payAmount || 0}`,
+      );
+      this.logger.debug(`[订单支付集成详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[订单支付集成事件处理失败] 订单: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理订单取消集成事件
+   */
+  @OnEvent(MarketingEventType.INTEGRATION_ORDER_CANCELLED)
+  async handleOrderCancelled(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(`[订单取消集成] 订单: ${event.instanceId}, 用户: ${event.memberId}`);
+      this.logger.debug(`[订单取消集成详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[订单取消集成事件处理失败] 订单: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
+   * 处理订单退款集成事件
+   */
+  @OnEvent(MarketingEventType.INTEGRATION_ORDER_REFUNDED)
+  async handleOrderRefunded(event: MarketingEvent): Promise<void> {
+    try {
+      this.logger.log(`[订单退款集成] 订单: ${event.instanceId}, 用户: ${event.memberId}`);
+      this.logger.debug(`[订单退款集成详情] ${JSON.stringify(event.payload)}`);
+      await this.recordCriticalEvent(event);
+    } catch (error) {
+      this.logger.error(
+        `[订单退款集成事件处理失败] 订单: ${event.instanceId}, 错误: ${getErrorMessage(error)}`,
+        getErrorStack(error),
+      );
+    }
+  }
+
+  /**
    * 处理拼团满员事件
    *
    * @description
@@ -360,8 +565,10 @@ export class MarketingEventListener {
   @OnEvent(MarketingEventType.GROUP_FULL)
   async handleGroupFull(event: MarketingEvent): Promise<void> {
     try {
+      const participants = event.payload?.participants;
+      const participantCount = Array.isArray(participants) ? participants.length : 0;
       this.logger.log(
-        `[拼团满员] 团ID: ${event.payload?.groupId}, 配置: ${event.configId}, 参团人数: ${event.payload?.participants?.length || 0}`,
+        `[拼团满员] 团ID: ${event.payload?.groupId}, 配置: ${event.configId}, 参团人数: ${participantCount}`,
       );
 
       // TODO: 扩展点 - 触发拼团成功逻辑

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CouponStatus, CouponDistributionType, UserCouponStatus, CouponValidityType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
@@ -11,6 +11,12 @@ import { UserCouponRepository } from './user-coupon.repository';
 import { RedisLockService } from './redis-lock.service';
 import { ManualDistributionDto } from './dto/manual-distribution.dto';
 import { getErrorMessage } from 'src/common/utils/error';
+import { ORDER_SERVICE, OrderServiceContract } from 'src/module/client/order/order-service.token';
+import { CouponErrorCode, CouponErrorMessages } from '../constants/error-codes';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
+
+const MANUAL_DISTRIBUTION_MEMBER_LIMIT = 500;
 
 /**
  * 优惠券发放服务
@@ -26,6 +32,9 @@ export class CouponDistributionService {
     private readonly redisLock: RedisLockService,
     private readonly templateRepo: CouponTemplateRepository,
     private readonly userCouponRepo: UserCouponRepository,
+    private readonly eventEmitter: MarketingEventEmitter,
+    @Inject(ORDER_SERVICE)
+    private readonly orderService: OrderServiceContract,
   ) {}
 
   /**
@@ -36,12 +45,17 @@ export class CouponDistributionService {
    */
   @Transactional()
   async distributeManually(dto: ManualDistributionDto) {
+    BusinessException.throwIf(
+      dto.memberIds.length > MANUAL_DISTRIBUTION_MEMBER_LIMIT,
+      CouponErrorMessages[CouponErrorCode.MANUAL_DISTRIBUTION_LIMIT_EXCEEDED],
+    );
+
     // 1. 检查模板
     const template = await this.templateRepo.findById(dto.templateId);
-    BusinessException.throwIfNull(template, '优惠券模板不存在');
+    BusinessException.throwIfNull(template, CouponErrorMessages[CouponErrorCode.TEMPLATE_NOT_FOUND]);
     BusinessException.throwIf(
       template.status !== CouponStatus.ACTIVE,
-      '优惠券模板已停用',
+      CouponErrorMessages[CouponErrorCode.TEMPLATE_INACTIVE],
     );
 
     // 2. 批量发放
@@ -88,10 +102,8 @@ export class CouponDistributionService {
   @Transactional()
   async grantByOrder(orderId: string, templateIds: string[]) {
     // 1. 检查订单
-    const order = await this.prisma.omsOrder.findUnique({
-      where: { id: orderId },
-    });
-    BusinessException.throwIfNull(order, '订单不存在');
+    const order = await this.orderService.findByIdForMarketing(orderId);
+    BusinessException.throwIfNull(order, CouponErrorMessages[CouponErrorCode.ORDER_NOT_FOUND]);
 
     // 2. 批量赠送
     const coupons = [];
@@ -169,14 +181,14 @@ export class CouponDistributionService {
       async () => {
         // 1. 检查模板
         const template = await this.templateRepo.findById(templateId);
-        BusinessException.throwIfNull(template, '优惠券不存在');
+        BusinessException.throwIfNull(template, CouponErrorMessages[CouponErrorCode.TEMPLATE_NOT_FOUND]);
         BusinessException.throwIf(
           template.status !== CouponStatus.ACTIVE,
-          '优惠券已停用',
+          CouponErrorMessages[CouponErrorCode.TEMPLATE_INACTIVE],
         );
         BusinessException.throwIf(
           template.remainingStock <= 0,
-          '优惠券已抢光',
+          CouponErrorMessages[CouponErrorCode.STOCK_INSUFFICIENT],
         );
 
         // 2. 检查用户领取次数
@@ -186,7 +198,7 @@ export class CouponDistributionService {
         );
         BusinessException.throwIf(
           userClaimedCount >= template.limitPerUser,
-          '已达到领取上限',
+          CouponErrorMessages[CouponErrorCode.CLAIM_LIMIT_EXCEEDED],
         );
 
         // 3. 使用事务扣减库存并创建用户优惠券
@@ -203,7 +215,10 @@ export class CouponDistributionService {
           });
 
           if (updated.count === 0) {
-            throw new BusinessException(ResponseCode.BUSINESS_ERROR, '优惠券已抢光');
+            throw new BusinessException(
+              ResponseCode.BUSINESS_ERROR,
+              CouponErrorMessages[CouponErrorCode.STOCK_INSUFFICIENT],
+            );
           }
 
           // 计算有效期
@@ -234,6 +249,21 @@ export class CouponDistributionService {
           memberId,
           templateId,
           userCouponId: userCoupon.id,
+        });
+
+        await this.eventEmitter.emitAsync({
+          type: MarketingEventType.COUPON_CLAIMED,
+          tenantId: template.tenantId,
+          instanceId: userCoupon.id,
+          configId: templateId,
+          memberId,
+          payload: {
+            templateId,
+            distributionType,
+            startTime: userCoupon.startTime,
+            endTime: userCoupon.endTime,
+          },
+          timestamp: new Date(),
         });
 
         return userCoupon;

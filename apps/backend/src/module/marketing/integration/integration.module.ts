@@ -1,15 +1,23 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CouponModule } from '../coupon/coupon.module';
 import { PointsModule } from '../points/points.module';
 import { PointsDegradationModule } from '../points/degradation/degradation.module';
 import { OrderIntegrationService } from './integration.service';
+import { ClientOrderModule } from 'src/module/client/order/order.module';
+import { MarketingEventsModule } from '../events/events.module';
 
 /**
  * 订单集成模块
  * C 端 calculate-discount Controller 已迁移至 module/client/order
  */
 @Module({
-  imports: [CouponModule, PointsModule, PointsDegradationModule],
+  imports: [
+    CouponModule,
+    PointsModule,
+    PointsDegradationModule,
+    MarketingEventsModule,
+    forwardRef(() => ClientOrderModule),
+  ],
   controllers: [],
   providers: [OrderIntegrationService],
   exports: [OrderIntegrationService],

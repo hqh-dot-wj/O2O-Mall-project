@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
@@ -7,12 +7,16 @@ import { Result } from 'src/common/response/result';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { RedisService } from 'src/module/common/redis/redis.service';
+import { TenantContext } from 'src/common/tenant/tenant.context';
 import { CouponUsageService } from '../coupon/usage/usage.service';
 import { PointsAccountService } from '../points/account/account.service';
 import { PointsRuleService } from '../points/rule/rule.service';
 import { PointsGracefulDegradationService } from '../points/degradation/degradation.service';
 import { CalculateDiscountDto } from './dto/calculate-discount.dto';
-import { getErrorMessage } from 'src/common/utils/error';
+import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
+import { ORDER_SERVICE, OrderServiceContract } from 'src/module/client/order/order-service.token';
+import { MarketingEventEmitter } from '../events/marketing-event.emitter';
+import { MarketingEventType } from '../events/marketing-event.types';
 
 /**
  * 订单集成服务
@@ -23,6 +27,7 @@ import { getErrorMessage } from 'src/common/utils/error';
 export class OrderIntegrationService {
   private readonly logger = new Logger(OrderIntegrationService.name);
   private readonly idempotencyTtlSeconds = 600;
+  private readonly lockTtlMs = 30 * 1000;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,6 +37,9 @@ export class OrderIntegrationService {
     private readonly pointsAccountService: PointsAccountService,
     private readonly pointsRuleService: PointsRuleService,
     private readonly degradationService: PointsGracefulDegradationService,
+    private readonly eventEmitter: MarketingEventEmitter,
+    @Inject(ORDER_SERVICE)
+    private readonly orderService: OrderServiceContract,
   ) {}
 
   /**
@@ -98,7 +106,7 @@ export class OrderIntegrationService {
       `订单优惠计算: memberId=${memberId}, original=${originalAmount}, coupon=${couponDiscount}, points=${pointsDiscount}, final=${finalAmount}`,
     );
 
-    return Result.ok({
+    const result = {
       originalAmount,
       couponDiscount,
       pointsDiscount,
@@ -107,7 +115,22 @@ export class OrderIntegrationService {
       userCouponId: dto.userCouponId || null,
       pointsUsed: dto.pointsUsed || 0,
       couponName,
+    };
+
+    await this.eventEmitter.emitAsync({
+      type: MarketingEventType.INTEGRATION_ORDER_DISCOUNT_CALCULATED,
+      tenantId: TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID,
+      instanceId: `discount:${memberId}:${Date.now()}`,
+      configId: 'integration.order',
+      memberId,
+      payload: {
+        ...result,
+        itemCount: dto.items.length,
+      },
+      timestamp: new Date(),
     });
+
+    return Result.ok(result);
   }
 
   /**
@@ -145,9 +168,17 @@ export class OrderIntegrationService {
           );
           this.logger.log(`积分已冻结: points=${pointsUsed}`);
         }
+
+        await this.emitIntegrationEvent(
+          MarketingEventType.INTEGRATION_ORDER_CREATED,
+          orderId,
+          memberId,
+          { userCouponId: userCouponId ?? null, pointsUsed: pointsUsed ?? 0 },
+        );
       } catch (error) {
         this.logger.error(
           `订单创建处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
+          getErrorStack(error),
         );
         throw error;
       }
@@ -174,10 +205,7 @@ export class OrderIntegrationService {
     return this.executeWithIdempotency('paid', orderId, async () => {
       try {
         // 查询订单信息（包含订单明细）
-        const order = await this.prisma.omsOrder.findUnique({
-          where: { id: orderId },
-          include: { items: true },
-        });
+        const order = await this.orderService.findByIdForMarketing(orderId, true);
 
         if (!order) {
           BusinessException.throw(404, '订单不存在');
@@ -235,24 +263,11 @@ export class OrderIntegrationService {
           0,
         );
 
-        // 更新订单明细的积分字段
-        for (const itemPoints of itemsPointsResult) {
-          await this.prisma.omsOrderItem.updateMany({
-            where: {
-              orderId: orderId,
-              skuId: itemPoints.skuId,
-            },
-            data: {
-              earnedPoints: itemPoints.earnedPoints,
-            },
-          });
-        }
-
-        // 更新订单的总积分
-        await this.prisma.omsOrder.update({
-          where: { id: orderId },
-          data: { pointsEarned: totalPointsToEarn },
-        });
+        await this.orderService.updateOrderPointsEarned(
+          orderId,
+          itemsPointsResult,
+          totalPointsToEarn,
+        );
 
         // 发放积分
         if (totalPointsToEarn > 0) {
@@ -289,9 +304,22 @@ export class OrderIntegrationService {
             // 积分会通过重试队列异步发放
           }
         }
+
+        await this.emitIntegrationEvent(
+          MarketingEventType.INTEGRATION_ORDER_PAID,
+          orderId,
+          memberId,
+          {
+            payAmount,
+            userCouponId: order.userCouponId ?? null,
+            pointsUsed: order.pointsUsed ?? 0,
+            earnedPoints: totalPointsToEarn,
+          },
+        );
       } catch (error) {
         this.logger.error(
           `订单支付处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
+          getErrorStack(error),
         );
         throw error;
       }
@@ -312,9 +340,7 @@ export class OrderIntegrationService {
     return this.executeWithIdempotency('cancelled', orderId, async () => {
       try {
         // 查询订单信息
-        const order = await this.prisma.omsOrder.findUnique({
-          where: { id: orderId },
-        });
+        const order = await this.orderService.findByIdForMarketing(orderId);
 
         if (!order) {
           BusinessException.throw(404, '订单不存在');
@@ -335,9 +361,20 @@ export class OrderIntegrationService {
           );
           this.logger.log(`积分已解冻: points=${order.pointsUsed}`);
         }
+
+        await this.emitIntegrationEvent(
+          MarketingEventType.INTEGRATION_ORDER_CANCELLED,
+          orderId,
+          memberId,
+          {
+            userCouponId: order.userCouponId ?? null,
+            pointsUsed: order.pointsUsed ?? 0,
+          },
+        );
       } catch (error) {
         this.logger.error(
           `订单取消处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
+          getErrorStack(error),
         );
         throw error;
       }
@@ -358,9 +395,7 @@ export class OrderIntegrationService {
     return this.executeWithIdempotency('refunded', orderId, async () => {
       try {
         // 查询订单信息
-        const order = await this.prisma.omsOrder.findUnique({
-          where: { id: orderId },
-        });
+        const order = await this.orderService.findByIdForMarketing(orderId);
 
         if (!order) {
           BusinessException.throw(404, '订单不存在');
@@ -405,22 +440,32 @@ export class OrderIntegrationService {
             this.logger.warn(
               `退款扣减消费积分跳过: orderId=${orderId}, memberId=${memberId}, available=${availablePoints}, required=${earnedPoints.amount}`,
             );
-            return;
+          } else {
+            await this.pointsAccountService.deductPoints({
+              memberId,
+              amount: earnedPoints.amount,
+              type: PointsTransactionType.DEDUCT_ADMIN,
+              relatedId: orderId,
+              remark: '订单退款扣减消费积分',
+            });
+
+            this.logger.log(`消费积分已扣减: points=${earnedPoints.amount}`);
           }
-
-          await this.pointsAccountService.deductPoints({
-            memberId,
-            amount: earnedPoints.amount,
-            type: PointsTransactionType.DEDUCT_ADMIN,
-            relatedId: orderId,
-            remark: '订单退款扣减消费积分',
-          });
-
-          this.logger.log(`消费积分已扣减: points=${earnedPoints.amount}`);
         }
+
+        await this.emitIntegrationEvent(
+          MarketingEventType.INTEGRATION_ORDER_REFUNDED,
+          orderId,
+          memberId,
+          {
+            userCouponId: order.userCouponId ?? null,
+            refundPoints: order.pointsUsed ?? 0,
+          },
+        );
       } catch (error) {
         this.logger.error(
           `订单退款处理失败: orderId=${orderId}, error=${getErrorMessage(error)}`,
+          getErrorStack(error),
         );
         throw error;
       }
@@ -432,21 +477,55 @@ export class OrderIntegrationService {
     orderId: string,
     handler: () => Promise<void>,
   ): Promise<void> {
-    const key = `idempotency:order:marketing:${eventType}:${orderId}`;
-    const lockResult = await this.redisService
-      .getClient()
-      .set(key, '1', 'EX', this.idempotencyTtlSeconds, 'NX');
-
-    if (lockResult !== 'OK') {
-      this.logger.warn(`重复订单事件已忽略: event=${eventType}, orderId=${orderId}`);
+    const lockKey = `lock:order:marketing:${eventType}:${orderId}`;
+    const lockAcquired = await this.redisService.tryLock(lockKey, this.lockTtlMs);
+    if (!lockAcquired) {
+      this.logger.warn(`订单事件处理锁未获取，已跳过: event=${eventType}, orderId=${orderId}`);
       return;
     }
 
     try {
-      await handler();
-    } catch (error) {
-      await this.redisService.del(key);
-      throw error;
+      const key = `idempotency:order:marketing:${eventType}:${orderId}`;
+      const lockResult = await this.redisService
+        .getClient()
+        .set(key, '1', 'EX', this.idempotencyTtlSeconds, 'NX');
+
+      if (lockResult !== 'OK') {
+        this.logger.warn(`重复订单事件已忽略: event=${eventType}, orderId=${orderId}`);
+        return;
+      }
+
+      try {
+        await handler();
+      } catch (error) {
+        await this.redisService.del(key);
+        throw error;
+      }
+    } finally {
+      try {
+        await this.redisService.unlock(lockKey);
+      } catch (error) {
+        this.logger.warn(
+          `订单事件处理释放锁失败: event=${eventType}, orderId=${orderId}, error=${getErrorMessage(error)}`,
+        );
+      }
     }
+  }
+
+  private async emitIntegrationEvent(
+    type: MarketingEventType,
+    orderId: string,
+    memberId: string,
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    await this.eventEmitter.emitAsync({
+      type,
+      tenantId: TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID,
+      instanceId: orderId,
+      configId: 'integration.order',
+      memberId,
+      payload,
+      timestamp: new Date(),
+    });
   }
 }

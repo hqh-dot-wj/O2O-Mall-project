@@ -70,6 +70,89 @@ export enum MarketingEventType {
    */
   INSTANCE_REFUNDED = 'instance.refunded',
 
+  // ========== 优惠券事件 ==========
+
+  /**
+   * 优惠券领取事件
+   * - 触发时机：优惠券领取/发放成功后
+   * - 用途：统计领取转化、触发消息通知
+   */
+  COUPON_CLAIMED = 'coupon.claimed',
+
+  /**
+   * 优惠券核销事件
+   * - 触发时机：订单支付后优惠券核销成功
+   * - 用途：统计核销效果、触发后续运营动作
+   */
+  COUPON_USED = 'coupon.used',
+
+  /**
+   * 优惠券过期事件
+   * - 触发时机：定时任务将优惠券标记为已过期后
+   * - 用途：统计过期损耗、触达召回策略
+   */
+  COUPON_EXPIRED = 'coupon.expired',
+
+  // ========== 积分事件 ==========
+
+  /**
+   * 积分获取事件
+   * - 触发时机：积分增加成功后（签到、任务、下单奖励、后台发放）
+   * - 用途：积分来源统计、运营触达
+   */
+  POINTS_EARNED = 'points.earned',
+
+  /**
+   * 积分使用事件
+   * - 触发时机：积分抵扣成功后
+   * - 用途：积分消耗分析、成本核算
+   */
+  POINTS_USED = 'points.used',
+
+  /**
+   * 积分过期事件
+   * - 触发时机：积分过期任务处理成功后
+   * - 用途：积分损耗统计、召回策略触发
+   */
+  POINTS_EXPIRED = 'points.expired',
+
+  // ========== 订单集成事件 ==========
+
+  /**
+   * 订单优惠计算事件
+   * - 触发时机：订单优惠计算完成后
+   * - 用途：优惠效果分析、策略调优
+   */
+  INTEGRATION_ORDER_DISCOUNT_CALCULATED = 'integration.order.discount_calculated',
+
+  /**
+   * 订单创建集成事件
+   * - 触发时机：订单创建流程中完成锁券/冻结积分后
+   * - 用途：订单营销联动审计
+   */
+  INTEGRATION_ORDER_CREATED = 'integration.order.created',
+
+  /**
+   * 订单支付集成事件
+   * - 触发时机：订单支付流程营销处理完成后
+   * - 用途：核销与积分发放追踪
+   */
+  INTEGRATION_ORDER_PAID = 'integration.order.paid',
+
+  /**
+   * 订单取消集成事件
+   * - 触发时机：订单取消流程营销回滚完成后
+   * - 用途：回滚链路审计
+   */
+  INTEGRATION_ORDER_CANCELLED = 'integration.order.cancelled',
+
+  /**
+   * 订单退款集成事件
+   * - 触发时机：订单退款流程营销回滚完成后
+   * - 用途：退款补偿链路追踪
+   */
+  INTEGRATION_ORDER_REFUNDED = 'integration.order.refunded',
+
   // ========== 玩法事件 ==========
 
   /**
@@ -162,7 +245,7 @@ export interface MarketingEvent {
    *   assetId: 'yyy'
    * }
    */
-  payload: any;
+  payload: Record<string, unknown>;
 
   /**
    * 事件时间戳

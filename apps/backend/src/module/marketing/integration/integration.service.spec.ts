@@ -5,6 +5,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { RedisService } from 'src/module/common/redis/redis.service';
+import { ORDER_SERVICE } from 'src/module/client/order/order-service.token';
+import { MarketingEventEmitter } from '../events/marketing-event.emitter';
+import { MarketingEventType } from '../events/marketing-event.types';
 import { CouponUsageService } from '../coupon/usage/usage.service';
 import { PointsAccountService } from '../points/account/account.service';
 import { PointsRuleService } from '../points/rule/rule.service';
@@ -44,19 +47,25 @@ describe('OrderIntegrationService', () => {
   };
 
   const mockRedisService = {
+    tryLock: jest.fn(),
+    unlock: jest.fn(),
     getClient: jest.fn(),
     del: jest.fn(),
   };
 
+  const mockOrderService = {
+    findByIdForMarketing: jest.fn(),
+    updateOrderPointsEarned: jest.fn(),
+  };
+
   const mockPrisma = {
     mktUserCoupon: { findUnique: jest.fn() },
-    omsOrder: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
-    omsOrderItem: { updateMany: jest.fn() },
     mktPointsTransaction: { findFirst: jest.fn() },
     mktPointsAccount: { findFirst: jest.fn() },
+  };
+
+  const mockEventEmitter = {
+    emitAsync: jest.fn(),
   };
 
   const mockCls = { get: jest.fn() };
@@ -68,6 +77,8 @@ describe('OrderIntegrationService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ClsService, useValue: mockCls },
         { provide: RedisService, useValue: mockRedisService },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
+        { provide: ORDER_SERVICE, useValue: mockOrderService },
         { provide: CouponUsageService, useValue: mockCouponUsageService },
         { provide: PointsAccountService, useValue: mockPointsAccountService },
         { provide: PointsRuleService, useValue: mockPointsRuleService },
@@ -77,8 +88,11 @@ describe('OrderIntegrationService', () => {
 
     service = module.get<OrderIntegrationService>(OrderIntegrationService);
     jest.clearAllMocks();
+    mockRedisService.tryLock.mockResolvedValue(true);
+    mockRedisService.unlock.mockResolvedValue(1);
     mockRedisService.getClient.mockReturnValue(mockRedisClient);
     mockRedisClient.set.mockResolvedValue('OK');
+    mockEventEmitter.emitAsync.mockResolvedValue(undefined);
   });
 
   it('should be defined', () => {
@@ -97,6 +111,12 @@ describe('OrderIntegrationService', () => {
       expect(result.data.couponDiscount).toBe(0);
       expect(result.data.pointsDiscount).toBe(0);
       expect(result.data.finalAmount).toBe(200);
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.INTEGRATION_ORDER_DISCOUNT_CALCULATED,
+          memberId: 'm1',
+        }),
+      );
     });
 
     it('使用优惠券时应计入优惠券抵扣', async () => {
@@ -163,6 +183,13 @@ describe('OrderIntegrationService', () => {
         100,
         'order1',
       );
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.INTEGRATION_ORDER_CREATED,
+          instanceId: 'order1',
+          memberId: 'm1',
+        }),
+      );
     });
 
     // R-FLOW-ORDER-01
@@ -175,6 +202,17 @@ describe('OrderIntegrationService', () => {
         50,
         'order1',
       );
+    });
+
+    // R-CONCUR-ORDER-02
+    it('Given 未获得分布式锁, When handleOrderCreated, Then 跳过处理', async () => {
+      mockRedisService.tryLock.mockResolvedValueOnce(false);
+
+      await service.handleOrderCreated('order1', 'm1', 'uc1', 100);
+
+      expect(mockCouponUsageService.lockCoupon).not.toHaveBeenCalled();
+      expect(mockPointsAccountService.freezePoints).not.toHaveBeenCalled();
+      expect(mockRedisClient.set).not.toHaveBeenCalled();
     });
 
     // R-CONCUR-ORDER-01
@@ -191,7 +229,7 @@ describe('OrderIntegrationService', () => {
   describe('handleOrderPaid', () => {
     // R-PRE-ORDER-01
     it('Given 订单不存在, When handleOrderPaid, Then 抛出业务异常', async () => {
-      mockPrisma.omsOrder.findUnique.mockResolvedValue(null);
+      mockOrderService.findByIdForMarketing.mockResolvedValue(null);
       jest.spyOn(service['logger'], 'error').mockImplementation(() => {});
 
       await expect(
@@ -217,12 +255,11 @@ describe('OrderIntegrationService', () => {
           },
         ],
       };
-      mockPrisma.omsOrder.findUnique.mockResolvedValue(order);
+      mockOrderService.findByIdForMarketing.mockResolvedValue(order);
       mockPointsRuleService.calculateOrderPointsByItems.mockResolvedValue([
         { skuId: 's1', earnedPoints: 18 },
       ]);
-      mockPrisma.omsOrderItem.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.omsOrder.update.mockResolvedValue(undefined);
+      mockOrderService.updateOrderPointsEarned.mockResolvedValue(undefined);
       mockPointsAccountService.unfreezePoints.mockResolvedValue(undefined);
       mockPointsAccountService.deductPoints.mockResolvedValue({ data: {} });
       mockPointsAccountService.addPoints.mockResolvedValue({ data: {} });
@@ -253,6 +290,18 @@ describe('OrderIntegrationService', () => {
           type: PointsTransactionType.EARN_ORDER,
         }),
       );
+      expect(mockOrderService.updateOrderPointsEarned).toHaveBeenCalledWith(
+        'order1',
+        [{ skuId: 's1', earnedPoints: 18 }],
+        18,
+      );
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.INTEGRATION_ORDER_PAID,
+          instanceId: 'order1',
+          memberId: 'm1',
+        }),
+      );
     });
 
     // R-BRANCH-ORDER-01
@@ -281,12 +330,11 @@ describe('OrderIntegrationService', () => {
           { skuId: 's1', price: new Decimal(100), quantity: 1, pointsRatio: 100 },
         ],
       };
-      mockPrisma.omsOrder.findUnique.mockResolvedValue(order);
+      mockOrderService.findByIdForMarketing.mockResolvedValue(order);
       mockPointsRuleService.calculateOrderPointsByItems.mockResolvedValue([
         { skuId: 's1', earnedPoints: 10 },
       ]);
-      mockPrisma.omsOrderItem.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.omsOrder.update.mockResolvedValue(undefined);
+      mockOrderService.updateOrderPointsEarned.mockResolvedValue(undefined);
       mockPointsAccountService.addPoints.mockRejectedValue(new Error('DB error'));
 
       await expect(
@@ -305,7 +353,7 @@ describe('OrderIntegrationService', () => {
   describe('handleOrderCancelled', () => {
     // R-FLOW-ORDER-03
     it('Given 订单已锁券和冻结积分, When handleOrderCancelled, Then 解锁优惠券并解冻积分', async () => {
-      mockPrisma.omsOrder.findUnique.mockResolvedValue({
+      mockOrderService.findByIdForMarketing.mockResolvedValue({
         id: 'order1',
         userCouponId: 'uc1',
         pointsUsed: 50,
@@ -319,13 +367,20 @@ describe('OrderIntegrationService', () => {
         50,
         'order1',
       );
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.INTEGRATION_ORDER_CANCELLED,
+          instanceId: 'order1',
+          memberId: 'm1',
+        }),
+      );
     });
   });
 
   describe('handleOrderRefunded', () => {
     // R-FLOW-ORDER-04
     it('Given 订单已发放消费积分, When handleOrderRefunded, Then 退券退积分并回收消费积分', async () => {
-      mockPrisma.omsOrder.findUnique.mockResolvedValue({
+      mockOrderService.findByIdForMarketing.mockResolvedValue({
         id: 'order1',
         userCouponId: 'uc1',
         pointsUsed: 30,
@@ -355,11 +410,18 @@ describe('OrderIntegrationService', () => {
           type: PointsTransactionType.DEDUCT_ADMIN,
         }),
       );
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.INTEGRATION_ORDER_REFUNDED,
+          instanceId: 'order1',
+          memberId: 'm1',
+        }),
+      );
     });
 
     // R-BRANCH-ORDER-02
     it('Given 可用积分小于待回收消费积分, When handleOrderRefunded, Then 跳过扣减', async () => {
-      mockPrisma.omsOrder.findUnique.mockResolvedValue({
+      mockOrderService.findByIdForMarketing.mockResolvedValue({
         id: 'order1',
         userCouponId: null,
         pointsUsed: 0,

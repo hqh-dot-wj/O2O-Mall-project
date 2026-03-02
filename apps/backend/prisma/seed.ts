@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Prisma Seed Data
  *
@@ -860,6 +859,41 @@ async function main() {
         updateBy: '',
         updateTime: null,
         remark: '设置登录IP黑名单限制，多个匹配项以;分隔，支持匹配（*通配、网段）',
+        status: 'NORMAL',
+        delFlag: 'NORMAL',
+      },
+      {
+        configId: 7,
+        tenantId: '000000',
+        configName: '营销模块-平台费率',
+        configKey: 'marketing.fee_rate',
+        configValue: '0.01',
+        configType: 'Y',
+        createBy: 'admin',
+        createTime: new Date('2025-02-28 08:52:10'),
+        updateBy: '',
+        updateTime: null,
+        remark: '营销实例成功后结算到门店钱包的平台费率，默认 1%',
+        status: 'NORMAL',
+        delFlag: 'NORMAL',
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  // sys_system_config
+  await prisma.sysSystemConfig.createMany({
+    data: [
+      {
+        configName: '营销模块-平台费率',
+        configKey: 'marketing.fee_rate',
+        configValue: '0.01',
+        configType: 'Y',
+        createBy: 'admin',
+        createTime: new Date('2025-02-28 08:52:10'),
+        updateBy: '',
+        updateTime: null,
+        remark: '营销实例成功后结算到门店钱包的平台费率，默认 1%',
         status: 'NORMAL',
         delFlag: 'NORMAL',
       },

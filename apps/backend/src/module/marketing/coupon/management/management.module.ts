@@ -6,6 +6,8 @@ import { CouponSchedulerService } from '../scheduler/scheduler.service';
 import { CouponDistributionModule } from '../distribution/distribution.module';
 import { CouponUsageModule } from '../usage/usage.module';
 import { CouponTemplateModule } from '../template/template.module';
+import { MemberRepository } from 'src/module/admin/member/member.repository';
+import { MarketingEventsModule } from '../../events/events.module';
 
 /**
  * 优惠券管理模块
@@ -17,9 +19,10 @@ import { CouponTemplateModule } from '../template/template.module';
     CouponTemplateModule,
     CouponDistributionModule,
     CouponUsageModule,
+    MarketingEventsModule,
   ],
   controllers: [CouponManagementController],
-  providers: [CouponStatisticsService, CouponSchedulerService],
+  providers: [CouponStatisticsService, CouponSchedulerService, MemberRepository],
   exports: [CouponStatisticsService],
 })
 export class CouponManagementModule {}

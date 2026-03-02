@@ -4,13 +4,16 @@ import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { FormatDateFields } from 'src/common/utils';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { MemberRepository } from 'src/module/admin/member/member.repository';
 import { PointsRuleService } from '../rule/rule.service';
 import { PointsAccountRepository } from './account.repository';
 import { PointsTransactionRepository } from './transaction.repository';
 import { AddPointsDto } from './dto/add-points.dto';
 import { DeductPointsDto } from './dto/deduct-points.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
+import { PointsErrorCode, PointsErrorMessages } from '../constants/error-codes';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
 
 /**
  * 积分账户服务
@@ -22,10 +25,11 @@ export class PointsAccountService {
   private readonly logger = new Logger(PointsAccountService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly accountRepo: PointsAccountRepository,
     private readonly transactionRepo: PointsTransactionRepository,
     private readonly ruleService: PointsRuleService,
+    private readonly memberRepo: MemberRepository,
+    private readonly eventEmitter: MarketingEventEmitter,
   ) {}
 
   /**
@@ -123,6 +127,20 @@ export class PointsAccountService {
       expireTime: dto.expireTime,
     } as any);
 
+    await this.eventEmitter.emitAsync({
+      type: MarketingEventType.POINTS_EARNED,
+      tenantId,
+      instanceId: transaction.id,
+      configId: account.id,
+      memberId: dto.memberId,
+      payload: {
+        amount: dto.amount,
+        transactionType: dto.type,
+        relatedId: dto.relatedId,
+      },
+      timestamp: new Date(),
+    });
+
     this.logger.log(`增加积分: memberId=${dto.memberId}, amount=${dto.amount}, type=${dto.type}`);
 
     return Result.ok(FormatDateFields(transaction));
@@ -143,12 +161,12 @@ export class PointsAccountService {
         // 获取账户
         const account = await this.accountRepo.findByMemberId(dto.memberId);
         if (!account) {
-          BusinessException.throw(400, '积分账户不存在');
+          BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.ACCOUNT_NOT_FOUND]);
         }
 
         // 检查余额
         if (account.availablePoints < dto.amount) {
-          BusinessException.throw(400, '积分余额不足');
+          BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.INSUFFICIENT_BALANCE]);
         }
 
         const balanceBefore = account.availablePoints;
@@ -181,6 +199,20 @@ export class PointsAccountService {
           expireTime: null,
         } as any);
 
+        await this.eventEmitter.emitAsync({
+          type: MarketingEventType.POINTS_USED,
+          tenantId,
+          instanceId: transaction.id,
+          configId: account.id,
+          memberId: dto.memberId,
+          payload: {
+            amount: dto.amount,
+            transactionType: dto.type,
+            relatedId: dto.relatedId,
+          },
+          timestamp: new Date(),
+        });
+
         this.logger.log(`扣减积分: memberId=${dto.memberId}, amount=${dto.amount}, type=${dto.type}`);
 
         return Result.ok(FormatDateFields(transaction));
@@ -194,7 +226,7 @@ export class PointsAccountService {
       }
     }
 
-    BusinessException.throw(500, '积分扣减失败，请稍后重试');
+    BusinessException.throw(500, PointsErrorMessages[PointsErrorCode.CONCURRENT_OPERATION_FAILED]);
   }
 
   /**
@@ -214,12 +246,12 @@ export class PointsAccountService {
         // 获取账户
         const account = await this.accountRepo.findByMemberId(memberId);
         if (!account) {
-          BusinessException.throw(400, '积分账户不存在');
+          BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.ACCOUNT_NOT_FOUND]);
         }
 
         // 检查余额
         if (account.availablePoints < amount) {
-          BusinessException.throw(400, '积分余额不足');
+          BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.INSUFFICIENT_BALANCE]);
         }
 
         const balanceBefore = account.availablePoints;
@@ -264,7 +296,7 @@ export class PointsAccountService {
       }
     }
 
-    BusinessException.throw(500, '积分冻结失败，请稍后重试');
+    BusinessException.throw(500, PointsErrorMessages[PointsErrorCode.CONCURRENT_OPERATION_FAILED]);
   }
 
   /**
@@ -284,12 +316,12 @@ export class PointsAccountService {
         // 获取账户
         const account = await this.accountRepo.findByMemberId(memberId);
         if (!account) {
-          BusinessException.throw(400, '积分账户不存在');
+          BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.ACCOUNT_NOT_FOUND]);
         }
 
         // 检查冻结余额
         if (account.frozenPoints < amount) {
-          BusinessException.throw(400, '冻结积分不足');
+          BusinessException.throw(400, PointsErrorMessages[PointsErrorCode.INSUFFICIENT_FROZEN]);
         }
 
         const balanceBefore = account.availablePoints;
@@ -334,7 +366,7 @@ export class PointsAccountService {
       }
     }
 
-    BusinessException.throw(500, '积分解冻失败，请稍后重试');
+    BusinessException.throw(500, PointsErrorMessages[PointsErrorCode.CONCURRENT_OPERATION_FAILED]);
   }
 
   /**
@@ -382,7 +414,7 @@ export class PointsAccountService {
     const memberIds = [...new Set((rows as any[]).map((r) => r.memberId))];
     const members =
       memberIds.length > 0
-        ? await this.prisma.umsMember.findMany({
+        ? await this.memberRepo.findMany({
             where: { memberId: { in: memberIds } },
             select: { memberId: true, nickname: true, mobile: true, avatar: true },
           })

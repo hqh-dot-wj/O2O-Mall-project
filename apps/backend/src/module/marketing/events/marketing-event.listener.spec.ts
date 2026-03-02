@@ -84,6 +84,36 @@ describe('MarketingEventListener', () => {
     expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
   });
 
+  // R-FLOW-EVENT-05
+  it('Given COUPON_CLAIMED 事件, When handleCouponClaimed, Then 写入优惠券领取事件统计缓存', async () => {
+    await listener.handleCouponClaimed(buildEvent(MarketingEventType.COUPON_CLAIMED, 't-1'));
+
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith(
+      'mkt:event:stats:t-1:20260302:coupon.claimed',
+    );
+    expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
+  });
+
+  // R-FLOW-EVENT-06
+  it('Given POINTS_EARNED 事件, When handlePointsEarned, Then 写入积分获取事件统计缓存', async () => {
+    await listener.handlePointsEarned(buildEvent(MarketingEventType.POINTS_EARNED, 't-1'));
+
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith(
+      'mkt:event:stats:t-1:20260302:points.earned',
+    );
+    expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
+  });
+
+  // R-FLOW-EVENT-07
+  it('Given INTEGRATION_ORDER_PAID 事件, When handleOrderPaid, Then 写入订单支付集成事件统计缓存', async () => {
+    await listener.handleOrderPaid(buildEvent(MarketingEventType.INTEGRATION_ORDER_PAID, 't-1'));
+
+    expect(mockRedisPipeline.incr).toHaveBeenCalledWith(
+      'mkt:event:stats:t-1:20260302:integration.order.paid',
+    );
+    expect(mockRedisPipeline.exec).toHaveBeenCalledTimes(1);
+  });
+
   // R-BRANCH-EVENT-01
   it('Given 事件未携带 tenantId, When handleInstanceSuccess, Then 使用默认租户写入缓存', async () => {
     await listener.handleInstanceSuccess(buildEvent(MarketingEventType.INSTANCE_SUCCESS));

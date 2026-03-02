@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { TenantContext } from 'src/common/tenant/tenant.context';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { MemberRepository } from 'src/module/admin/member/member.repository';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
 import { PointsRuleService } from '../rule/rule.service';
 import { PointsAccountRepository } from './account.repository';
 import { PointsTransactionRepository } from './transaction.repository';
@@ -28,8 +30,11 @@ describe('PointsAccountService', () => {
   };
 
   const mockRuleService = {};
-  const mockPrisma = {
-    umsMember: { findMany: jest.fn() },
+  const mockMemberRepo = {
+    findMany: jest.fn(),
+  };
+  const mockEventEmitter = {
+    emitAsync: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -38,10 +43,11 @@ describe('PointsAccountService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PointsAccountService,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: MemberRepository, useValue: mockMemberRepo },
         { provide: PointsAccountRepository, useValue: mockAccountRepo },
         { provide: PointsTransactionRepository, useValue: mockTransactionRepo },
         { provide: PointsRuleService, useValue: mockRuleService },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -142,6 +148,13 @@ describe('PointsAccountService', () => {
           balanceAfter: 120,
         }),
       );
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.POINTS_EARNED,
+          memberId: 'm1',
+          configId: 'acc1',
+        }),
+      );
       expect(result.data).toBeDefined();
     });
   });
@@ -214,6 +227,13 @@ describe('PointsAccountService', () => {
         expect.objectContaining({
           availablePoints: 90,
           usedPoints: 10,
+        }),
+      );
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.POINTS_USED,
+          memberId: 'm1',
+          configId: 'acc1',
         }),
       );
       expect(result.data).toBeDefined();
@@ -342,7 +362,7 @@ describe('PointsAccountService', () => {
         rows: [{ id: 'acc1', memberId: 'm1' }],
         total: 1,
       });
-      mockPrisma.umsMember.findMany.mockResolvedValue([
+      mockMemberRepo.findMany.mockResolvedValue([
         { memberId: 'm1', nickname: '用户1' },
       ]);
 

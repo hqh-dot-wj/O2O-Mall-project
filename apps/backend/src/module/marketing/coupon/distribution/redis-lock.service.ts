@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response';
+import { CouponErrorCode, CouponErrorMessages } from '../constants/error-codes';
 
 /**
  * Redis 分布式锁服务
@@ -50,7 +51,10 @@ export class RedisLockService {
     // 如果获取锁失败，抛出异常
     if (!lockAcquired) {
       this.logger.warn(`Failed to acquire lock: ${lockKey} after ${maxRetries} retries`);
-      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '系统繁忙，请稍后重试');
+      throw new BusinessException(
+        ResponseCode.BUSINESS_ERROR,
+        CouponErrorMessages[CouponErrorCode.LOCK_ACQUIRE_FAILED],
+      );
     }
 
     try {

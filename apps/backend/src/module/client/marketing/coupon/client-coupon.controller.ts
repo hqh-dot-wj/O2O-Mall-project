@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Member } from 'src/module/client/common/decorators/member.decorator';
 import { MemberAuthGuard } from 'src/module/client/common/guards/member-auth.guard';
@@ -11,8 +11,11 @@ import { UserCouponRepository } from 'src/module/marketing/coupon/distribution/u
 /**
  * C端优惠券控制器
  * 提供用户领券、查询可领券、我的优惠券等接口
+ *
+ * @tenantScope TenantBound（依赖会员登录态租户隔离）
  */
 @ApiTags('C端-优惠券')
+@ApiBearerAuth()
 @Controller('client/marketing/coupon')
 @UseGuards(MemberAuthGuard)
 export class ClientCouponController {

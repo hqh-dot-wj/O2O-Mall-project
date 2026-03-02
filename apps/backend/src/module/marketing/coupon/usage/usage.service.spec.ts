@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CouponType, UserCouponStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
+import { ORDER_SERVICE } from 'src/module/client/order/order-service.token';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
 import { UserCouponRepository } from '../distribution/user-coupon.repository';
 import { CouponUsageRepository } from './usage.repository';
 import { CouponUsageService } from './usage.service';
@@ -23,15 +25,20 @@ describe('CouponUsageService', () => {
     create: jest.fn(),
   };
 
-  const mockPrisma = {
-    omsOrder: { findUnique: jest.fn() },
+  const mockOrderService = {
+    findByIdForMarketing: jest.fn(),
+  };
+
+  const mockEventEmitter = {
+    emitAsync: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CouponUsageService,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: ORDER_SERVICE, useValue: mockOrderService },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
         { provide: UserCouponRepository, useValue: mockUserCouponRepo },
         { provide: CouponUsageRepository, useValue: mockUsageRepo },
       ],
@@ -249,9 +256,10 @@ describe('CouponUsageService', () => {
         id: 'uc1',
         tenantId: '00000',
         memberId: 'm1',
+        templateId: 't1',
       });
       mockUserCouponRepo.useCoupon.mockResolvedValue(undefined);
-      mockPrisma.omsOrder.findUnique.mockResolvedValue({
+      mockOrderService.findByIdForMarketing.mockResolvedValue({
         totalAmount: new Decimal(100),
       });
       mockUsageRepo.create.mockResolvedValue({});
@@ -260,6 +268,14 @@ describe('CouponUsageService', () => {
 
       expect(mockUserCouponRepo.useCoupon).toHaveBeenCalledWith('uc1');
       expect(mockUsageRepo.create).toHaveBeenCalled();
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MarketingEventType.COUPON_USED,
+          instanceId: 'uc1',
+          memberId: 'm1',
+          configId: 't1',
+        }),
+      );
     });
   });
 

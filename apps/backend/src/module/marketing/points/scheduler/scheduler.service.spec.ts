@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/module/common/redis/redis.service';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
 import { PointsSchedulerService } from './scheduler.service';
 
 describe('PointsSchedulerService', () => {
@@ -18,12 +20,17 @@ describe('PointsSchedulerService', () => {
     unlock: jest.fn(),
   };
 
+  const mockEventEmitter = {
+    emitAsync: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PointsSchedulerService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RedisService, useValue: mockRedisService },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -51,5 +58,49 @@ describe('PointsSchedulerService', () => {
 
     expect(mockPrisma.mktPointsTransaction.findMany).toHaveBeenCalledTimes(1);
     expect(mockRedisService.unlock).toHaveBeenCalledTimes(1);
+  });
+
+  it('处理过期积分成功后应发送过期事件', async () => {
+    mockRedisService.tryLock.mockResolvedValue(true);
+    mockPrisma.mktPointsTransaction.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'tx-source-1',
+          tenantId: 't1',
+          accountId: 'acc1',
+          memberId: 'm1',
+          amount: 10,
+          remark: '签到奖励',
+          account: {
+            availablePoints: 20,
+          },
+        },
+      ])
+      .mockResolvedValueOnce([]);
+    mockPrisma.$transaction.mockImplementation(async (callback) =>
+      callback({
+        mktPointsAccount: {
+          update: jest.fn(),
+        },
+        mktPointsTransaction: {
+          create: jest.fn().mockResolvedValue({ id: 'tx-expired-1' }),
+          update: jest.fn(),
+        },
+      }),
+    );
+    mockRedisService.unlock.mockResolvedValue(1);
+
+    await service.processExpiredPoints();
+
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MarketingEventType.POINTS_EXPIRED,
+        tenantId: 't1',
+        memberId: 'm1',
+        instanceId: 'tx-expired-1',
+        configId: 'acc1',
+      }),
+    );
+    expect(mockRedisService.unlock).toHaveBeenCalled();
   });
 });

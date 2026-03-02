@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Member } from 'src/module/client/common/decorators/member.decorator';
 import { MemberAuthGuard } from 'src/module/client/common/guards/member-auth.guard';
@@ -7,8 +7,11 @@ import { PointsTaskService } from 'src/module/marketing/points/task/task.service
 
 /**
  * C端积分任务控制器
+ *
+ * @tenantScope TenantBound（依赖会员登录态租户隔离）
  */
 @ApiTags('C端-积分任务')
+@ApiBearerAuth()
 @Controller('client/marketing/points/tasks')
 @UseGuards(MemberAuthGuard)
 export class ClientPointsTaskController {

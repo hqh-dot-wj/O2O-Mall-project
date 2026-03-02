@@ -364,7 +364,8 @@ export class PlayInstanceService {
     if (amount.gt(0)) {
       // 获取平台费率配置
       const feeRateStr = await this.configService.getSystemConfigValue('marketing.fee_rate');
-      const feeRate = new Decimal(feeRateStr || 0.01);
+      BusinessException.throwIf(!feeRateStr, '系统配置缺失: marketing.fee_rate');
+      const feeRate = new Decimal(feeRateStr);
 
       const platformFee = amount.mul(feeRate);
       const settleAmount = amount.minus(platformFee);
@@ -386,13 +387,17 @@ export class PlayInstanceService {
     // 假设 rules: { giftAssetId: 'coupon_template_123', giftCount: 1 }
     const rules = config.rules as any;
     if (rules?.giftAssetId) {
+      const giftAssetType =
+        typeof rules.giftAssetType === 'string' && rules.giftAssetType.trim().length > 0
+          ? rules.giftAssetType
+          : 'VOUCHER';
       await this.assetService.grantAsset({
         tenantId: instance.tenantId,
         memberId: instance.memberId,
         instanceId: instance.id,
         configId: instance.configId,
         assetName: rules.giftAssetName || '活动赠送权益',
-        assetType: 'VOUCHER', // 暂定
+        assetType: giftAssetType,
         balance: new Decimal(rules.giftCount || 1),
         initialBalance: new Decimal(rules.giftCount || 1),
         status: 'UNUSED',
@@ -434,16 +439,6 @@ export class PlayInstanceService {
     // 例如：拼团逻辑会增加人数，判断是否满员 -> 自动流转 SUCCESS
     const strategy = this.strategyFactory.getStrategy(instance.templateCode);
     await strategy.onPaymentSuccess(instance);
-  }
-
-  /**
-   * 校验状态流转是否允许
-   * 
-   * @deprecated 已迁移到 state-machine.config.ts 的 isValidTransition 函数
-   * @see isValidTransition
-   */
-  private checkTransition(current: PlayInstanceStatus, next: PlayInstanceStatus): boolean {
-    return isValidTransition(current, next);
   }
 
   private getJoinQuantity(instanceData: Record<string, unknown>): number {

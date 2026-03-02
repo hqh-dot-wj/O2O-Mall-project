@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CouponType, UserCouponStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
 import { Result } from 'src/common/response/result';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
@@ -9,6 +8,10 @@ import { FormatDateFields } from 'src/common/utils';
 import { UserCouponRepository } from '../distribution/user-coupon.repository';
 import { CouponUsageRepository } from './usage.repository';
 import { OrderContext } from './dto/validate-coupon.dto';
+import { ORDER_SERVICE, OrderServiceContract } from 'src/module/client/order/order-service.token';
+import { CouponErrorCode, CouponErrorMessages } from '../constants/error-codes';
+import { MarketingEventEmitter } from '../../events/marketing-event.emitter';
+import { MarketingEventType } from '../../events/marketing-event.types';
 
 /**
  * 优惠券使用服务
@@ -20,9 +23,11 @@ export class CouponUsageService {
   private readonly logger = new Logger(CouponUsageService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly userCouponRepo: UserCouponRepository,
     private readonly usageRepo: CouponUsageRepository,
+    private readonly eventEmitter: MarketingEventEmitter,
+    @Inject(ORDER_SERVICE)
+    private readonly orderService: OrderServiceContract,
   ) {}
 
   /**
@@ -62,37 +67,37 @@ export class CouponUsageService {
    */
   async validateCoupon(userCouponId: string, orderContext: OrderContext) {
     const coupon = await this.userCouponRepo.findById(userCouponId);
-    BusinessException.throwIfNull(coupon, '优惠券不存在');
+    BusinessException.throwIfNull(coupon, CouponErrorMessages[CouponErrorCode.USER_COUPON_NOT_FOUND]);
 
     // 验证归属
     BusinessException.throwIf(
       coupon.memberId !== orderContext.memberId,
-      '优惠券不属于当前用户',
+      CouponErrorMessages[CouponErrorCode.CLAIM_NOT_ELIGIBLE],
     );
 
     // 验证状态
     BusinessException.throwIf(
       coupon.status !== UserCouponStatus.UNUSED,
-      '优惠券已使用或已过期',
+      CouponErrorMessages[CouponErrorCode.COUPON_USED],
     );
 
     // 验证有效期
     const now = new Date();
     BusinessException.throwIf(
       now < coupon.startTime || now > coupon.endTime,
-      '优惠券不在有效期内',
+      CouponErrorMessages[CouponErrorCode.COUPON_EXPIRED],
     );
 
     // 验证最低消费
     const minAmount = Number(coupon.minOrderAmount);
     BusinessException.throwIf(
       orderContext.orderAmount < minAmount,
-      '订单金额未达到最低消费' + minAmount + '元',
+      `${CouponErrorMessages[CouponErrorCode.ORDER_AMOUNT_TOO_LOW]}: ${minAmount}元`,
     );
 
     // 验证适用商品（如果有限制）
     if (!this.isApplicableToOrder(coupon, orderContext)) {
-      throw new BusinessException(400, '优惠券不适用于当前订单商品');
+      BusinessException.throw(400, CouponErrorMessages[CouponErrorCode.COUPON_NOT_APPLICABLE]);
     }
 
     return Result.ok({ valid: true });
@@ -107,7 +112,7 @@ export class CouponUsageService {
    */
   async calculateDiscount(userCouponId: string, orderAmount: number) {
     const coupon = await this.userCouponRepo.findById(userCouponId);
-    BusinessException.throwIfNull(coupon, '优惠券不存在');
+    BusinessException.throwIfNull(coupon, CouponErrorMessages[CouponErrorCode.USER_COUPON_NOT_FOUND]);
 
     let discount = new Decimal(0);
     const amount = new Decimal(orderAmount);
@@ -150,7 +155,7 @@ export class CouponUsageService {
 
     BusinessException.throwIf(
       updated.count === 0,
-      '优惠券状态异常，无法锁定',
+      CouponErrorMessages[CouponErrorCode.COUPON_LOCKED],
     );
 
     this.logger.log({
@@ -170,7 +175,7 @@ export class CouponUsageService {
   @Transactional()
   async useCoupon(userCouponId: string, orderId: string, discountAmount: number) {
     const coupon = await this.userCouponRepo.findById(userCouponId);
-    BusinessException.throwIfNull(coupon, '优惠券不存在');
+    BusinessException.throwIfNull(coupon, CouponErrorMessages[CouponErrorCode.USER_COUPON_NOT_FOUND]);
 
     // 更新优惠券状态
     await this.userCouponRepo.useCoupon(userCouponId);
@@ -188,6 +193,20 @@ export class CouponUsageService {
       orderId,
       discountAmount: new Decimal(discountAmount),
       orderAmount: new Decimal(orderAmount),
+    });
+
+    await this.eventEmitter.emitAsync({
+      type: MarketingEventType.COUPON_USED,
+      tenantId: coupon.tenantId,
+      instanceId: userCouponId,
+      configId: coupon.templateId,
+      memberId: coupon.memberId,
+      payload: {
+        orderId,
+        discountAmount,
+        orderAmount,
+      },
+      timestamp: new Date(),
     });
 
     this.logger.log({
@@ -221,7 +240,7 @@ export class CouponUsageService {
   @Transactional()
   async refundCoupon(userCouponId: string) {
     const coupon = await this.userCouponRepo.findById(userCouponId);
-    BusinessException.throwIfNull(coupon, '优惠券不存在');
+    BusinessException.throwIfNull(coupon, CouponErrorMessages[CouponErrorCode.USER_COUPON_NOT_FOUND]);
 
     // 检查是否已过期
     const now = new Date();
@@ -291,10 +310,7 @@ export class CouponUsageService {
    * @returns 订单金额
    */
   private async getOrderAmount(orderId: string): Promise<number> {
-    const order = await this.prisma.omsOrder.findUnique({
-      where: { id: orderId },
-      select: { totalAmount: true },
-    });
+    const order = await this.orderService.findByIdForMarketing(orderId);
     return order?.totalAmount ? Number(order.totalAmount) : 0;
   }
 }

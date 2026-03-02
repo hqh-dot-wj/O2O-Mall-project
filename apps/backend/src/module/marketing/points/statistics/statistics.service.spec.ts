@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
+import { BusinessException } from 'src/common/exceptions/business.exception';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PointsStatisticsService } from './statistics.service';
@@ -12,6 +13,7 @@ describe('PointsStatisticsService', () => {
     mktPointsTransaction: {
       groupBy: jest.fn(),
       aggregate: jest.fn(),
+      count: jest.fn(),
       findMany: jest.fn(),
     },
     mktPointsAccount: {
@@ -130,6 +132,7 @@ describe('PointsStatisticsService', () => {
 
   describe('exportTransactions', () => {
     it('应返回导出格式的明细', async () => {
+      mockPrisma.mktPointsTransaction.count.mockResolvedValue(1);
       mockPrisma.mktPointsTransaction.findMany.mockResolvedValue([
         {
           memberId: 'm1',
@@ -149,6 +152,13 @@ describe('PointsStatisticsService', () => {
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toHaveProperty('用户ID', 'm1');
       expect(result.data[0]).toHaveProperty('积分数量', 10);
+    });
+
+    it('导出数量超过10000时应抛业务异常', async () => {
+      mockPrisma.mktPointsTransaction.count.mockResolvedValue(10001);
+
+      await expect(service.exportTransactions({})).rejects.toThrow(BusinessException);
+      expect(mockPrisma.mktPointsTransaction.findMany).not.toHaveBeenCalled();
     });
   });
 });

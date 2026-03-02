@@ -41,6 +41,9 @@ export enum PointsErrorCode {
   OPTIMISTIC_LOCK_FAILED = 'POINTS_2500',
   CONCURRENT_OPERATION_FAILED = 'POINTS_2501',
   VERSION_CONFLICT = 'POINTS_2502',
+
+  // 导出相关错误 (2600-2699)
+  EXPORT_LIMIT_EXCEEDED = 'POINTS_2600',
 }
 
 /**
@@ -84,4 +87,7 @@ export const PointsErrorMessages: Record<PointsErrorCode, string> = {
   [PointsErrorCode.OPTIMISTIC_LOCK_FAILED]: '数据已被修改，请刷新后重试',
   [PointsErrorCode.CONCURRENT_OPERATION_FAILED]: '并发操作失败，请稍后重试',
   [PointsErrorCode.VERSION_CONFLICT]: '版本冲突，请刷新后重试',
+
+  // 导出相关
+  [PointsErrorCode.EXPORT_LIMIT_EXCEEDED]: '导出数量超过10000条，请缩小筛选范围或使用异步导出',
 };

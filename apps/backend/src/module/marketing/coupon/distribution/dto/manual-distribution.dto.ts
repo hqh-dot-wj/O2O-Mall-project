@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 /**
  * 手动发放优惠券 DTO
@@ -13,6 +13,7 @@ export class ManualDistributionDto {
   @ApiProperty({ description: '用户ID列表', type: [String] })
   @IsNotEmpty({ message: '用户ID列表不能为空' })
   @IsArray({ message: '用户ID列表必须是数组' })
+  @ArrayMaxSize(500, { message: '手动发放最多支持500个用户' })
   @IsString({ each: true, message: '用户ID必须是字符串' })
   memberIds: string[];
 }

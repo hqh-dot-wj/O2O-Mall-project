@@ -18,6 +18,8 @@ export enum CouponErrorCode {
   STOCK_INSUFFICIENT = 'COUPON_1103',
   ALREADY_CLAIMED = 'COUPON_1104',
   DISTRIBUTION_TIME_INVALID = 'COUPON_1105',
+  ORDER_NOT_FOUND = 'COUPON_1106',
+  MANUAL_DISTRIBUTION_LIMIT_EXCEEDED = 'COUPON_1107',
 
   // 使用相关错误 (1200-1299)
   USER_COUPON_NOT_FOUND = 'COUPON_1200',
@@ -34,6 +36,9 @@ export enum CouponErrorCode {
   LOCK_ACQUIRE_FAILED = 'COUPON_1300',
   CONCURRENT_OPERATION_FAILED = 'COUPON_1301',
   OPTIMISTIC_LOCK_FAILED = 'COUPON_1302',
+
+  // 导出相关错误 (1400-1499)
+  EXPORT_LIMIT_EXCEEDED = 'COUPON_1400',
 }
 
 /**
@@ -54,6 +59,8 @@ export const CouponErrorMessages: Record<CouponErrorCode, string> = {
   [CouponErrorCode.STOCK_INSUFFICIENT]: '优惠券库存不足',
   [CouponErrorCode.ALREADY_CLAIMED]: '已领取过该优惠券',
   [CouponErrorCode.DISTRIBUTION_TIME_INVALID]: '不在发放时间范围内',
+  [CouponErrorCode.ORDER_NOT_FOUND]: '订单不存在',
+  [CouponErrorCode.MANUAL_DISTRIBUTION_LIMIT_EXCEEDED]: '手动发放最多支持500个用户',
 
   // 使用相关
   [CouponErrorCode.USER_COUPON_NOT_FOUND]: '优惠券不存在',
@@ -70,4 +77,7 @@ export const CouponErrorMessages: Record<CouponErrorCode, string> = {
   [CouponErrorCode.LOCK_ACQUIRE_FAILED]: '获取锁失败，请稍后重试',
   [CouponErrorCode.CONCURRENT_OPERATION_FAILED]: '并发操作失败，请稍后重试',
   [CouponErrorCode.OPTIMISTIC_LOCK_FAILED]: '数据已被修改，请刷新后重试',
+
+  // 导出相关
+  [CouponErrorCode.EXPORT_LIMIT_EXCEEDED]: '导出数量超过10000条，请缩小筛选范围或使用异步导出',
 };
