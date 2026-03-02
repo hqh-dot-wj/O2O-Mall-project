@@ -3,7 +3,7 @@ import { PlayInstanceRepository } from './instance.repository';
 import { CreatePlayInstanceDto, ListPlayInstanceDto } from './dto/instance.dto';
 import { Result } from 'src/common/response/result';
 import { BusinessException } from 'src/common/exceptions/business.exception';
-import { PlayInstanceStatus } from '@prisma/client';
+import { MarketingStockMode, PlayInstanceStatus } from '@prisma/client';
 import { WalletService } from 'src/module/finance/wallet/wallet.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -22,6 +22,7 @@ import { MarketingEventEmitter } from '../events/marketing-event.emitter';
 import { MarketingEventType } from '../events/marketing-event.types';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { GrayReleaseService } from '../gray/gray-release.service';
+import { MarketingStockService } from '../stock/stock.service';
 
 @Injectable()
 export class PlayInstanceService {
@@ -34,6 +35,7 @@ export class PlayInstanceService {
     private readonly idempotencyService: IdempotencyService,
     private readonly eventEmitter: MarketingEventEmitter,
     private readonly grayReleaseService: GrayReleaseService,
+    private readonly stockService: MarketingStockService,
     @Inject(forwardRef(() => PlayStrategyFactory))
     private readonly strategyFactory: PlayStrategyFactory,
   ) {}
@@ -123,36 +125,59 @@ export class PlayInstanceService {
     const strategy = this.strategyFactory.getStrategy(config.templateCode);
     await strategy.validateJoin(config, dto.memberId, dto.instanceData);
 
-    // === 5. 执行创建，初始状态设为待支付 ===
-    const instance = await this.repo.create({
-      ...dto,
-      status: PlayInstanceStatus.PENDING_PAY,
-    });
+    const quantity = this.getJoinQuantity(dto.instanceData);
+    let stockLocked = false;
 
-    // === 6. 发送实例创建事件 ===
-    // 使用 emitAsync() 异步发送，不阻塞主流程
-    await this.eventEmitter.emitAsync({
-      type: MarketingEventType.INSTANCE_CREATED,
-      instanceId: instance.id,
-      configId: instance.configId,
-      memberId: instance.memberId,
-      payload: {
-        templateCode: config.templateCode,
-        instanceData: instance.instanceData,
-      },
-      timestamp: new Date(),
-    });
+    try {
+      // === 5. STRONG_LOCK 模式预扣库存 ===
+      if (config.stockMode === MarketingStockMode.STRONG_LOCK) {
+        await this.stockService.decrement(config.id, quantity, config.stockMode);
+        stockLocked = true;
+      }
 
-    // === 7. 缓存结果用于幂等性返回 ===
-    const result = Result.ok(FormatDateFields(instance));
-    await this.idempotencyService.cacheJoinResult(
-      dto.configId,
-      dto.memberId,
-      dto.instanceData,
-      result,
-    );
+      // === 6. 执行创建，初始状态设为待支付 ===
+      const instanceData = this.buildCreateInstanceData(
+        dto.instanceData,
+        stockLocked,
+        quantity,
+      );
+      const instance = await this.repo.create({
+        ...dto,
+        instanceData,
+        status: PlayInstanceStatus.PENDING_PAY,
+      });
 
-    return result;
+      // === 7. 发送实例创建事件 ===
+      // 使用 emitAsync() 异步发送，不阻塞主流程
+      await this.eventEmitter.emitAsync({
+        type: MarketingEventType.INSTANCE_CREATED,
+        instanceId: instance.id,
+        configId: instance.configId,
+        memberId: instance.memberId,
+        payload: {
+          templateCode: config.templateCode,
+          instanceData: instance.instanceData,
+        },
+        timestamp: new Date(),
+      });
+
+      // === 8. 缓存结果用于幂等性返回 ===
+      const result = Result.ok(FormatDateFields(instance));
+      await this.idempotencyService.cacheJoinResult(
+        dto.configId,
+        dto.memberId,
+        dto.instanceData,
+        result,
+      );
+
+      return result;
+    } catch (error) {
+      // 创建流程失败时回补预扣库存，避免出现“锁库存成功但实例未落库”的脏数据。
+      if (stockLocked) {
+        await this.stockService.increment(dto.configId, quantity);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -193,7 +218,13 @@ export class PlayInstanceService {
 
       // === 4. 执行状态变更 ===
       // 使用事务确保状态变更与后续副作用（入账、发放权益）的原子性
-      const updated = await this.repo.updateStatus(id, nextStatus, extraData);
+      const nextInstanceData = this.mergeInstanceData(instance.instanceData, extraData);
+      if (this.shouldReleaseStock(nextStatus, nextInstanceData)) {
+        const quantity = this.getJoinQuantity(nextInstanceData);
+        await this.stockService.increment(instance.configId, quantity);
+        nextInstanceData.stockReleased = true;
+      }
+      const updated = await this.repo.updateStatus(id, nextStatus, nextInstanceData);
 
       // === 5. 通用业务逻辑：状态流转到 SUCCESS 时，自动执行分账和发券 ===
       if (nextStatus === PlayInstanceStatus.SUCCESS) {
@@ -285,19 +316,29 @@ export class PlayInstanceService {
    */
   @Transactional()
   async batchTransitStatus(ids: string[], nextStatus: PlayInstanceStatus, extraData?: any) {
-    if (ids.length === 0) return;
+    if (ids.length === 0) {
+      return;
+    }
 
-    // 1. 批量更新状态
-    await this.repo.batchUpdateStatus(ids, nextStatus, extraData);
+    const instances = await this.repo.findMany({ where: { id: { in: ids } } });
+    const instanceMap = new Map(instances.map((instance) => [instance.id, instance]));
 
-    // 2. 如果是 SUCCESS，批量执行分账和发券
-    if (nextStatus === PlayInstanceStatus.SUCCESS) {
-      // 需要查询出实例详情以获取 configContext 进行分账
-      const instances = await this.repo.findMany({ where: { id: { in: ids } } });
-      for (const instance of instances) {
-        // TODO: 可考虑异步队列处理以提升性能
-        await this.creditToStore(instance);
-      }
+    BusinessException.throwIf(
+      instances.length !== ids.length,
+      '存在无效的营销实例ID，批量状态流转中止',
+    );
+
+    for (const id of ids) {
+      const instance = instanceMap.get(id);
+      BusinessException.throwIfNull(instance, `营销实例不存在: ${id}`);
+      BusinessException.throwIf(
+        !isValidTransition(instance.status, nextStatus),
+        `非法的状态流转: ${instance.status} -> ${nextStatus}`,
+      );
+    }
+
+    for (const id of ids) {
+      await this.transitStatus(id, nextStatus, extraData);
     }
   }
 
@@ -401,5 +442,61 @@ export class PlayInstanceService {
    */
   private checkTransition(current: PlayInstanceStatus, next: PlayInstanceStatus): boolean {
     return isValidTransition(current, next);
+  }
+
+  private getJoinQuantity(instanceData: Record<string, unknown>): number {
+    const quantity = instanceData.quantity;
+    if (typeof quantity === 'number' && Number.isFinite(quantity) && quantity > 0) {
+      return Math.floor(quantity);
+    }
+    return 1;
+  }
+
+  private buildCreateInstanceData(
+    instanceData: Record<string, unknown>,
+    stockLocked: boolean,
+    quantity: number,
+  ): Record<string, unknown> {
+    if (!stockLocked) {
+      return instanceData;
+    }
+    return {
+      ...instanceData,
+      stockLocked: true,
+      stockReleased: false,
+      stockLockQuantity: quantity,
+    };
+  }
+
+  private mergeInstanceData(
+    currentData: unknown,
+    extraData?: unknown,
+  ): Record<string, unknown> {
+    const baseData =
+      currentData && typeof currentData === 'object'
+        ? (currentData as Record<string, unknown>)
+        : {};
+    if (!extraData || typeof extraData !== 'object') {
+      return { ...baseData };
+    }
+    return {
+      ...baseData,
+      ...(extraData as Record<string, unknown>),
+    };
+  }
+
+  private shouldReleaseStock(
+    nextStatus: PlayInstanceStatus,
+    instanceData: Record<string, unknown>,
+  ): boolean {
+    const shouldRelease =
+      nextStatus === PlayInstanceStatus.TIMEOUT ||
+      nextStatus === PlayInstanceStatus.FAILED ||
+      nextStatus === PlayInstanceStatus.REFUNDED;
+    return (
+      shouldRelease &&
+      instanceData.stockLocked === true &&
+      instanceData.stockReleased !== true
+    );
   }
 }

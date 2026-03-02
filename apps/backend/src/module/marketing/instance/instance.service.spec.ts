@@ -1,0 +1,260 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { MarketingStockMode, PlayInstanceStatus } from '@prisma/client';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { PlayInstanceService } from './instance.service';
+import { PlayInstanceRepository } from './instance.repository';
+import { WalletService } from 'src/module/finance/wallet/wallet.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserAssetService } from '../asset/asset.service';
+import { ConfigService } from 'src/module/admin/system/config/config.service';
+import { IdempotencyService } from './idempotency.service';
+import { MarketingEventEmitter } from '../events/marketing-event.emitter';
+import { GrayReleaseService } from '../gray/gray-release.service';
+import { PlayStrategyFactory } from '../play/play.factory';
+import { MarketingStockService } from '../stock/stock.service';
+
+describe('PlayInstanceService', () => {
+  let service: PlayInstanceService;
+
+  const mockRepo = {
+    search: jest.fn(),
+    findById: jest.fn(),
+    updateStatus: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    findByOrderSn: jest.fn(),
+  };
+
+  const mockWalletService = {
+    getOrCreateWallet: jest.fn(),
+    addBalance: jest.fn(),
+  };
+
+  const mockPrisma = {
+    storePlayConfig: {
+      findUnique: jest.fn(),
+    },
+  };
+
+  const mockAssetService = {
+    grantAsset: jest.fn(),
+  };
+
+  const mockConfigService = {
+    getSystemConfigValue: jest.fn(),
+  };
+
+  const mockIdempotencyService = {
+    checkJoinIdempotency: jest.fn(),
+    cacheJoinResult: jest.fn(),
+    checkPaymentIdempotency: jest.fn(),
+    markPaymentProcessed: jest.fn(),
+    withStateLock: jest.fn(),
+  };
+
+  const mockEventEmitter = {
+    emitAsync: jest.fn(),
+  };
+
+  const mockGrayReleaseService = {
+    isInGrayRelease: jest.fn(),
+  };
+
+  const mockStrategy = {
+    validateJoin: jest.fn(),
+    onStatusChange: jest.fn(),
+    onPaymentSuccess: jest.fn(),
+    getDisplayData: jest.fn(),
+  };
+
+  const mockStrategyFactory = {
+    getStrategy: jest.fn(),
+  };
+
+  const mockStockService = {
+    decrement: jest.fn(),
+    increment: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        PlayInstanceService,
+        { provide: PlayInstanceRepository, useValue: mockRepo },
+        { provide: WalletService, useValue: mockWalletService },
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: UserAssetService, useValue: mockAssetService },
+        { provide: ConfigService, useValue: mockConfigService },
+        { provide: IdempotencyService, useValue: mockIdempotencyService },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
+        { provide: GrayReleaseService, useValue: mockGrayReleaseService },
+        { provide: PlayStrategyFactory, useValue: mockStrategyFactory },
+        { provide: MarketingStockService, useValue: mockStockService },
+      ],
+    }).compile();
+
+    service = module.get<PlayInstanceService>(PlayInstanceService);
+    jest.clearAllMocks();
+
+    mockIdempotencyService.checkJoinIdempotency.mockResolvedValue(null);
+    mockIdempotencyService.cacheJoinResult.mockResolvedValue(undefined);
+    mockIdempotencyService.withStateLock.mockImplementation(
+      async (_instanceId: string, callback: () => Promise<unknown>) => callback(),
+    );
+    mockGrayReleaseService.isInGrayRelease.mockResolvedValue(true);
+    mockStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
+    mockStrategy.validateJoin.mockResolvedValue(undefined);
+    mockStrategy.onStatusChange.mockResolvedValue(undefined);
+    mockEventEmitter.emitAsync.mockResolvedValue(undefined);
+    mockRepo.create.mockImplementation(async (data: Record<string, unknown>) => ({
+      id: 'ins-1',
+      tenantId: data.tenantId,
+      memberId: data.memberId,
+      configId: data.configId,
+      templateCode: data.templateCode,
+      instanceData: data.instanceData,
+      status: data.status,
+    }));
+    mockRepo.updateStatus.mockImplementation(
+      async (id: string, status: PlayInstanceStatus, instanceData: Record<string, unknown>) => ({
+        id,
+        tenantId: 't-1',
+        memberId: 'm-1',
+        configId: 'cfg-1',
+        templateCode: 'FLASH_SALE',
+        instanceData,
+        status,
+      }),
+    );
+  });
+
+  it('STRONG_LOCK 参与时应预扣库存并写入库存锁标记', async () => {
+    mockPrisma.storePlayConfig.findUnique.mockResolvedValue({
+      id: 'cfg-1',
+      storeId: 'store-1',
+      templateCode: 'FLASH_SALE',
+      stockMode: MarketingStockMode.STRONG_LOCK,
+      rules: {},
+    });
+    mockStockService.decrement.mockResolvedValue(true);
+
+    await service.create({
+      tenantId: 't-1',
+      memberId: 'm-1',
+      configId: 'cfg-1',
+      templateCode: 'FLASH_SALE',
+      instanceData: { quantity: 2 },
+    });
+
+    expect(mockStockService.decrement).toHaveBeenCalledWith(
+      'cfg-1',
+      2,
+      MarketingStockMode.STRONG_LOCK,
+    );
+    expect(mockRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        instanceData: expect.objectContaining({
+          quantity: 2,
+          stockLocked: true,
+          stockReleased: false,
+          stockLockQuantity: 2,
+        }),
+      }),
+    );
+  });
+
+  it('预扣库存后创建失败应自动回补库存', async () => {
+    mockPrisma.storePlayConfig.findUnique.mockResolvedValue({
+      id: 'cfg-1',
+      storeId: 'store-1',
+      templateCode: 'FLASH_SALE',
+      stockMode: MarketingStockMode.STRONG_LOCK,
+      rules: {},
+    });
+    mockStockService.decrement.mockResolvedValue(true);
+    mockRepo.create.mockRejectedValue(new Error('db failed'));
+
+    await expect(
+      service.create({
+        tenantId: 't-1',
+        memberId: 'm-1',
+        configId: 'cfg-1',
+        templateCode: 'FLASH_SALE',
+        instanceData: { quantity: 2 },
+      }),
+    ).rejects.toThrow('db failed');
+
+    expect(mockStockService.increment).toHaveBeenCalledWith('cfg-1', 2);
+  });
+
+  it('流转到终态且库存未释放时应回补库存并标记已释放', async () => {
+    mockRepo.findById.mockResolvedValue({
+      id: 'ins-1',
+      configId: 'cfg-1',
+      memberId: 'm-1',
+      tenantId: 't-1',
+      templateCode: 'FLASH_SALE',
+      status: PlayInstanceStatus.PENDING_PAY,
+      instanceData: {
+        quantity: 3,
+        stockLocked: true,
+        stockReleased: false,
+      },
+    });
+
+    await service.transitStatus('ins-1', PlayInstanceStatus.TIMEOUT);
+
+    expect(mockStockService.increment).toHaveBeenCalledWith('cfg-1', 3);
+    expect(mockRepo.updateStatus).toHaveBeenCalledWith(
+      'ins-1',
+      PlayInstanceStatus.TIMEOUT,
+      expect.objectContaining({
+        stockLocked: true,
+        stockReleased: true,
+      }),
+    );
+  });
+
+  it('批量流转应先做状态机校验，不合法时直接拒绝', async () => {
+    mockRepo.findMany.mockResolvedValue([
+      {
+        id: 'ins-1',
+        status: PlayInstanceStatus.TIMEOUT,
+      },
+    ]);
+
+    await expect(
+      service.batchTransitStatus(['ins-1'], PlayInstanceStatus.SUCCESS),
+    ).rejects.toThrow(BusinessException);
+  });
+
+  it('批量流转合法时应逐条复用 transitStatus', async () => {
+    mockRepo.findMany.mockResolvedValue([
+      { id: 'ins-1', status: PlayInstanceStatus.PAID },
+      { id: 'ins-2', status: PlayInstanceStatus.ACTIVE },
+    ]);
+    const transitSpy = jest
+      .spyOn(service, 'transitStatus')
+      .mockResolvedValue({ data: null } as never);
+
+    await service.batchTransitStatus(
+      ['ins-1', 'ins-2'],
+      PlayInstanceStatus.SUCCESS,
+      { source: 'batch' },
+    );
+
+    expect(transitSpy).toHaveBeenCalledTimes(2);
+    expect(transitSpy).toHaveBeenNthCalledWith(
+      1,
+      'ins-1',
+      PlayInstanceStatus.SUCCESS,
+      { source: 'batch' },
+    );
+    expect(transitSpy).toHaveBeenNthCalledWith(
+      2,
+      'ins-2',
+      PlayInstanceStatus.SUCCESS,
+      { source: 'batch' },
+    );
+  });
+});

@@ -13,6 +13,7 @@ import { FinanceModule } from 'src/module/finance/finance.module';
 import { MarketingPlayModule } from '../play/play.module';
 import { MarketingEventsModule } from '../events/events.module';
 import { GrayModule } from '../gray/gray.module';
+import { MarketingStockModule } from '../stock/stock.module';
 import { forwardRef } from '@nestjs/common';
 
 @Module({
@@ -22,6 +23,7 @@ import { forwardRef } from '@nestjs/common';
     forwardRef(() => MarketingPlayModule),
     MarketingEventsModule, // 导入事件模块
     GrayModule, // 导入灰度发布模块
+    MarketingStockModule,
   ],
   controllers: [PlayInstanceController],
   providers: [PlayInstanceService, PlayInstanceRepository, IdempotencyService],

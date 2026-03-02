@@ -3,7 +3,6 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayInstanceStatus, PublishStatus } from '@prisma/client';
 import { PlayInstanceService } from '../instance/instance.service';
-import { MarketingStockService } from '../stock/stock.service';
 import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 
 /**
@@ -29,7 +28,6 @@ export class ActivityLifecycleScheduler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly instanceService: PlayInstanceService,
-    private readonly stockService: MarketingStockService,
   ) {}
 
   /**
@@ -68,15 +66,6 @@ export class ActivityLifecycleScheduler {
         try {
           // 流转状态到 TIMEOUT
           await this.instanceService.transitStatus(instance.id, PlayInstanceStatus.TIMEOUT);
-
-          // 释放库存（如果有占用）
-          const config = await this.prisma.storePlayConfig.findUnique({
-            where: { id: instance.configId },
-          });
-          if (config && config.stockMode === 'STRONG_LOCK') {
-            const quantity = (instance.instanceData as any)?.quantity || 1;
-            await this.stockService.increment(instance.configId, quantity);
-          }
 
           this.logger.debug(`[待支付超时] 实例 ${instance.id} 已超时关闭`);
         } catch (error) {

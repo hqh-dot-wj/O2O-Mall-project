@@ -5,7 +5,6 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { PlayInstanceService } from '../instance/instance.service';
-import { MarketingStockService } from '../stock/stock.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FlashSaleRulesDto, FlashSaleJoinDto } from './dto/flash-sale.dto';
 import { plainToInstance } from 'class-transformer';
@@ -23,7 +22,6 @@ export class FlashSaleService implements IMarketingStrategy {
   constructor(
     @Inject(forwardRef(() => PlayInstanceService))
     private readonly instanceService: PlayInstanceService,
-    private readonly stockService: MarketingStockService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -114,18 +112,7 @@ export class FlashSaleService implements IMarketingStrategy {
    * 3. 支付成功回调
    */
   async onPaymentSuccess(instance: PlayInstance): Promise<void> {
-    // 扣减库存（通过库存服务的原子扣减）
-    const data = instance.instanceData as any;
-    const quantity = data.quantity || 1;
-    
-    // 获取配置以获取库存模式
-    const config = await this.prisma.storePlayConfig.findUnique({
-      where: { id: instance.configId },
-    });
-
-    if (config) {
-      await this.stockService.decrement(instance.configId, quantity, config.stockMode);
-    }
+    // 库存已在参与阶段预扣，这里不再重复扣减。
   }
 
   /**
@@ -135,17 +122,6 @@ export class FlashSaleService implements IMarketingStrategy {
     // 秒杀成功后的额外逻辑（如发送通知等）
     if (newStatus === PlayInstanceStatus.SUCCESS) {
       // 可以在这里添加发送秒杀成功通知的逻辑
-    }
-
-    // 如果订单超时、失败或退款，需要释放库存
-    if (
-      newStatus === PlayInstanceStatus.TIMEOUT ||
-      newStatus === PlayInstanceStatus.FAILED ||
-      newStatus === PlayInstanceStatus.REFUNDED
-    ) {
-      const data = instance.instanceData as any;
-      const quantity = data.quantity || 1;
-      await this.stockService.increment(instance.configId, quantity);
     }
   }
 
