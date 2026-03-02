@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BusinessException } from 'src/common/exceptions';
 import { StationService } from './station.service';
 import { StationRepository } from './station.repository';
 import { GeoService } from '../geo/geo.service';
@@ -53,6 +54,7 @@ describe('StationService', () => {
   describe('create', () => {
     it('should create station and its fence', async () => {
       const dto = {
+        tenantId: 'tenant1',
         name: 'Test Station',
         address: 'Test Address',
         location: { lat: 30, lng: 104 },
@@ -73,13 +75,77 @@ describe('StationService', () => {
 
       expect(mockRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
+          tenantId: 'tenant1',
           name: 'Test Station',
           latitude: 30,
           longitude: 104,
         }),
       );
-      expect(mockGeoService.toPolygonWKT).toHaveBeenCalled();
+      expect(mockGeoService.toPolygonWKT).toHaveBeenCalledWith([
+        [104, 30],
+        [104, 31],
+        [105, 31],
+        [104, 30],
+      ]);
       expect(mockRepo.createFenceWithGeom).toHaveBeenCalledWith(1, 'SERVICE', 'POLYGON(...)');
+    });
+
+    it('should throw when tenantId is missing', async () => {
+      const dto = {
+        name: 'Test Station',
+        location: { lat: 30, lng: 104 },
+      };
+
+      await expect(service.create(dto as any)).rejects.toThrow(BusinessException);
+      try {
+        await service.create(dto as any);
+      } catch (error) {
+        const response = (error as any).getResponse();
+        expect(response.msg).toBe('tenantId 不能为空');
+      }
+      expect(mockRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('should support legacy flat coordinates', async () => {
+      const dto = {
+        tenantId: 'tenant1',
+        name: 'Legacy Station',
+        latitude: 30,
+        longitude: 104,
+      };
+
+      mockRepo.create.mockResolvedValue({ stationId: 2 });
+      await service.create(dto as any);
+
+      expect(mockRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 30,
+          longitude: 104,
+        }),
+      );
+    });
+
+    it('should throw when fence conversion fails', async () => {
+      const dto = {
+        tenantId: 'tenant1',
+        name: 'Test Station',
+        location: { lat: 30, lng: 104 },
+        fence: {
+          points: [
+            { lat: 30, lng: 104 },
+            { lat: 31, lng: 104 },
+            { lat: 31, lng: 105 },
+          ],
+        },
+      };
+
+      mockRepo.create.mockResolvedValue({ stationId: 3 });
+      mockGeoService.toPolygonWKT.mockImplementation(() => {
+        throw new Error('invalid fence');
+      });
+
+      await expect(service.create(dto as any)).rejects.toThrow('invalid fence');
+      expect(mockRepo.createFenceWithGeom).not.toHaveBeenCalled();
     });
   });
 

@@ -1,31 +1,37 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Api } from 'src/common/decorators/api.decorator';
+import { BusinessType } from 'src/common/constant/business.constant';
+import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
+import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { StationService } from './station.service';
+import { CheckRegionDto, CreateStationDto, ListStationQueryDto } from './dto/station.dto';
 
 @ApiTags('LBS-站点管理')
+@ApiBearerAuth('Authorization')
 @Controller('lbs/station')
 export class StationController {
   constructor(private readonly stationService: StationService) {}
 
+  @Api({ summary: '创建站点 (含围栏)', body: CreateStationDto })
+  @RequirePermission('lbs:station:create')
+  @Operlog({ businessType: BusinessType.INSERT })
   @Post()
-  @ApiOperation({ summary: '创建站点 (含围栏)' })
-  async create(@Body() body: any) {
-    // Body should validate DTO, simplified here
+  async create(@Body() body: CreateStationDto) {
     return this.stationService.create(body);
   }
 
+  @Api({ summary: '获取站点列表' })
+  @RequirePermission('lbs:station:list')
   @Get('list')
-  @ApiOperation({ summary: '获取站点列表' })
-  @ApiQuery({ name: 'tenantId', required: false })
-  async list(@Query('tenantId') tenantId?: string) {
-    return this.stationService.findAll(tenantId);
+  async list(@Query() query: ListStationQueryDto) {
+    return this.stationService.findAll(query.tenantId);
   }
 
+  @Api({ summary: '判断坐标所在位置 (管理端调试)' })
+  @RequirePermission('lbs:station:query')
   @Get('check-region')
-  @ApiOperation({ summary: '判断坐标所在位置 (C端使用)' })
-  @ApiQuery({ name: 'lat', type: Number })
-  @ApiQuery({ name: 'lng', type: Number })
-  async checkRegion(@Query('lat') lat: number, @Query('lng') lng: number) {
-    return this.stationService.findNearby(Number(lat), Number(lng));
+  async checkRegion(@Query() query: CheckRegionDto) {
+    return this.stationService.findNearby(query.lat, query.lng);
   }
 }

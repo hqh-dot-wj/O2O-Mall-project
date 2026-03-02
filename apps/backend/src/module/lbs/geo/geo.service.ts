@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { BusinessException } from 'src/common/exceptions';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
@@ -15,17 +16,12 @@ export class GeoService {
    * @returns WKT 格式的多边形字符串: POLYGON((lng1 lat1, lng2 lat2, ...))
    */
   toPolygonWKT(coordinates: number[][]): string {
-    if (!coordinates || coordinates.length < 3) {
-      throw new Error('多边形必须至少包含 3 个点');
-    }
-    // 确保多边形闭合 (第一个点必须等于最后一个点)
-    const first = coordinates[0];
-    const last = coordinates[coordinates.length - 1];
-    if (first[0] !== last[0] || first[1] !== last[1]) {
-      coordinates.push(first);
-    }
+    BusinessException.throwIf(!Array.isArray(coordinates), '围栏坐标不能为空');
+    BusinessException.throwIf(coordinates.length < 3, '多边形必须至少包含 3 个点');
 
-    const points = coordinates.map((p) => `${p[0]} ${p[1]}`).join(',');
+    const normalized = coordinates.map((point, index) => this.normalizePoint(point, index));
+    const closedCoordinates = this.ensurePolygonClosed(normalized);
+    const points = closedCoordinates.map((point) => `${point[0]} ${point[1]}`).join(',');
     return `POLYGON((${points}))`;
   }
 
@@ -47,7 +43,11 @@ export class GeoService {
       SELECT s.station_id as "stationId", s.name, s.tenant_id as "tenantId"
       FROM sys_geo_fence f
       JOIN sys_station s ON f.station_id = s.station_id
-      WHERE ST_Contains(f.geom, ST_GeomFromText(${pointWKT}, 4326))
+      JOIN sys_tenant t ON s.tenant_id = t.tenant_id
+      WHERE s.status = '0'
+        AND t.status = '0'
+        AND t.del_flag = '0'
+        AND ST_Contains(f.geom, ST_GeomFromText(${pointWKT}, 4326))
       LIMIT 1;
     `;
 
@@ -82,5 +82,32 @@ export class GeoService {
       return result[0].distance;
     }
     return 0;
+  }
+
+  private normalizePoint(point: number[], index: number): [number, number] {
+    BusinessException.throwIf(!Array.isArray(point) || point.length < 2, `围栏坐标第 ${index + 1} 个点格式错误`);
+
+    const lng = Number(point[0]);
+    const lat = Number(point[1]);
+
+    BusinessException.throwIf(
+      Number.isNaN(lng) || Number.isNaN(lat),
+      `围栏坐标第 ${index + 1} 个点不是有效数字`,
+    );
+    BusinessException.throwIf(lng < -180 || lng > 180, `围栏坐标第 ${index + 1} 个点经度超出范围`);
+    BusinessException.throwIf(lat < -90 || lat > 90, `围栏坐标第 ${index + 1} 个点纬度超出范围`);
+
+    return [lng, lat];
+  }
+
+  private ensurePolygonClosed(coordinates: [number, number][]): [number, number][] {
+    const first = coordinates[0];
+    const last = coordinates[coordinates.length - 1];
+
+    if (first[0] === last[0] && first[1] === last[1]) {
+      return coordinates;
+    }
+
+    return [...coordinates, first];
   }
 }

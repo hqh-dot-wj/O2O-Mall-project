@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GeoService } from './geo.service';
+import { BusinessException } from 'src/common/exceptions';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 describe('GeoService', () => {
@@ -31,12 +32,19 @@ describe('GeoService', () => {
 
   describe('toPolygonWKT', () => {
     it('should throw error if less than 3 points', () => {
-      expect(() =>
+      const act = () =>
         service.toPolygonWKT([
           [1, 2],
           [2, 3],
-        ]),
-      ).toThrow('多边形必须至少包含 3 个点');
+        ]);
+
+      expect(act).toThrow(BusinessException);
+      try {
+        act();
+      } catch (error) {
+        const response = (error as any).getResponse();
+        expect(response.msg).toBe('多边形必须至少包含 3 个点');
+      }
     });
 
     it('should close the polygon if not closed', () => {
@@ -48,6 +56,12 @@ describe('GeoService', () => {
       ];
       const wkt = service.toPolygonWKT(coords);
       expect(wkt).toBe('POLYGON((100 0,101 0,101 1,100 1,100 0))');
+      expect(coords).toEqual([
+        [100, 0],
+        [101, 0],
+        [101, 1],
+        [100, 1],
+      ]);
     });
 
     it('should handle already closed polygon', () => {
@@ -60,6 +74,40 @@ describe('GeoService', () => {
       ];
       const wkt = service.toPolygonWKT(coords);
       expect(wkt).toBe('POLYGON((100 0,101 0,101 1,100 1,100 0))');
+    });
+
+    it('should throw error when longitude is out of range', () => {
+      const act = () =>
+        service.toPolygonWKT([
+          [200, 30],
+          [121, 31],
+          [122, 30],
+        ]);
+
+      expect(act).toThrow(BusinessException);
+      try {
+        act();
+      } catch (error) {
+        const response = (error as any).getResponse();
+        expect(response.msg).toContain('经度超出范围');
+      }
+    });
+
+    it('should throw error when point format is invalid', () => {
+      const act = () =>
+        service.toPolygonWKT([
+          [120, 30],
+          [121] as any,
+          [122, 30],
+        ]);
+
+      expect(act).toThrow(BusinessException);
+      try {
+        act();
+      } catch (error) {
+        const response = (error as any).getResponse();
+        expect(response.msg).toContain('点格式错误');
+      }
     });
   });
 

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RegionService } from './region.service';
 import { RegionRepository } from './region.repository';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -19,6 +20,11 @@ describe('RegionService', () => {
     findById: jest.fn(),
   };
 
+  const mockRedisService = {
+    tryLock: jest.fn(),
+    unlock: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,6 +32,10 @@ describe('RegionService', () => {
         {
           provide: RegionRepository,
           useValue: mockRepo,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();
@@ -78,6 +88,28 @@ describe('RegionService', () => {
       expect(tree[0].children.length).toBe(1);
       expect(tree[0].children[0].code).toBe('1101');
       expect(tree[1].code).toBe('12');
+    });
+  });
+
+  describe('seedRegions', () => {
+    it('should skip seeding when lock is not acquired', async () => {
+      mockRedisService.tryLock.mockResolvedValue(false);
+
+      await service.seedRegions();
+
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+      expect(mockRedisService.unlock).not.toHaveBeenCalled();
+    });
+
+    it('should release lock in finally when file is missing', async () => {
+      mockRedisService.tryLock.mockResolvedValue(true);
+      mockRedisService.unlock.mockResolvedValue(1);
+      mockRepo.count.mockResolvedValue(0);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      await service.seedRegions();
+
+      expect(mockRedisService.unlock).toHaveBeenCalled();
     });
   });
 

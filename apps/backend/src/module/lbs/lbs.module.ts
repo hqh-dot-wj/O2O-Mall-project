@@ -6,9 +6,10 @@ import { StationService } from './station/station.service';
 import { StationController } from './station/station.controller';
 import { RegionRepository } from './region/region.repository';
 import { StationRepository } from './station/station.repository';
+import { RedisModule } from 'src/module/common/redis/redis.module';
 
 @Module({
-  imports: [],
+  imports: [RedisModule],
   controllers: [RegionController, StationController],
   providers: [GeoService, RegionService, StationService, RegionRepository, StationRepository],
   exports: [GeoService, RegionService, StationService], // Export GeoService for use in other modules if needed

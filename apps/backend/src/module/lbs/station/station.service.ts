@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { BusinessException } from 'src/common/exceptions';
 import { GeoService } from '../geo/geo.service';
 import { StationRepository } from './station.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
@@ -22,54 +23,25 @@ export class StationService {
    */
   @Transactional()
   async create(data: CreateStationDto) {
-    const { tenantId, name, address, location, fence } = data as any; // DTO has location object, but raw data might be flattened or different.
-    // Wait, DTO definition: location: StationPointDto {lng, lat}.
-    // Schema: SysStation { latitude, longitude }.
-    // Need mapping.
+    const tenantId = (data as any).tenantId;
+    const lat = data.location?.lat ?? (data as any).latitude;
+    const lng = data.location?.lng ?? (data as any).longitude;
 
-    // Check if input data matches DTO structure (nested) or flat structure from previous implementation?
-    // Previous implementation: const { tenantId, name, address, latitude, longitude, fence } = data;
-    // We should assume data comes from Controller validated DTO? I'll assume flat-ish usage or handle mapping.
-    // The previous code destructured latitude/longitude.
-    // If I use CreateStationDto, it has `location: { lng, lat }`.
-    // I will support both or map DTO to Entity.
-
-    // Mapping DTO to Entity data
-    // If data is CreateStationDto:
-    let lat = data.location?.lat;
-    let lng = data.location?.lng;
-
-    // If legacy call passes flat data (not using DTO class instance strictly?):
-    if (!lat && (data as any).latitude) lat = (data as any).latitude;
-    if (!lng && (data as any).longitude) lng = (data as any).longitude;
+    BusinessException.throwIf(!tenantId, 'tenantId 不能为空');
+    BusinessException.throwIf(lat === undefined || lat === null, '站点纬度不能为空');
+    BusinessException.throwIf(lng === undefined || lng === null, '站点经度不能为空');
 
     const station = await this.repo.create({
-      tenantId: (data as any).tenantId, // tenantId usually from context, but previous code took it from data.
+      tenantId,
       name: data.name,
       address: data.address,
       latitude: lat,
       longitude: lng,
     } as any);
 
-    // 2. 如果提供了围栏数据，则同步创建空间地理围栏记录
-    if (fence && fence.points && fence.points.length > 0) {
-      // DTO: points: [{lat, lng}, ...]
-      // GeoService.toPolygonWKT expects [[lng, lat], ...] array (coordinates).
-      // Need transformation.
-      const coordinates = fence.points.map((p: any) => [p.lng, p.lat]);
-      const polygonCoords = [coordinates]; // Ring 1
-
-      const wkt = this.geoService.toPolygonWKT(polygonCoords);
-      await this.repo.createFenceWithGeom(station.stationId, 'SERVICE', wkt);
-    } else if ((data as any).fence && (data as any).fence.coordinates) {
-      // Legacy support for raw coordinates if passed
-      // Previous code: fence.coordinates
-      // ... logic ...
-      let polygonCoords = (data as any).fence.coordinates;
-      if (Array.isArray(polygonCoords[0]) && Array.isArray(polygonCoords[0][0])) {
-        polygonCoords = polygonCoords[0];
-      }
-      const wkt = this.geoService.toPolygonWKT(polygonCoords);
+    const ringCoordinates = this.extractFenceRingCoordinates(data);
+    if (ringCoordinates.length > 0) {
+      const wkt = this.geoService.toPolygonWKT(ringCoordinates);
       await this.repo.createFenceWithGeom(station.stationId, 'SERVICE', wkt);
     }
 
@@ -150,5 +122,23 @@ export class StationService {
     }
 
     return station;
+  }
+
+  private extractFenceRingCoordinates(data: CreateStationDto): number[][] {
+    const dtoPoints = data.fence?.points;
+    if (Array.isArray(dtoPoints) && dtoPoints.length > 0) {
+      return dtoPoints.map((point) => [point.lng, point.lat]);
+    }
+
+    const legacyCoordinates = (data as any).fence?.coordinates;
+    if (!Array.isArray(legacyCoordinates) || legacyCoordinates.length === 0) {
+      return [];
+    }
+
+    if (Array.isArray(legacyCoordinates[0]) && Array.isArray(legacyCoordinates[0][0])) {
+      return legacyCoordinates[0] as number[][];
+    }
+
+    return legacyCoordinates as number[][];
   }
 }

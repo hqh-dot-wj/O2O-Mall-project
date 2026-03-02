@@ -135,20 +135,20 @@ alwaysApply: false
 
 ### 9.2 后端文档目录结构（apps/backend/docs/）
 
-| 文档类型 | 目录                                | 示例 |
-| -------- | ----------------------------------- | ---- |
+| 文档类型 | 目录                                | 示例                                                         |
+| -------- | ----------------------------------- | ------------------------------------------------------------ |
 | 需求文档 | `apps/backend/docs/requirements/`   | `requirements/finance/commission/commission-requirements.md` |
-| 设计文档 | `apps/backend/docs/design/`          | `design/finance/commission/commission-design.md` |
-| 指南文档 | `apps/backend/docs/guides/`         | `guides/quick-start.md` |
-| 任务文档 | `apps/backend/docs/tasks/`          | `tasks/architecture-optimization.md` |
-| 计划文档 | `apps/backend/docs/plans/`          | `plans/performance-optimization-plan.md` |
-| 改进文档 | `apps/backend/docs/improvements/`   | `improvements/p1-eliminate-finance-any-types.md` |
-| 重构文档 | `apps/backend/docs/refactoring/`    | `refactoring/commission-service-refactoring-summary.md` |
-| 总结文档 | `apps/backend/docs/summaries/`      | `summaries/performance-optimization-summary.md` |
-| 参考文档 | `apps/backend/docs/references/`     | `references/api-reference.md` |
-| 最佳实践 | `apps/backend/docs/best-practices/` | `best-practices/logging-best-practices.md` |
-| 测试文档 | `apps/backend/docs/testing/`        | `testing/e2e-test-guide.md` |
-| 归档文档 | `apps/backend/docs/archive/`         | `archive/marketing-reset-guide.md` |
+| 设计文档 | `apps/backend/docs/design/`         | `design/finance/commission/commission-design.md`             |
+| 指南文档 | `apps/backend/docs/guides/`         | `guides/quick-start.md`                                      |
+| 任务文档 | `apps/backend/docs/tasks/`          | `tasks/architecture-optimization.md`                         |
+| 计划文档 | `apps/backend/docs/plans/`          | `plans/performance-optimization-plan.md`                     |
+| 改进文档 | `apps/backend/docs/improvements/`   | `improvements/p1-eliminate-finance-any-types.md`             |
+| 重构文档 | `apps/backend/docs/refactoring/`    | `refactoring/commission-service-refactoring-summary.md`      |
+| 总结文档 | `apps/backend/docs/summaries/`      | `summaries/performance-optimization-summary.md`              |
+| 参考文档 | `apps/backend/docs/references/`     | `references/api-reference.md`                                |
+| 最佳实践 | `apps/backend/docs/best-practices/` | `best-practices/logging-best-practices.md`                   |
+| 测试文档 | `apps/backend/docs/testing/`        | `testing/e2e-test-guide.md`                                  |
+| 归档文档 | `apps/backend/docs/archive/`        | `archive/marketing-reset-guide.md`                           |
 
 **模块对齐**：文档路径与 `src/module/` 同构，如 `src/module/finance/commission/` → `docs/requirements/finance/commission/`。
 
@@ -258,7 +258,7 @@ alwaysApply: false
 
 ### 12.1 第一步：整体架构评估文档
 
-**文档名称**：`{module}-overall-analysis.md`  
+**文档名称**：`{module}-overall-analysis.md`
 **存放位置**：`apps/backend/docs/requirements/{module}/{module}-overall-analysis.md`
 
 **文档结构**（10 章节）：概述、主流平台对标、业务场景覆盖度、缺失模块分析（P0-P3）、架构完整性、演进路线图、资源评估、风险与挑战、总结与建议、附录。

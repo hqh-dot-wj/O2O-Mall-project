@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SoftDeleteRepository } from 'src/common/repository/base.repository';
-import { SysStation, Prisma, SysGeoFence } from '@prisma/client';
+import { BaseRepository } from 'src/common/repository/base.repository';
+import { SysStation, SysGeoFence } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { CreateStationDto, UpdateStationDto } from './dto/station.dto';
 
 @Injectable()
-export class StationRepository extends SoftDeleteRepository<SysStation, CreateStationDto, UpdateStationDto> {
+export class StationRepository extends BaseRepository<SysStation, CreateStationDto, UpdateStationDto> {
   constructor(prisma: PrismaService, cls: ClsService) {
     super(prisma, cls, 'sysStation', 'stationId');
   }

@@ -1,14 +1,21 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getErrorMessage } from 'src/common/utils/error';
+import { RedisService } from 'src/module/common/redis/redis.service';
 import { RegionRepository } from './region.repository';
 import { SystemCacheable } from 'src/module/admin/common/decorators/system-cache.decorator';
 
 @Injectable()
 export class RegionService implements OnModuleInit {
   private readonly logger = new Logger(RegionService.name);
+  private readonly seedLockKey = 'lbs:region:seed:lock';
+  private readonly seedLockTtlMs = 60000;
 
-  constructor(private readonly repo: RegionRepository) {}
+  constructor(
+    private readonly repo: RegionRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async onModuleInit() {
     // Check if regions exist, if not, seed them
@@ -20,49 +27,66 @@ export class RegionService implements OnModuleInit {
   }
 
   async seedRegions() {
-    // Standardized path: apps/backend/src/assets/json/pcas-code.json
-    // In dev (src context): ../../assets/json/pcas-code.json (from region module)
-    // In prod (dist context): same relative path usually works if assets are copied, or use absolute path strategy
-    const jsonPath = path.resolve(process.cwd(), 'src/assets/json/pcas-code.json');
-
-    if (!fs.existsSync(jsonPath)) {
-      this.logger.warn(`Region JSON file not found at [${jsonPath}]. Skipping seed.`);
+    const locked = await this.redisService.tryLock(this.seedLockKey, this.seedLockTtlMs);
+    if (!locked) {
+      this.logger.log('Region seed lock is held by another instance, skip seeding.');
       return;
     }
 
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-    this.logger.log('Read JSON data, starting seeding...');
-
-    const flattenData: any[] = [];
-    const traverse = (node: any, parentId: string | null = null, level: number = 1) => {
-      flattenData.push({
-        code: node.code,
-        name: node.name,
-        parentId: parentId,
-        level: level,
-        latitude: node.latitude || node.lat || null,
-        longitude: node.longitude || node.lng || null,
-      });
-
-      if (node.children && node.children.length > 0) {
-        node.children.forEach((child: any) => traverse(child, node.code, level + 1));
+    try {
+      const existsCount = await this.repo.count();
+      if (existsCount > 0) {
+        this.logger.log('Region data already exists, skip seeding.');
+        return;
       }
-    };
 
-    data.forEach((province: any) => traverse(province));
+    // Standardized path: apps/backend/src/assets/json/pcas-code.json
+    // In dev (src context): ../../assets/json/pcas-code.json (from region module)
+    // In prod (dist context): same relative path usually works if assets are copied, or use absolute path strategy
+      const jsonPath = path.resolve(process.cwd(), 'src/assets/json/pcas-code.json');
 
-    this.logger.log(`Prepared ${flattenData.length} region records. Inserting in batches...`);
+      if (!fs.existsSync(jsonPath)) {
+        this.logger.warn(`Region JSON file not found at [${jsonPath}]. Skipping seed.`);
+        return;
+      }
 
-    // Use createMany from BaseRepository (if enabled/supported) or raw Prisma
-    // Since RegionRepository extends BaseRepository<SysRegion>, and base has createMany
-    const BATCH_SIZE = 1000;
-    for (let i = 0; i < flattenData.length; i += BATCH_SIZE) {
-      const batch = flattenData.slice(i, i + BATCH_SIZE);
-      // Note: skipDuplicates is important
-      await this.repo.createMany(batch);
+      const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      this.logger.log('Read JSON data, starting seeding...');
+
+      const flattenData: any[] = [];
+      const traverse = (node: any, parentId: string | null = null, level: number = 1) => {
+        flattenData.push({
+          code: node.code,
+          name: node.name,
+          parentId: parentId,
+          level: level,
+          latitude: node.latitude || node.lat || null,
+          longitude: node.longitude || node.lng || null,
+        });
+
+        if (node.children && node.children.length > 0) {
+          node.children.forEach((child: any) => traverse(child, node.code, level + 1));
+        }
+      };
+
+      data.forEach((province: any) => traverse(province));
+
+      this.logger.log(`Prepared ${flattenData.length} region records. Inserting in batches...`);
+
+      const BATCH_SIZE = 1000;
+      for (let i = 0; i < flattenData.length; i += BATCH_SIZE) {
+        const batch = flattenData.slice(i, i + BATCH_SIZE);
+        await this.repo.createMany(batch);
+      }
+
+      this.logger.log('Region seeding completed.');
+    } finally {
+      try {
+        await this.redisService.unlock(this.seedLockKey);
+      } catch (error) {
+        this.logger.warn(`Region seed lock release failed: ${getErrorMessage(error)}`);
+      }
     }
-
-    this.logger.log('Region seeding completed.');
   }
 
   /**

@@ -1,6 +1,6 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsNumber, ValidateNested, IsArray } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PageQueryDto } from 'src/common/dto/base.dto';
 
 export class StationPointDto {
@@ -71,4 +71,23 @@ export class ListStationDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   name?: string;
+}
+
+export class ListStationQueryDto {
+  @ApiProperty({ description: '租户ID', required: false })
+  @IsOptional()
+  @IsString()
+  tenantId?: string;
+}
+
+export class CheckRegionDto {
+  @ApiProperty({ description: '纬度' })
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  lat: number;
+
+  @ApiProperty({ description: '经度' })
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  lng: number;
 }

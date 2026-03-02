@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GeoService } from 'src/module/lbs/geo/geo.service';
-import { Result, ResponseCode } from 'src/common/response';
+import { ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { MatchTenantVo, NearbyTenantVo } from './vo';
 
@@ -33,6 +33,9 @@ export class ClientLocationService {
 
     if (!tenant) {
       throw new BusinessException(ResponseCode.DATA_NOT_FOUND, '服务商家信息不存在');
+    }
+    if (tenant.status !== 'NORMAL') {
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '服务商家暂不可用');
     }
 
     return {
