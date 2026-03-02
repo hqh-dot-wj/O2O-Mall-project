@@ -22,15 +22,15 @@ alwaysApply: false
 ### 第 0 步：架构审查（Architecture Review）⭐ 新增
 
 > 需求文档可能存在遗漏、过时、或未充分考虑架构影响的问题。
-> 在提取任务之前，必须先用 `architecture-meta-model.md` 的四棱镜对需求文档进行审查。
+> 在提取任务之前，必须先用架构决策框架（`architecture-meta-model.mdc` 原则 + `architecture-checklist.mdc` 模板）对需求文档进行审查。
 
 #### 0.1 相态判断
 
-确认需求涉及的模块当前处于什么相态（参照 `architecture-meta-model.md §0`）：
+确认需求涉及的模块当前处于什么相态（参照 `architecture-playbook.mdc §1`）：
 
-- 查阅 §0.6 的相态判断表，确认模块相态是否仍然准确
+- 查阅 playbook 的相态判断表，确认模块相态是否仍然准确
 - 如果需求文档的编写时间距今 > 1 个月，或模块发生了重大变化，触发相态重评估
-- 输出：`当前相态：探索态 / 成长态 / 运营态`，以及对应的四棱镜权重
+- 输出：`当前相态：探索态 / 成长态 / 运营态`，以及对应的四棱镜权重（见 `architecture-meta-model.mdc §1.3`）
 
 #### 0.2 四棱镜快速扫描
 
