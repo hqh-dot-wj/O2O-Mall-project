@@ -1,44 +1,21 @@
 ---
-inclusion: manual
+inclusion: fileMatch
+fileMatchPattern: '{**/*.spec.ts,**/*.spec.tsx,**/*.spec.vue,**/*.test.ts,**/*.test.tsx,**/*.test.vue,**/*.e2e-spec.ts,**/test/**/*.ts,**/e2e/**/*.ts}'
 ---
 
 # 测试最佳实践指南
 
-> 手动引用: `#testing-guide`。编写测试时使用。
+> 手动引用: `#testing-guide`
 
-本文档整合项目测试规范和 Anthony Fu 的测试 Skills。
+详细测试规范已整合到 `testing.md` 中（`#testing` 引用）。
 
-## 官方测试最佳实践（Anthony Fu Skills）
-
-### Vitest 单元测试
-
-- 测试组织和命名
-- Mock 策略
-- 快照测试
-- 覆盖率配置
-
-### Vue 组件测试
-
-- 组件挂载和渲染
-- 用户交互模拟
-- 异步测试
-- Composables 测试
-
----
-
-**注意**: 需要先安装：
-
-```bash
-pnpx skills add antfu/skills --skill='vitest,vue-testing-best-practices'
-```
-
-## 项目测试规范
-
-详细的测试规范请参考 `testing.md`：
+## 快速参考
 
 - 单元测试: Vitest + @vue/test-utils
 - E2E 测试: Playwright
-- 测试文件位置: `src/**/*.spec.{ts,tsx,vue}`, `e2e/*.spec.ts`
+- 测试文件: `*.spec.{ts,tsx,vue}`（与源文件同目录）
+- 覆盖: Happy Path + Edge Cases + Error Cases
+- 测试文件顶部: `// @ts-nocheck`
 
 ### 何时可以直接编写测试
 
@@ -52,3 +29,9 @@ pnpx skills add antfu/skills --skill='vitest,vue-testing-best-practices'
 - 强依赖环境的 E2E（登录态、权限）
 - 大范围/长流程 E2E
 - 性能/快照类测试
+
+## Anthony Fu Skills
+
+```bash
+pnpx skills add antfu/skills --skill='vitest,vue-testing-best-practices'
+```

@@ -6,7 +6,8 @@
 
 ```
 .kiro/steering/
-├── 00-core-principles.md          # Always (75 tokens) - 核心原则
+├── 00-core-principles.md          # Always - 核心原则
+├── commit-message.md              # Auto - Commit 规范（始终加载）
 │
 ├── [File Match - 自动触发]
 │   ├── admin-web-frontend.md      # apps/admin-web/src/**/*.{vue,ts,tsx}
@@ -17,86 +18,113 @@
 │   ├── build-tools.md             # **/vite.config.ts, **/uno.config.ts
 │   ├── vue-router-guide.md        # apps/admin-web/src/router/**/*
 │   ├── vue-best-practices.md      # apps/admin-web/src/**/*.{vue,ts,tsx}
-│   └── vue-ecosystem.md           # apps/admin-web/src/**/*.vue
+│   ├── vue-ecosystem.md           # apps/admin-web/src/**/*.vue
+│   │
+│   ├── testing.md                 # **/*.spec.*, **/*.test.*, **/e2e/**
+│   ├── testing-guide.md           # **/*.spec.*, **/*.test.*, **/e2e/**
+│   ├── process-testing.md         # apps/backend/**/*.ts, process-specs/**
+│   │
+│   ├── documentation.md           # docs/**/*.md, **/docs/**/*.md
+│   ├── task-execution-workflow.md  # docs/tasks/**, docs/requirements/**
+│   ├── architecture-meta-model.md # docs/design/**, *.module.ts, module/**
+│   ├── architecture-checklist.md  # docs/design/**, docs/requirements/**
+│   ├── architecture-playbook.md   # docs/design/**, docs/tasks/**
+│   │
+│   ├── backend-p2c.md             # apps/backend/**/*.ts, backend/docs/**
+│   ├── backend-third-party.md     # apps/backend/**/adapters/**, ports/**
+│   ├── miniapp-d2c.md             # apps/miniapp-client/**/*.vue
+│   ├── miniapp-p2c.md             # apps/miniapp-client/**/*.{vue,ts}
+│   ├── miniapp-ui-spec.md         # apps/miniapp-client/**/*.{vue,scss,ts}
+│   └── notion-workspace.md        # **/*notion*.md
 │
 └── [Manual - 手动引用]
-    ├── architecture-meta-model.md # #architecture
-    ├── testing.md                 # #testing
-    ├── testing-guide.md           # #testing-guide
     ├── monorepo-tools.md          # #monorepo-tools
-    ├── documentation.md           # #doc
     ├── documentation-workflow.md  # #doc-workflow
     └── prompt-templates.md        # #prompts
 ```
 
 ## 🎯 触发机制
 
-### Always Included（始终加载）
+### Always / Auto（始终加载）
 
-- `00-core-principles.md` - 仅 ~75 tokens，包含最核心的 5 条原则
+- `00-core-principles.md` - 核心原则（~75 tokens）
+- `commit-message.md` - Commit 规范（生成 commit 时始终需要）
 
-### File Match（文件匹配触发）
+### File Match（文件匹配自动触发）
 
-编辑匹配路径的文件时自动加载：
+编辑匹配路径的文件时自动加载，与 `.cursor/rules` 的 globs 对齐：
 
-| 文件                  | 触发条件            | 用途                |
-| --------------------- | ------------------- | ------------------- |
-| admin-web-frontend.md | 编辑 admin-web 源码 | 前端开发规范        |
-| backend-nestjs.md     | 编辑 backend 源码   | 后端开发规范        |
-| miniapp-client.md     | 编辑小程序源码      | 小程序开发规范      |
-| monorepo.md           | 编辑 monorepo 配置  | Monorepo 管理规范   |
-| build-tools.md        | 编辑构建配置        | Vite/UnoCSS 配置    |
-| vue-router-guide.md   | 编辑路由文件        | Vue Router 最佳实践 |
-| vue-best-practices.md | 编辑 Vue 文件       | Vue 3 最佳实践      |
-| vue-ecosystem.md      | 编辑 Vue 组件       | Vue/Pinia/VueUse    |
+| 文件                       | 触发条件               | 用途                |
+| -------------------------- | ---------------------- | ------------------- |
+| admin-web-frontend.md      | 编辑 admin-web 源码    | 前端开发规范        |
+| backend-nestjs.md          | 编辑 backend 源码      | 后端开发规范        |
+| miniapp-client.md          | 编辑小程序源码         | 小程序开发规范      |
+| monorepo.md                | 编辑 monorepo 配置     | Monorepo 管理规范   |
+| build-tools.md             | 编辑构建配置           | Vite/UnoCSS 配置    |
+| vue-router-guide.md        | 编辑路由文件           | Vue Router 最佳实践 |
+| vue-best-practices.md      | 编辑 Vue 文件          | Vue 3 最佳实践      |
+| vue-ecosystem.md           | 编辑 Vue 组件          | Vue/Pinia/VueUse    |
+| windows-dev-environment.md | 编辑脚本文件           | Windows 命令规范    |
+| testing.md                 | 编辑测试文件           | 测试规范            |
+| testing-guide.md           | 编辑测试文件           | 测试最佳实践        |
+| process-testing.md         | 编辑后端代码/流程规约  | 流程规约驱动测试    |
+| documentation.md           | 编辑文档               | 文档编写规范        |
+| task-execution-workflow.md | 编辑需求/任务/改进文档 | 任务执行工作流      |
+| architecture-meta-model.md | 编辑设计文档/模块文件  | 架构决策元模型      |
+| architecture-checklist.md  | 编辑设计/需求文档      | 架构决策检查清单    |
+| architecture-playbook.md   | 编辑设计/任务文档      | 架构决策项目落地    |
+| backend-p2c.md             | 编辑后端代码/文档      | 后端 P2C 生成规则   |
+| backend-third-party.md     | 编辑 adapter/port 文件 | 第三方 API 对接规范 |
+| miniapp-d2c.md             | 编辑小程序 Vue 文件    | D2C 设计稿到代码    |
+| miniapp-p2c.md             | 编辑小程序代码         | P2C 需求到代码      |
+| miniapp-ui-spec.md         | 编辑小程序 UI 文件     | 小程序 UI/UX 规范   |
+| notion-workspace.md        | 编辑 notion 相关文档   | Notion 工作区规范   |
 
-### Manual（手动引用）
+### Manual（手动引用，仅 3 个）
 
-在聊天中使用 `#文件名` 引用：
+仅保留无法通过文件匹配自动触发的通用工具类文档：
 
-| 引用方式          | 文件                       | 用途                  |
-| ----------------- | -------------------------- | --------------------- |
-| `#architecture`   | architecture-meta-model.md | 架构设计和重构        |
-| `#testing`        | testing.md                 | 测试规范（详细版）    |
-| `#testing-guide`  | testing-guide.md           | 测试最佳实践 + Skills |
-| `#monorepo-tools` | monorepo-tools.md          | pnpm/Turborepo 工具链 |
-| `#doc`            | documentation.md           | 文档编写规范          |
-| `#doc-workflow`   | documentation-workflow.md  | 文档工作流            |
-| `#prompts`        | prompt-templates.md        | 提示词模板            |
+| 引用方式          | 文件                      | 用途                  |
+| ----------------- | ------------------------- | --------------------- |
+| `#monorepo-tools` | monorepo-tools.md         | pnpm/Turborepo 工具链 |
+| `#doc-workflow`   | documentation-workflow.md | 文档编写工作流        |
+| `#prompts`        | prompt-templates.md       | 提示词模板            |
 
-## 📊 Context 消耗对比
-
-### 改造前（最坏情况）
+## 📊 与 Cursor Rules 对应关系
 
 ```
-开启新对话: ~8,000 tokens (所有 steering 文件)
-```
-
-### 改造后
-
-```
-开启新对话:        ~75 tokens (仅核心原则)
-编辑 Vue 文件:   ~3,000 tokens (前端规范 + Vue ecosystem)
-编辑后端文件:   ~1,500 tokens (后端规范)
-编辑配置文件:   ~2,000 tokens (monorepo + 构建工具)
-写测试 (#testing-guide): ~2,500 tokens (测试规范 + Skills)
+.kiro/steering/                      .cursor/rules/
+├── 00-core-principles.md     ──→    core-principles.mdc (alwaysApply)
+├── commit-message.md         ──→    commit-message.mdc (alwaysApply)
+├── admin-web-frontend.md     ──→    admin-web.mdc
+├── backend-nestjs.md         ──→    backend.mdc
+├── miniapp-client.md         ──→    miniapp-client.mdc
+├── monorepo.md               ──→    monorepo.mdc
+├── testing.md                ──→    testing.mdc
+├── documentation.md          ──→    documentation.mdc
+├── architecture-meta-model.md ──→   architecture-meta-model.mdc
+├── architecture-checklist.md  ──→   architecture-checklist.mdc
+├── architecture-playbook.md   ──→   architecture-playbook.mdc
+├── task-execution-workflow.md ──→   task-execution-workflow.mdc
+├── backend-p2c.md             ──→   backend-p2c.mdc
+├── backend-third-party.md     ──→   backend-third-party.mdc
+├── miniapp-d2c.md             ──→   miniapp-d2c.mdc
+├── miniapp-p2c.md             ──→   miniapp-p2c.mdc
+├── miniapp-ui-spec.md         ──→   miniapp-ui-spec.mdc
+├── notion-workspace.md        ──→   notion-workspace.mdc
+├── process-testing.md         ──→   process-testing.mdc
+├── vue-best-practices.md            （admin-web.mdc 覆盖）
+├── vue-ecosystem.md                 （admin-web.mdc 覆盖）
+├── vue-router-guide.md              （admin-web.mdc 覆盖）
+├── testing-guide.md                 （testing.mdc 覆盖）
+├── monorepo-tools.md                （monorepo.mdc 覆盖）
+├── windows-dev-environment.md       （无独立 cursor rule）
+├── build-tools.md                   （无独立 cursor rule）
+├── documentation-workflow.md        （无独立 cursor rule）
+└── prompt-templates.md              （无独立 cursor rule）
 ```
 
 ## 🔧 Anthony Fu Skills 集成
-
-以下文件引用了 Anthony Fu 的官方 Skills（需要先安装）：
-
-### 安装命令
-
-```bash
-# 核心技术栈（File Match 触发）
-pnpx skills add antfu/skills --skill='vue,pinia,vite,unocss,vueuse-functions,vue-router-best-practices,vue-best-practices'
-
-# 工具链（Manual 触发）
-pnpx skills add antfu/skills --skill='pnpm,turborepo,vitest,vue-testing-best-practices'
-```
-
-### Skills 映射
 
 | Steering 文件         | 引用的 Skills                      |
 | --------------------- | ---------------------------------- |
@@ -107,28 +135,16 @@ pnpx skills add antfu/skills --skill='pnpm,turborepo,vitest,vue-testing-best-pra
 | testing-guide.md      | vitest, vue-testing-best-practices |
 | monorepo-tools.md     | pnpm, turborepo                    |
 
-## 💡 使用建议
-
-1. **日常开发**: 只需关注 `00-core-principles.md`，其他规范会自动加载
-2. **架构设计**: 手动引用 `#architecture`
-3. **编写测试**: 手动引用 `#testing-guide`
-4. **配置工具**: 编辑配置文件时自动加载对应指南
-5. **查看文档**: 手动引用 `#doc` 或 `#doc-workflow`
+```bash
+pnpx skills add antfu/skills --skill='vue,pinia,vite,unocss,vueuse-functions,vue-router-best-practices,vue-best-practices'
+pnpx skills add antfu/skills --skill='pnpm,turborepo,vitest,vue-testing-best-practices'
+```
 
 ## 🔄 维护规则
 
-1. **00-core-principles.md**: 保持 < 50 行，只放最核心的原则
-2. **File Match 文件**: 可以详细，但避免重复内容
-3. **Manual 文件**: 用于特定场景，不常用但很重要的内容
-4. **新增规范**: 优先考虑 File Match，避免 Always Included
+1. `.cursor/rules` 为权威来源，变更后同步到 `.kiro/steering`
+2. cursor 的 `globs` 对应 kiro 的 `fileMatchPattern`
+3. cursor 的 `alwaysApply: true` 对应 kiro 的 `inclusion: auto`
+4. 新增规范优先 fileMatch，避免 manual
 
-## ✅ 验证
-
-检查配置是否生效：
-
-```bash
-# 1. 开启新对话，应该只看到 00-core-principles.md
-# 2. 编辑 apps/admin-web/src/views/test.vue，应该看到 admin-web-frontend.md + vue-*.md
-# 3. 编辑 apps/backend/src/test.ts，应该看到 backend-nestjs.md
-# 4. 输入 #testing，应该看到 testing.md
-```
+**最后同步**：2026-03-03

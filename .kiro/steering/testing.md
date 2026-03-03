@@ -1,28 +1,50 @@
 ---
-inclusion: manual
+inclusion: fileMatch
+fileMatchPattern: '{**/*.spec.ts,**/*.spec.tsx,**/*.spec.vue,**/*.test.ts,**/*.test.tsx,**/*.test.vue,**/*.e2e-spec.ts,**/test/**/*.ts,**/e2e/**/*.ts}'
 ---
 
 # 测试规范
 
-> 手动引用: `#testing`。编写测试时使用。
+跨应用（backend、admin-web 等）的测试命名、目录结构、覆盖率、Mock 与 Fixture 约定。
 
-跨应用（backend、admin-web 等）的测试命名、目录结构、覆盖率、Mock 与 Fixture 约定。各应用具体测试框架（Jest / Vitest）以对应规则为准。
+## 0. 测试类型与必要性
 
----
+### 0.1 项目已具备的测试
+
+| 类型     | 工具                               | 说明                                                  |
+| -------- | ---------------------------------- | ----------------------------------------------------- |
+| 单元测试 | Jest (backend)、Vitest (admin-web) | `*.spec.ts` 与源文件同目录                            |
+| 集成测试 | Jest                               | `test/integration/*.integration.spec.ts`              |
+| E2E 测试 | Jest e2e、Playwright               | Backend: `test/*.e2e-spec.ts`；Admin: `e2e/*.spec.ts` |
+| 静态分析 | ESLint、vue-tsc                    | `pnpm lint`、`pnpm typecheck`                         |
+
+### 0.2 必要性分级
+
+| 必要性   | 测试类型                                        | 说明                    |
+| -------- | ----------------------------------------------- | ----------------------- |
+| **必要** | 单元测试、集成测试、E2E 冒烟、ESLint、typecheck | CI 门禁，PR 必过        |
+| **建议** | 组件测试、关键流程 E2E                          | 核心业务/复杂组件优先补 |
+| **可选** | 快照、视觉回归、性能测试                        | 按需求引入              |
+
+### 0.3 对接完成必做
+
+| 完成内容                         | 必须执行                                                              |
+| -------------------------------- | --------------------------------------------------------------------- |
+| 新增/修改 API 接口               | 补充 `*.spec.ts`，运行 `pnpm test -- src/service/api/对应模块`        |
+| 新增/修改后端 Controller/Service | 补充 `*.spec.ts`，运行 `pnpm --filter @apps/backend test -- 对应路径` |
+| 新增页面或路由                   | 关键路由补充 E2E 冒烟                                                 |
+| 修改核心业务逻辑                 | 确保相关单测/集成测通过                                               |
 
 ## 1. 命名约定
 
-| 类型             | 命名                                 | 说明                     |
-| ---------------- | ------------------------------------ | ------------------------ |
-| 单元/组件        | `*.spec.ts`                          | 与源文件同目录           |
-| 集成             | `*.integration.spec.ts`              | 放在 `test/integration/` |
-| E2E (Jest)       | `*.e2e-spec.ts`                      | Backend                  |
-| E2E (Playwright) | `*.spec.ts`                          | Admin-Web，放 `e2e/`     |
-| 脚本式测试       | `*.flow.test.ts` 或 `scripts/xxx.ts` | 非 Jest 执行的独立脚本   |
+| 类型             | 命名                                           |
+| ---------------- | ---------------------------------------------- |
+| 单元/组件        | `*.spec.ts`（与源文件同目录）                  |
+| 集成             | `*.integration.spec.ts`（`test/integration/`） |
+| E2E (Jest)       | `*.e2e-spec.ts`                                |
+| E2E (Playwright) | `*.spec.ts`（`e2e/`）                          |
 
 **统一使用 `.spec.ts`**，避免 `.test.ts` 与 `.spec.ts` 混用。
-
----
 
 ## 2. 目录结构
 
@@ -34,146 +56,51 @@ inclusion: manual
 | Fixture   | `test/fixtures/`                                               |
 | 共享 Mock | `src/test-utils/mocks/` 或 `src/test/mocks/`                   |
 
----
-
 ## 3. Mock 规范
 
-### 3.1 类型安全的 Mock（推荐）
+### 3.1 类型安全的 Mock（推荐，Backend）
 
-Backend 提供了类型安全的测试辅助类型，位于 `src/common/types/test-helpers.types.ts`：
+Backend 提供类型安全测试辅助，位于 `src/common/types/test-helpers.types.ts`：
 
-**核心类型**：
-
-- `MockRepository<T>` - 类型安全的 Repository Mock
-- `MockService<T>` - 类型安全的 Service Mock
-- `PartialMock<T>` - 部分 Mock 类型
-- `TestPaginatedResult<T>` - 测试分页结果
-- `TestPrismaClient` - 测试 Prisma 客户端
-- `TestRedisClient` - 测试 Redis 客户端
-- `TestClsService` - 测试 CLS 服务
-
-**辅助函数**：
-
-- `createMockRepository<T>(methods)` - 创建 Mock Repository
-- `createMockService<T>(methods)` - 创建 Mock Service
-- `createTestPrismaClient()` - 创建测试 Prisma 客户端
-- `createTestRedisClient()` - 创建测试 Redis 客户端
-- `createTestClsService()` - 创建测试 CLS 服务
-- `expectAny` - 类型安全的 expect.any 替代
-
-**使用示例**：
-
-```typescript
-import { MockRepository, MockService, TestPaginatedResult } from 'src/common/types/test-helpers.types';
-
-describe('WithdrawalService', () => {
-  let service: WithdrawalService;
-  let withdrawalRepo: MockRepository<Pick<WithdrawalRepository, 'create' | 'findOne' | 'findPage'>>;
-  let walletService: MockService<Pick<WalletService, 'getOrCreateWallet' | 'freezeBalance'>>;
-
-  const mockWithdrawalRepo: MockRepository<Pick<WithdrawalRepository, 'create' | 'findOne' | 'findPage'>> = {
-    create: jest.fn(),
-    findOne: jest.fn(),
-    findPage: jest.fn(),
-  };
-
-  const mockWalletService: MockService<Pick<WalletService, 'getOrCreateWallet' | 'freezeBalance'>> = {
-    getOrCreateWallet: jest.fn(),
-    freezeBalance: jest.fn(),
-  };
-
-  // 使用类型安全的分页结果
-  it('应该返回列表', async () => {
-    interface WithdrawalListItem {
-      id: string;
-      memberId: string;
-      amount: Decimal;
-      status: WithdrawalStatus;
-    }
-
-    const mockResult: TestPaginatedResult<WithdrawalListItem> = {
-      rows: [],
-      total: 0,
-    };
-
-    mockWithdrawalRepo.findPage.mockResolvedValue(mockResult);
-    // ...
-  });
-
-  // 使用 expectAny
-  it('应该更新时间', async () => {
-    expect(mockRepo.update).toHaveBeenCalledWith('id1', {
-      status: 'APPROVED',
-      auditTime: expectAny.date(),
-    });
-  });
-});
-```
-
-**优势**：
-
-- 编译时类型检查，减少运行时错误
-- IDE 智能提示更准确
-- 避免 any 类型，提高代码质量
-- 统一的 Mock 创建方式
-
-**何时使用**：
-
-- ✅ 新编写的测试文件应使用类型安全的 Mock
-- ✅ 修改现有测试时可顺带改造
-- ⏸️ 现有测试不强制全部改造
+- **类型**：`MockRepository<T>`、`MockService<T>`、`PartialMock<T>`、`TestPaginatedResult<T>`、`TestPrismaClient`、`TestRedisClient`、`TestClsService`
+- **函数**：`createMockRepository<T>()`、`createMockService<T>()`、`createTestPrismaClient()`、`createTestRedisClient()`、`createTestClsService()`、`expectAny`
 
 ### 3.2 Backend (NestJS + Jest)
 
-- **共享 Mock**：优先从 `src/test-utils/mocks/` 导入 `createPrismaMock`、`createRedisMock`、`createClsMock`。
-- **类型安全 Mock**：优先使用 `src/common/types/test-helpers.types.ts` 中的类型和工具函数。
+- **共享 Mock**：优先从 `src/test-utils/mocks/` 导入。
 - **注入方式**：`{ provide: XxxService, useValue: mockXxx }`。
 - **清理**：`beforeEach` 中 `jest.clearAllMocks()`；有 `jest.spyOn` 时在 `afterEach` 中 `jest.restoreAllMocks()`。
 
 ### 3.3 Admin-Web (Vue + Vitest)
 
 - **全局 Mock**：在 `src/test/setup.ts` 中 mock `window.$message`、`$t`、路由、Pinia 等。
-- **组件 Mock**：`mount(Comp, { global: { mocks: { $t: vi.fn(), $message: { success: vi.fn() } } } })`。
 - **API Mock**：优先使用 `vi.mock('@/service/api/xxx')` 或 MSW。
-
-### 3.4 Mock 命名
-
-- 变量：`mockPrisma`、`mockRedis`、`mockCls`。
-- 工厂：`createPrismaMock()`、`createRedisMock()`、`createClsMock(tenantId?)`。
-
----
 
 ## 4. Fixture 规范
 
-### 4.1 放置位置
+- 位置：`apps/backend/test/fixtures/`，统一导出 `test/fixtures/index.ts`。
+- 工厂函数：`createTenantFixture()`、`createMemberFixture(opts?)`。
+- 支持 `opts` 部分覆盖默认值。
 
-- Backend：`apps/backend/test/fixtures/`。
-- 导出：`test/fixtures/index.ts` 统一导出。
+## 5. 新增功能测试要求（必做）
 
-### 4.2 工厂函数
+| 类型               | 最低要求                                               |
+| ------------------ | ------------------------------------------------------ |
+| Service 新方法     | 至少 2 个用例：主路径成功 + 异常/边界                  |
+| Controller 新端点  | 至少验证 `@RequirePermission` 装饰器存在且权限标识正确 |
+| Scheduler 定时任务 | 至少验证 Cron 元数据 + 调用对应 Service 方法           |
+| 批量操作           | 覆盖全部成功、部分失败两种场景                         |
 
-- 命名：`createTenantFixture()`、`createMemberFixture(opts?)`、`createOrderFixture(opts?)`。
-- 返回：符合 Prisma 类型的对象，用于 `mockResolvedValue` 或 `prisma.xxx.create({ data: factory() })`。
-- 覆盖：支持 `opts` 部分覆盖默认值。
+### 5.1 流程规约驱动测试
 
-### 4.3 使用场景
+涉及状态机、并发、金额计算、幂等性的 Service，必须先编写 Process Spec，为每条规则分配 Rule ID，再按 Rule ID 编写测试。测试命名使用 Given/When/Then 格式。详见 `process-testing.md`。
 
-- **单元**：`mockRepo.findById.mockResolvedValue(createMemberFixture({ memberId: 'm1' }))`。
-- **集成/E2E**：`await prisma.umsMember.create({ data: createMemberFixture({ tenantId: '00000' }) })`。
-
----
-
-## 5. 覆盖率
+## 6. 覆盖率
 
 - Backend：`collectCoverageFrom` 仅收集 `src/**/*.ts`，排除 `*.spec.ts`、`*.module.ts`。
-- Admin-Web：排除 `src/**/*.spec.*`、`src/main.ts`、`locales`、`typings`。
 - 阈值：分阶段设置，先 `statements: 60`、`branches: 50`。
 
----
-
-## 6. PR 门禁与 CI
-
-### 6.1 门禁检查项（按顺序）
+## 7. PR 门禁与 CI
 
 | 序号 | 检查      | 命令             | 失败即阻断 |
 | ---- | --------- | ---------------- | ---------- |
@@ -182,47 +109,10 @@ describe('WithdrawalService', () => {
 | 3    | Test      | `pnpm test`      | 是         |
 | 4    | Build     | `pnpm build`     | 是         |
 
-PR 合并前，CI 中上述四项均须通过；任意一项失败即不可合并。
+PR 合并前，CI 中上述四项均须通过。
 
-### 6.2 参与范围
+## 8. 失败处理
 
-- **lint**：backend、admin-web、miniapp-client（根 lint-staged 已配置）
-- **typecheck**：有 typecheck 脚本的包（backend、admin-web 等）
-- **test**：有 test 脚本的包（当前为 backend、admin-web；miniapp-client 无则跳过）
-- **build**：所有需构建的应用
-
-### 6.3 单点约定
-
-- CI 配置统一在 `.github/workflows/ci.yml`。
-- 新增应用时，若需参与门禁，须在对应 package.json 中声明 `lint`、`typecheck`、`test`、`build` 脚本，且根 lint-staged 已包含该应用路径。
-
----
-
-## 7. 失败处理
-
-### 7.1 CI 失败时
-
-- **开发者**：本地复现（`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`），修复后重新推送。
-- **不合并**：任意检查失败时，禁止合并 PR。
-
-### 7.2 测试失败时
-
-- **单元/集成**：修复用例或被测代码，确保 `pnpm test` 通过。
-- **E2E**：若依赖环境（DB、Redis、账号）导致不稳定，可先在 CI 中临时跳过或隔离，并在 Issue 中跟踪修复。
-- **覆盖率下降**：若配置了 coverageThreshold，未达标会失败；可放宽阈值或补测，需在 PR 中说明。
-
-### 7.3 临时豁免
-
-- 确需临时跳过某检查时，须在 PR 描述中**显式说明**原因、计划恢复时间，并经 Reviewer 同意。
-
----
-
-## 8. Miniapp-Client 测试约定（若有需求时）
-
-miniapp-client 当前无 test 脚本，不参与 `pnpm test`。若后续引入测试：
-
-- **单元**：推荐 Vitest + `@vue/test-utils`，与 admin-web 保持一致。
-- **命名**：`*.spec.ts`，与源文件同目录。
-- **Mock**：uni API 用 `vi.mock('@dcloudio/uni-app')`；HTTP 用 `vi.mock('@/http/xxx')`。
-- **package.json**：新增 `"test": "vitest"`、`"test:run": "vitest run"`，并配置 `vitest.config.ts`。
-- **turbo**：自动参与 `pnpm test`（因 task 存在且包有 test 脚本）。
+- **CI 失败**：本地复现，修复后重新推送。任意检查失败禁止合并 PR。
+- **测试失败**：修复用例或被测代码。E2E 依赖环境导致不稳定可先临时跳过并在 Issue 中跟踪。
+- **临时豁免**：须在 PR 描述中显式说明原因、计划恢复时间，经 Reviewer 同意。

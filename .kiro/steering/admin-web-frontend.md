@@ -3,13 +3,22 @@ inclusion: fileMatch
 fileMatchPattern: 'apps/admin-web/src/**/*.{vue,ts,tsx}'
 ---
 
-# Admin-Web 前端开发规范（详细版）
-
-> 编辑 admin-web 源码时自动加载。核心原则见 `00-core-principles.md`。
+# Admin-Web 前端开发规范（Coding Rules & Conventions）
 
 编辑 `apps/admin-web` 时遵循。本规范以 `apps/admin-web/src/views/system` 为参考实现（如 `role`、`user`、`dept`），适用于 admin-web 下所有业务视图的开发与扩展。命名与结构对齐业界常见实践（如大厂管理后台的目录、组件、API 约定）。
 
-## 1. File Structure
+## 1. Vue 生态（Vue3 + Pinia + VueUse + Router）
+
+- **Vue 3**：Composition API、Reactivity 最佳实践、组件单一职责
+- **组件设计**：Props 设计模式、Emits 类型安全、Slots 最佳实践
+- **性能优化**：计算属性 vs 方法、v-if vs v-show、列表渲染优化、组件懒加载
+- **TypeScript**：类型推断、泛型组件、类型安全的 Props/Emits、全局类型定义
+- **代码组织**：Composables 单一职责、状态管理模式、目录结构最佳实践
+- **Pinia**：Store 模块化、类型安全、Actions/Getters 最佳实践
+- **VueUse**：按需使用 Composables；自定义 Composables 保持单一职责
+- **Vue Router**：本项目用 `@elegant-router/vue`，配置在 `src/router/`；路由懒加载、嵌套路由；全局守卫与路由级权限控制；路由参数类型推断
+
+## 2. File Structure
 
 每个实体模块（如 `role`、`user`、`dept`）推荐采用以下目录结构：
 
@@ -29,7 +38,7 @@ src/views/[module]/[entity_name]/
 
 **示例（system）：** `src/views/system/role/index.vue`、`role-operate-drawer.vue`、`role-search.vue`、`menu-cascade-delete-modal.vue`。
 
-## 2. Naming Conventions
+## 3. Naming Conventions
 
 - **目录**：kebab-case（如 `role`、`user-payment`、`tenant-package`）。
 - **文件**：kebab-case（如 `role-search.vue`、`user-operate-drawer.vue`）。
@@ -39,7 +48,7 @@ src/views/[module]/[entity_name]/
 - **类型**：PascalCase；优先使用 `Api.[Module].[Entity]`，**禁止 `any`**。
 - **文案**：可展示给用户的文本使用 `$t()` 国际化（`@/locales`）。
 
-## 3. Component Responsibilities & Patterns
+## 4. Component Responsibilities & Patterns
 
 ### 3.1 Main List View (`index.vue`)
 
@@ -57,7 +66,7 @@ src/views/[module]/[entity_name]/
 - Emit：`submitted`（接口成功后）。
 - 逻辑：watch `visible`，add 重置表单、edit 用 `rowData` 填表；`useNaiveForm` + rules；内部调 `fetchCreate`/`fetchUpdate`；成功 `$message.success` 并 emit `submitted`。
 
-## 4. Common Hooks & Utils
+## 5. Common Hooks & Utils
 
 - Table：`@/hooks/common/table`（`useTable`、`useTableOperate`）。
 - Tree Table：`@/hooks/common/tree-table`（`useTreeTable`、`useTreeTableOperate`）。
@@ -66,13 +75,15 @@ src/views/[module]/[entity_name]/
 - **API**：优先 `@/service/api/[module]/[entity]`；多实体时可从 `@/service/api/[module]` 的 index 导入。
 - **API 命名**：`fetchGet[Entity]List`、`fetchCreate[Entity]`、`fetchUpdate[Entity]`、`fetchDelete[Entity]`。
 
-## 5. 代码风格与模板约定
+**多租户**：本端为后台管理系统，租户由当前登录用户决定。请求拦截器已从 `authStore.userInfo.user?.tenantId` 注入请求头 `tenant-id`，业务代码无需再设。平台级接口（如租户管理）仅对具备权限的角色开放；下载/导出需带 `tenant-id`（使用现有 download hook 或显式传头）。
+
+## 6. 代码风格与模板约定
 
 - **模板**：指令缩写（`:value`、`@click`）；`v-for` 必须 `key` 且稳定唯一；频繁切换用 `v-show`，否则 `v-if`。
-- **TypeScript**：**类型安全强制**，见 §8；入参/出参显式类型；**禁止 `any`**；异步用 `try/catch` 并提示错误。
+- **TypeScript**：**类型安全强制**，见 §9；入参/出参显式类型；**禁止 `any`**；异步用 `try/catch` 并提示错误。
 - **样式**：单文件组件 `<style scoped>`，避免污染全局。
 
-## 6. 页面布局规范
+## 7. 页面布局规范
 
 新开模块按数据关系选**一种**布局，参考 `src/views/system` 对应页面。
 
@@ -88,7 +99,7 @@ src/views/[module]/[entity_name]/
 - 6.3：`TableSiderLayout`，左树，右侧 NDescriptions + 子表；`useLoading`。
 - 6.4：Search + NCard + 树形 NDataTable；`useTreeTable`，配置 `idField`。
 
-## 7. 性能、样式与实现细节（20 条摘要）
+## 8. 性能、样式与实现细节（20 条摘要）
 
 1. **DOM 深度**：单路径不超过 5～6 层；用 NCard、NForm 等语义组件。
 2. **Flex**：一维排布、对齐、均分用 Flex（工具栏、表单项一行）。
@@ -111,20 +122,126 @@ src/views/[module]/[entity_name]/
 19. **a11y**：按钮/链接有文案或 aria-label；表单项关联 label。
 20. **响应式**：用 Naive responsive 或断点，避免魔法数字。
 
-## 8. TypeScript 类型安全（强制）
+## 9. 代码注释规范
+
+### 9.1 必须写 JSDoc 的场景
+
+| 场景                                 | 必须包含                             |
+| ------------------------------------ | ------------------------------------ |
+| Composable / Hook 导出函数           | `@description`、`@param`、`@returns` |
+| Service API 函数（`@/service/api/`） | `@param`、`@returns`                 |
+| 工具函数（`@/utils/`）               | `@param`、`@returns`                 |
+| 复杂 computed / watcher              | Why 注释（为什么需要这个计算/监听）  |
+| 废弃函数                             | `@deprecated` + 替代方案             |
+
+### 9.2 不必写 JSDoc 的场景
+
+| 场景                     | 原因                                    |
+| ------------------------ | --------------------------------------- |
+| 组件 Props / Emits       | TypeScript interface 已充当文档         |
+| 简单 ref / reactive 声明 | 类型签名已说明                          |
+| 模板中的事件绑定         | 命名清晰即可（`@click="handleSubmit"`） |
+| 逐行翻译代码             | 代码本身应该可读                        |
+
+### 9.3 JSDoc 示例
+
+Composable / Hook：
+
+```typescript
+/**
+ * 封装角色列表的表格操作，包含搜索、分页、增删改
+ *
+ * @param fetchList - 获取列表数据的 API 函数
+ * @returns table 数据、分页状态、操作方法
+ */
+export function useRoleTable(fetchList: FetchListFn) {
+```
+
+API Service：
+
+```typescript
+/**
+ * 根据角色 ID 获取已分配的菜单 ID 列表
+ *
+ * @param roleId - 角色 ID
+ * @returns 该角色拥有的菜单 ID 数组
+ */
+export function fetchGetRoleMenuIds(roleId: string): Promise<string[]> {
+```
+
+### 9.4 业务逻辑注释：写 Why，不写 What
+
+```vue
+<script setup lang="ts">
+// 树形选中节点变化时重新加载右侧表格
+// 同时清空搜索条件，避免筛选残留导致用户看到空表格却不知道原因
+watch(selectedKeys, (keys) => {
+  resetSearchParams();
+  searchParams.deptId = keys[0] ?? undefined;
+  getData();
+});
+
+// 金额输入限制两位小数，防止后端精度丢失
+const priceRule = { pattern: /^\d+(\.\d{1,2})?$/, message: '最多两位小数' };
+</script>
+```
+
+**反面示例**（禁止）：
+
+```typescript
+// 定义 visible 变量        ← ref<boolean> 已经说明了
+const visible = ref<boolean>(false);
+// 调用获取列表方法         ← 下一行 fetchList() 已经说明了
+await fetchList();
+```
+
+### 9.5 TODO / FIXME / HACK 格式
+
+```typescript
+// TODO(zhangsan): 2026-Q2 表格列配置改为用户可自定义持久化
+// FIXME(lisi): Safari 下日期选择器偶现样式错位
+// HACK: NDataTable 虚拟滚动与固定列冲突，等 Naive UI 修复后移除此 workaround
+```
+
+格式：`// 标记(负责人): 描述`。TODO 必须带负责人，建议带目标时间。
+
+### 9.6 组件文件顶部注释（可选，推荐复杂组件）
+
+对于逻辑较复杂的组件（> 200 行），可在 `<script setup>` 顶部用一句话说明组件职责：
+
+```vue
+<script setup lang="ts">
+/**
+ * 商品编辑抽屉：支持 SKU 动态增减、规格联动、图片上传
+ * 业务规则：编辑时不允许修改已有 SKU 的规格组合
+ */
+```
+
+### 9.7 速查
+
+| 场景                       | 写什么                               |
+| -------------------------- | ------------------------------------ |
+| Composable / Hook 导出函数 | JSDoc：description + param + returns |
+| API Service 函数           | JSDoc：param + returns               |
+| 非显而易见的业务规则       | Why 注释                             |
+| 临时方案 / 已知问题        | TODO/FIXME(负责人): 描述             |
+| 复杂组件（> 200 行）       | 文件顶部一句话说明职责               |
+| 代码已经自解释的地方       | **不写**                             |
+
+## 10. TypeScript 类型安全（强制）
 
 前端为 TypeScript，**类型安全强制**，禁止放宽。
 
-### 8.1 禁止 any
+### 10.1 禁止 any
 
 - 禁止 `any`、`as any`、`@ts-ignore`。无法推断时用 `unknown` + 类型收窄。
 - 优先使用 `src/typings/` 下类型（如 `Api.System.Role`、`Api.System.RoleSearchParams`）。
 
-### 8.2 API 必须带类型
+### 10.2 API 必须带类型
 
 - 请求参数、响应体使用 `Api.[Module].*`；新接口先在 typings 补充类型再写业务，不得用 `any` 占位。
 
-### 8.3 Props / Emits 显式类型
+### 10.3 Props / Emits 显式类型
 
 - Props/Emits 用 interface 或 type；`defineModel<T>` 带泛型；`defineEmits` 类型化签名。
 
@@ -142,27 +259,27 @@ interface Emits {
 const emit = defineEmits<Emits>();
 ```
 
-### 8.4 ref / reactive 带类型
+### 10.4 ref / reactive 带类型
 
 - `ref<Api.System.Role[]>([])`、`reactive<RoleOperateParams>({...})`；禁止无泛型 `ref([])`。
 
-### 8.5 函数入参与返回值声明类型
+### 10.5 函数入参与返回值声明类型
 
 - 函数/箭头函数入参、返回值显式类型；async 返回 `Promise<T>`。
 
-### 8.6 表格列与表单 rules 带类型
+### 10.6 表格列与表单 rules 带类型
 
 - columns：`DataTableColumns<Api.System.Role>`；rules 的 key 与 model 字段一致。
 
-### 8.7 严格空值
+### 10.7 严格空值
 
 - 可能为空用 `?.`、默认值用 `??`；类型用 `?`、`| null`。
 
-### 8.8 类型导入
+### 10.8 类型导入
 
 - 仅类型用 `import type`。
 
-### 8.9 速查
+### 10.9 速查
 
 | 场景         | 要求                           |
 | ------------ | ------------------------------ |
@@ -178,30 +295,34 @@ const emit = defineEmits<Emits>();
 
 ---
 
-## 9. 测试规范
+## 11. 测试规范
 
-- **单元/组件测试**：Vitest + `@vue/test-utils`，用例放在 `src/**/*.spec.{ts,tsx,vue}`，配置见 `vitest.config.ts`、入口 `src/test/setup.ts`。
-- **E2E 测试**：Playwright，用例放在 `e2e/*.spec.ts`，配置见 `playwright.config.ts`。详见 `docs/TESTING.md`。
+> 详见 `testing.mdc`。对接完页面/接口后必须补测并运行通过。
 
-### 9.1 可直接编写（简单）
+## 12. API 类型规范
 
-以下情况**无需先问**，可直接补充或修改测试：
+涉及 API 调用时，类型**必须**来自 `@libs/common-types`，禁止手写重复类型。
 
-- **工具函数**：`src/utils`、`src/constants` 等纯函数，无全局依赖或仅简单 mock。
-- **简单组件**：无路由/Pinia/复杂 Naive 依赖，或 mock 方式明确（如仅需 `$t`、`$message`）。
-- **冒烟 E2E**：访问某路由、页面可见、基础可点击（如已有 `e2e/smoke.spec.ts` 风格）。
-- **与本次改动强相关**：新增/修改了某函数或小组件，顺带补同文件的 `*.spec.ts` 或单用例。
+### 前置步骤
 
-编写时遵守：单测用 `describe`/`it`/`expect`，组件用 `mount` + 断言 DOM 或 emit；E2E 用 `page.goto`、`page.locator`、`expect`，不依赖未约定的环境（如固定账号密码）。
+1. 执行 `pnpm generate-types`（先构建 backend → 生成 common-types）
+2. 在 `libs/common-types/src/api.d.ts` 查找所需类型
+3. 若无对应类型，确认 backend 是否已暴露接口，重新生成
 
-### 9.2 需先询问（有难度）
+### 正确做法
 
-以下情况**先与用户确认**再实现，不擅自写复杂或易失效的用例：
+```ts
+// 在 src/typings/api/*.d.ts 中引用 common-types
+declare namespace Api {
+  namespace Order {
+    type OrderItem = import('@libs/common-types').components['schemas']['OrderListItemVo'];
+    type SearchParams = import('@libs/common-types').RequestParams<'/api/order/list', 'get'>;
+  }
+}
+```
 
-- **复杂 mock**：需 mock 路由、Pinia、多层级 Naive 组件、请求拦截范围与返回值等，方案不唯一。
-- **强依赖环境/权限的 E2E**：登录态、多角色、特定后端数据或环境变量，需约定账号、数据或是否用 mock 接口。
-- **大范围/长流程 E2E**：跨多页、多步骤的关键业务流程（如下单、审批），需确认覆盖范围与可维护性。
-- **历史遗留或第三方逻辑**：被测代码难以理解或强耦合，需确认是否值得补测、优先级与粒度。
-- **性能/快照类测试**：如 Vitest 快照、Playwright 视觉回归、性能阈值，需确认是否引入、阈值与 CI 策略。
+### 禁止行为
 
-询问时尽量给出：可选方案（例如「只测 happy path」或「加 mock 登录」）、工作量粗估、对现有流水线的影响；由用户选择后再写。
+- 禁止在 `typings/api/*.d.ts` 中手写与后端 VO/DTO 重复的类型
+- 禁止用 `any` 占位替代应从 common-types 引用的类型
+- 修改已有手写类型时，顺带迁移为 common-types 引用
