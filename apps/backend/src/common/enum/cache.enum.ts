@@ -49,4 +49,13 @@ export enum CacheEnum {
 
   /** 属性模板缓存 */
   PMS_ATTRIBUTE_TEMPLATE = 'pms:attribute:template',
+
+  /** 刷新令牌黑名单 redis key */
+  REFRESH_TOKEN_BLACKLIST_KEY = 'refresh_token_blacklist:',
+
+  /** 登录失败计数 redis key */
+  LOGIN_FAIL_KEY = 'login_fail:',
+
+  /** 账号锁定标记 redis key */
+  ACCOUNT_LOCK_KEY = 'account_lock:',
 }

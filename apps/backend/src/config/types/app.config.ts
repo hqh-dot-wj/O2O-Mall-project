@@ -2,6 +2,24 @@ import { Type } from 'class-transformer';
 import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUrl, Max, Min, ValidateNested } from 'class-validator';
 
 /**
+ * IP 地理位置查询配置
+ */
+export class IpLocationConfig {
+  @IsUrl({ require_tld: false })
+  apiUrl: string;
+
+  @IsNumber()
+  @Min(1000)
+  @Max(30000)
+  timeout: number;
+
+  @IsNumber()
+  @Min(60)
+  @Max(86400)
+  cacheTtl: number;
+}
+
+/**
  * 日志配置
  */
 export class LoggerConfig {
@@ -71,4 +89,9 @@ export class AppConfig {
   @ValidateNested()
   @Type(() => FileConfig)
   file: FileConfig;
+
+  @ValidateNested()
+  @Type(() => IpLocationConfig)
+  @IsOptional()
+  ipLocation?: IpLocationConfig;
 }

@@ -39,30 +39,57 @@ export class MemberReferralService {
     return { parentMap, indirectParentMap };
   }
 
+  /** 推荐链最大遍历深度（普通→C1→C2，3 层足够） */
+  private static readonly MAX_CHAIN_DEPTH = 10;
+
   /**
    * 校验并获取新推荐人的间接推荐关系
    * @param memberId 会员 ID
    * @param parentId 新上级 ID
+   * @returns 间接推荐人 ID，无则返回 null
+   * @throws BusinessException 自引用、循环推荐、推荐人不存在、等级不足
    */
-  async validateAndGetIndirectParent(memberId: string, parentId: string) {
-    if (memberId === parentId) {
-      BusinessException.throwIf(true, '不可将自己设为推荐人');
+  async validateAndGetIndirectParent(memberId: string, parentId: string): Promise<string | null> {
+    BusinessException.throwIf(memberId === parentId, '不可将自己设为推荐人');
+
+    if (!parentId) return null;
+
+    const parent = await this.memberRepo.findById(parentId);
+    BusinessException.throwIfNull(parent, '推荐人不存在');
+    BusinessException.throwIf(parent!.levelId < 1, '推荐人必须是 C1团长 或 C2股东');
+
+    // 循环推荐检测：沿推荐链向上遍历，确保 memberId 不在链中
+    await this.checkCircularReferral(memberId, parentId);
+
+    // 间接推荐人计算
+    if (parent!.levelId === 1) {
+      return parent!.parentId;
     }
+    // C2 股东为顶级，无间接推荐人
+    return null;
+  }
 
-    let indirectParentId: string | null = null;
+  /**
+   * 检测循环推荐：从 startId 沿 parentId 链向上遍历，若遇到 targetId 则为循环
+   * @param targetId 不允许出现在链中的会员 ID
+   * @param startId 遍历起点（新推荐人）
+   * @throws BusinessException 检测到循环推荐
+   */
+  private async checkCircularReferral(targetId: string, startId: string): Promise<void> {
+    let currentId: string | null = startId;
+    const visited = new Set<string>();
 
-    if (parentId) {
-      const parent = await this.memberRepo.findById(parentId);
-      BusinessException.throwIfNull(parent, '推荐人不存在');
-      BusinessException.throwIf(parent!.levelId < 1, '推荐人必须是 C1团长 或 C2股东');
+    for (let depth = 0; depth < MemberReferralService.MAX_CHAIN_DEPTH && currentId; depth++) {
+      if (visited.has(currentId)) break;
+      visited.add(currentId);
 
-      // 如果推荐人是 C1 (团长)，则间接推荐人为该团长的上级 (通常是 C2)
-      if (parent!.levelId === 1) {
-        indirectParentId = parent!.parentId;
+      const member = await this.memberRepo.findById(currentId);
+      if (!member) break;
+
+      if (member.parentId === targetId) {
+        BusinessException.throwIf(true, '不能形成循环推荐');
       }
-      // 如果推荐人已经是 C2 (股东)，则没有间接推荐人
+      currentId = member.parentId;
     }
-
-    return indirectParentId;
   }
 }

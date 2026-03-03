@@ -372,30 +372,77 @@ export class RedisService {
   /* ----------------------- Distributed Lock ----------------------- */
 
   /**
-   * 尝试获取分布式锁
+   * 尝试获取分布式锁（安全版本）
    * @param key 锁键
-   * @param ttl 过期时间(毫秒)
-   * @returns true:获取成功 false:获取失败
+   * @param ttl 过期时间(毫秒)，默认 10 秒
+   * @returns 锁 Token（成功）或 null（失败），释放锁时需传入此 Token
+   * @description 使用 UUID 作为锁值，释放时比对 Token 防止误删其他进程的锁
    */
-  async tryLock(key: string, ttl: number = 10000): Promise<boolean> {
-    const result = await this.client.set(key, '1', 'PX', ttl, 'NX');
-    return result === 'OK';
+  async tryLock(key: string, ttl: number = 10000): Promise<string | null> {
+    const token = crypto.randomUUID();
+    const result = await this.client.set(key, token, 'PX', ttl, 'NX');
+    return result === 'OK' ? token : null;
   }
 
   /**
-   * 释放分布式锁
+   * 释放分布式锁（安全版本）
    * @param key 锁键
+   * @param token 获取锁时返回的 Token
+   * @returns 1:释放成功 0:锁不存在或 Token 不匹配
+   * @description 使用 Lua 脚本原子性比对 Token 后删除，防止误删其他进程的锁
    */
-  async unlock(key: string): Promise<number> {
-    return await this.client.del(key);
+  async unlock(key: string, token: string): Promise<number> {
+    // Lua 脚本：比对 Token 后删除，保证原子性
+    const script = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `;
+    return (await this.client.eval(script, 1, key, token)) as number;
   }
 
   /**
-   * 删除全部缓存
-   * @returns
+   * 原子递增
+   *
+   * @param key Redis key
+   * @returns 递增后的值
    */
-  async reset() {
-    const keys = await this.client.keys('*');
-    return this.client.del(keys);
+  async incr(key: string): Promise<number> {
+    return await this.client.incr(key);
+  }
+
+  /**
+   * 设置 key 的过期时间（毫秒）
+   *
+   * @param key Redis key
+   * @param ttlMs 过期时间（毫秒）
+   * @returns 1 表示设置成功，0 表示 key 不存在
+   */
+  async expire(key: string, ttlMs: number): Promise<number> {
+    return await this.client.pexpire(key, ttlMs);
+  }
+
+  /**
+   * 删除全部缓存（使用 SCAN 避免阻塞）
+   * @returns 删除的 key 数量
+   * @description 使用 SCAN 迭代删除，避免 keys * 在大数据量时阻塞 Redis 主线程
+   */
+  async reset(): Promise<number> {
+    let cursor = '0';
+    let deletedCount = 0;
+    const batchSize = 100;
+
+    do {
+      const [nextCursor, keys] = await this.client.scan(cursor, 'COUNT', batchSize);
+      cursor = nextCursor;
+
+      if (keys.length > 0) {
+        deletedCount += await this.client.del(...keys);
+      }
+    } while (cursor !== '0');
+
+    return deletedCount;
   }
 }

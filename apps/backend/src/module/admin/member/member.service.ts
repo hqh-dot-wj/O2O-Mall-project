@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberVo } from './vo/member.vo';
 import { Result } from 'src/common/response';
@@ -12,6 +13,7 @@ import { PointsAccountService } from 'src/module/marketing/points/account/accoun
 import { MemberRepository } from './member.repository';
 import { MemberStatsService } from './services/member-stats.service';
 import { MemberReferralService } from './services/member-referral.service';
+import { MemberExportService } from './services/member-export.service';
 import {
   ListMemberDto,
   UpdateMemberStatusDto,
@@ -35,6 +37,7 @@ export class MemberService {
     private readonly memberStatsService: MemberStatsService,
     private readonly memberReferralService: MemberReferralService,
     private readonly pointsAccountService: PointsAccountService,
+    private readonly memberExportService: MemberExportService,
   ) {}
 
   /**
@@ -110,6 +113,53 @@ export class MemberService {
     });
 
     return Result.page(FormatDateFields(rows), total);
+  }
+
+  /**
+   * 查询单个会员详情
+   * 聚合推荐人信息、统计数据、租户信息
+   * @param memberId 会员 ID
+   * @returns 会员详情 VO
+   * @throws BusinessException 会员不存在
+   */
+  async detail(memberId: string) {
+    const member = await this.memberRepo.findById(memberId);
+    BusinessException.throwIfNull(member, '会员不存在');
+
+    const [referralInfo, stats, tenantMap] = await Promise.all([
+      this.memberReferralService.getBatchReferralInfo([member]),
+      this.memberStatsService.getBatchStats([memberId]),
+      this.getTenantMap([member]),
+    ]);
+
+    const parent = member.parentId ? referralInfo.parentMap.get(member.parentId) : null;
+    const indirectParentId = member.indirectParentId || parent?.parentId;
+    const indirectParent = indirectParentId ? referralInfo.indirectParentMap.get(indirectParentId) : null;
+
+    const vo: MemberVo = {
+      memberId: member.memberId,
+      nickname: member.nickname,
+      avatar: member.avatar,
+      mobile: member.mobile,
+      status: MemberStatusMap[member.status as MemberStatus] || '0',
+      createTime: member.createTime,
+      tenantId: member.tenantId,
+      tenantName: tenantMap.get(member.tenantId) || '平台',
+      referrerId: member.parentId || undefined,
+      referrerName: parent?.nickname,
+      referrerMobile: parent?.mobile,
+      indirectReferrerId: indirectParentId || undefined,
+      indirectReferrerName: indirectParent?.nickname,
+      indirectReferrerMobile: indirectParent?.mobile,
+      balance: Number(member.balance),
+      commission: Number(stats.commissionMap.get(memberId) || 0),
+      totalConsumption: Number(stats.consumptionMap.get(memberId) || 0),
+      orderCount: 0,
+      levelId: member.levelId,
+      levelName: MemberLevelNameMap[member.levelId as MemberLevel] || '未知',
+    };
+
+    return Result.ok(FormatDateFields(vo));
   }
 
   /**
@@ -241,5 +291,19 @@ export class MemberService {
       type: 'DEDUCT_ADMIN',
       remark: remark ?? '管理员调整',
     });
+  }
+
+  /**
+   * 导出会员列表到 Excel
+   * 复用 list 查询逻辑（不分页），委托 MemberExportService 生成文件
+   * @param res Express Response
+   * @param query 查询条件
+   */
+  async export(res: Response, query: ListMemberDto) {
+    // 不分页，查全量（受 where 条件约束）
+    const exportQuery = { ...query, skip: 0, take: 10000 };
+    const result = await this.list(exportQuery);
+    const rows = result.data?.rows ?? [];
+    return this.memberExportService.export(res, rows);
   }
 }

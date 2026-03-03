@@ -190,6 +190,13 @@ export default () => {
         secret: process.env.WX_H5_SECRET || '',
       },
     },
+
+    social: {
+      github: {
+        clientId: process.env.SOCIAL_GITHUB_CLIENT_ID || '',
+        clientSecret: process.env.SOCIAL_GITHUB_CLIENT_SECRET || '',
+      },
+    },
   };
 
   // 应用配置转换器进行类型验证

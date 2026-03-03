@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+﻿﻿import { Injectable, Logger } from '@nestjs/common';
 import { Response } from 'express';
 import { Prisma, SysConfig } from '@prisma/client';
 import { Result, ResponseCode } from 'src/common/response';
@@ -25,6 +25,8 @@ export class ConfigService {
     private readonly systemConfigService: SystemConfigService,
   ) {}
   async create(createConfigDto: CreateConfigDto) {
+    const exists = await this.configRepo.existsByConfigKey(createConfigDto.configKey);
+    BusinessException.throwIf(exists, '参数键名已存在', ResponseCode.BUSINESS_ERROR);
     await this.configRepo.create(createConfigDto);
     return Result.ok();
   }
@@ -133,9 +135,40 @@ export class ConfigService {
     return config.length > 0 ? config[0].config_value : null;
   }
 
-  @CacheEvict(CacheEnum.SYS_CONFIG_KEY, '{updateConfigDto.configKey}')
+  /**
+   * 根据ID更新配置
+   *
+   * @param updateConfigDto 更新参数
+   * @returns 操作结果
+   * @throws BusinessException 参数不存在、键名重复、内置参数键名不可修改
+   */
   async update(updateConfigDto: UpdateConfigDto) {
+    const oldConfig = await this.configRepo.findById(updateConfigDto.configId);
+    BusinessException.throwIfNull(oldConfig, '参数不存在', ResponseCode.DATA_NOT_FOUND);
+
+    // D3: 系统内置参数禁止修改键名
+    if (
+      oldConfig.configType === 'Y' &&
+      updateConfigDto.configKey &&
+      updateConfigDto.configKey !== oldConfig.configKey
+    ) {
+      BusinessException.throwIf(true, '系统内置参数的键名不可修改', ResponseCode.BUSINESS_ERROR);
+    }
+
+    // D2: 修改时校验参数键名唯一性
+    if (updateConfigDto.configKey) {
+      const exists = await this.configRepo.existsByConfigKey(updateConfigDto.configKey, updateConfigDto.configId);
+      BusinessException.throwIf(exists, '参数键名已存在', ResponseCode.BUSINESS_ERROR);
+    }
+
     await this.configRepo.update(updateConfigDto.configId, updateConfigDto);
+
+    // D4: 清除新旧两个缓存键
+    await this.redisService.del(`${CacheEnum.SYS_CONFIG_KEY}${oldConfig.configKey}`);
+    if (updateConfigDto.configKey && updateConfigDto.configKey !== oldConfig.configKey) {
+      await this.redisService.del(`${CacheEnum.SYS_CONFIG_KEY}${updateConfigDto.configKey}`);
+    }
+
     return Result.ok();
   }
 

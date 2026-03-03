@@ -1484,6 +1484,24 @@ model SysFileShare {
   @@map("sys_file_share")
 }
 
+/// 后台用户社交账号绑定表
+model SysUserSocial {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  tenantId   String   @default("000000") @map("tenant_id") @db.VarChar(20)
+  source     String   @db.VarChar(32) // github, wechat, dingtalk 等
+  openid     String   @db.VarChar(128) // 第三方平台用户唯一标识
+  unionid    String?  @db.VarChar(128) // 跨应用唯一标识（微信等）
+  nickname   String?  @db.VarChar(64)
+  avatar     String?  @db.VarChar(512)
+  createTime DateTime @default(now()) @map("create_time") @db.Timestamp(6)
+
+  @@unique([source, openid, tenantId])
+  @@index([userId])
+  @@index([tenantId, source, openid])
+  @@map("sys_user_social")
+}
+
 model SysUser {
   userId      Int       @id @default(autoincrement()) @map("user_id")
   tenantId    String    @default("000000") @map("tenant_id") @db.VarChar(20)

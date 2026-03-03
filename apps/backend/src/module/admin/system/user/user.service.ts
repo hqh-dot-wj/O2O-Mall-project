@@ -430,6 +430,10 @@ export class UserService {
     return this.userAuthService.register(user);
   }
 
+  async loginByUserId(userId: number, uuid: string, clientInfo: ClientInfoDto) {
+    return this.userAuthService.loginByUserId(userId, uuid, clientInfo);
+  }
+
   createToken(payload: { uuid: string; userId: number }): string {
     return this.userAuthService.createToken(payload);
   }

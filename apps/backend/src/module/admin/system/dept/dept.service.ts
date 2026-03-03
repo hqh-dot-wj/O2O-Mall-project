@@ -142,34 +142,180 @@ export class DeptService {
     return Result.ok(data);
   }
 
+  /**
+   * 更新部门信息
+   * @description 如果修改了父部门，会递归更新所有子部门的祖级列表
+   * @param updateDeptDto 更新部门DTO
+   * @returns 更新结果
+   */
   @CacheEvict(CacheEnum.SYS_DEPT_KEY, '*')
   @Transactional()
   async update(updateDeptDto: UpdateDeptDto) {
-    if (updateDeptDto.parentId && updateDeptDto.parentId !== 0) {
-      const parent = await this.prisma.sysDept.findUnique({
-        where: {
-          deptId: updateDeptDto.parentId,
-        },
-        select: { ancestors: true },
-      });
-      if (!parent) {
-        return Result.fail(ResponseCode.INTERNAL_SERVER_ERROR, '父级部门不存在');
-      }
-      const ancestors = parent.ancestors
-        ? `${parent.ancestors},${updateDeptDto.parentId}`
-        : `${updateDeptDto.parentId}`;
-      Object.assign(updateDeptDto, { ancestors: ancestors });
+    const { deptId, parentId } = updateDeptDto;
+
+    // 获取当前部门信息
+    const currentDept = await this.deptRepo.findById(deptId);
+    BusinessException.throwIfNull(currentDept, '部门不存在');
+
+    // 检查是否修改了父部门
+    const isParentChanged = parentId !== undefined && parentId !== currentDept.parentId;
+
+    let newAncestors: string | undefined;
+
+    if (isParentChanged) {
+      // 校验不能将自己设为父部门
+      BusinessException.throwIf(parentId === deptId, '不能将自己设为父部门');
+
+      // 校验不能将子部门设为父部门
+      await this.checkNotChildAsParent(deptId, parentId);
+
+      // 计算新的祖级列表
+      newAncestors = await this.calculateAncestors(parentId);
+      Object.assign(updateDeptDto, { ancestors: newAncestors });
     }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { deptCategory, ...data } = updateDeptDto;
-    await this.deptRepo.update(updateDeptDto.deptId, data);
+    await this.deptRepo.update(deptId, data);
+
+    // 如果修改了父部门，递归更新所有子部门的祖级列表
+    if (isParentChanged && newAncestors !== undefined) {
+      await this.updateChildrenAncestors(deptId, currentDept.ancestors, newAncestors);
+    }
+
     return Result.ok();
   }
 
+  /**
+   * 计算祖级列表
+   * @param parentId 父部门ID
+   * @returns 祖级列表字符串
+   */
+  private async calculateAncestors(parentId: number): Promise<string> {
+    if (!parentId || parentId === 0) {
+      return '0';
+    }
+
+    const parent = await this.prisma.sysDept.findUnique({
+      where: { deptId: parentId },
+      select: { ancestors: true },
+    });
+
+    BusinessException.throwIfNull(parent, '父级部门不存在');
+
+    return parent.ancestors ? `${parent.ancestors},${parentId}` : `${parentId}`;
+  }
+
+  /**
+   * 检查新父部门不是当前部门的子部门
+   * @param deptId 当前部门ID
+   * @param newParentId 新父部门ID
+   * @throws BusinessException 如果新父部门是当前部门的子部门
+   */
+  private async checkNotChildAsParent(deptId: number, newParentId: number): Promise<void> {
+    if (!newParentId || newParentId === 0) {
+      return;
+    }
+
+    const newParent = await this.prisma.sysDept.findUnique({
+      where: { deptId: newParentId },
+      select: { ancestors: true },
+    });
+
+    if (!newParent) {
+      return; // 父部门不存在的校验在 calculateAncestors 中处理
+    }
+
+    // 检查新父部门的祖级列表是否包含当前部门ID
+    const ancestorIds = newParent.ancestors?.split(',').map(Number) || [];
+    BusinessException.throwIf(
+      ancestorIds.includes(deptId),
+      '不能将子部门设为父部门',
+    );
+  }
+
+  /**
+   * 递归更新所有子部门的祖级列表
+   * @param deptId 当前部门ID
+   * @param oldAncestors 旧的祖级列表
+   * @param newAncestors 新的祖级列表
+   */
+  private async updateChildrenAncestors(
+    deptId: number,
+    oldAncestors: string,
+    newAncestors: string,
+  ): Promise<void> {
+    // 查询所有子部门（ancestors 包含当前部门ID的部门）
+    const children = await this.prisma.sysDept.findMany({
+      where: {
+        delFlag: DelFlagEnum.NORMAL,
+        OR: [
+          { ancestors: { contains: `,${deptId},` } },
+          { ancestors: { endsWith: `,${deptId}` } },
+          { ancestors: { startsWith: `${deptId},` } },
+          { parentId: deptId },
+        ],
+      },
+      select: { deptId: true, ancestors: true },
+    });
+
+    if (children.length === 0) {
+      return;
+    }
+
+    // 构建旧祖级前缀（包含当前部门）
+    const oldPrefix = oldAncestors ? `${oldAncestors},${deptId}` : `${deptId}`;
+    // 构建新祖级前缀（包含当前部门）
+    const newPrefix = `${newAncestors},${deptId}`;
+
+    // 批量更新子部门的祖级列表
+    for (const child of children) {
+      const childNewAncestors = child.ancestors.replace(oldPrefix, newPrefix);
+      await this.prisma.sysDept.update({
+        where: { deptId: child.deptId },
+        data: { ancestors: childNewAncestors },
+      });
+    }
+
+    this.logger.log(`Updated ancestors for ${children.length} child departments`);
+  }
+
+  /**
+   * 删除部门
+   * @description 删除前检查是否存在子部门和关联用户
+   * @param deptId 部门ID
+   * @returns 删除结果
+   * @throws BusinessException 存在子部门或关联用户时抛出异常
+   */
   @CacheEvict(CacheEnum.SYS_DEPT_KEY, '*')
   async remove(deptId: number) {
+    // AC-5: 删除部门前检查是否存在子部门
+    await this.checkHasChildren(deptId);
+    // 删除部门前检查是否存在关联用户
+    await this.checkHasUsers(deptId);
+
     const data = await this.deptRepo.softDelete(deptId);
     return Result.ok(data);
+  }
+
+  /**
+   * 检查部门是否存在子部门
+   * @param deptId 部门ID
+   * @throws BusinessException 存在子部门时抛出异常
+   */
+  private async checkHasChildren(deptId: number): Promise<void> {
+    const childCount = await this.deptRepo.countChildren(deptId);
+    BusinessException.throwIf(childCount > 0, '该部门存在子部门，无法删除');
+  }
+
+  /**
+   * 检查部门是否存在关联用户
+   * @param deptId 部门ID
+   * @throws BusinessException 存在关联用户时抛出异常
+   */
+  private async checkHasUsers(deptId: number): Promise<void> {
+    const userCount = await this.deptRepo.countUsers(deptId);
+    BusinessException.throwIf(userCount > 0, '该部门存在关联用户，无法删除');
   }
 
   /**

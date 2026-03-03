@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { MemberService } from './member.service';
 import {
   ListMemberDto,
@@ -33,6 +34,16 @@ export class MemberController {
   @Get('list')
   async list(@Query() query: ListMemberDto) {
     return this.memberService.list(query);
+  }
+
+  /**
+   * 查询会员详情
+   */
+  @ApiOperation({ summary: '查询会员详情' })
+  @RequirePermission('admin:member:list')
+  @Get('detail')
+  async detail(@Query('memberId') memberId: string) {
+    return this.memberService.detail(memberId);
   }
 
   /**
@@ -98,5 +109,16 @@ export class MemberController {
   @Post('point/adjust')
   async adjustMemberPoints(@Body() dto: AdjustMemberPointsDto) {
     return this.memberService.adjustMemberPoints(dto);
+  }
+
+  @ApiOperation({
+    summary: '导出会员数据',
+    produces: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  })
+  @RequirePermission('admin:member:list')
+  @Operlog({ businessType: BusinessType.EXPORT })
+  @Post('export')
+  async export(@Res() res: Response, @Body() query: ListMemberDto): Promise<void> {
+    return this.memberService.export(res, query);
   }
 }

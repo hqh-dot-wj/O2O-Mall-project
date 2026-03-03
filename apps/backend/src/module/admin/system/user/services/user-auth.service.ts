@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿﻿import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { BusinessException } from 'src/common/exceptions';
@@ -200,12 +200,131 @@ export class UserAuthService {
   }
 
   /**
+   * 通过用户ID直接登录（社交登录等免密场景）
+   *
+   * @description 加载用户信息、权限、角色，存入 Redis 会话。不做密码校验。
+   * @param userId 用户ID
+   * @param uuid 会话标识（由调用方生成）
+   * @param clientInfo 客户端信息
+   * @throws BusinessException 用户不存在、已删除或已停用时
+   */
+  async loginByUserId(userId: number, uuid: string, clientInfo: ClientInfoDto): Promise<void> {
+    const userData = await this.getUserinfo(userId);
+
+    BusinessException.throwIf(userData.delFlag === DelFlagEnum.DELETE, '用户已被删除');
+    BusinessException.throwIf(userData.status === StatusEnum.STOP, '用户已被停用');
+
+    await this.userRepo.updateLoginTime(userId);
+    await this.prisma.sysUser.update({
+      where: { userId },
+      data: { loginIp: clientInfo.ipaddr },
+    });
+
+    const permissions = await this.getUserPermissions(userId);
+    const deptData = userData.deptId
+      ? await this.prisma.sysDept.findFirst({ where: { deptId: userData.deptId }, select: { deptName: true } })
+      : null;
+
+    const roles = (userData.roles ?? []).map((item) => item.roleKey);
+
+    const userInfo: Partial<UserType> = {
+      browser: clientInfo.browser,
+      ipaddr: clientInfo.ipaddr,
+      loginLocation: clientInfo.loginLocation,
+      loginTime: new Date(),
+      os: clientInfo.os,
+      deviceType: clientInfo.deviceType,
+      permissions,
+      roles,
+      token: uuid,
+      user: {
+        ...(userData as unknown as UserType['user']),
+        dept: (userData.dept || {}) as UserType['user']['dept'],
+        roles: (userData.roles || []) as UserType['user']['roles'],
+        posts: (userData.posts || []) as UserType['user']['posts'],
+      },
+      userId: userData.userId,
+      userName: userData.userName,
+      deptId: userData.deptId,
+    };
+
+    (userInfo.user as UserType['user'] & { deptName?: string }).deptName = deptData?.deptName || '';
+
+    const activeTenantId = TenantContext.getTenantId();
+    if (activeTenantId && userInfo.user) {
+      userInfo.user.tenantId = activeTenantId;
+    }
+
+    await this.updateRedisToken(uuid, userInfo);
+  }
+
+  /**
    * 清除用户缓存
    */
   @CacheEvict(CacheEnum.SYS_USER_KEY, '{userId}')
   async clearUserCache(userId: number) {
     return userId;
   }
+
+  /**
+   * 通过用户ID直接登录（社交登录等免密场景）
+   *
+   * @description 加载用户信息、权限、角色，存入 Redis 会话。不做密码校验。
+   * @param userId 用户ID
+   * @param uuid 会话标识（由调用方生成）
+   * @param clientInfo 客户端信息
+   * @throws BusinessException 用户不存在、已删除或已停用时
+   */
+  async loginByUserId(userId: number, uuid: string, clientInfo: ClientInfoDto): Promise<void> {
+    const userData = await this.getUserinfo(userId);
+
+    BusinessException.throwIf(userData.delFlag === DelFlagEnum.DELETE, '用户已被删除');
+    BusinessException.throwIf(userData.status === StatusEnum.STOP, '用户已被停用');
+
+    await this.userRepo.updateLoginTime(userId);
+    await this.prisma.sysUser.update({
+      where: { userId },
+      data: { loginIp: clientInfo.ipaddr },
+    });
+
+    const permissions = await this.getUserPermissions(userId);
+    const deptData = userData.deptId
+      ? await this.prisma.sysDept.findFirst({ where: { deptId: userData.deptId }, select: { deptName: true } })
+      : null;
+
+    const roles = (userData.roles ?? []).map((item) => item.roleKey);
+
+    const userInfo: Partial<UserType> = {
+      browser: clientInfo.browser,
+      ipaddr: clientInfo.ipaddr,
+      loginLocation: clientInfo.loginLocation,
+      loginTime: new Date(),
+      os: clientInfo.os,
+      deviceType: clientInfo.deviceType,
+      permissions,
+      roles,
+      token: uuid,
+      user: {
+        ...(userData as unknown as UserType['user']),
+        dept: (userData.dept || {}) as UserType['user']['dept'],
+        roles: (userData.roles || []) as UserType['user']['roles'],
+        posts: (userData.posts || []) as UserType['user']['posts'],
+      },
+      userId: userData.userId,
+      userName: userData.userName,
+      deptId: userData.deptId,
+    };
+
+    (userInfo.user as UserType['user'] & { deptName?: string }).deptName = deptData?.deptName || '';
+
+    const activeTenantId = TenantContext.getTenantId();
+    if (activeTenantId && userInfo.user) {
+      userInfo.user.tenantId = activeTenantId;
+    }
+
+    await this.updateRedisToken(uuid, userInfo);
+  }
+
 
   /**
    * 获取用户角色ID列表

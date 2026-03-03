@@ -1,61 +1,36 @@
-import { Status } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { Result } from 'src/common/response';
-import { RedisService } from 'src/module/common/redis/redis.service';
-import { CacheEnum } from 'src/common/enum/index';
-import { FormatDateFields, Paginate } from 'src/common/utils/index';
+import { SessionService } from 'src/module/admin/auth/services/session.service';
+import { OnlineListDto } from './dto/index';
 
 @Injectable()
 export class OnlineService {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(private readonly sessionService: SessionService) {}
+
   /**
-   * 日志列表-分页
-   * @param query
-   * @returns
+   * 在线用户列表-分页
+   *
+   * @param query 查询条件
+   * @returns 分页结果
    */
-  async findAll(query: any) {
-    const keys = await this.redisService.keys(`${CacheEnum.LOGIN_TOKEN_KEY}*`);
+  async findAll(query: OnlineListDto) {
+    const { list, total } = await this.sessionService.getOnlineUsers({
+      userName: query.userName,
+      ipaddr: query.ipaddr,
+      pageNum: Number(query.pageNum),
+      pageSize: Number(query.pageSize),
+    });
 
-    // 如果没有在线用户，返回空数据
-    if (!keys || keys.length === 0) {
-      return Result.page([], 0);
-    }
-
-    const data = await this.redisService.mget(keys);
-
-    // 过滤掉空值并映射为在线用户对象
-    const allUsers = data
-      .filter((item: any) => item && item.token)
-      .map((item: any) => ({
-        tokenId: item.token,
-        deptName: item.user?.deptName || '',
-        userName: item.userName,
-        ipaddr: item.ipaddr,
-        loginLocation: item.loginLocation,
-        browser: item.browser,
-        os: item.os,
-        loginTime: item.loginTime,
-        deviceType: item.deviceType || Status.NORMAL,
-      }));
-
-    // 分页处理
-    const list = Paginate(
-      {
-        list: allUsers,
-        pageSize: query.pageSize,
-        pageNum: query.pageNum,
-      },
-      query,
-    );
-
-    // 格式化时间字段
-    const formattedList = FormatDateFields(list, ['loginTime']);
-
-    return Result.page(formattedList, allUsers.length);
+    return Result.page(list, total);
   }
 
+  /**
+   * 强制用户下线
+   *
+   * @param token 用户会话 Token（uuid）
+   */
   async delete(token: string) {
-    await this.redisService.del(`${CacheEnum.LOGIN_TOKEN_KEY}${token}`);
+    await this.sessionService.deleteSession(token);
     return Result.ok();
   }
 }

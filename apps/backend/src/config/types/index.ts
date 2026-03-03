@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { IsOptional, ValidateNested } from 'class-validator';
 import { AppConfig } from './app.config';
 import { DatabaseConfig } from './database.config';
 import { RedisConfig } from './redis.config';
@@ -12,6 +12,7 @@ import { GeneratorConfig } from './generator.config';
 import { UserConfig } from './user.config';
 import { ClientConfig } from './client.config';
 import { WechatConfig } from './wechat.config';
+import { SocialConfig } from './social.config';
 
 /**
  * 完整的应用配置接口
@@ -64,6 +65,11 @@ export class Configuration {
   @ValidateNested()
   @Type(() => WechatConfig)
   wechat: WechatConfig;
+
+  @ValidateNested()
+  @Type(() => SocialConfig)
+  @IsOptional()
+  social?: SocialConfig;
 }
 
 // 导出所有配置类型
@@ -79,3 +85,4 @@ export * from './generator.config';
 export * from './user.config';
 export * from './client.config';
 export * from './wechat.config';
+export * from './social.config';
