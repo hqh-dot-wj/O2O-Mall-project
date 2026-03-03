@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Body, Query, Request, Put, Res, HttpCode, Param, Delete } from '@nestjs/common';
+﻿﻿import { Controller, Get, Post, Body, Query, Request, Put, Res, HttpCode, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DictService } from './dict.service';
 import {
@@ -8,6 +8,9 @@ import {
   CreateDictDataDto,
   UpdateDictDataDto,
   ListDictData,
+  ImportDictDto,
+  SortDictDataDto,
+  DictStatsSummaryDto,
 } from './dto/index';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Response } from 'express';
@@ -205,5 +208,42 @@ export class DictController {
   @Post('/data/export')
   async exportData(@Res() res: Response, @Body() body: ListDictType): Promise<void> {
     return this.dictService.exportData(res, body);
+  }
+
+  @Api({
+    summary: '字典-批量导入',
+    description: '批量导入字典类型及数据，支持跳过已存在的字典类型和标签',
+    body: [ImportDictDto],
+  })
+  @RequirePermission('system:dict:add')
+  @Operlog({ businessType: BusinessType.IMPORT })
+  @HttpCode(200)
+  @Post('/import')
+  importDict(@Body() importList: ImportDictDto[]) {
+    return this.dictService.importDict(importList);
+  }
+
+  @Api({
+    summary: '字典数据-批量排序',
+    description: '批量更新字典数据的排序值，支持拖拽排序',
+    body: SortDictDataDto,
+  })
+  @RequirePermission('system:dict:edit')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  @HttpCode(200)
+  @Post('/data/sort')
+  sortDictData(@Body() sortDto: SortDictDataDto) {
+    return this.dictService.sortDictData(sortDto);
+  }
+
+  @Api({
+    summary: '字典-使用统计',
+    description: '获取字典类型和数据的使用统计信息，包括缓存状态',
+    type: DictStatsSummaryDto,
+  })
+  @RequirePermission('system:dict:list')
+  @Get('/stats')
+  getDictStats() {
+    return this.dictService.getDictStats();
   }
 }

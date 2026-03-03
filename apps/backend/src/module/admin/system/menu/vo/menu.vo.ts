@@ -169,3 +169,47 @@ export class RoleMenuTreeSelectVo {
   @ApiProperty({ description: '菜单树数据', type: [MenuTreeVo] })
   menus: MenuTreeVo[];
 }
+
+
+/**
+ * 权限标识生成结果
+ */
+export class GeneratePermsVo {
+  @ApiProperty({ description: '推荐的权限标识' })
+  perms: string;
+
+  @ApiProperty({ description: '权限标识建议列表', type: [String] })
+  suggestions: string[];
+}
+
+
+/**
+ * 菜单使用的角色信息
+ */
+export class MenuUsageRoleVo {
+  @ApiProperty({ description: '角色ID' })
+  roleId: number;
+
+  @ApiProperty({ description: '角色名称' })
+  roleName: string;
+
+  @ApiProperty({ description: '角色权限字符串' })
+  roleKey: string;
+
+  @ApiProperty({ description: '角色状态（0正常 1停用）' })
+  status: string;
+}
+
+/**
+ * 菜单使用情况统计
+ */
+export class MenuUsageVo {
+  @ApiProperty({ description: '菜单ID' })
+  menuId: number;
+
+  @ApiProperty({ description: '使用该菜单的角色数量' })
+  roleCount: number;
+
+  @ApiProperty({ description: '使用该菜单的角色列表', type: [MenuUsageRoleVo] })
+  roles: MenuUsageRoleVo[];
+}

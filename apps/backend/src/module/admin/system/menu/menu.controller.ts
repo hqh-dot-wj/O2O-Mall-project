@@ -1,10 +1,10 @@
 ﻿import { Controller, Get, Post, Body, Query, Put, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MenuService } from './menu.service';
-import { CreateMenuDto, UpdateMenuDto, ListMenuDto } from './dto/index';
+import { CreateMenuDto, UpdateMenuDto, ListMenuDto, SortMenuDto, GeneratePermsDto } from './dto/index';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
-import { MenuVo, MenuTreeVo, RoleMenuTreeSelectVo } from './vo/menu.vo';
+import { MenuVo, MenuTreeVo, RoleMenuTreeSelectVo, GeneratePermsVo, MenuUsageVo } from './vo/menu.vo';
 import { User, UserDto } from 'src/module/admin/system/user/user.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
@@ -134,5 +134,41 @@ export class MenuController {
   @Delete(':menuId')
   remove(@Param('menuId') menuId: string) {
     return this.menuService.remove(+menuId);
+  }
+
+  @Api({
+    summary: '菜单管理-批量排序',
+    description: '批量更新菜单显示顺序，支持拖拽排序',
+    body: SortMenuDto,
+  })
+  @RequirePermission('system:menu:edit')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  @Put('/sort')
+  batchSort(@Body() sortMenuDto: SortMenuDto) {
+    return this.menuService.batchSort(sortMenuDto);
+  }
+
+  @Api({
+    summary: '菜单管理-生成权限标识',
+    description: '根据菜单路径自动生成权限标识建议',
+    type: GeneratePermsVo,
+  })
+  @RequirePermission('system:menu:query')
+  @Post('/generate-perms')
+  generatePerms(@Body() dto: GeneratePermsDto) {
+    const result = this.menuService.generatePermission(dto.path, dto.parentPath, dto.menuType, dto.action);
+    return { code: 200, msg: 'success', data: result };
+  }
+
+  @Api({
+    summary: '菜单管理-使用情况统计',
+    description: '获取菜单被哪些角色使用的统计信息',
+    type: MenuUsageVo,
+    params: [{ name: 'menuId', description: '菜单ID', type: 'number' }],
+  })
+  @RequirePermission('system:menu:query')
+  @Get('/usage/:menuId')
+  getMenuUsage(@Param('menuId') menuId: string) {
+    return this.menuService.getMenuUsage(+menuId);
   }
 }

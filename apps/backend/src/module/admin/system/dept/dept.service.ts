@@ -2,13 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
-import { CreateDeptDto, UpdateDeptDto, ListDeptDto } from './dto/index';
+import { CreateDeptDto, UpdateDeptDto, ListDeptDto, MoveDeptDto, QueryLeaderLogDto } from './dto/index';
 import { FormatDateFields, ListToTree } from 'src/common/utils/index';
 import { CacheEnum, DataScopeEnum, DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 import { Cacheable, CacheEvict } from 'src/common/decorators/redis.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DeptRepository } from './dept.repository';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
+import { ClsService } from 'nestjs-cls';
 
 @Injectable()
 export class DeptService {
@@ -17,6 +18,7 @@ export class DeptService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly deptRepo: DeptRepository,
+    private readonly cls: ClsService,
   ) {}
 
   @CacheEvict(CacheEnum.SYS_DEPT_KEY, '*')
@@ -151,11 +153,14 @@ export class DeptService {
   @CacheEvict(CacheEnum.SYS_DEPT_KEY, '*')
   @Transactional()
   async update(updateDeptDto: UpdateDeptDto) {
-    const { deptId, parentId } = updateDeptDto;
+    const { deptId, parentId, leader } = updateDeptDto;
 
     // 获取当前部门信息
     const currentDept = await this.deptRepo.findById(deptId);
     BusinessException.throwIfNull(currentDept, '部门不存在');
+
+    // 检查是否修改了负责人
+    const isLeaderChanged = leader !== undefined && leader !== currentDept.leader;
 
     // 检查是否修改了父部门
     const isParentChanged = parentId !== undefined && parentId !== currentDept.parentId;
@@ -181,6 +186,16 @@ export class DeptService {
     // 如果修改了父部门，递归更新所有子部门的祖级列表
     if (isParentChanged && newAncestors !== undefined) {
       await this.updateChildrenAncestors(deptId, currentDept.ancestors, newAncestors);
+    }
+
+    // 如果修改了负责人，记录变更历史
+    if (isLeaderChanged) {
+      await this.recordLeaderChange(
+        deptId,
+        currentDept.deptName,
+        currentDept.leader,
+        leader,
+      );
     }
 
     return Result.ok();
@@ -371,5 +386,142 @@ export class DeptService {
       select: { deptId: true },
     });
     return depts.map((d) => d.deptId);
+  }
+
+  /**
+   * 移动部门到新的父部门下
+   * @description 独立的部门移动接口，会递归更新所有子部门的祖级列表
+   * @param moveDeptDto 移动部门DTO
+   * @returns 移动结果
+   * @throws BusinessException 移动失败时抛出异常
+   */
+  @CacheEvict(CacheEnum.SYS_DEPT_KEY, '*')
+  @Transactional()
+  async move(moveDeptDto: MoveDeptDto) {
+    const { deptId, newParentId } = moveDeptDto;
+
+    // 获取当前部门信息
+    const currentDept = await this.deptRepo.findById(deptId);
+    BusinessException.throwIfNull(currentDept, '部门不存在');
+
+    // 如果父部门没有变化，直接返回
+    if (newParentId === currentDept.parentId) {
+      return Result.ok();
+    }
+
+    // 校验不能将自己设为父部门
+    BusinessException.throwIf(newParentId === deptId, '不能将自己设为父部门');
+
+    // 校验不能将子部门设为父部门
+    await this.checkNotChildAsParent(deptId, newParentId);
+
+    // 计算新的祖级列表
+    const newAncestors = await this.calculateAncestors(newParentId);
+
+    // 更新当前部门
+    await this.deptRepo.update(deptId, {
+      parentId: newParentId,
+      ancestors: newAncestors,
+    });
+
+    // 递归更新所有子部门的祖级列表
+    await this.updateChildrenAncestors(deptId, currentDept.ancestors, newAncestors);
+
+    this.logger.log(`Department ${deptId} moved to parent ${newParentId}`);
+    return Result.ok();
+  }
+
+  /**
+   * 获取部门人员统计
+   * @description 统计部门的直接用户数量和包含子部门的总用户数量
+   * @param deptId 部门ID
+   * @returns 人员统计信息
+   */
+  async getDeptUserStats(deptId: number) {
+    // 获取部门信息
+    const dept = await this.deptRepo.findById(deptId);
+    BusinessException.throwIfNull(dept, '部门不存在');
+
+    // 统计直接用户数量
+    const directUserCount = await this.deptRepo.countUsers(deptId);
+
+    // 获取所有子部门ID
+    const childDeptIds = await this.getChildDeptIds(deptId);
+
+    // 统计包含子部门的总用户数量
+    const totalUserCount = await this.prisma.sysUser.count({
+      where: {
+        deptId: { in: childDeptIds },
+        delFlag: DelFlagEnum.NORMAL,
+      },
+    });
+
+    return Result.ok({
+      deptId,
+      deptName: dept.deptName,
+      directUserCount,
+      totalUserCount,
+      childDeptCount: childDeptIds.length - 1, // 排除自身
+    });
+  }
+
+  /**
+   * 记录部门负责人变更历史
+   * @param deptId 部门ID
+   * @param deptName 部门名称
+   * @param oldLeader 旧负责人
+   * @param newLeader 新负责人
+   * @param changeReason 变更原因
+   */
+  private async recordLeaderChange(
+    deptId: number,
+    deptName: string,
+    oldLeader: string,
+    newLeader: string,
+    changeReason?: string,
+  ): Promise<void> {
+    const tenantId = this.cls.get('tenantId') || '000000';
+    const operator = this.cls.get('userName') || 'system';
+
+    await this.prisma.sysDeptLeaderLog.create({
+      data: {
+        tenantId,
+        deptId,
+        deptName,
+        oldLeader: oldLeader || '',
+        newLeader: newLeader || '',
+        changeReason,
+        operator,
+      },
+    });
+
+    this.logger.log(`Leader changed for dept ${deptId}: ${oldLeader} -> ${newLeader}`);
+  }
+
+  /**
+   * 查询部门负责人变更历史
+   * @param query 查询条件
+   * @returns 变更历史列表
+   */
+  async getLeaderChangeHistory(query: QueryLeaderLogDto) {
+    const { deptId, pageNum = 1, pageSize = 10 } = query;
+    const tenantId = this.cls.get('tenantId') || '000000';
+
+    const where: Prisma.SysDeptLeaderLogWhereInput = { tenantId };
+    if (deptId) {
+      where.deptId = deptId;
+    }
+
+    const [rows, total] = await Promise.all([
+      this.prisma.sysDeptLeaderLog.findMany({
+        where,
+        orderBy: { createTime: 'desc' },
+        skip: (pageNum - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.sysDeptLeaderLog.count({ where }),
+    ]);
+
+    return Result.ok({ rows: FormatDateFields(rows), total });
   }
 }

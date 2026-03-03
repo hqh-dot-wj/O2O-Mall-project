@@ -1,6 +1,7 @@
 // @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
+import { ClsService } from 'nestjs-cls';
 import { DeptService } from './dept.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DeptRepository } from './dept.repository';
@@ -86,6 +87,11 @@ describe('DeptService', () => {
             sysUser: {
               count: jest.fn(),
             },
+            sysDeptLeaderLog: {
+              create: jest.fn(),
+              findMany: jest.fn(),
+              count: jest.fn(),
+            },
           },
         },
         {
@@ -111,6 +117,16 @@ describe('DeptService', () => {
               set: jest.fn(),
               del: jest.fn(),
             })),
+          },
+        },
+        {
+          provide: ClsService,
+          useValue: {
+            get: jest.fn().mockImplementation((key: string) => {
+              if (key === 'tenantId') return '000000';
+              if (key === 'userName') return 'admin';
+              return undefined;
+            }),
           },
         },
       ],
@@ -723,6 +739,201 @@ describe('DeptService', () => {
       expect(result).toEqual([100, 101, 102]);
       const callArgs = (prisma.sysDept.findMany as jest.Mock).mock.calls[0][0];
       expect(callArgs.where.OR).toEqual([{ deptId: 100 }, { ancestors: { contains: '100' } }]);
+    });
+  });
+
+  // ============================================================
+  // 部门移动测试
+  // ============================================================
+  describe('move', () => {
+    it('Given valid move request, When move, Then update parent and ancestors', async () => {
+      // Arrange
+      const moveDeptDto = { deptId: 101, newParentId: 200 };
+      (deptRepo.findById as jest.Mock).mockResolvedValue({
+        ...mockChildDept,
+        deptId: 101,
+        parentId: 100,
+        ancestors: '0,100',
+      });
+      (prisma.sysDept.findUnique as jest.Mock)
+        .mockResolvedValueOnce({ deptId: 200, ancestors: '0' }) // checkNotChildAsParent
+        .mockResolvedValueOnce({ deptId: 200, ancestors: '0' }); // calculateAncestors
+      (prisma.sysDept.findMany as jest.Mock).mockResolvedValue([]); // no children
+      (deptRepo.update as jest.Mock).mockResolvedValue({});
+
+      // Act
+      const result = await service.move(moveDeptDto);
+
+      // Assert
+      expect(result.code).toBe(ResponseCode.SUCCESS);
+      expect(deptRepo.update).toHaveBeenCalledWith(101, {
+        parentId: 200,
+        ancestors: '0,200',
+      });
+    });
+
+    it('Given same parent, When move, Then return success without update', async () => {
+      // Arrange
+      const moveDeptDto = { deptId: 101, newParentId: 100 };
+      (deptRepo.findById as jest.Mock).mockResolvedValue({
+        ...mockChildDept,
+        deptId: 101,
+        parentId: 100,
+        ancestors: '0,100',
+      });
+
+      // Act
+      const result = await service.move(moveDeptDto);
+
+      // Assert
+      expect(result.code).toBe(ResponseCode.SUCCESS);
+      expect(deptRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('Given move to self, When move, Then throw 不能将自己设为父部门', async () => {
+      // Arrange
+      const moveDeptDto = { deptId: 100, newParentId: 100 };
+      (deptRepo.findById as jest.Mock).mockResolvedValue({
+        ...mockRootDept,
+        deptId: 100,
+        parentId: 0,
+      });
+
+      // Act & Assert
+      await expect(service.move(moveDeptDto)).rejects.toThrow(BusinessException);
+    });
+
+    it('Given move to child, When move, Then throw 不能将子部门设为父部门', async () => {
+      // Arrange
+      const moveDeptDto = { deptId: 100, newParentId: 102 };
+      (deptRepo.findById as jest.Mock).mockResolvedValue({
+        ...mockRootDept,
+        deptId: 100,
+        parentId: 0,
+        ancestors: '0',
+      });
+      (prisma.sysDept.findUnique as jest.Mock).mockResolvedValue({
+        deptId: 102,
+        ancestors: '0,100,101', // 102 is child of 100
+      });
+
+      // Act & Assert
+      await expect(service.move(moveDeptDto)).rejects.toThrow(BusinessException);
+    });
+
+    it('Given dept not exists, When move, Then throw 部门不存在', async () => {
+      // Arrange
+      const moveDeptDto = { deptId: 999, newParentId: 100 };
+      (deptRepo.findById as jest.Mock).mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.move(moveDeptDto)).rejects.toThrow(BusinessException);
+    });
+  });
+
+  // ============================================================
+  // 部门人员统计测试
+  // ============================================================
+  describe('getDeptUserStats', () => {
+    it('Given valid deptId, When getDeptUserStats, Then return stats', async () => {
+      // Arrange
+      (deptRepo.findById as jest.Mock).mockResolvedValue({
+        ...mockRootDept,
+        deptId: 100,
+        deptName: '总公司',
+      });
+      (deptRepo.countUsers as jest.Mock).mockResolvedValue(5);
+      (prisma.sysDept.findMany as jest.Mock).mockResolvedValue([
+        { deptId: 100 },
+        { deptId: 101 },
+        { deptId: 102 },
+      ]);
+      (prisma.sysUser.count as jest.Mock).mockResolvedValue(15);
+
+      // Act
+      const result = await service.getDeptUserStats(100);
+
+      // Assert
+      expect(result.code).toBe(ResponseCode.SUCCESS);
+      expect(result.data).toEqual({
+        deptId: 100,
+        deptName: '总公司',
+        directUserCount: 5,
+        totalUserCount: 15,
+        childDeptCount: 2,
+      });
+    });
+
+    it('Given dept not exists, When getDeptUserStats, Then throw 部门不存在', async () => {
+      // Arrange
+      (deptRepo.findById as jest.Mock).mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.getDeptUserStats(999)).rejects.toThrow(BusinessException);
+    });
+
+    it('Given dept with no children, When getDeptUserStats, Then childDeptCount=0', async () => {
+      // Arrange
+      (deptRepo.findById as jest.Mock).mockResolvedValue({
+        ...mockGrandchildDept,
+        deptId: 102,
+        deptName: '前端组',
+      });
+      (deptRepo.countUsers as jest.Mock).mockResolvedValue(3);
+      (prisma.sysDept.findMany as jest.Mock).mockResolvedValue([{ deptId: 102 }]);
+      (prisma.sysUser.count as jest.Mock).mockResolvedValue(3);
+
+      // Act
+      const result = await service.getDeptUserStats(102);
+
+      // Assert
+      expect(result.data.childDeptCount).toBe(0);
+      expect(result.data.directUserCount).toBe(3);
+      expect(result.data.totalUserCount).toBe(3);
+    });
+  });
+
+  // ============================================================
+  // 负责人变更历史测试
+  // ============================================================
+  describe('getLeaderChangeHistory', () => {
+    it('Given valid query, When getLeaderChangeHistory, Then return paginated history', async () => {
+      // Arrange
+      const mockLogs = [
+        {
+          id: 1,
+          tenantId: '000000',
+          deptId: 100,
+          deptName: '总公司',
+          oldLeader: '张三',
+          newLeader: '李四',
+          operator: 'admin',
+          createTime: new Date(),
+        },
+      ];
+      (prisma.sysDeptLeaderLog.findMany as jest.Mock).mockResolvedValue(mockLogs);
+      (prisma.sysDeptLeaderLog.count as jest.Mock).mockResolvedValue(1);
+
+      // Act
+      const result = await service.getLeaderChangeHistory({ pageNum: 1, pageSize: 10 });
+
+      // Assert
+      expect(result.code).toBe(ResponseCode.SUCCESS);
+      expect(result.data.rows).toHaveLength(1);
+      expect(result.data.total).toBe(1);
+    });
+
+    it('Given deptId filter, When getLeaderChangeHistory, Then filter by deptId', async () => {
+      // Arrange
+      (prisma.sysDeptLeaderLog.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.sysDeptLeaderLog.count as jest.Mock).mockResolvedValue(0);
+
+      // Act
+      await service.getLeaderChangeHistory({ deptId: 100, pageNum: 1, pageSize: 10 });
+
+      // Assert
+      const callArgs = (prisma.sysDeptLeaderLog.findMany as jest.Mock).mock.calls[0][0];
+      expect(callArgs.where.deptId).toBe(100);
     });
   });
 });

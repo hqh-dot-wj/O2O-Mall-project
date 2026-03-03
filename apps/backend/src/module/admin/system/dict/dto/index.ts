@@ -4,3 +4,6 @@ export * from './list-dict-type.dto';
 export * from './create-dict-data.dto';
 export * from './update-dict-data.dto';
 export * from './list-dict-data.dto';
+export * from './import-dict.dto';
+export * from './sort-dict-data.dto';
+export * from './dict-stats.dto';

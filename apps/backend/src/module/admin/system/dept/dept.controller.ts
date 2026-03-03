@@ -1,7 +1,7 @@
 ﻿import { Controller, Get, Post, Body, Put, Param, Query, Delete, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DeptService } from './dept.service';
-import { CreateDeptDto, UpdateDeptDto, ListDeptDto } from './dto/index';
+import { CreateDeptDto, UpdateDeptDto, ListDeptDto, MoveDeptDto, QueryLeaderLogDto } from './dto/index';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Api } from 'src/common/decorators/api.decorator';
 import { DeptVo } from './vo/dept.vo';
@@ -106,5 +106,44 @@ export class DeptController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.deptService.remove(+id);
+  }
+
+  @Api({
+    summary: '部门管理-移动',
+    description: '将部门移动到新的父部门下，会递归更新所有子部门的祖级列表',
+    body: MoveDeptDto,
+  })
+  @RequirePermission('system:dept:edit')
+  @Operlog({ businessType: BusinessType.UPDATE })
+  @Put('move')
+  @HttpCode(200)
+  move(@Body() moveDeptDto: MoveDeptDto) {
+    return this.deptService.move(moveDeptDto);
+  }
+
+  @Api({
+    summary: '部门管理-人员统计',
+    description: '获取部门的人员统计信息，包括直接用户数和总用户数',
+    params: [{ name: 'id', description: '部门ID', type: 'number' }],
+  })
+  @RequirePermission('system:dept:query')
+  @Get(':id/stats')
+  getDeptUserStats(@Param('id') id: string) {
+    return this.deptService.getDeptUserStats(+id);
+  }
+
+  @Api({
+    summary: '部门管理-负责人变更历史',
+    description: '查询部门负责人变更历史记录',
+    queries: [
+      { name: 'deptId', description: '部门ID', required: false },
+      { name: 'pageNum', description: '页码', required: false },
+      { name: 'pageSize', description: '每页数量', required: false },
+    ],
+  })
+  @RequirePermission('system:dept:query')
+  @Get('leader/history')
+  getLeaderChangeHistory(@Query() query: QueryLeaderLogDto) {
+    return this.deptService.getLeaderChangeHistory(query);
   }
 }

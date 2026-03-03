@@ -188,4 +188,22 @@ export class MenuRepository extends BaseRepository<
 
     return result.count;
   }
+
+  /**
+   * 批量更新菜单排序
+   *
+   * @param items 排序项列表 { menuId, orderNum }[]
+   * @returns 更新的记录数
+   */
+  async batchUpdateOrder(items: { menuId: number; orderNum: number }[]): Promise<number> {
+    const updates = items.map((item) =>
+      this.delegate.update({
+        where: { menuId: item.menuId },
+        data: { orderNum: item.orderNum },
+      }),
+    );
+
+    const results = await this.prisma.$transaction(updates);
+    return results.length;
+  }
 }

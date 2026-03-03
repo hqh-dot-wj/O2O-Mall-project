@@ -4,12 +4,13 @@ import { Result } from 'src/common/response';
 import { DelFlagEnum, StatusEnum, CacheEnum } from 'src/common/enum/index';
 import { Cacheable } from 'src/common/decorators/redis.decorator';
 import { RedisService } from 'src/module/common/redis/redis.service';
-import { CreateMenuDto, UpdateMenuDto, ListMenuDto } from './dto/index';
+import { CreateMenuDto, UpdateMenuDto, ListMenuDto, SortMenuDto } from './dto/index';
 import { ListToTree, Uniq } from 'src/common/utils/index';
 import { UserService } from '../user/user.service';
 import { buildMenus } from './utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MenuRepository } from './menu.repository';
+import { BusinessException } from 'src/common/exceptions/business.exception';
 
 @Injectable()
 export class MenuService {
@@ -132,10 +133,139 @@ export class MenuService {
     return Result.ok(res);
   }
 
+  /**
+   * 删除菜单
+   *
+   * @param menuId 菜单ID
+   * @returns 删除结果
+   * @throws BusinessException 存在子菜单时抛出异常
+   */
   async remove(menuId: number) {
+    // 检查是否存在子菜单
+    await this.checkHasChildren(menuId);
+
     const data = await this.menuRepo.softDelete(menuId);
     await this.clearCache();
     return Result.ok(data);
+  }
+
+  /**
+   * 检查菜单是否存在子菜单
+   *
+   * @param menuId 菜单ID
+   * @throws BusinessException 存在子菜单时抛出异常
+   */
+  private async checkHasChildren(menuId: number): Promise<void> {
+    const childCount = await this.menuRepo.countChildren(menuId);
+    BusinessException.throwIf(childCount > 0, '存在子菜单，不允许删除');
+  }
+
+  /**
+   * 批量更新菜单排序
+   *
+   * @param sortMenuDto 排序数据
+   * @returns 更新的记录数
+   */
+  async batchSort(sortMenuDto: SortMenuDto) {
+    const count = await this.menuRepo.batchUpdateOrder(sortMenuDto.items);
+    await this.clearCache();
+    return Result.ok(count);
+  }
+
+  /**
+   * 根据菜单路径生成权限标识建议
+   *
+   * @param path 菜单路径，如 /system/user 或 user
+   * @param parentPath 父菜单路径（可选）
+   * @param menuType 菜单类型：M=目录 C=菜单 F=按钮
+   * @param action 操作类型（按钮时使用）：list/add/edit/remove/export/import
+   * @returns 权限标识建议
+   */
+  generatePermission(
+    path: string,
+    parentPath?: string,
+    menuType?: string,
+    action?: string,
+  ): { perms: string; suggestions: string[] } {
+    // 清理路径，移除开头的斜杠
+    const cleanPath = path?.replace(/^\/+/, '') || '';
+    const cleanParentPath = parentPath?.replace(/^\/+/, '') || '';
+
+    // 构建完整路径
+    let fullPath = cleanPath;
+    if (cleanParentPath && !cleanPath.includes('/')) {
+      fullPath = `${cleanParentPath}/${cleanPath}`;
+    }
+
+    // 将路径转换为权限格式：/system/user -> system:user
+    const permBase = fullPath.replace(/\//g, ':');
+
+    // 根据菜单类型生成权限标识
+    let perms = '';
+    const suggestions: string[] = [];
+
+    if (menuType === 'F') {
+      // 按钮类型：添加操作后缀
+      const actionSuffix = action || 'list';
+      perms = `${permBase}:${actionSuffix}`;
+      suggestions.push(
+        `${permBase}:list`,
+        `${permBase}:query`,
+        `${permBase}:add`,
+        `${permBase}:edit`,
+        `${permBase}:remove`,
+        `${permBase}:export`,
+        `${permBase}:import`,
+      );
+    } else if (menuType === 'C') {
+      // 菜单类型：默认 list 权限
+      perms = `${permBase}:list`;
+      suggestions.push(`${permBase}:list`, `${permBase}:query`);
+    } else {
+      // 目录类型：通常不需要权限标识
+      perms = '';
+      suggestions.push(`${permBase}:list`);
+    }
+
+    return { perms, suggestions: [...new Set(suggestions)] };
+  }
+
+  /**
+   * 获取菜单使用情况统计
+   *
+   * @param menuId 菜单ID
+   * @returns 使用该菜单的角色列表
+   */
+  async getMenuUsage(menuId: number) {
+    // 查询使用该菜单的角色
+    const roleMenus = await this.prisma.sysRoleMenu.findMany({
+      where: { menuId },
+      include: {
+        role: {
+          select: {
+            roleId: true,
+            roleName: true,
+            roleKey: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    const roles = roleMenus
+      .filter((rm) => rm.role)
+      .map((rm) => ({
+        roleId: rm.role.roleId,
+        roleName: rm.role.roleName,
+        roleKey: rm.role.roleKey,
+        status: rm.role.status === StatusEnum.NORMAL ? '0' : '1',
+      }));
+
+    return Result.ok({
+      menuId,
+      roleCount: roles.length,
+      roles,
+    });
   }
 
   /**

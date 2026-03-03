@@ -1152,6 +1152,23 @@ model SysDept {
   @@map("sys_dept")
 }
 
+/// 部门负责人变更历史表
+model SysDeptLeaderLog {
+  id           Int      @id @default(autoincrement())
+  tenantId     String   @map("tenant_id") @db.VarChar(20)
+  deptId       Int      @map("dept_id")
+  deptName     String   @map("dept_name") @db.VarChar(30)
+  oldLeader    String   @map("old_leader") @db.VarChar(20)
+  newLeader    String   @map("new_leader") @db.VarChar(20)
+  changeReason String?  @map("change_reason") @db.VarChar(200)
+  operator     String   @db.VarChar(64)
+  createTime   DateTime @default(now()) @map("create_time")
+
+  @@index([tenantId, deptId])
+  @@index([tenantId, createTime])
+  @@map("sys_dept_leader_log")
+}
+
 model SysDictData {
   dictCode   Int       @id @default(autoincrement()) @map("dict_code")
   tenantId   String    @default("000000") @map("tenant_id") @db.VarChar(20)
