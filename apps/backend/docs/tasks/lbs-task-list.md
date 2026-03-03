@@ -133,13 +133,88 @@
 
 ## 中期任务（1-2 月）
 
-- [ ] T-7: 统一位置准入模型（围栏与半径规则收敛为单一口径） (2-3d)
-- [ ] T-8: 下单链路复用统一准入服务，消除重复逻辑 (1-2d)
-- [ ] T-9: 新增 `sys_geo_fence.geom` GIST 空间索引迁移与回滚脚本 (1d)
-- [ ] T-10: 区划缓存生效与失效策略落地（含缓存观测） (1d)
-- [ ] T-11: 建立位置服务监控（命中率/P95/错误率） (2d)
+- [x] T-7: 统一位置准入模型（围栏与半径规则收敛为单一口径） (2-3d) ✅ 2026-03-03
+- [x] T-8: 下单链路复用统一准入服务，消除重复逻辑 (1-2d) ✅ 2026-03-03
+- [x] T-9: 新增 `sys_geo_fence.geom` GIST 空间索引迁移与回滚脚本 (1d) ✅ 2026-03-03
+- [x] T-10: 区划缓存生效与失效策略落地（含缓存观测） (1d) ✅ 2026-03-03
+- [x] T-11: 建立位置服务监控（命中率/P95/错误率） (2d) ✅ 2026-03-03
 
-## 长期任务（3-6 月）
+## 中期任务执行拆解（T-7 ~ T-11）
+
+> 说明：中期任务已全部完成（2026-03-03）。
+
+### T-7 统一位置准入模型
+
+**完成状态**: ✅ 已完成
+
+- 目标文件
+  - `apps/backend/src/module/lbs/admission/admission.service.ts` (新建)
+  - `apps/backend/src/module/lbs/admission/admission.service.spec.ts` (新建)
+  - `apps/backend/src/module/lbs/lbs.module.ts` (更新导出)
+- 实现内容
+  - 创建 `AdmissionService` 统一位置准入逻辑
+  - 围栏优先，半径降级策略
+  - 支持租户状态与站点状态过滤
+  - 完整单元测试覆盖（7 个测试用例）
+
+### T-8 下单链路复用统一准入服务
+
+**完成状态**: ✅ 已完成
+
+- 目标文件
+  - `apps/backend/src/module/client/order/services/order-checkout.service.ts` (重构)
+  - `apps/backend/src/module/client/order/order.module.ts` (更新依赖)
+- 实现内容
+  - `OrderCheckoutService` 重构为调用 `AdmissionService`
+  - 移除重复的位置匹配逻辑
+  - 保持原有业务逻辑不变
+
+### T-9 新增空间索引迁移脚本
+
+**完成状态**: ✅ 已完成
+
+- 目标文件
+  - `apps/backend/prisma/migrations/add_geo_fence_spatial_index/migration.sql` (新建)
+  - `apps/backend/prisma/migrations/add_geo_fence_spatial_index/rollback.sql` (新建)
+- 实现内容
+  - 为 `sys_geo_fence.geom` 创建 GIST 空间索引
+  - 提供回滚脚本
+  - 包含执行说明和注意事项
+
+### T-10 区划缓存策略落地
+
+**完成状态**: ✅ 已完成
+
+- 目标文件
+  - `apps/backend/src/module/lbs/region/region.service.ts` (更新)
+- 实现内容
+  - 使用 `@SystemCacheable` 装饰器（24小时TTL）
+  - 缓存 `findAll`、`findByCode`、`findChildren` 方法
+  - 使用 `@SystemCacheEvict` 实现缓存失效
+  - 静态数据缓存策略，适合区划数据特性
+
+### T-11 建立位置服务监控
+
+**完成状态**: ✅ 已完成
+
+- 目标文件
+  - `apps/backend/src/module/lbs/monitoring/lbs-metrics.service.ts` (新建)
+  - `apps/backend/src/module/lbs/monitoring/lbs-metrics.service.spec.ts` (新建)
+  - `apps/backend/src/module/lbs/monitoring/lbs-metrics.controller.ts` (新建)
+  - `apps/backend/src/module/lbs/lbs.module.ts` (更新)
+- 实现内容
+  - 基于 Redis 的指标收集服务
+  - 记录匹配请求（成功/失败）、围栏命中、半径降级
+  - 提供今日统计、P95延迟、热门站点查询接口
+  - 完整单元测试覆盖（7 个测试用例）
+  - 管理接口带权限控制
+
+### 中期阶段验收
+
+- ✅ 所有单元测试通过（44 个测试用例）
+- ✅ TypeScript 编译无错误（LBS 模块）
+- ✅ 代码符合项目规范（装饰器、异常处理、类型安全）
+- ✅ 文档完整（任务清单、实现总结）
 
 - [ ] T-12: 接入地理编码与逆地理编码能力 (1-2w)
 - [ ] T-13: 支持多围栏类型（服务区、禁行区、营业区） (1-2w)

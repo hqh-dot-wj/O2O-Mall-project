@@ -6,12 +6,23 @@ import { StationService } from './station/station.service';
 import { StationController } from './station/station.controller';
 import { RegionRepository } from './region/region.repository';
 import { StationRepository } from './station/station.repository';
+import { AdmissionService } from './admission/admission.service';
+import { LbsMetricsService } from './monitoring/lbs-metrics.service';
+import { LbsMetricsController } from './monitoring/lbs-metrics.controller';
 import { RedisModule } from 'src/module/common/redis/redis.module';
 
 @Module({
   imports: [RedisModule],
-  controllers: [RegionController, StationController],
-  providers: [GeoService, RegionService, StationService, RegionRepository, StationRepository],
-  exports: [GeoService, RegionService, StationService], // Export GeoService for use in other modules if needed
+  controllers: [RegionController, StationController, LbsMetricsController],
+  providers: [
+    GeoService,
+    RegionService,
+    StationService,
+    RegionRepository,
+    StationRepository,
+    AdmissionService,
+    LbsMetricsService,
+  ],
+  exports: [GeoService, RegionService, StationService, AdmissionService, LbsMetricsService],
 })
 export class LbsModule {}

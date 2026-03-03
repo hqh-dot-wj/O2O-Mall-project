@@ -15,6 +15,9 @@ export class WalletVo {
 
   @ApiProperty({ description: '累计收益' })
   totalIncome: number;
+
+  @ApiProperty({ description: '待回收金额' })
+  pendingRecovery: number;
 }
 
 export class ApplyWithdrawalDto {

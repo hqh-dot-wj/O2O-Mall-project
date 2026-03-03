@@ -5,13 +5,24 @@ import { CommissionRepository } from './commission.repository';
 import { WalletRepository } from '../wallet/wallet.repository';
 import { TransactionRepository } from '../wallet/transaction.repository';
 import { WalletService } from '../wallet/wallet.service';
-import { Queue } from 'bull';
 import { Decimal } from '@prisma/client/runtime/library';
-import { CommissionStatus, OrderType } from '@prisma/client';
+import { OrderType } from '@prisma/client';
+// Import sub-services
+import { DistConfigService } from './services/dist-config.service';
+import { CommissionValidatorService } from './services/commission-validator.service';
+import { BaseCalculatorService } from './services/base-calculator.service';
+import { L1CalculatorService } from './services/l1-calculator.service';
+import { L2CalculatorService } from './services/l2-calculator.service';
+import { CommissionCalculatorService } from './services/commission-calculator.service';
+import { CommissionSettlerService } from './services/commission-settler.service';
+import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
+import { LevelService } from 'src/module/store/distribution/services/level.service';
+import { OrderQueryPort } from '../ports/order-query.port';
+import { MemberQueryPort } from '../ports/member-query.port';
 
 /**
  * 优惠券和积分分佣计算测试套件
- * 
+ *
  * 测试场景：
  * 1. 基于原价分佣（ORIGINAL_PRICE）
  * 2. 兑换商品不分佣（ZERO）
@@ -34,6 +45,7 @@ describe('CommissionService - Coupon & Points Integration', () => {
     },
     pmsTenantSku: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
     },
     sysDistBlacklist: {
       findUnique: jest.fn(),
@@ -59,10 +71,43 @@ describe('CommissionService - Coupon & Points Integration', () => {
     add: jest.fn(),
   };
 
+  const mockProductConfigService = {
+    getEffectiveConfig: jest.fn().mockResolvedValue({
+      level1Rate: new Decimal(0.1),
+      level2Rate: new Decimal(0.05),
+    }),
+  };
+
+  const mockLevelService = {
+    findOne: jest.fn().mockResolvedValue(null),
+    findByLevelId: jest.fn().mockResolvedValue(null),
+  };
+
+  // A-T1: OrderQueryPort mock
+  const mockOrderQueryPort = {
+    findOrderForCommission: jest.fn(),
+    findOrdersForCommission: jest.fn(),
+  };
+
+  // A-T2: MemberQueryPort mock
+  const mockMemberQueryPort = {
+    findMemberForCommission: jest.fn(),
+    findMemberBrief: jest.fn(),
+    findMembersBrief: jest.fn(),
+    checkCircularReferral: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommissionService,
+        CommissionCalculatorService,
+        CommissionSettlerService,
+        CommissionValidatorService,
+        DistConfigService,
+        BaseCalculatorService,
+        L1CalculatorService,
+        L2CalculatorService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
@@ -84,8 +129,24 @@ describe('CommissionService - Coupon & Points Integration', () => {
           useValue: mockWalletService,
         },
         {
+          provide: ProductConfigService,
+          useValue: mockProductConfigService,
+        },
+        {
+          provide: LevelService,
+          useValue: mockLevelService,
+        },
+        {
           provide: 'BullQueue_CALC_COMMISSION',
           useValue: mockCommissionQueue,
+        },
+        {
+          provide: OrderQueryPort,
+          useValue: mockOrderQueryPort,
+        },
+        {
+          provide: MemberQueryPort,
+          useValue: mockMemberQueryPort,
         },
       ],
     }).compile();
@@ -116,38 +177,42 @@ describe('CommissionService - Coupon & Points Integration', () => {
         items: [
           {
             skuId: 'sku_exchange',
+            productId: 'prod_001',
             totalAmount: new Decimal(50),
             quantity: 1,
+            price: new Decimal(50),
           },
         ],
       };
 
       const member = {
         memberId: 'member_001',
+        tenantId: 'tenant_001',
         parentId: 'member_002',
         indirectParentId: null as string | null,
         levelId: 0,
       };
 
       const distConfig = {
-        level1Rate: new Decimal(0.10),
+        level1Rate: new Decimal(0.1),
         level2Rate: new Decimal(0.05),
         commissionBaseType: 'ORIGINAL_PRICE',
-        maxCommissionRate: new Decimal(0.50),
+        maxCommissionRate: new Decimal(0.5),
         enableCrossTenant: false,
       };
 
-      const tenantSku = {
-        id: 'sku_exchange',
-        distMode: 'NONE',
-        distRate: new Decimal(0),
-        isExchangeProduct: true, // 兑换商品
-      };
-
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(member);
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(distConfig);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(tenantSku);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
+        {
+          id: 'sku_exchange',
+          distMode: 'NONE',
+          distRate: new Decimal(0),
+          isExchangeProduct: true, // 兑换商品
+        },
+      ]);
 
       await service.calculateCommission(orderId, tenantId);
 
@@ -174,21 +239,25 @@ describe('CommissionService - Coupon & Points Integration', () => {
         items: [
           {
             skuId: 'sku_001',
+            productId: 'prod_001',
             totalAmount: new Decimal(100),
             quantity: 1,
+            price: new Decimal(100),
           },
         ],
       };
 
       const member = {
         memberId: 'member_001',
+        tenantId: 'tenant_001',
         parentId: null as string | null,
         indirectParentId: null as string | null,
         levelId: 1,
       };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(member);
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
 
       await service.calculateCommission(orderId, tenantId);
 
@@ -202,14 +271,14 @@ describe('CommissionService - Coupon & Points Integration', () => {
       const tenantId = 'tenant_001';
       const dbConfig = {
         tenantId,
-        level1Rate: new Decimal(0.10),
+        level1Rate: new Decimal(0.1),
         level2Rate: new Decimal(0.05),
         enableLV0: true,
         enableCrossTenant: false,
         crossTenantRate: new Decimal(1.0),
         crossMaxDaily: new Decimal(500),
         commissionBaseType: 'ORIGINAL_PRICE',
-        maxCommissionRate: new Decimal(0.50),
+        maxCommissionRate: new Decimal(0.5),
       };
 
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(dbConfig);
@@ -217,7 +286,7 @@ describe('CommissionService - Coupon & Points Integration', () => {
       const result = await service.getDistConfig(tenantId);
 
       expect(result.commissionBaseType).toBe('ORIGINAL_PRICE');
-      expect(result.maxCommissionRate.toNumber()).toBe(0.50);
+      expect(result.maxCommissionRate.toNumber()).toBe(0.5);
     });
 
     it('应该返回默认配置（当数据库无配置时）', async () => {

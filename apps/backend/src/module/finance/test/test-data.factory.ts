@@ -188,6 +188,7 @@ export class TestDataFactory {
       balance: new Decimal(100),
       frozen: new Decimal(0),
       totalIncome: new Decimal(100),
+      pendingRecovery: new Decimal(0),
       version: 1,
       createTime: new Date(),
       updateTime: new Date(),
@@ -203,6 +204,18 @@ export class TestDataFactory {
       balance: new Decimal(0),
       frozen: new Decimal(0),
       totalIncome: new Decimal(0),
+      pendingRecovery: new Decimal(0),
+      ...overrides,
+    });
+  }
+
+  /**
+   * 生成有待回收余额的钱包
+   */
+  static createWalletWithPendingRecovery(overrides?: Record<string, unknown>) {
+    return this.createWallet({
+      balance: new Decimal(0),
+      pendingRecovery: new Decimal(50),
       ...overrides,
     });
   }
@@ -234,9 +247,12 @@ export class TestDataFactory {
       tenantId: 'tenant1',
       memberId: 'member1',
       amount: new Decimal(50),
+      fee: new Decimal(0),
+      actualAmount: new Decimal(50),
       method: 'WECHAT',
       realName: '测试用户',
       status: WithdrawalStatus.PENDING,
+      retryCount: 0,
       auditTime: null as Date | null,
       auditBy: null as string | null,
       auditRemark: null as string | null,
@@ -280,6 +296,18 @@ export class TestDataFactory {
       auditTime: new Date(),
       auditBy: 'admin1',
       auditRemark: '余额异常',
+      ...overrides,
+    });
+  }
+
+  /**
+   * 生成失败待重试提现记录
+   */
+  static createFailedWithdrawal(overrides?: Record<string, unknown>) {
+    return this.createWithdrawal({
+      status: WithdrawalStatus.FAILED,
+      failReason: '支付网关超时',
+      retryCount: 1,
       ...overrides,
     });
   }

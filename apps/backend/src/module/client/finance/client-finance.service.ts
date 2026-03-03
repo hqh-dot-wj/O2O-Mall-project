@@ -24,6 +24,9 @@ export class ClientFinanceService {
 
   /**
    * 获取我的钱包信息
+   * 
+   * @description
+   * W-T5: C 端钱包查询接口增强，返回待回收金额
    */
   async getWallet(tenantId: string, memberId: string) {
     // 确保钱包存在
@@ -40,6 +43,7 @@ export class ClientFinanceService {
           balance: 0,
           frozen: 0,
           totalIncome: 0,
+          pendingRecovery: 0,
         },
       });
     }
@@ -49,6 +53,7 @@ export class ClientFinanceService {
       balance: Number(wallet.balance),
       frozen: Number(wallet.frozen),
       totalIncome: Number(wallet.totalIncome),
+      pendingRecovery: Number(wallet.pendingRecovery),
     };
 
     return Result.ok(vo);

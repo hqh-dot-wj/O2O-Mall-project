@@ -1,16 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import { MemberQueryPort } from '../../ports/member-query.port';
 
 /**
  * 佣金校验服务
- * 职责：自购检测、黑名单校验、限额校验、循环推荐检测
+ *
+ * @description
+ * 自购检测、黑名单校验、限额校验、循环推荐检测
+ *
+ * @architecture A-T2: 循环推荐检测通过 MemberQueryPort 实现
  */
 @Injectable()
 export class CommissionValidatorService {
   private readonly logger = new Logger(CommissionValidatorService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly memberQueryPort: MemberQueryPort,
+  ) {}
 
   /**
    * 检查是否自购 (不返佣)
@@ -138,24 +146,14 @@ export class CommissionValidatorService {
   }
 
   /**
-   * 检查循环推荐 (绑定推荐人时调用)
+   * 检查循环推荐（绑定推荐人时调用）
+   *
+   * @description
+   * 通过 MemberQueryPort 实现，解耦对 umsMember 的直接访问
+   *
+   * @architecture A-T2
    */
   async checkCircularReferral(memberId: string, parentId: string): Promise<boolean> {
-    let current = await this.prisma.umsMember.findUnique({
-      where: { memberId: parentId },
-    });
-    let depth = 0;
-
-    while (current?.parentId && depth < 10) {
-      if (current.parentId === memberId) {
-        return true; // 发现循环
-      }
-      current = await this.prisma.umsMember.findUnique({
-        where: { memberId: current.parentId },
-      });
-      depth++;
-    }
-
-    return false;
+    return this.memberQueryPort.checkCircularReferral(memberId, parentId);
   }
 }

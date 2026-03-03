@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import { OrderType } from '@prisma/client';
 import { Transactional, IsolationLevel } from 'src/common/decorators/transactional.decorator';
@@ -11,17 +10,25 @@ import { L1CalculatorService } from './l1-calculator.service';
 import { L2CalculatorService } from './l2-calculator.service';
 import { CommissionRecord } from 'src/common/types/finance.types';
 import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
+import { OrderQueryPort } from '../../ports/order-query.port';
+import { MemberQueryPort } from '../../ports/member-query.port';
 
 /**
  * 佣金计算协调服务
- * 职责：协调各计算器完成佣金计算
+ *
+ * @description
+ * 协调各计算器完成佣金计算。
+ * 通过 Port/Adapter 模式解耦对 OMS 和 UMS 模块的直接依赖。
+ *
+ * @architecture
+ * - A-T1: 通过 OrderQueryPort 获取订单数据
+ * - A-T2: 通过 MemberQueryPort 获取会员数据
  */
 @Injectable()
 export class CommissionCalculatorService {
   private readonly logger = new Logger(CommissionCalculatorService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly commissionRepo: CommissionRepository,
     private readonly configService: DistConfigService,
     private readonly validator: CommissionValidatorService,
@@ -29,6 +36,8 @@ export class CommissionCalculatorService {
     private readonly l1Calculator: L1CalculatorService,
     private readonly l2Calculator: L2CalculatorService,
     private readonly productConfigService: ProductConfigService,
+    private readonly orderQueryPort: OrderQueryPort,
+    private readonly memberQueryPort: MemberQueryPort,
   ) {}
 
   /**
@@ -46,27 +55,16 @@ export class CommissionCalculatorService {
    */
   @Transactional({ isolationLevel: IsolationLevel.RepeatableRead })
   async calculateCommission(orderId: string, tenantId: string) {
-    // 1. 获取订单详情（包含商品明细，OmsOrderItem 无 tenantSku 关联，使用 productId）
-    const order = await this.prisma.omsOrder.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
+    // 1. 通过 Port 获取订单详情（A-T1: 解耦对 omsOrder 的直接访问）
+    const order = await this.orderQueryPort.findOrderForCommission(orderId);
 
     if (!order) {
       this.logger.warn(`[Commission] Order ${orderId} not found`);
       return;
     }
 
-    // 2. 获取下单人及其推荐关系链 (使用新的 parentId/indirectParentId)
-    const member = await this.prisma.umsMember.findUnique({
-      where: { memberId: order.memberId },
-      select: {
-        memberId: true,
-        parentId: true,
-        indirectParentId: true,
-        levelId: true,
-      },
-    });
+    // 2. 通过 Port 获取下单人及其推荐关系链（A-T2: 解耦对 umsMember 的直接访问）
+    const member = await this.memberQueryPort.findMemberForCommission(order.memberId);
 
     if (!member) return;
 

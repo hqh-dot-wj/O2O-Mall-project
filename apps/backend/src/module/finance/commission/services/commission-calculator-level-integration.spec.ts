@@ -10,6 +10,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
 import { LevelService } from 'src/module/store/distribution/services/level.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import { OrderQueryPort } from '../../ports/order-query.port';
+import { MemberQueryPort } from '../../ports/member-query.port';
 
 describe('CommissionCalculatorService - Level Integration', () => {
   let service: CommissionCalculatorService;
@@ -54,6 +56,20 @@ describe('CommissionCalculatorService - Level Integration', () => {
     findOne: jest.fn(),
   };
 
+  // A-T1: OrderQueryPort mock
+  const mockOrderQueryPort = {
+    findOrderForCommission: jest.fn(),
+    findOrdersForCommission: jest.fn(),
+  };
+
+  // A-T2: MemberQueryPort mock
+  const mockMemberQueryPort = {
+    findMemberForCommission: jest.fn(),
+    findMemberBrief: jest.fn(),
+    findMembersBrief: jest.fn(),
+    checkCircularReferral: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -87,6 +103,14 @@ describe('CommissionCalculatorService - Level Integration', () => {
         {
           provide: LevelService,
           useValue: mockLevelService,
+        },
+        {
+          provide: OrderQueryPort,
+          useValue: mockOrderQueryPort,
+        },
+        {
+          provide: MemberQueryPort,
+          useValue: mockMemberQueryPort,
         },
       ],
     }).compile();
@@ -133,12 +157,14 @@ describe('CommissionCalculatorService - Level Integration', () => {
 
       const member = {
         memberId: 'M001',
+        tenantId: 'T001',
         parentId: 'M002',
         indirectParentId: null,
         levelId: 0,
       };
 
       const beneficiary = {
+        memberId: 'M002',
         tenantId: 'T001',
         levelId: 2, // C2会员
         parentId: 'M003', // 有上级，不是C2全拿场景
@@ -169,7 +195,8 @@ describe('CommissionCalculatorService - Level Integration', () => {
         commissionBaseType: 'ORIGINAL_PRICE',
       };
 
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(beneficiary);
+      // A-T2: 使用 MemberQueryPort mock
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockValidator.checkSelfPurchase.mockReturnValue(false);
       mockValidator.isUserBlacklisted.mockResolvedValue(false);
       mockLevelService.findOne.mockResolvedValue(memberLevelConfig);
@@ -215,12 +242,14 @@ describe('CommissionCalculatorService - Level Integration', () => {
 
       const member = {
         memberId: 'M001',
+        tenantId: 'T001',
         parentId: 'M002',
         indirectParentId: null,
         levelId: 0,
       };
 
       const beneficiary = {
+        memberId: 'M002',
         tenantId: 'T001',
         levelId: 1, // C1会员
         parentId: null,
@@ -245,7 +274,8 @@ describe('CommissionCalculatorService - Level Integration', () => {
         commissionBaseType: 'ORIGINAL_PRICE',
       };
 
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(beneficiary);
+      // A-T2: 使用 MemberQueryPort mock
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockValidator.checkSelfPurchase.mockReturnValue(false);
       mockValidator.isUserBlacklisted.mockResolvedValue(false);
       mockLevelService.findOne.mockResolvedValue(memberLevelConfig);
@@ -290,14 +320,17 @@ describe('CommissionCalculatorService - Level Integration', () => {
 
       const member = {
         memberId: 'M001',
+        tenantId: 'T001',
         parentId: 'M002',
         indirectParentId: 'M003',
         levelId: 0,
       };
 
       const beneficiary = {
+        memberId: 'M003',
         tenantId: 'T001',
         levelId: 2, // C2会员
+        parentId: null,
       };
 
       const distConfig = {
@@ -325,7 +358,8 @@ describe('CommissionCalculatorService - Level Integration', () => {
         commissionBaseType: 'ORIGINAL_PRICE',
       };
 
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(beneficiary);
+      // A-T2: 使用 MemberQueryPort mock
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockValidator.isUserBlacklisted.mockResolvedValue(false);
       mockLevelService.findOne.mockResolvedValue(memberLevelConfig);
       mockProductConfigService.getEffectiveConfig.mockResolvedValue(productConfig);
@@ -373,12 +407,14 @@ describe('CommissionCalculatorService - Level Integration', () => {
 
       const member = {
         memberId: 'M001',
+        tenantId: 'T001',
         parentId: 'M002',
         indirectParentId: null,
         levelId: 0,
       };
 
       const beneficiary = {
+        memberId: 'M002',
         tenantId: 'T001',
         levelId: 2, // C2会员
         parentId: null, // 无上级，C2全拿
@@ -408,7 +444,8 @@ describe('CommissionCalculatorService - Level Integration', () => {
         commissionBaseType: 'ORIGINAL_PRICE',
       };
 
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(beneficiary);
+      // A-T2: 使用 MemberQueryPort mock
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockValidator.checkSelfPurchase.mockReturnValue(false);
       mockValidator.isUserBlacklisted.mockResolvedValue(false);
       mockLevelService.findOne.mockResolvedValue(memberLevelConfig);
@@ -456,12 +493,14 @@ describe('CommissionCalculatorService - Level Integration', () => {
 
       const member = {
         memberId: 'M001',
+        tenantId: 'T001',
         parentId: 'M002',
         indirectParentId: null,
         levelId: 0,
       };
 
       const beneficiary = {
+        memberId: 'M002',
         tenantId: 'T001',
         levelId: 2,
         parentId: 'M003', // 有上级，不是C2全拿场景
@@ -485,17 +524,18 @@ describe('CommissionCalculatorService - Level Integration', () => {
       };
 
       // 不同商品有不同的商品级配置
-      const productConfigs = {
+      const productConfigs: Record<string, { level1Rate: number; level2Rate: number; commissionBaseType: string }> = {
         P001: { level1Rate: 0.12, level2Rate: 0.06, commissionBaseType: 'ORIGINAL_PRICE' },
         P002: { level1Rate: 0.10, level2Rate: 0.05, commissionBaseType: 'ORIGINAL_PRICE' },
         P003: { level1Rate: 0.08, level2Rate: 0.04, commissionBaseType: 'ORIGINAL_PRICE' },
       };
 
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(beneficiary);
+      // A-T2: 使用 MemberQueryPort mock
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockValidator.checkSelfPurchase.mockReturnValue(false);
       mockValidator.isUserBlacklisted.mockResolvedValue(false);
       mockLevelService.findOne.mockResolvedValue(memberLevelConfig);
-      mockProductConfigService.getEffectiveConfig.mockImplementation((tenantId, productId) => {
+      mockProductConfigService.getEffectiveConfig.mockImplementation((_tenantId: string, productId: string) => {
         return Promise.resolve(productConfigs[productId]);
       });
 
@@ -537,14 +577,17 @@ describe('CommissionCalculatorService - Level Integration', () => {
 
       const member = {
         memberId: 'M001',
+        tenantId: 'T001',
         parentId: 'M002',
         indirectParentId: 'M003',
         levelId: 0,
       };
 
       const beneficiary = {
+        memberId: 'M003',
         tenantId: 'T001',
         levelId: 2,
+        parentId: null,
       };
 
       const distConfig = {
@@ -564,7 +607,8 @@ describe('CommissionCalculatorService - Level Integration', () => {
         isActive: true,
       };
 
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(beneficiary);
+      // A-T2: 使用 MemberQueryPort mock
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockValidator.isUserBlacklisted.mockResolvedValue(false);
       mockLevelService.findOne.mockResolvedValue(memberLevelConfig);
 

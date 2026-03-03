@@ -5,6 +5,7 @@ import { OrderService } from './order.service';
 import { FinanceModule } from 'src/module/finance/finance.module';
 import { NotificationModule } from 'src/module/notification/notification.module';
 import { MarketingModule } from 'src/module/marketing/marketing.module';
+import { LbsModule } from 'src/module/lbs/lbs.module';
 import { BullModule } from '@nestjs/bull';
 import { NotificationProcessor } from './notification.processor';
 import { OrderDelayProcessor } from './order-delay.processor';
@@ -26,6 +27,7 @@ import { ORDER_SERVICE } from './order-service.token';
     forwardRef(() => MarketingModule),
     ClientAddressModule, // For AddressRepository
     ClientCartModule, // For CartService
+    LbsModule, // For AdmissionService
     BullModule.registerQueue({
       name: 'ORDER_NOTIFICATION',
     }),

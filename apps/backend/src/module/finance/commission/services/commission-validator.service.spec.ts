@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CommissionValidatorService } from './commission-validator.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import { MemberQueryPort } from '../../ports/member-query.port';
 
 describe('CommissionValidatorService', () => {
   let service: CommissionValidatorService;
@@ -20,6 +21,14 @@ describe('CommissionValidatorService', () => {
     },
   };
 
+  // A-T2: MemberQueryPort mock
+  const mockMemberQueryPort = {
+    findMemberForCommission: jest.fn(),
+    findMemberBrief: jest.fn(),
+    findMembersBrief: jest.fn(),
+    checkCircularReferral: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -27,6 +36,10 @@ describe('CommissionValidatorService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: MemberQueryPort,
+          useValue: mockMemberQueryPort,
         },
       ],
     }).compile();
@@ -168,41 +181,26 @@ describe('CommissionValidatorService', () => {
 
   describe('checkCircularReferral', () => {
     beforeEach(() => {
-      mockPrismaService.umsMember.findUnique.mockReset();
+      mockMemberQueryPort.checkCircularReferral.mockReset();
     });
 
     it('应该检测到循环推荐', async () => {
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce({ memberId: 'member2', parentId: 'member3' })
-        .mockResolvedValueOnce({ memberId: 'member3', parentId: 'member1' });
+      // A-T2: 通过 MemberQueryPort 检测循环推荐
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(true);
 
       const result = await service.checkCircularReferral('member1', 'member2');
 
       expect(result).toBe(true);
+      expect(mockMemberQueryPort.checkCircularReferral).toHaveBeenCalledWith('member1', 'member2');
     });
 
     it('应该返回false - 无循环推荐', async () => {
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce({ memberId: 'member2', parentId: 'member3' })
-        .mockResolvedValueOnce({ memberId: 'member3', parentId: null });
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(false);
 
       const result = await service.checkCircularReferral('member1', 'member2');
 
       expect(result).toBe(false);
-    });
-
-    it('应该返回false - 达到最大深度', async () => {
-      // Mock 10 层深度
-      for (let i = 0; i < 10; i++) {
-        mockPrismaService.umsMember.findUnique.mockResolvedValueOnce({
-          memberId: `member${i + 2}`,
-          parentId: `member${i + 3}`,
-        });
-      }
-
-      const result = await service.checkCircularReferral('member1', 'member2');
-
-      expect(result).toBe(false);
+      expect(mockMemberQueryPort.checkCircularReferral).toHaveBeenCalledWith('member1', 'member2');
     });
   });
 });

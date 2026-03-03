@@ -16,6 +16,10 @@ import { L1CalculatorService } from './services/l1-calculator.service';
 import { L2CalculatorService } from './services/l2-calculator.service';
 import { CommissionCalculatorService } from './services/commission-calculator.service';
 import { CommissionSettlerService } from './services/commission-settler.service';
+import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
+import { LevelService } from 'src/module/store/distribution/services/level.service';
+import { OrderQueryPort } from '../ports/order-query.port';
+import { MemberQueryPort } from '../ports/member-query.port';
 
 describe('CommissionService', () => {
   let service: CommissionService;
@@ -69,10 +73,40 @@ describe('CommissionService', () => {
     getOrCreateWallet: jest.fn(),
     addBalance: jest.fn(),
     deductBalance: jest.fn(),
+    deductBalanceOrPendingRecovery: jest.fn().mockResolvedValue({
+      deducted: new Decimal(10),
+      pendingRecovery: new Decimal(0),
+    }),
   };
 
   const mockCommissionQueue = {
     add: jest.fn(),
+  };
+
+  const mockProductConfigService = {
+    getEffectiveConfig: jest.fn().mockResolvedValue({
+      level1Rate: new Decimal(0.1),
+      level2Rate: new Decimal(0.05),
+    }),
+  };
+
+  const mockLevelService = {
+    findOne: jest.fn().mockResolvedValue(null), // 默认无会员等级配置，使用商品级配置
+    findByLevelId: jest.fn().mockResolvedValue(null),
+  };
+
+  // A-T1: OrderQueryPort mock
+  const mockOrderQueryPort = {
+    findOrderForCommission: jest.fn(),
+    findOrdersForCommission: jest.fn(),
+  };
+
+  // A-T2: MemberQueryPort mock
+  const mockMemberQueryPort = {
+    findMemberForCommission: jest.fn(),
+    findMemberBrief: jest.fn(),
+    findMembersBrief: jest.fn(),
+    checkCircularReferral: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -107,8 +141,24 @@ describe('CommissionService', () => {
           useValue: mockWalletService,
         },
         {
+          provide: ProductConfigService,
+          useValue: mockProductConfigService,
+        },
+        {
+          provide: LevelService,
+          useValue: mockLevelService,
+        },
+        {
           provide: 'BullQueue_CALC_COMMISSION',
           useValue: mockCommissionQueue,
+        },
+        {
+          provide: OrderQueryPort,
+          useValue: mockOrderQueryPort,
+        },
+        {
+          provide: MemberQueryPort,
+          useValue: mockMemberQueryPort,
         },
       ],
     }).compile();
@@ -213,6 +263,7 @@ describe('CommissionService', () => {
           skuId: 'sku1',
           totalAmount: new Decimal(100),
           quantity: 1,
+          price: new Decimal(100),
         },
       ],
     };
@@ -234,7 +285,7 @@ describe('CommissionService', () => {
     };
 
     it('应该跳过计算 - 订单不存在', async () => {
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(null);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(null);
 
       await service.calculateCommission('order1', 'tenant1');
 
@@ -242,8 +293,8 @@ describe('CommissionService', () => {
     });
 
     it('应该跳过计算 - 会员不存在', async () => {
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(null);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(mockOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(null);
 
       await service.calculateCommission('order1', 'tenant1');
 
@@ -256,8 +307,8 @@ describe('CommissionService', () => {
         shareUserId: 'member1' as string | null,
       };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(selfPurchaseOrder);
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(mockMember);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(selfPurchaseOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(mockMember);
 
       await service.calculateCommission('order1', 'tenant1');
 
@@ -265,8 +316,8 @@ describe('CommissionService', () => {
     });
 
     it('应该跳过计算 - 佣金基数为0', async () => {
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(mockMember);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(mockOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(mockMember);
       mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
         {
           id: 'sku1',
@@ -287,9 +338,9 @@ describe('CommissionService', () => {
         parentId: 'member3',
       };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(mockMember)
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(mockOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(mockMember);
+      mockMemberQueryPort.findMemberBrief
         .mockResolvedValueOnce(beneficiary)
         .mockResolvedValueOnce({ memberId: 'member3', tenantId: 'tenant1', levelId: 2 });
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
@@ -316,8 +367,9 @@ describe('CommissionService', () => {
         parentId: null as string | null, // C2无上级
       };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(mockOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(mockMember);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
       mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
         {
@@ -345,8 +397,9 @@ describe('CommissionService', () => {
         parentId: 'member3',
       };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(mockOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(mockMember);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
       mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
         {
@@ -374,8 +427,9 @@ describe('CommissionService', () => {
         parentId: 'member3',
       };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(mockOrder);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(mockMember).mockResolvedValueOnce(beneficiary);
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(mockOrder);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(mockMember);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(mockDistConfig);
       mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([
         {
@@ -449,12 +503,15 @@ describe('CommissionService', () => {
       ];
 
       mockCommissionRepo.findMany.mockResolvedValue(mockCommissions);
-      mockWalletService.deductBalance.mockResolvedValue({});
+      mockWalletService.deductBalanceOrPendingRecovery.mockResolvedValue({
+        deducted: new Decimal(10),
+        pendingRecovery: new Decimal(0),
+      });
       mockCommissionRepo.update.mockResolvedValue({});
 
       await service.cancelCommissions('order1');
 
-      expect(mockWalletService.deductBalance).toHaveBeenCalled();
+      expect(mockWalletService.deductBalanceOrPendingRecovery).toHaveBeenCalled();
       expect(mockCommissionRepo.update).toHaveBeenCalledWith('comm1', {
         status: CommissionStatus.CANCELLED,
       });
@@ -473,7 +530,10 @@ describe('CommissionService', () => {
       ];
 
       mockCommissionRepo.findMany.mockResolvedValue(mockCommissions);
-      mockWalletService.deductBalance.mockResolvedValue({});
+      mockWalletService.deductBalanceOrPendingRecovery.mockResolvedValue({
+        deducted: new Decimal(5),
+        pendingRecovery: new Decimal(0),
+      });
       mockCommissionRepo.update.mockResolvedValue({});
 
       await service.cancelCommissions('order1', [1]);
@@ -481,7 +541,7 @@ describe('CommissionService', () => {
       expect(mockCommissionRepo.findMany).toHaveBeenCalledWith({
         where: { orderId: 'order1', orderItemId: { in: [1] } },
       });
-      expect(mockWalletService.deductBalance).toHaveBeenCalledWith(
+      expect(mockWalletService.deductBalanceOrPendingRecovery).toHaveBeenCalledWith(
         'member1',
         new Decimal(5),
         'order1',
@@ -499,7 +559,7 @@ describe('CommissionService', () => {
       await service.cancelCommissions('order1');
 
       expect(mockCommissionRepo.update).not.toHaveBeenCalled();
-      expect(mockWalletService.deductBalance).not.toHaveBeenCalled();
+      expect(mockWalletService.deductBalanceOrPendingRecovery).not.toHaveBeenCalled();
     });
   });
 
@@ -552,34 +612,31 @@ describe('CommissionService', () => {
 
   describe('checkCircularReferral', () => {
     beforeEach(() => {
-      mockPrismaService.umsMember.findUnique.mockReset();
+      mockMemberQueryPort.checkCircularReferral.mockReset();
     });
 
     it('应该检测到循环推荐', async () => {
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce({ memberId: 'member2', parentId: 'member3' })
-        .mockResolvedValueOnce({ memberId: 'member3', parentId: 'member1' });
+      // A-T2: 通过 MemberQueryPort 检测循环推荐
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(true);
 
       const result = await service.checkCircularReferral('member1', 'member2');
 
       expect(result).toBe(true);
+      expect(mockMemberQueryPort.checkCircularReferral).toHaveBeenCalledWith('member1', 'member2');
     });
 
     it('应该返回false - 无循环推荐', async () => {
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce({ memberId: 'member2', parentId: 'member3' })
-        .mockResolvedValueOnce({ memberId: 'member3', parentId: null });
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(false);
 
       const result = await service.checkCircularReferral('member1', 'member2');
 
       expect(result).toBe(false);
+      expect(mockMemberQueryPort.checkCircularReferral).toHaveBeenCalledWith('member1', 'member2');
     });
 
     it('应该返回false - 达到最大深度', async () => {
-      mockPrismaService.umsMember.findUnique.mockResolvedValue({
-        memberId: 'memberX',
-        parentId: 'memberY',
-      });
+      // Port 内部处理最大深度逻辑，返回 false
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(false);
 
       const result = await service.checkCircularReferral('member1', 'member2');
 

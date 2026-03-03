@@ -1883,9 +1883,16 @@ model FinWallet {
   tenantId String @map("tenant_id")
 
   // 三资产
-  balance     Decimal @default(0) @db.Decimal(12, 2) // 可用余额
-  frozen      Decimal @default(0) @db.Decimal(12, 2) // 冻结余额
-  totalIncome Decimal @default(0) @db.Decimal(12, 2) // 累计收益
+  balance         Decimal @default(0) @db.Decimal(12, 2) // 可用余额
+  frozen          Decimal @default(0) @db.Decimal(12, 2) // 冻结余额
+  totalIncome     Decimal @default(0) @db.Decimal(12, 2) // 累计收益
+  pendingRecovery Decimal @default(0) @db.Decimal(12, 2) @map("pending_recovery") // 待回收余额（佣金回滚时余额不足）
+
+  // W-T9: 钱包状态（用于冻结异常用户）
+  status       WalletStatus @default(NORMAL)
+  frozenReason String?      @map("frozen_reason") @db.VarChar(200) // 冻结原因
+  frozenAt     DateTime?    @map("frozen_at") // 冻结时间
+  frozenBy     String?      @map("frozen_by") // 冻结操作人
 
   // 安全
   payPassword String? @map("pay_password")
@@ -1898,6 +1905,7 @@ model FinWallet {
   transactions FinTransaction[]
 
   @@index([tenantId, memberId])
+  @@index([tenantId, status])
   @@map("fin_wallet")
 }
 
@@ -1993,14 +2001,19 @@ model FinWithdrawal {
   tenantId String @map("tenant_id")
   memberId String @map("member_id")
 
-  amount Decimal @db.Decimal(10, 2)
-  method String // WECHAT_WALLET, BANK_CARD
+  amount       Decimal  @db.Decimal(10, 2) // 申请金额
+  fee          Decimal  @default(0) @db.Decimal(10, 2) // 手续费
+  actualAmount Decimal? @map("actual_amount") @db.Decimal(10, 2) // 实际到账金额
+  method       String // WECHAT_WALLET, BANK_CARD
 
   // 账号快照
   accountNo String?
   realName  String?
 
   status WithdrawalStatus @default(PENDING)
+
+  // 重试相关
+  retryCount Int @default(0) @map("retry_count") // 打款重试次数
 
   auditTime   DateTime? @map("audit_time")
   auditBy     String?   @map("audit_by")
@@ -2017,6 +2030,37 @@ model FinWithdrawal {
   @@index([tenantId, status])
   @@index([memberId, createTime])
   @@map("fin_withdrawal")
+}
+
+/// 结算日志表 (S-T8)
+model FinSettlementLog {
+  id        BigInt   @id @default(autoincrement())
+  tenantId  String   @map("tenant_id")
+  batchId   String   @map("batch_id") // 批次ID
+
+  settledCount  Int     @map("settled_count")
+  failedCount   Int     @map("failed_count")
+  totalAmount   Decimal @map("total_amount") @db.Decimal(12, 2)
+
+  startTime     DateTime @map("start_time")
+  endTime       DateTime @map("end_time")
+  durationMs    Int      @map("duration_ms") // 执行耗时(毫秒)
+
+  triggerType   String   @map("trigger_type") // SCHEDULED, MANUAL
+  errorDetails  String?  @map("error_details") @db.Text // 失败详情 JSON
+
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@index([tenantId, createTime])
+  @@index([batchId])
+  @@map("fin_settlement_log")
+}
+
+/// 钱包状态枚举
+enum WalletStatus {
+  NORMAL   // 正常
+  FROZEN   // 冻结
+  DISABLED // 禁用
 }
 
 // ==================== 消息通知模块 ====================

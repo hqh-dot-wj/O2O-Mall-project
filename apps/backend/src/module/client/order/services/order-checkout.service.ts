@@ -9,6 +9,7 @@ import { PublishStatus, DelFlag } from '@prisma/client';
 import { OrderItemDto } from '../dto/order.dto';
 import { OrderItemVo, CheckoutPreviewVo } from '../vo/order.vo';
 import { AddressRepository } from '../../address/address.repository';
+import { AdmissionService } from 'src/module/lbs/admission/admission.service';
 
 @Injectable()
 export class OrderCheckoutService {
@@ -18,23 +19,15 @@ export class OrderCheckoutService {
     private readonly playStrategyFactory: PlayStrategyFactory,
     // [Dependency] AddressRepository for default address check
     private readonly addressRepo: AddressRepository,
+    // [Dependency] AdmissionService for unified location check
+    private readonly admissionService: AdmissionService,
   ) {}
 
   /**
-   * 校验配送范围
+   * 校验配送范围（使用统一准入服务）
    */
   async checkLocation(tenantId: string, lat: number, lng: number) {
-    const tenant = await this.prisma.sysTenant.findUnique({
-      where: { tenantId },
-      include: { geoConfig: true },
-    });
-
-    if (tenant?.geoConfig?.latitude && tenant?.geoConfig?.longitude) {
-      const dist = this.calcDistance(Number(tenant.geoConfig.latitude), Number(tenant.geoConfig.longitude), lat, lng);
-      if (tenant.geoConfig.serviceRadius && dist > tenant.geoConfig.serviceRadius) {
-        throw new BusinessException(ResponseCode.BUSINESS_ERROR, '超出服务范围，无法配送/服务');
-      }
-    }
+    await this.admissionService.checkLocationAdmission(tenantId, lat, lng);
   }
 
   /**
@@ -123,39 +116,21 @@ export class OrderCheckoutService {
     const discountAmount = 0;
     const payAmount = totalAmount.toNumber() + freightAmount - discountAmount;
 
-    // 验证 LBS 距离
-    const tenant = await this.prisma.sysTenant.findUnique({
-      where: { tenantId },
-      include: { geoConfig: true },
-    });
-
+    // 验证 LBS 距离（使用统一准入服务）
     let outOfRange = false;
     let defaultAddress = null;
 
     if (memberId) {
       // Use Repository
       defaultAddress = await this.addressRepo.findDefault(memberId);
-
-      // Fallback if no default (same logic as before? or simplified? Let's keep consistent)
-      if (!defaultAddress) {
-        // Maybe just simplified null if no default.
-        // But OrderService logic was: if no default, find first.
-        // AddressRepository doesn't expose findFirst as public API easily except findDefault.
-        // But we can leave it as just findDefault for preview.
-        // If user wants to check a specific address, they pass it? No preview uses default.
-      }
     }
 
-    if (defaultAddress && defaultAddress.latitude && defaultAddress.longitude && tenant?.geoConfig?.latitude) {
-      const dist = this.calcDistance(
-        tenant.geoConfig.latitude,
-        tenant.geoConfig.longitude,
+    if (defaultAddress && defaultAddress.latitude && defaultAddress.longitude) {
+      outOfRange = !(await this.admissionService.isLocationInRange(
+        tenantId,
         defaultAddress.latitude,
         defaultAddress.longitude,
-      );
-      if (tenant.geoConfig.serviceRadius && dist > tenant.geoConfig.serviceRadius) {
-        outOfRange = true;
-      }
+      ));
     }
 
     // 5. 判断是否包含服务商品

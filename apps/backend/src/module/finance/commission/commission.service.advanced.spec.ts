@@ -5,9 +5,19 @@ import { CommissionRepository } from './commission.repository';
 import { WalletRepository } from '../wallet/wallet.repository';
 import { TransactionRepository } from '../wallet/transaction.repository';
 import { WalletService } from '../wallet/wallet.service';
-import { Queue } from 'bull';
-import { TestDataFactory } from '../test/test-data.factory';
 import { Decimal } from '@prisma/client/runtime/library';
+// Import sub-services
+import { DistConfigService } from './services/dist-config.service';
+import { CommissionValidatorService } from './services/commission-validator.service';
+import { BaseCalculatorService } from './services/base-calculator.service';
+import { L1CalculatorService } from './services/l1-calculator.service';
+import { L2CalculatorService } from './services/l2-calculator.service';
+import { CommissionCalculatorService } from './services/commission-calculator.service';
+import { CommissionSettlerService } from './services/commission-settler.service';
+import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
+import { LevelService } from 'src/module/store/distribution/services/level.service';
+import { OrderQueryPort } from '../ports/order-query.port';
+import { MemberQueryPort } from '../ports/member-query.port';
 
 /**
  * CommissionService 高级测试用例
@@ -21,34 +31,80 @@ describe('CommissionService - Advanced Tests', () => {
     sysDistConfig: { findUnique: jest.fn() },
     omsOrder: { findUnique: jest.fn() },
     umsMember: { findUnique: jest.fn() },
-    pmsTenantSku: { findUnique: jest.fn() },
+    pmsTenantSku: { findUnique: jest.fn(), findMany: jest.fn() },
     sysDistBlacklist: { findUnique: jest.fn() },
+    finUserDailyQuota: { upsert: jest.fn(), update: jest.fn() },
     $queryRaw: jest.fn(),
+    $transaction: jest.fn((callback: (tx: unknown) => Promise<unknown>) => callback(mockPrismaService)),
   };
 
   const mockCommissionRepo = {
     upsert: jest.fn(),
     findMany: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
   };
 
   const mockWalletRepo = {};
   const mockTransactionRepo = {};
   const mockWalletService = {
     deductBalance: jest.fn(),
+    addBalance: jest.fn(),
+    getOrCreateWallet: jest.fn(),
+    deductBalanceOrPendingRecovery: jest.fn().mockResolvedValue({
+      deducted: new Decimal(10),
+      pendingRecovery: new Decimal(0),
+    }),
   };
   const mockCommissionQueue = { add: jest.fn() };
+
+  const mockProductConfigService = {
+    getEffectiveConfig: jest.fn().mockResolvedValue({
+      level1Rate: new Decimal(0.1),
+      level2Rate: new Decimal(0.05),
+    }),
+  };
+
+  const mockLevelService = {
+    findOne: jest.fn().mockResolvedValue(null),
+    findByLevelId: jest.fn().mockResolvedValue(null),
+  };
+
+  // A-T1: OrderQueryPort mock
+  const mockOrderQueryPort = {
+    findOrderForCommission: jest.fn(),
+    findOrdersForCommission: jest.fn(),
+  };
+
+  // A-T2: MemberQueryPort mock
+  const mockMemberQueryPort = {
+    findMemberForCommission: jest.fn(),
+    findMemberBrief: jest.fn(),
+    findMembersBrief: jest.fn(),
+    checkCircularReferral: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommissionService,
+        CommissionCalculatorService,
+        CommissionSettlerService,
+        CommissionValidatorService,
+        DistConfigService,
+        BaseCalculatorService,
+        L1CalculatorService,
+        L2CalculatorService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CommissionRepository, useValue: mockCommissionRepo },
         { provide: WalletRepository, useValue: mockWalletRepo },
         { provide: TransactionRepository, useValue: mockTransactionRepo },
         { provide: WalletService, useValue: mockWalletService },
+        { provide: ProductConfigService, useValue: mockProductConfigService },
+        { provide: LevelService, useValue: mockLevelService },
         { provide: 'BullQueue_CALC_COMMISSION', useValue: mockCommissionQueue },
+        { provide: OrderQueryPort, useValue: mockOrderQueryPort },
+        { provide: MemberQueryPort, useValue: mockMemberQueryPort },
       ],
     }).compile();
 
@@ -61,26 +117,49 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('推荐关系链测试', () => {
-    it('应该正确计算三级推荐关系的佣金', async () => {
-      // 使用工厂创建推荐关系链
-      const { c0, c1, c2 } = TestDataFactory.createReferralChain();
+    it('Given 三级推荐关系链, When 计算佣金, Then 应该创建L1和L2佣金记录', async () => {
+      // C0 下单，C1 是直推人，C2 是间推人
+      const c0 = { memberId: 'member-c0', tenantId: 'tenant1', parentId: 'member-c1', indirectParentId: 'member-c2', levelId: 0 };
+      const c1 = { memberId: 'member-c1', tenantId: 'tenant1', parentId: 'member-c2', levelId: 1 };
+      const c2 = { memberId: 'member-c2', tenantId: 'tenant1', parentId: null, levelId: 2 };
 
-      // 创建 C0 的订单
-      const order = TestDataFactory.createOrder({
-        memberId: c0.memberId,
+      const order = {
+        id: 'order-chain',
+        tenantId: 'tenant1',
+        memberId: 'member-c0',
         shareUserId: null,
-      });
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
 
-      const config = TestDataFactory.createDistConfig();
-      const sku = TestDataFactory.createTenantSku();
+      const config = {
+        level1Rate: new Decimal(0.1),
+        level2Rate: new Decimal(0.05),
+        enableLV0: true,
+        enableCrossTenant: false,
+        crossTenantRate: new Decimal(0.5),
+        crossMaxDaily: new Decimal(1000),
+      };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce(c0)
+      const sku = {
+        id: 'sku1',
+        distMode: 'RATIO',
+        distRate: new Decimal(1),
+        globalSku: {},
+      };
+
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(c0);
+      mockMemberQueryPort.findMemberBrief
         .mockResolvedValueOnce(c1)
         .mockResolvedValueOnce(c2);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([sku]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
       await service.calculateCommission(order.id, order.tenantId);
@@ -101,22 +180,46 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('跨店佣金测试', () => {
-    it('应该正确处理跨店佣金 - 启用跨店', async () => {
-      const { order, beneficiary, config } = TestDataFactory.createCrossTenantScenario();
+    it('Given 启用跨店, When 计算跨店佣金, Then 应该标记isCrossTenant为true', async () => {
+      const member = { memberId: 'member1', tenantId: 'tenant1', parentId: 'member2', indirectParentId: null, levelId: 0 };
+      const beneficiary = { memberId: 'member2', tenantId: 'tenant2', parentId: null, levelId: 1 }; // 不同租户
 
-      const member = TestDataFactory.createMember({
-        memberId: order.memberId,
-        parentId: beneficiary.memberId,
-      });
+      const order = {
+        id: 'order-cross',
+        tenantId: 'tenant1',
+        memberId: 'member1',
+        shareUserId: null,
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
 
-      const sku = TestDataFactory.createTenantSku();
+      const config = {
+        level1Rate: new Decimal(0.1),
+        level2Rate: new Decimal(0.05),
+        enableLV0: true,
+        enableCrossTenant: true, // 启用跨店
+        crossTenantRate: new Decimal(0.5),
+        crossMaxDaily: new Decimal(1000),
+      };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
+      const sku = { id: 'sku1', distMode: 'RATIO', distRate: new Decimal(1), globalSku: {} };
+
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([sku]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
-      mockPrismaService.$queryRaw.mockResolvedValue([{ total: '0' }]);
+      // Mock daily quota check - 返回在限额内
+      mockPrismaService.finUserDailyQuota.upsert.mockResolvedValue({
+        usedAmount: new Decimal(10),
+        limitAmount: new Decimal(1000),
+      });
 
       await service.calculateCommission(order.id, order.tenantId);
 
@@ -125,24 +228,40 @@ describe('CommissionService - Advanced Tests', () => {
       expect(call.create.isCrossTenant).toBe(true);
     });
 
-    it('应该跳过跨店佣金 - 未启用跨店', async () => {
-      const { order, beneficiary } = TestDataFactory.createCrossTenantScenario();
+    it('Given 未启用跨店, When 计算跨店佣金, Then 应该跳过佣金创建', async () => {
+      const member = { memberId: 'member1', tenantId: 'tenant1', parentId: 'member2', indirectParentId: null, levelId: 0 };
+      const beneficiary = { memberId: 'member2', tenantId: 'tenant2', parentId: null, levelId: 1 }; // 不同租户
 
-      const config = TestDataFactory.createDistConfig({
+      const order = {
+        id: 'order-cross2',
+        tenantId: 'tenant1',
+        memberId: 'member1',
+        shareUserId: null,
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
+
+      const config = {
+        level1Rate: new Decimal(0.1),
+        level2Rate: new Decimal(0.05),
+        enableLV0: true,
         enableCrossTenant: false, // 未启用
-      });
+        crossTenantRate: new Decimal(0.5),
+        crossMaxDaily: new Decimal(1000),
+      };
 
-      const member = TestDataFactory.createMember({
-        memberId: order.memberId,
-        parentId: beneficiary.memberId,
-      });
+      const sku = { id: 'sku1', distMode: 'RATIO', distRate: new Decimal(1), globalSku: {} };
 
-      const sku = TestDataFactory.createTenantSku();
-
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([sku]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
       await service.calculateCommission(order.id, order.tenantId);
@@ -150,24 +269,48 @@ describe('CommissionService - Advanced Tests', () => {
       expect(mockCommissionRepo.upsert).not.toHaveBeenCalled();
     });
 
-    it('应该检查跨店日限额', async () => {
-      const { order, beneficiary, config } = TestDataFactory.createCrossTenantScenario();
+    it('Given 跨店日限额已达上限, When 计算跨店佣金, Then 应该跳过佣金创建', async () => {
+      const member = { memberId: 'member1', tenantId: 'tenant1', parentId: 'member2', indirectParentId: null, levelId: 0 };
+      const beneficiary = { memberId: 'member2', tenantId: 'tenant2', parentId: null, levelId: 1 };
 
-      const member = TestDataFactory.createMember({
-        memberId: order.memberId,
-        parentId: beneficiary.memberId,
-      });
+      const order = {
+        id: 'order-cross3',
+        tenantId: 'tenant1',
+        memberId: 'member1',
+        shareUserId: null,
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
 
-      const sku = TestDataFactory.createTenantSku();
+      const config = {
+        level1Rate: new Decimal(0.1),
+        level2Rate: new Decimal(0.05),
+        enableLV0: true,
+        enableCrossTenant: true,
+        crossTenantRate: new Decimal(0.5),
+        crossMaxDaily: new Decimal(1000),
+      };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
+      const sku = { id: 'sku1', distMode: 'RATIO', distRate: new Decimal(1), globalSku: {} };
+
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([sku]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
-      // 模拟已达到限额
-      mockPrismaService.$queryRaw.mockResolvedValue([{ total: '1000' }]);
+      // 模拟已达到限额 - upsert 返回超限的金额，然后回滚
+      mockPrismaService.finUserDailyQuota.upsert.mockResolvedValue({
+        usedAmount: new Decimal(1010), // 超过限额
+        limitAmount: new Decimal(1000),
+      });
+      mockPrismaService.finUserDailyQuota.update.mockResolvedValue({});
 
       await service.calculateCommission(order.id, order.tenantId);
 
@@ -177,11 +320,25 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('自购场景测试', () => {
-    it('应该跳过自购订单的佣金计算', async () => {
-      const { member, order } = TestDataFactory.createSelfPurchaseScenario();
+    it('Given 自购订单, When 计算佣金, Then 应该跳过佣金计算', async () => {
+      const member = { memberId: 'member1', tenantId: 'tenant1', parentId: null, indirectParentId: null, levelId: 1 };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValue(member);
+      const order = {
+        id: 'order-self',
+        tenantId: 'tenant1',
+        memberId: 'member1',
+        shareUserId: 'member1', // 自己分享自己购买
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
+
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
 
       await service.calculateCommission(order.id, order.tenantId);
 
@@ -190,16 +347,40 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('C2 全拿场景测试', () => {
-    it('应该让 C2 获得 L1+L2 全部佣金', async () => {
-      const { c2, c0, order } = TestDataFactory.createC2FullTakeScenario();
+    it('Given C2无上级, When 计算佣金, Then C2应该获得L1+L2全部佣金', async () => {
+      const c0 = { memberId: 'member-c0', tenantId: 'tenant1', parentId: 'member-c2', indirectParentId: null, levelId: 0 };
+      const c2 = { memberId: 'member-c2', tenantId: 'tenant1', parentId: null, levelId: 2 }; // C2 无上级
 
-      const config = TestDataFactory.createDistConfig();
-      const sku = TestDataFactory.createTenantSku();
+      const order = {
+        id: 'order-c2full',
+        tenantId: 'tenant1',
+        memberId: 'member-c0',
+        shareUserId: null,
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(c0).mockResolvedValueOnce(c2);
+      const config = {
+        level1Rate: new Decimal(0.1),
+        level2Rate: new Decimal(0.05),
+        enableLV0: true,
+        enableCrossTenant: false,
+        crossTenantRate: new Decimal(0.5),
+        crossMaxDaily: new Decimal(1000),
+      };
+
+      const sku = { id: 'sku1', distMode: 'RATIO', distRate: new Decimal(1), globalSku: {} };
+
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(c0);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(c2);
       mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(sku);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([sku]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(null);
 
       await service.calculateCommission(order.id, order.tenantId);
@@ -218,23 +399,41 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('黑名单测试', () => {
-    it('应该跳过黑名单用户的佣金', async () => {
-      const order = TestDataFactory.createOrder();
-      const member = TestDataFactory.createMember({
-        memberId: order.memberId,
-        parentId: 'member-blacklist',
-      });
-      const beneficiary = TestDataFactory.createC1Member({
-        memberId: 'member-blacklist',
-      });
-      const blacklist = TestDataFactory.createBlacklist({
-        userId: 'member-blacklist',
-      });
+    it('Given 受益人在黑名单, When 计算佣金, Then 应该跳过佣金创建', async () => {
+      const member = { memberId: 'member1', tenantId: 'tenant1', parentId: 'member-blacklist', indirectParentId: null, levelId: 0 };
+      const beneficiary = { memberId: 'member-blacklist', tenantId: 'tenant1', parentId: null, levelId: 1 };
 
-      mockPrismaService.omsOrder.findUnique.mockResolvedValue(order);
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce(member).mockResolvedValueOnce(beneficiary);
-      mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(TestDataFactory.createDistConfig());
-      mockPrismaService.pmsTenantSku.findUnique.mockResolvedValue(TestDataFactory.createTenantSku());
+      const order = {
+        id: 'order-blacklist',
+        tenantId: 'tenant1',
+        memberId: 'member1',
+        shareUserId: null,
+        orderType: 'PRODUCT',
+        totalAmount: new Decimal(100),
+        payAmount: new Decimal(100),
+        couponDiscount: new Decimal(0),
+        pointsDiscount: new Decimal(0),
+        items: [{ skuId: 'sku1', productId: 'prod1', totalAmount: new Decimal(100), quantity: 1, price: new Decimal(100) }],
+      };
+
+      const config = {
+        level1Rate: new Decimal(0.1),
+        level2Rate: new Decimal(0.05),
+        enableLV0: true,
+        enableCrossTenant: false,
+        crossTenantRate: new Decimal(0.5),
+        crossMaxDaily: new Decimal(1000),
+      };
+
+      const sku = { id: 'sku1', distMode: 'RATIO', distRate: new Decimal(1), globalSku: {} };
+      const blacklist = { tenantId: 'tenant1', userId: 'member-blacklist' };
+
+      // A-T1/A-T2: 使用 Port mocks
+      mockOrderQueryPort.findOrderForCommission.mockResolvedValue(order);
+      mockMemberQueryPort.findMemberForCommission.mockResolvedValue(member);
+      mockMemberQueryPort.findMemberBrief.mockResolvedValue(beneficiary);
+      mockPrismaService.sysDistConfig.findUnique.mockResolvedValue(config);
+      mockPrismaService.pmsTenantSku.findMany.mockResolvedValue([sku]);
       mockPrismaService.sysDistBlacklist.findUnique.mockResolvedValue(blacklist);
 
       await service.calculateCommission(order.id, order.tenantId);
@@ -244,10 +443,10 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('佣金取消测试', () => {
-    it('应该取消冻结中的佣金', async () => {
+    it('Given 冻结中的佣金, When 取消佣金, Then 应该更新状态为CANCELLED', async () => {
       const commissions = [
-        TestDataFactory.createCommission({ id: BigInt(1) }),
-        TestDataFactory.createCommission({ id: BigInt(2) }),
+        { id: BigInt(1), orderId: 'order1', status: 'FROZEN', amount: new Decimal(10), beneficiaryId: 'member1' },
+        { id: BigInt(2), orderId: 'order1', status: 'FROZEN', amount: new Decimal(5), beneficiaryId: 'member2' },
       ];
 
       mockCommissionRepo.findMany.mockResolvedValue(commissions);
@@ -257,15 +456,24 @@ describe('CommissionService - Advanced Tests', () => {
       expect(mockCommissionRepo.update).toHaveBeenCalledTimes(2);
     });
 
-    it('应该回滚已结算的佣金', async () => {
-      const commission = TestDataFactory.createSettledCommission();
+    it('Given 已结算的佣金, When 取消佣金, Then 应该回滚钱包余额', async () => {
+      const commission = {
+        id: BigInt(1),
+        orderId: 'order1',
+        status: 'SETTLED',
+        amount: new Decimal(10),
+        beneficiaryId: 'member1',
+      };
 
       mockCommissionRepo.findMany.mockResolvedValue([commission]);
-      mockWalletService.deductBalance.mockResolvedValue({});
+      mockWalletService.deductBalanceOrPendingRecovery.mockResolvedValue({
+        deducted: new Decimal(10),
+        pendingRecovery: new Decimal(0),
+      });
 
       await service.cancelCommissions('order1');
 
-      expect(mockWalletService.deductBalance).toHaveBeenCalledWith(
+      expect(mockWalletService.deductBalanceOrPendingRecovery).toHaveBeenCalledWith(
         commission.beneficiaryId,
         commission.amount,
         commission.orderId,
@@ -276,32 +484,31 @@ describe('CommissionService - Advanced Tests', () => {
   });
 
   describe('循环推荐检测', () => {
-    it('应该检测到循环推荐 - A->B->C->A', async () => {
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce({ memberId: 'B', parentId: 'C' })
-        .mockResolvedValueOnce({ memberId: 'C', parentId: 'A' });
+    beforeEach(() => {
+      // A-T2: 重置 MemberQueryPort mock
+      mockMemberQueryPort.checkCircularReferral.mockReset();
+    });
+
+    it('Given A->B->C->A循环, When 检测循环推荐, Then 应该返回true', async () => {
+      // A-T2: 通过 MemberQueryPort 检测循环推荐
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(true);
+
+      const result = await service.checkCircularReferral('A', 'B');
+
+      expect(result).toBe(true);
+      expect(mockMemberQueryPort.checkCircularReferral).toHaveBeenCalledWith('A', 'B');
+    });
+
+    it('Given A->B->A循环, When 检测循环推荐, Then 应该返回true', async () => {
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(true);
 
       const result = await service.checkCircularReferral('A', 'B');
 
       expect(result).toBe(true);
     });
 
-    it('应该检测到循环推荐 - A->B->A', async () => {
-      mockPrismaService.umsMember.findUnique.mockResolvedValueOnce({
-        memberId: 'B',
-        parentId: 'A',
-      });
-
-      const result = await service.checkCircularReferral('A', 'B');
-
-      expect(result).toBe(true);
-    });
-
-    it('应该返回 false - 无循环推荐', async () => {
-      mockPrismaService.umsMember.findUnique
-        .mockResolvedValueOnce({ memberId: 'B', parentId: 'C' })
-        .mockResolvedValueOnce({ memberId: 'C', parentId: 'D' })
-        .mockResolvedValueOnce({ memberId: 'D', parentId: null });
+    it('Given 无循环推荐, When 检测循环推荐, Then 应该返回false', async () => {
+      mockMemberQueryPort.checkCircularReferral.mockResolvedValue(false);
 
       const result = await service.checkCircularReferral('A', 'B');
 

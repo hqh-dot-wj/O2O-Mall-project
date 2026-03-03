@@ -18,6 +18,13 @@ export const BusinessConstants = {
    */
   FINANCE: {
     MIN_WITHDRAWAL_AMOUNT: 1.0, // 最小提现金额 1元
+    MAX_SINGLE_AMOUNT: 50000, // 单笔金额上限 5万元
+    MAX_DAILY_WITHDRAWAL_COUNT: 3, // 单日提现次数上限
+    MAX_DAILY_WITHDRAWAL_AMOUNT: 50000, // 单日提现金额上限 5万元
+    WITHDRAWAL_FEE_RATE: 0, // 提现手续费率（0 表示免手续费）
+    WITHDRAWAL_FEE_MIN: 0, // 最低手续费
+    MAX_PAYMENT_RETRY_COUNT: 3, // 打款失败最大重试次数
+    SETTLEMENT_BATCH_SIZE: 100, // S-T9: 结算批量大小
   },
 
   /**

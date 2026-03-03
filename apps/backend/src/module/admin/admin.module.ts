@@ -6,9 +6,10 @@ import { ResourceModule } from './resource/resource.module';
 import { AuthModule } from './auth/auth.module';
 import { MemberModule } from './member/member.module';
 import { AdminUpgradeModule } from './upgrade/admin-upgrade.module';
+import { AdminFinanceModule } from './finance/admin-finance.module';
 // import { ToolModule } from './tool/tool.module'; // Tool module missing/skipped
 
 @Module({
-  imports: [AuthModule, SystemModule, MonitorModule, UploadModule, ResourceModule, MemberModule, AdminUpgradeModule],
+  imports: [AuthModule, SystemModule, MonitorModule, UploadModule, ResourceModule, MemberModule, AdminUpgradeModule, AdminFinanceModule],
 })
 export class AdminModule {}

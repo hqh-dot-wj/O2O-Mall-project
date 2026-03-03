@@ -6,12 +6,44 @@ import { TenantContext } from '../tenant';
 /** 随机过期时间偏移范围（秒） */
 const JITTER_RANGE = 300; // 5分钟
 
+/** 缓存更新重试配置 */
+const CACHE_RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: 100,
+};
+
 /**
  * 添加随机过期偏移（防雪崩）
  */
 function addJitter(baseTtl: number): number {
   const jitter = Math.floor(Math.random() * JITTER_RANGE);
   return baseTtl + jitter;
+}
+
+/**
+ * 带重试的缓存操作
+ */
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  context: string,
+  maxRetries: number = CACHE_RETRY_CONFIG.maxRetries,
+): Promise<T | null> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+      if (isLastAttempt) {
+        // 最后一次重试失败，记录警告但不抛出异常（缓存失败不应阻塞业务）
+        console.warn(`[CacheRetry] ${context} failed after ${maxRetries} attempts:`, error);
+        return null;
+      }
+      // 指数退避
+      const delay = CACHE_RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  return null;
 }
 
 /**
@@ -146,11 +178,15 @@ export function Cacheable(CACHE_NAME: string, CACHE_KEY: string, CACHE_EXPIRESIN
 }
 
 /**
- * 缓存更新装饰器 - 执行方法后更新缓存
+ * 缓存更新装饰器 - 执行方法后更新缓存（带重试机制）
  *
  * @param CACHE_NAME - 缓存键前缀
  * @param CACHE_KEY - 缓存键模板
  * @param CACHE_EXPIRESIN - 过期时间（秒）
+ * 
+ * @description
+ * 缓存更新失败时会自动重试（最多3次，指数退避）
+ * 重试全部失败后记录警告日志，但不阻塞业务流程
  */
 export function CachePut(CACHE_NAME: string, CACHE_KEY: string, CACHE_EXPIRESIN: number = 3600) {
   const injectRedis = Inject(RedisService);
@@ -166,7 +202,13 @@ export function CachePut(CACHE_NAME: string, CACHE_KEY: string, CACHE_EXPIRESIN:
       const key = paramsKeyFormat(originMethod, CACHE_KEY, args);
       if (key !== null) {
         const ttl = addJitter(CACHE_EXPIRESIN);
-        await this.redis.set(`${CACHE_NAME}${key}`, result, ttl);
+        const cacheKey = `${CACHE_NAME}${key}`;
+        
+        // 带重试的缓存更新
+        await withRetry(
+          () => this.redis.set(cacheKey, result, ttl),
+          `CachePut ${cacheKey}`,
+        );
       }
 
       return result;

@@ -1,25 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import { CommissionStatus } from '@prisma/client';
 import { CommissionValidatorService } from './commission-validator.service';
 import { MemberForCommission, DistributionConfig, CommissionRecord } from 'src/common/types/finance.types';
 import { ProductConfigService } from 'src/module/store/distribution/services/product-config.service';
 import { LevelService } from 'src/module/store/distribution/services/level.service';
+import { MemberQueryPort } from '../../ports/member-query.port';
 
 /**
  * L2 佣金计算服务
- * 职责：计算间推佣金
- * 配置优先级：会员等级 > 商品级 > 品类级 > 租户默认
+ *
+ * @description
+ * 计算间推佣金。配置优先级：会员等级 > 商品级 > 品类级 > 租户默认
+ *
+ * @architecture A-T2: 通过 MemberQueryPort 获取会员数据
  */
 @Injectable()
 export class L2CalculatorService {
   private readonly logger = new Logger(L2CalculatorService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly validator: CommissionValidatorService,
     private readonly levelService: LevelService,
+    private readonly memberQueryPort: MemberQueryPort,
   ) {}
 
   /**
@@ -60,11 +63,8 @@ export class L2CalculatorService {
     let beneficiaryId: string | null = null;
 
     if (order.shareUserId && l1BeneficiaryId) {
-      // 临时分享场景：查分享人的上级
-      const sharer = await this.prisma.umsMember.findUnique({
-        where: { memberId: l1BeneficiaryId },
-        select: { parentId: true },
-      });
+      // 临时分享场景：通过 Port 查分享人的上级（A-T2）
+      const sharer = await this.memberQueryPort.findMemberBrief(l1BeneficiaryId);
       beneficiaryId = sharer?.parentId || null;
     } else {
       // 绑定关系场景：使用 indirectParentId
@@ -86,11 +86,8 @@ export class L2CalculatorService {
       return null;
     }
 
-    // 3. 获取受益人信息并校验身份 (必须是C2)
-    const beneficiary = await this.prisma.umsMember.findUnique({
-      where: { memberId: beneficiaryId },
-      select: { tenantId: true, levelId: true },
-    });
+    // 3. 通过 Port 获取受益人信息并校验身份（A-T2: 解耦对 umsMember 的直接访问）
+    const beneficiary = await this.memberQueryPort.findMemberBrief(beneficiaryId);
 
     if (!beneficiary || beneficiary.levelId !== 2) {
       this.logger.log(`[Commission] L2 user ${beneficiaryId} is not C2, skip`);

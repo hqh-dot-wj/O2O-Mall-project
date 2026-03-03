@@ -4,7 +4,7 @@ import * as path from 'path';
 import { getErrorMessage } from 'src/common/utils/error';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { RegionRepository } from './region.repository';
-import { SystemCacheable } from 'src/module/admin/common/decorators/system-cache.decorator';
+import { SystemCacheable, ClearSystemCache } from 'src/module/admin/common/decorators/system-cache.decorator';
 
 @Injectable()
 export class RegionService implements OnModuleInit {
@@ -34,15 +34,14 @@ export class RegionService implements OnModuleInit {
     }
 
     try {
+      // Double-check after acquiring lock
       const existsCount = await this.repo.count();
       if (existsCount > 0) {
-        this.logger.log('Region data already exists, skip seeding.');
+        this.logger.log('Region data already exists (double-check after lock), skip seeding.');
         return;
       }
 
-    // Standardized path: apps/backend/src/assets/json/pcas-code.json
-    // In dev (src context): ../../assets/json/pcas-code.json (from region module)
-    // In prod (dist context): same relative path usually works if assets are copied, or use absolute path strategy
+      // Standardized path: apps/backend/src/assets/json/pcas-code.json
       const jsonPath = path.resolve(process.cwd(), 'src/assets/json/pcas-code.json');
 
       if (!fs.existsSync(jsonPath)) {
@@ -100,6 +99,10 @@ export class RegionService implements OnModuleInit {
     return this.buildTree(regions);
   }
 
+  /**
+   * 获取子区域列表 (带缓存)
+   */
+  @SystemCacheable({ key: (args) => `sys:region:children:${args[0] || 'root'}`, ttl: 86400 })
   async getChildren(parentCode?: string) {
     if (!parentCode) {
       return this.repo.findRoots();
@@ -107,9 +110,21 @@ export class RegionService implements OnModuleInit {
     return this.repo.findChildren(parentCode);
   }
 
+  /**
+   * 获取区域名称 (带缓存)
+   */
+  @SystemCacheable({ key: (args) => `sys:region:name:${args[0]}`, ttl: 86400 })
   async getRegionName(code: string) {
     const region = await this.repo.findById(code, { select: { name: true } });
     return region?.name || '';
+  }
+
+  /**
+   * 清除区划缓存（用于数据更新后）
+   */
+  @ClearSystemCache(['sys:region:*'])
+  async clearRegionCache() {
+    this.logger.log('Region cache cleared');
   }
 
   private buildTree(regions: any[]) {

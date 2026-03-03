@@ -7,8 +7,13 @@ import { WithdrawalAuditService } from './withdrawal-audit.service';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response';
 import { WithdrawalStatus } from '@prisma/client';
+import { RedisService } from 'src/module/common/redis/redis.service';
+import { FinanceEventEmitter } from '../events/finance-event.emitter';
+import { Decimal } from '@prisma/client/runtime/library';
+import { BusinessConstants } from 'src/common/constants/business.constants';
+import { MemberQueryPort } from '../ports/member-query.port';
 
-describe('WithdrawalService - T-4: 提现审核租户归属校验', () => {
+describe('WithdrawalService', () => {
   let service: WithdrawalService;
   let withdrawalRepo: WithdrawalRepository;
   let auditService: WithdrawalAuditService;
@@ -16,6 +21,9 @@ describe('WithdrawalService - T-4: 提现审核租户归属校验', () => {
   const mockPrismaService = {
     umsMember: {
       findUnique: jest.fn(),
+    },
+    finWithdrawal: {
+      aggregate: jest.fn(),
     },
   };
 
@@ -33,6 +41,30 @@ describe('WithdrawalService - T-4: 提现审核租户归属校验', () => {
   const mockAuditService = {
     approve: jest.fn(),
     reject: jest.fn(),
+  };
+
+  const mockRedisClient = {
+    set: jest.fn(),
+    del: jest.fn(),
+  };
+
+  const mockRedisService = {
+    getClient: jest.fn(() => mockRedisClient),
+  };
+
+  const mockEventEmitter = {
+    emitWithdrawalApplied: jest.fn(),
+  };
+
+  // A-T2: MemberQueryPort mock
+  const mockMemberQueryPort = {
+    findMemberForCommission: jest.fn(),
+    findMemberBrief: jest.fn().mockResolvedValue({
+      memberId: 'member1',
+      nickname: '测试用户',
+    }),
+    findMembersBrief: jest.fn(),
+    checkCircularReferral: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -55,6 +87,18 @@ describe('WithdrawalService - T-4: 提现审核租户归属校验', () => {
           provide: WithdrawalAuditService,
           useValue: mockAuditService,
         },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
+        {
+          provide: FinanceEventEmitter,
+          useValue: mockEventEmitter,
+        },
+        {
+          provide: MemberQueryPort,
+          useValue: mockMemberQueryPort,
+        },
       ],
     }).compile();
 
@@ -63,6 +107,137 @@ describe('WithdrawalService - T-4: 提现审核租户归属校验', () => {
     auditService = module.get<WithdrawalAuditService>(WithdrawalAuditService);
 
     jest.clearAllMocks();
+  });
+
+  // ========== WD-T5: 提现手续费计算 ==========
+  describe('calculateFee - WD-T5 提现手续费', () => {
+    it('Given 费率和最低手续费都为0, When calculateFee, Then 返回0', () => {
+      // 当前配置 FEE_RATE=0, FEE_MIN=0
+      const fee = service.calculateFee(new Decimal(100));
+      expect(fee.toString()).toBe('0');
+    });
+  });
+
+  // ========== WD-T4: 单日提现限额 ==========
+  describe('apply - WD-T4 单日提现限额', () => {
+    beforeEach(() => {
+      mockRedisClient.set.mockResolvedValue('OK');
+      mockWalletService.getOrCreateWallet.mockResolvedValue({
+        id: 'wallet1',
+        memberId: 'member1',
+        balance: new Decimal(1000),
+      });
+      mockPrismaService.umsMember.findUnique.mockResolvedValue({
+        memberId: 'member1',
+        nickname: '测试用户',
+      });
+      mockWalletService.freezeBalance.mockResolvedValue({});
+      mockWithdrawalRepo.create.mockResolvedValue({
+        id: 'withdrawal1',
+        amount: new Decimal(100),
+        fee: new Decimal(0),
+        actualAmount: new Decimal(100),
+      });
+    });
+
+    it('Given 今日未提现, When apply, Then 成功创建提现申请', async () => {
+      mockPrismaService.finWithdrawal.aggregate.mockResolvedValue({
+        _count: 0,
+        _sum: { amount: null },
+      });
+
+      const result = await service.apply('member1', 'tenant1', 100, 'WECHAT');
+
+      expect(result.code).toBe(200);
+      expect(mockWithdrawalRepo.create).toHaveBeenCalled();
+      expect(mockEventEmitter.emitWithdrawalApplied).toHaveBeenCalled();
+    });
+
+    it('Given 今日提现次数已达上限, When apply, Then 抛出次数超限异常', async () => {
+      // R-PRE-WD-01: 单日限额校验
+      mockPrismaService.finWithdrawal.aggregate.mockResolvedValue({
+        _count: BusinessConstants.FINANCE.MAX_DAILY_WITHDRAWAL_COUNT,
+        _sum: { amount: new Decimal(100) },
+      });
+
+      await expect(
+        service.apply('member1', 'tenant1', 100, 'WECHAT'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('Given 今日提现金额将超限, When apply, Then 抛出金额超限异常', async () => {
+      // R-PRE-WD-01: 单日限额校验
+      const maxDaily = BusinessConstants.FINANCE.MAX_DAILY_WITHDRAWAL_AMOUNT;
+      mockPrismaService.finWithdrawal.aggregate.mockResolvedValue({
+        _count: 1,
+        _sum: { amount: new Decimal(maxDaily - 100) },
+      });
+
+      await expect(
+        service.apply('member1', 'tenant1', 200, 'WECHAT'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('Given 金额低于最小提现金额, When apply, Then 抛出金额过小异常', async () => {
+      // R-IN-WD-01: 金额范围校验
+      mockPrismaService.finWithdrawal.aggregate.mockResolvedValue({
+        _count: 0,
+        _sum: { amount: null },
+      });
+
+      await expect(
+        service.apply('member1', 'tenant1', 0.5, 'WECHAT'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('Given 金额超过单笔上限, When apply, Then 抛出金额过大异常', async () => {
+      // R-IN-WD-01: 金额范围校验
+      mockPrismaService.finWithdrawal.aggregate.mockResolvedValue({
+        _count: 0,
+        _sum: { amount: null },
+      });
+
+      const exceedAmount = BusinessConstants.FINANCE.MAX_SINGLE_AMOUNT + 1;
+      await expect(
+        service.apply('member1', 'tenant1', exceedAmount, 'WECHAT'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('Given 重复提交, When apply, Then 抛出重复提交异常', async () => {
+      // R-CONCUR-WD-01: 防重提交校验
+      mockRedisClient.set.mockResolvedValue(null); // 锁获取失败
+
+      await expect(
+        service.apply('member1', 'tenant1', 100, 'WECHAT'),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('Given 余额不足, When apply, Then 抛出余额不足异常', async () => {
+      mockPrismaService.finWithdrawal.aggregate.mockResolvedValue({
+        _count: 0,
+        _sum: { amount: null },
+      });
+      mockWalletService.getOrCreateWallet.mockResolvedValue({
+        id: 'wallet1',
+        memberId: 'member1',
+        balance: new Decimal(50),
+      });
+
+      await expect(
+        service.apply('member1', 'tenant1', 100, 'WECHAT'),
+      ).rejects.toThrow(BusinessException);
+    });
+  });
+
+  describe('getWithdrawalConfig', () => {
+    it('Given 调用getWithdrawalConfig, When 获取配置, Then 返回正确的配置值', () => {
+      const config = service.getWithdrawalConfig();
+
+      expect(config.minAmount).toBe(BusinessConstants.FINANCE.MIN_WITHDRAWAL_AMOUNT);
+      expect(config.maxSingleAmount).toBe(BusinessConstants.FINANCE.MAX_SINGLE_AMOUNT);
+      expect(config.maxDailyCount).toBe(BusinessConstants.FINANCE.MAX_DAILY_WITHDRAWAL_COUNT);
+      expect(config.maxDailyAmount).toBe(BusinessConstants.FINANCE.MAX_DAILY_WITHDRAWAL_AMOUNT);
+    });
   });
 
   describe('audit - 租户归属校验', () => {

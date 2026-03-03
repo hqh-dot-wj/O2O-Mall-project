@@ -85,17 +85,27 @@ export class CommissionSettlerService {
 
   /**
    * 回滚已结算佣金
+   * 
+   * @description
+   * C-T4: 使用 deductBalanceOrPendingRecovery 支持余额不足场景
+   * 当余额不足时，差额记入待回收台账，不会导致回滚失败
    */
   @Transactional()
   private async rollbackCommission(commission: { beneficiaryId: string; amount: Decimal; orderId: string; id: string | bigint }) {
-    // 扣减余额 (可能变负)
-    await this.walletService.deductBalance(
+    // 扣减余额或记入待回收（不会因余额不足而失败）
+    const { deducted, pendingRecovery } = await this.walletService.deductBalanceOrPendingRecovery(
       commission.beneficiaryId,
       commission.amount,
       commission.orderId,
       `订单退款，佣金回收`,
       TransType.REFUND_DEDUCT,
     );
+
+    if (pendingRecovery.gt(0)) {
+      this.logger.warn(
+        `[佣金回滚] 佣金 ${commission.id} 部分回收: 扣减 ${deducted}, 待回收 ${pendingRecovery}`,
+      );
+    }
 
     // 更新佣金状态
     await this.commissionRepo.update(commission.id, { status: CommissionStatus.CANCELLED });
