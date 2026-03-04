@@ -64,7 +64,7 @@ export class TenantPackageService {
     }
 
     if (query.status) {
-      where.status = query.status as any;
+      where.status = query.status as Prisma.SysTenantPackageWhereInput['status'];
     }
 
     const [list, total] = await this.prisma.$transaction([

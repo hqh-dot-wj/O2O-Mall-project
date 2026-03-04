@@ -1,33 +1,81 @@
-﻿import { isURL } from 'class-validator';
+import { isURL } from 'class-validator';
 import * as Lodash from 'lodash';
 import * as UserConstants from 'src/module/admin/system/user/user.constant';
+
+/** 菜单项基础结构（来自 sys_menu 或 build 过程） */
+interface MenuItemLike {
+  menuId: number;
+  parentId: number;
+  menuName?: string;
+  name?: string;
+  visible?: string;
+  path?: string;
+  component?: string;
+  query?: string;
+  menuType?: string;
+  isCache?: string;
+  link?: string;
+  icon?: string;
+  isFrame?: string;
+  id?: number;
+  children?: MenuItemLike[];
+}
+
+/** 带 children 的菜单节点（build 过程使用） */
+interface MenuNode extends MenuItemLike {
+  children?: MenuNode[];
+}
+
+/** 路由 meta 信息 */
+interface RouterMeta {
+  title?: string;
+  icon?: string;
+  noCache?: boolean;
+  link?: string;
+  name?: string;
+  path?: string;
+}
+
+/** 构建后的路由节点 */
+interface RouterItem {
+  hidden?: boolean;
+  name?: string;
+  path?: string;
+  component?: string;
+  query?: string;
+  meta?: RouterMeta | null;
+  alwaysShow?: boolean;
+  redirect?: string;
+  children?: RouterItem[];
+}
 
 /**
  * 菜单列表转树形结构
  * @param arr
  */
-export const buildMenus = (arr: any[]) => {
+export const buildMenus = (arr: MenuItemLike[]) => {
   //保证父级菜单排在前面
   arr.sort((a, b) => a.parentId - b.parentId);
-  const kData: Record<string, any> = {}; // 以id做key的对象 暂时储存数据
-  const lData: any[] = []; // 最终的数据 arr
+  const kData: Record<number, MenuNode> = {};
+  const lData: MenuNode[] = [];
   arr.forEach((m) => {
-    m = {
+    const node: MenuNode = {
       ...m,
       id: m.menuId,
       parentId: m.parentId,
     };
-    kData[m.id] = {
-      ...m,
-      id: m.id,
-      parentId: m.parentId,
-    };
+    kData[node.menuId] = node;
+  });
+  arr.forEach((m) => {
+    const node = kData[m.menuId];
     if (m.parentId === 0) {
-      lData.push(kData[m.id]);
+      lData.push(node);
     } else {
-      kData[m.parentId] = kData[m.parentId] || {};
-      kData[m.parentId].children = kData[m.parentId].children || [];
-      kData[m.parentId].children.push(kData[m.id]);
+      const parent = kData[m.parentId];
+      if (parent) {
+        parent.children = parent.children ?? [];
+        parent.children.push(node);
+      }
     }
   });
   return formatTreeNodeBuildMenus(lData);
@@ -39,9 +87,9 @@ export const buildMenus = (arr: any[]) => {
  * @param getId
  * @returns
  */
-const formatTreeNodeBuildMenus = (menus: any[]): any[] => {
+const formatTreeNodeBuildMenus = (menus: MenuItemLike[]): RouterItem[] => {
   return menus.map((menu) => {
-    const router: any = {};
+    const router: RouterItem = {};
     router.hidden = menu.visible === '1';
     router.name = getRouteName(menu);
     router.path = getRouterPath(menu);
@@ -58,8 +106,8 @@ const formatTreeNodeBuildMenus = (menus: any[]): any[] => {
       router.children = formatTreeNodeBuildMenus(menu.children);
     } else if (isMenuFrame(menu)) {
       router.meta = null;
-      const childrenList = [];
-      const childrenRouter: any = {};
+      const childrenList: RouterItem[] = [];
+      const childrenRouter: RouterItem = {};
       childrenRouter.path = menu.path;
       childrenRouter.component = menu.component;
       childrenRouter.name = Lodash.capitalize(menu.path);
@@ -69,17 +117,17 @@ const formatTreeNodeBuildMenus = (menus: any[]): any[] => {
       router.children = childrenList;
     } else if (menu.parentId === 0 && isInnerLink(menu)) {
       router.meta = {
-        name: menu.name,
+        name: menu.name ?? menu.menuName,
         icon: menu.icon,
       };
       router.path = '/';
-      const childrenList = [];
-      const childrenRouter: any = {};
+      const childrenList: RouterItem[] = [];
+      const childrenRouter: RouterItem = {};
       childrenRouter.path = innerLinkReplaceEach(menu.path);
       childrenRouter.component = UserConstants.INNER_LINK;
-      childrenRouter.name = Lodash.capitalize(menu.name);
+      childrenRouter.name = Lodash.capitalize(menu.name ?? menu.menuName ?? menu.path ?? '');
       childrenRouter.meta = {
-        name: menu.name,
+        name: menu.name ?? menu.menuName,
         icon: menu.icon,
         path: menu.path,
       };
@@ -94,8 +142,8 @@ const formatTreeNodeBuildMenus = (menus: any[]): any[] => {
 /**
  * 设置meta信息
  */
-const setMeta = (menu: any) => {
-  const meta: any = {
+const setMeta = (menu: MenuItemLike): RouterMeta => {
+  const meta: RouterMeta = {
     title: menu.menuName,
     icon: menu.icon,
     noCache: menu.isCache === '1',
@@ -114,7 +162,7 @@ const setMeta = (menu: any) => {
  * @param menu 菜单信息
  * @return 路由名称
  */
-const getRouteName = (menu: any) => {
+const getRouteName = (menu: MenuItemLike): string => {
   let routerName = Lodash.capitalize(menu.path);
   // 非外链并且是一级目录（类型为目录）
   if (isMenuFrame(menu)) {
@@ -128,7 +176,7 @@ const getRouteName = (menu: any) => {
  * @param menu 菜单信息
  * @return 结果
  */
-const isMenuFrame = (menu: any): boolean => {
+const isMenuFrame = (menu: MenuItemLike): boolean => {
   return menu.parentId === 0 && menu.menuType === UserConstants.TYPE_MENU && menu.isFrame === UserConstants.NO_FRAME;
 };
 
@@ -138,7 +186,7 @@ const isMenuFrame = (menu: any): boolean => {
  * @param menu 菜单信息
  * @return 结果
  */
-const isInnerLink = (menu: any): boolean => {
+const isInnerLink = (menu: MenuItemLike): boolean => {
   return menu.isFrame === UserConstants.NO_FRAME && isURL(menu.path);
 };
 
@@ -148,7 +196,7 @@ const isInnerLink = (menu: any): boolean => {
  * @param menu 菜单信息
  * @return 结果
  */
-const isParentView = (menu: any): boolean => {
+const isParentView = (menu: MenuItemLike): boolean => {
   return menu.parentId !== 0 && menu.menuType === UserConstants.TYPE_DIR;
 };
 
@@ -158,7 +206,7 @@ const isParentView = (menu: any): boolean => {
  * @param menu 菜单信息
  * @return 组件信息
  */
-const getComponent = (menu: any): string => {
+const getComponent = (menu: MenuItemLike): string => {
   let component = UserConstants.LAYOUT;
   if (menu.component && !isMenuFrame(menu)) {
     component = menu.component;
@@ -198,8 +246,8 @@ const innerLinkReplaceEach = (path: string): string => {
  * @param menu 菜单信息
  * @return 路由地址
  */
-const getRouterPath = (menu: any): string => {
-  let routerPath = menu.path;
+const getRouterPath = (menu: MenuItemLike): string => {
+  let routerPath = menu.path ?? '';
   // 内链打开外网方式
   if (menu.parentId !== 0 && isInnerLink(menu)) {
     routerPath = innerLinkReplaceEach(routerPath);

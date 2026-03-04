@@ -318,38 +318,38 @@ export class CommissionService {
 
 ### 3.2 短期改进 (1-2 月 - P1)
 
-| 任务                       | 工时      | 收益       | 状态               |
-| -------------------------- | --------- | ---------- | ------------------ |
-| 4. 消除核心模块的 any 类型 | 1周 → 1天 | 类型安全   | 🔄 进行中 (见下表) |
-| 5. 定义核心接口 SLO        | 3天       | 性能基线   | 待开始             |
-| 6. 完善技术债标记          | 2天       | 债务可视化 | 待开始             |
-| 7. 建立 CODEOWNERS         | 0.5天     | 代码所有权 | ✅ 已完成          |
+| 任务                       | 工时      | 收益       | 状态            |
+| -------------------------- | --------- | ---------- | --------------- |
+| 4. 消除核心模块的 any 类型 | 1周 → 2天 | 类型安全   | ✅ P0/P1 已完成 |
+| 5. 定义核心接口 SLO        | 3天       | 性能基线   | 待开始          |
+| 6. 完善技术债标记          | 2天       | 债务可视化 | 待开始          |
+| 7. 建立 CODEOWNERS         | 0.5天     | 代码所有权 | ✅ 已完成       |
 
-**any 类型分布统计 (2026-03-03 扫描，排除测试文件)**:
+**any 类型分布统计 (2026-03-04 扫描，排除测试文件)**:
 
-| 模块      | any 数量   | 优先级 | 状态        |
-| --------- | ---------- | ------ | ----------- |
-| pms       | 1 处       | P0     | ✅ 基本完成 |
-| finance   | 2 处       | P0     | ✅ 基本完成 |
-| store     | 22 处      | P1     | 🔄 待处理   |
-| client    | 32 处      | P1     | 🔄 待处理   |
-| admin     | 133 处     | P2     | 🔄 待处理   |
-| marketing | 151 处     | P2     | 🔄 待处理   |
-| common    | 106 处     | P2     | 🔄 待处理   |
-| **总计**  | **447 处** | -      | -           |
+| 模块      | any 数量   | 优先级 | 状态      |
+| --------- | ---------- | ------ | --------- |
+| pms       | 1 处       | P0     | ✅ 已完成 |
+| finance   | 2 处       | P0     | ✅ 已完成 |
+| store     | 0 处       | P1     | ✅ 已完成 |
+| client    | 0 处       | P1     | ✅ 已完成 |
+| admin     | 133 处     | P2     | 🔄 待处理 |
+| marketing | 151 处     | P2     | 🔄 待处理 |
+| common    | 106 处     | P2     | 🔄 待处理 |
+| **总计**  | **393 处** | -      | -         |
 
 **any 类型消除优先级**:
 
 ```typescript
 // P0: 金融核心逻辑 (✅ 已完成)
-apps/backend/src/module/finance/**/*.ts  // 2 处
-apps/backend/src/module/pms/**/*.ts      // 1 处
+apps/backend/src/module/finance/**/*.ts  // 2 处 → 0 处
+apps/backend/src/module/pms/**/*.ts      // 1 处 → 0 处
 
-// P1: 订单和客户端 (下一步)
-apps/backend/src/module/store/**/*.ts    // 22 处
-apps/backend/src/module/client/**/*.ts   // 32 处
+// P1: 订单和客户端 (✅ 已完成 2026-03-04)
+apps/backend/src/module/store/**/*.ts    // 22 处 → 0 处
+apps/backend/src/module/client/**/*.ts   // 32 处 → 0 处
 
-// P2: 营销和管理后台
+// P2: 营销和管理后台 (待处理)
 apps/backend/src/module/marketing/**/*.ts // 151 处
 apps/backend/src/module/admin/**/*.ts     // 133 处
 apps/backend/src/common/**/*.ts           // 106 处
@@ -613,15 +613,15 @@ grep -r "console\.log" apps/backend/src --include="*.ts" --exclude-dir=node_modu
 
 ### 8.1 按模块分布
 
-| 模块      | 生产代码 | 测试代码 | 主要问题                                    |
-| --------- | -------- | -------- | ------------------------------------------- |
-| pms       | 1 处     | ~40 处   | attribute.service.ts 的 where 条件          |
-| finance   | 2 处     | ~10 处   | commission-calculator 的类型转换            |
-| store     | 22 处    | ~30 处   | level.service.ts、product-config.service.ts |
-| client    | 32 处    | ~5 处    | order.service.ts、auth.service.ts           |
-| admin     | 133 处   | ~20 处   | tool 模块模板生成、user.service.ts          |
-| marketing | 151 处   | ~60 处   | rule-validator.service.ts、task.service.ts  |
-| common    | 106 处   | ~10 处   | tenant.extension.ts、utils/index.ts         |
+| 模块      | 生产代码 | 测试代码 | 主要问题                                   |
+| --------- | -------- | -------- | ------------------------------------------ |
+| pms       | 0 处     | ~40 处   | ✅ 已完成                                  |
+| finance   | 0 处     | ~10 处   | ✅ 已完成                                  |
+| store     | 0 处     | ~30 处   | ✅ 已完成 (2026-03-04)                     |
+| client    | 0 处     | ~5 处    | ✅ 已完成 (2026-03-04)                     |
+| admin     | 133 处   | ~20 处   | tool 模块模板生成、user.service.ts         |
+| marketing | 151 处   | ~60 处   | rule-validator.service.ts、task.service.ts |
+| common    | 106 处   | ~10 处   | tenant.extension.ts、utils/index.ts        |
 
 ### 8.2 高频问题模式
 

@@ -108,6 +108,9 @@ describe('MenuService', () => {
             sysRoleMenu: {
               findMany: jest.fn(),
             },
+            sysRole: {
+              findMany: jest.fn(),
+            },
             sysTenantPackage: {
               findUnique: jest.fn(),
             },
@@ -704,24 +707,12 @@ describe('MenuService', () => {
     // R-FLOW-USAGE-01: 获取菜单使用情况
     it('Given 菜单被多个角色使用, When getMenuUsage, Then 返回角色列表和数量', async () => {
       (prisma.sysRoleMenu.findMany as jest.Mock).mockResolvedValue([
-        {
-          menuId: 1,
-          role: {
-            roleId: 1,
-            roleName: '超级管理员',
-            roleKey: 'admin',
-            status: StatusEnum.NORMAL,
-          },
-        },
-        {
-          menuId: 1,
-          role: {
-            roleId: 2,
-            roleName: '普通用户',
-            roleKey: 'user',
-            status: StatusEnum.NORMAL,
-          },
-        },
+        { menuId: 1, roleId: 1 },
+        { menuId: 1, roleId: 2 },
+      ]);
+      (prisma.sysRole.findMany as jest.Mock).mockResolvedValue([
+        { roleId: 1, roleName: '超级管理员', roleKey: 'admin', status: StatusEnum.NORMAL },
+        { roleId: 2, roleName: '普通用户', roleKey: 'user', status: StatusEnum.NORMAL },
       ]);
 
       const result = await service.getMenuUsage(1);
@@ -747,15 +738,10 @@ describe('MenuService', () => {
     // R-RESP-USAGE-01: 角色状态正确转换
     it('Given 角色状态为枚举, When getMenuUsage, Then 状态转换为字符串0/1', async () => {
       (prisma.sysRoleMenu.findMany as jest.Mock).mockResolvedValue([
-        {
-          menuId: 1,
-          role: {
-            roleId: 1,
-            roleName: '停用角色',
-            roleKey: 'disabled',
-            status: StatusEnum.STOP,
-          },
-        },
+        { menuId: 1, roleId: 1 },
+      ]);
+      (prisma.sysRole.findMany as jest.Mock).mockResolvedValue([
+        { roleId: 1, roleName: '停用角色', roleKey: 'disabled', status: StatusEnum.STOP },
       ]);
 
       const result = await service.getMenuUsage(1);

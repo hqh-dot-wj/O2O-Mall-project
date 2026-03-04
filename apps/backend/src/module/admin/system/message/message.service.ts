@@ -34,8 +34,10 @@ export class MessageService {
    * - 站内信 → NotificationService.send(target, 'IN_APP', ...)
    * - SMS → NotificationService.send(target, 'SMS', ...)
    * - 微信模板消息 → NotificationService.send(target, 'WECHAT_TEMPLATE', ...)
+   *
+   * @param order 订单信息，至少包含 orderSn、payAmount、tenantId
    */
-  async notifyNewOrder(order: any) {
+  async notifyNewOrder(order: { orderSn: string; payAmount: number | string; tenantId: string }) {
     // 1. 发送站内信
     // 通常发给租户管理员 (Tenant Owner)
     // 这里简化目前 owner 就是 tenantId 对应的某个 Admin (需查询)

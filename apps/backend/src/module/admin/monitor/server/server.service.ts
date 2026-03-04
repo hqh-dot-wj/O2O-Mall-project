@@ -61,8 +61,15 @@ export class ServerService {
 
   getCpuInfo() {
     const cpus = os.cpus();
-    const cpuInfo = cpus.reduce(
-      (info: any, cpu) => {
+    interface CpuInfo {
+      user: number;
+      sys: number;
+      idle: number;
+      total: number;
+      cpuNum: number;
+    }
+    const cpuInfo = cpus.reduce<CpuInfo>(
+      (info, cpu) => {
         info.cpuNum += 1;
         info.user += cpu.times.user;
         info.sys += cpu.times.sys;

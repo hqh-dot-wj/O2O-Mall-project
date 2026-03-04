@@ -25,6 +25,24 @@ interface CategoryTreeNode {
 }
 
 /**
+ * 营销活动信息
+ */
+interface MarketingActivity {
+  configId: string;
+  type: string;
+  rules: Prisma.JsonValue;
+  displayData: Record<string, unknown>;
+  priority: number;
+}
+
+/**
+ * 租户商品SKU信息
+ */
+interface TenantProductWithSkus {
+  skus: Array<{ id: string; globalSkuId: string; price: Prisma.Decimal; stock: number }>;
+}
+
+/**
  * C端商品服务层
  * 提供商品列表、详情以及分类接口
  * 支持租户上下文：如果有租户ID，返回门店价格；否则返回总部指导价
@@ -231,10 +249,7 @@ export class ClientProductService {
     }
 
     // 获取门店商品信息 (如果有)
-    type TenantProductWithSkus = {
-      skus: Array<{ id: string; globalSkuId: string; price: Prisma.Decimal; stock: number }>;
-    };
-    const tenantProducts = (product as { tenantProducts?: TenantProductWithSkus[] }).tenantProducts;
+    const tenantProducts = (product as unknown as { tenantProducts?: TenantProductWithSkus[] }).tenantProducts;
     const tenantProduct = tenantProducts?.[0];
     const tenantSkuMap = new Map<string, { id: string; price: Prisma.Decimal; stock: number }>();
     if (tenantProduct?.skus) {
@@ -244,13 +259,6 @@ export class ClientProductService {
     }
 
     // --- Aggregation: Generic Marketing Activities ---
-    interface MarketingActivity {
-      configId: string;
-      type: string;
-      rules: Prisma.JsonValue;
-      displayData: Record<string, unknown>;
-      priority: number;
-    }
     const marketingActivities: MarketingActivity[] = [];
     // 只有在特定门店租户环境下才查询具体活动
     if (tenantId && tenantId !== TenantContext.SUPER_TENANT_ID) {

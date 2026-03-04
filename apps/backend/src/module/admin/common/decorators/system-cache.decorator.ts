@@ -36,11 +36,20 @@ const SYSTEM_CACHE_PREFIX = '';
  * }
  * ```
  */
-export function SystemCacheable(options: { key: string | ((args: any[]) => string); ttl?: number }) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+/** 装饰器宿主实例（含 RedisService / ModuleRef） */
+interface CacheDecoratorHost {
+  redisService?: RedisService;
+  moduleRef?: { get: (token: unknown) => RedisService };
+}
+
+export function SystemCacheable(options: {
+  key: string | ((args: unknown[]) => string);
+  ttl?: number;
+}) {
+  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (this: any, ...args: any[]) {
+    descriptor.value = async function (this: CacheDecoratorHost, ...args: unknown[]) {
       // 获取 RedisService 实例
       const redisService: RedisService = this.redisService || this.moduleRef?.get(RedisService);
 
@@ -104,10 +113,10 @@ export function SystemCacheable(options: { key: string | ((args: any[]) => strin
  * ```
  */
 export function ClearSystemCache(keys: string[]) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (this: any, ...args: any[]) {
+    descriptor.value = async function (this: CacheDecoratorHost, ...args: unknown[]) {
       // 执行原方法
       const result = await originalMethod.apply(this, args);
 
@@ -148,5 +157,8 @@ export const SYSTEM_CACHE_KEY = 'system:cache';
 /**
  * 设置系统缓存元数据
  */
-export const SystemCache = (metadata: { key: string | ((args: any[]) => string); ttl?: number }) =>
+export const SystemCache = (metadata: {
+  key: string | ((args: unknown[]) => string);
+  ttl?: number;
+}) =>
   SetMetadata(SYSTEM_CACHE_KEY, metadata);

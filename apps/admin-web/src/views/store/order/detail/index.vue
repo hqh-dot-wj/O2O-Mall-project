@@ -7,15 +7,24 @@ import {
   NCard,
   NDescriptions,
   NDescriptionsItem,
+  NInput,
+  NInputNumber,
+  NModal,
   NSpace,
   NSpin,
   NTable,
   NTag,
-  NText,
-  NTimeline,
-  NTimelineItem
+  NText
 } from 'naive-ui';
-import { fetchGetOrderDetail } from '@/service/api/store/order';
+import { useAuth } from '@/hooks/business/auth';
+import { useBoolean } from '@sa/hooks';
+import {
+  fetchGetOrderDetail,
+  fetchPartialRefundOrder,
+  fetchReassignWorker,
+  fetchRefundOrder,
+  fetchVerifyService
+} from '@/service/api/store/order';
 
 defineOptions({
   name: 'OrderDetail'
@@ -23,6 +32,7 @@ defineOptions({
 
 const route = useRoute();
 const router = useRouter();
+const { hasAuth } = useAuth();
 const orderId = computed(() => route.query.id as string);
 
 // 订单状态映射
@@ -46,7 +56,45 @@ const commissionStatusRecord: Record<string, { label: string; type: NaiveUI.Them
 
 // 数据状态
 const loading = ref(true);
-const orderData = ref<any>(null);
+const orderData = ref<Api.Order.DetailResult | null>(null);
+
+// 操作弹窗
+const { bool: verifyModalVisible, setTrue: openVerifyModal, setFalse: closeVerifyModal } = useBoolean(false);
+const { bool: refundModalVisible, setTrue: openRefundModal, setFalse: closeRefundModal } = useBoolean(false);
+const { bool: partialRefundModalVisible, setTrue: openPartialRefundModal, setFalse: closePartialRefundModal } =
+  useBoolean(false);
+const { bool: reassignModalVisible, setTrue: openReassignModal, setFalse: closeReassignModal } = useBoolean(false);
+const actionRemark = ref('');
+const actionLoading = ref(false);
+const newWorkerId = ref<number | null>(null);
+// 部分退款：每项 { itemId, quantity }
+const partialRefundItems = ref<Array<{ itemId: number; quantity: number; maxQty: number; productName: string }>>([]);
+
+// 是否可核销：服务类订单且状态为 SHIPPED
+const canVerify = computed(
+  () =>
+    orderData.value?.order?.orderType === 'SERVICE' &&
+    orderData.value?.order?.status === 'SHIPPED' &&
+    hasAuth('store:order:verify')
+);
+
+// 是否可退款：非待支付/已取消/已退款
+const canRefund = computed(() => {
+  const status = orderData.value?.order?.status;
+  const invalid = ['PENDING_PAY', 'CANCELLED', 'REFUNDED'];
+  return status && !invalid.includes(status) && hasAuth('store:order:refund');
+});
+
+// 是否可改派：服务类订单且状态为 PAID 或 SHIPPED
+const canReassign = computed(() => {
+  const order = orderData.value?.order;
+  const status = order?.status;
+  return (
+    order?.orderType === 'SERVICE' &&
+    (status === 'PAID' || status === 'SHIPPED') &&
+    hasAuth('store:order:dispatch')
+  );
+});
 
 // 加载订单详情
 async function loadOrderDetail() {
@@ -66,6 +114,107 @@ function handleBack() {
   router.push({ name: 'store_order_list' });
 }
 
+/** 核销 */
+function handleVerify() {
+  actionRemark.value = '';
+  openVerifyModal();
+}
+
+async function submitVerify() {
+  if (!orderId.value) return;
+  actionLoading.value = true;
+  try {
+    await fetchVerifyService({ orderId: orderId.value, remark: actionRemark.value || undefined });
+    window.$message?.success('核销成功');
+    closeVerifyModal();
+    loadOrderDetail();
+  } catch {
+    throw new Error();
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
+/** 退款 */
+function handleRefund() {
+  actionRemark.value = '';
+  openRefundModal();
+}
+
+async function submitRefund() {
+  if (!orderId.value) return;
+  actionLoading.value = true;
+  try {
+    await fetchRefundOrder({ orderId: orderId.value, remark: actionRemark.value || undefined });
+    window.$message?.success('退款成功');
+    closeRefundModal();
+    loadOrderDetail();
+  } catch {
+    throw new Error();
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
+/** 部分退款 */
+function handlePartialRefund() {
+  actionRemark.value = '';
+  const items = orderData.value?.order?.items ?? [];
+  partialRefundItems.value = items.map((item: { id: string | number; productName: string; quantity: number }) => ({
+    itemId: Number(item.id),
+    quantity: 0,
+    maxQty: item.quantity,
+    productName: item.productName
+  }));
+  openPartialRefundModal();
+}
+
+async function submitPartialRefund() {
+  if (!orderId.value) return;
+  const items = partialRefundItems.value
+    .filter(i => i.quantity > 0)
+    .map(i => ({ itemId: i.itemId, quantity: i.quantity }));
+  if (items.length === 0) {
+    window.$message?.warning('请至少选择一项并填写退款数量');
+    return;
+  }
+  actionLoading.value = true;
+  try {
+    await fetchPartialRefundOrder({ orderId: orderId.value, items, remark: actionRemark.value || undefined });
+    window.$message?.success('部分退款成功');
+    closePartialRefundModal();
+    loadOrderDetail();
+  } catch {
+    throw new Error();
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
+/** 改派 */
+function handleReassign() {
+  newWorkerId.value = orderData.value?.worker?.id ?? null;
+  openReassignModal();
+}
+
+async function submitReassign() {
+  if (!orderId.value || newWorkerId.value == null || newWorkerId.value <= 0) {
+    window.$message?.warning('请输入有效的技师ID');
+    return;
+  }
+  actionLoading.value = true;
+  try {
+    await fetchReassignWorker({ orderId: orderId.value, newWorkerId: newWorkerId.value });
+    window.$message?.success('改派成功');
+    closeReassignModal();
+    loadOrderDetail();
+  } catch {
+    throw new Error();
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
 onMounted(() => {
   loadOrderDetail();
 });
@@ -74,14 +223,20 @@ onMounted(() => {
 <template>
   <div class="flex-col-stretch gap-16px">
     <!-- 页头 -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between flex-wrap gap-8px">
       <NButton text @click="handleBack">
         <template #icon>
           <icon-carbon-arrow-left />
         </template>
         返回列表
       </NButton>
-      <NButton type="primary" @click="loadOrderDetail">刷新</NButton>
+      <NSpace>
+        <NButton v-if="canVerify" type="primary" @click="handleVerify">核销</NButton>
+        <NButton v-if="canRefund" type="error" @click="handleRefund">全额退款</NButton>
+        <NButton v-if="canRefund" @click="handlePartialRefund">部分退款</NButton>
+        <NButton v-if="canReassign" @click="handleReassign">改派技师</NButton>
+        <NButton type="primary" @click="loadOrderDetail">刷新</NButton>
+      </NSpace>
     </div>
 
     <NSpin :show="loading">
@@ -254,6 +409,80 @@ onMounted(() => {
         </div>
       </template>
     </NSpin>
+
+    <!-- 核销弹窗 -->
+    <NModal
+      v-model:show="verifyModalVisible"
+      title="强制核销"
+      preset="dialog"
+      positive-text="确认核销"
+      :loading="actionLoading"
+      @positive-click="submitVerify"
+    >
+      <NInput v-model:value="actionRemark" type="textarea" placeholder="核销备注（选填）" :rows="3" class="mt-12px" />
+    </NModal>
+
+    <!-- 全额退款弹窗 -->
+    <NModal
+      v-model:show="refundModalVisible"
+      title="全额退款"
+      preset="dialog"
+      positive-text="确认退款"
+      :loading="actionLoading"
+      @positive-click="submitRefund"
+    >
+      <NInput v-model:value="actionRemark" type="textarea" placeholder="退款原因（选填）" :rows="3" class="mt-12px" />
+    </NModal>
+
+    <!-- 部分退款弹窗 -->
+    <NModal
+      v-model:show="partialRefundModalVisible"
+      title="部分退款"
+      preset="dialog"
+      positive-text="确认退款"
+      :loading="actionLoading"
+      @positive-click="submitPartialRefund"
+    >
+      <div class="mt-12px space-y-8px">
+        <p class="text-gray-600 text-14px">选择要退款的商品及数量：</p>
+        <div
+          v-for="row in partialRefundItems"
+          :key="row.itemId"
+          class="flex items-center justify-between gap-12px py-8px border-b border-gray-100"
+        >
+          <span class="flex-1 truncate">{{ row.productName }}</span>
+          <NInputNumber
+            v-model:value="row.quantity"
+            :min="0"
+            :max="row.maxQty"
+            :placeholder="`最多 ${row.maxQty}`"
+            class="w-120px"
+          />
+        </div>
+        <NInput
+          v-model:value="actionRemark"
+          type="textarea"
+          placeholder="退款原因（选填）"
+          :rows="2"
+          class="mt-8px"
+        />
+      </div>
+    </NModal>
+
+    <!-- 改派弹窗 -->
+    <NModal
+      v-model:show="reassignModalVisible"
+      title="改派技师"
+      preset="dialog"
+      positive-text="确认改派"
+      :loading="actionLoading"
+      @positive-click="submitReassign"
+    >
+      <div class="mt-12px">
+        <p class="text-gray-600 text-14px mb-8px">请输入新技师的 ID（可在技师管理中查看）：</p>
+        <NInputNumber v-model:value="newWorkerId" placeholder="技师ID" :min="1" class="w-full" />
+      </div>
+    </NModal>
   </div>
 </template>
 

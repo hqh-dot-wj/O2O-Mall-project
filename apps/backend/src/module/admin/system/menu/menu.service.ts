@@ -237,29 +237,32 @@ export class MenuService {
    * @returns 使用该菜单的角色列表
    */
   async getMenuUsage(menuId: number) {
-    // 查询使用该菜单的角色
     const roleMenus = await this.prisma.sysRoleMenu.findMany({
       where: { menuId },
-      include: {
-        role: {
-          select: {
-            roleId: true,
-            roleName: true,
-            roleKey: true,
-            status: true,
-          },
-        },
+      select: { roleId: true },
+    });
+    const roleIds = [...new Set(roleMenus.map((rm) => rm.roleId))];
+
+    if (roleIds.length === 0) {
+      return Result.ok({ menuId, roleCount: 0, roles: [] });
+    }
+
+    const rolesData = await this.prisma.sysRole.findMany({
+      where: { roleId: { in: roleIds } },
+      select: {
+        roleId: true,
+        roleName: true,
+        roleKey: true,
+        status: true,
       },
     });
 
-    const roles = roleMenus
-      .filter((rm) => rm.role)
-      .map((rm) => ({
-        roleId: rm.role.roleId,
-        roleName: rm.role.roleName,
-        roleKey: rm.role.roleKey,
-        status: rm.role.status === StatusEnum.NORMAL ? '0' : '1',
-      }));
+    const roles = rolesData.map((role) => ({
+      roleId: role.roleId,
+      roleName: role.roleName,
+      roleKey: role.roleKey,
+      status: role.status === StatusEnum.NORMAL ? '0' : '1',
+    }));
 
     return Result.ok({
       menuId,

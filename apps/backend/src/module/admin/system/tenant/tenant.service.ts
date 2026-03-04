@@ -117,7 +117,7 @@ export class TenantService {
             latitude: createTenantDto.latitude,
             longitude: createTenantDto.longitude,
             serviceRadius: createTenantDto.serviceRadius,
-            geoFence: createTenantDto.fence as any,
+            geoFence: createTenantDto.fence as Prisma.InputJsonValue,
           },
         });
       }
@@ -175,7 +175,7 @@ export class TenantService {
     }
 
     if (query.status) {
-      where.status = query.status as any;
+      where.status = query.status as Prisma.SysTenantWhereInput['status'];
     }
 
     if (query.beginTime && query.endTime) {
@@ -323,7 +323,7 @@ export class TenantService {
         latitude: updateData.latitude,
         longitude: updateData.longitude,
         serviceRadius: updateData.serviceRadius,
-        geoFence: updateData.fence as any,
+        geoFence: updateData.fence as Prisma.InputJsonValue,
       };
 
       // Remove undefined fields

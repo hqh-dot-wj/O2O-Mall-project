@@ -1,324 +1,97 @@
+/**
+ * Api.Store - 来自 @libs/common-types
+ */
+import type {
+  TenantProduct as TenantProductT,
+  TenantSku as TenantSkuT,
+  ListStoreProductParams as ListStoreProductParamsT,
+  ImportSkuParams as ImportSkuParamsT,
+  ProductImportParams as ProductImportParamsT,
+  ProductPriceUpdateParams as ProductPriceUpdateParamsT,
+  ProductBaseUpdateParams as ProductBaseUpdateParamsT,
+  MarketProduct as MarketProductT,
+  MarketSearchParams as MarketSearchParamsT,
+  DistributionConfig as DistributionConfigT,
+  DistributionConfigUpdateParams as DistributionConfigUpdateParamsT,
+  UpdateDistributionConfigDto as UpdateDistributionConfigDtoT,
+  DistributionConfigLog as DistributionConfigLogT,
+  Level as LevelT,
+  CreateLevelDto as CreateLevelDtoT,
+  UpdateLevelDto as UpdateLevelDtoT,
+  LevelUpgradeCondition as LevelUpgradeConditionT,
+  UpdateMemberLevelDto as UpdateMemberLevelDtoT,
+  MemberLevelLog as MemberLevelLogT,
+  LevelSearchParams as LevelSearchParamsT,
+  ListMemberLevelLogDto as ListMemberLevelLogDtoT,
+  Application as ApplicationT,
+  ListApplicationDto as ListApplicationDtoT,
+  ReviewApplicationDto as ReviewApplicationDtoT,
+  BatchReviewDto as BatchReviewDtoT,
+  ReviewConfig as ReviewConfigT,
+  UpdateReviewConfigDto as UpdateReviewConfigDtoT,
+  GetDashboardDto as GetDashboardDtoT,
+  Dashboard as DashboardT,
+  DistributorStats as DistributorStatsT,
+  OrderStats as OrderStatsT,
+  StoreCommissionPreviewDto as StoreCommissionPreviewDtoT,
+  StoreCommissionPreview as StoreCommissionPreviewT,
+  ProductConfig as ProductConfigT,
+  CreateProductConfigDto as CreateProductConfigDtoT,
+  UpdateProductConfigDto as UpdateProductConfigDtoT,
+  ProductConfigSearchParams as ProductConfigSearchParamsT,
+  BatchImportProductConfigDto as BatchImportProductConfigDtoT,
+  LevelCheck as LevelCheckT,
+} from '@libs/common-types';
+
 declare namespace Api {
   namespace Store {
-    interface TenantProduct {
-      id: string; // tenantProductId
-      productId: string;
-      name: string;
-      albumPics: string;
-      type: Pms.ProductType;
-      status: Pms.PublishStatus;
-      isHot: boolean;
-      price: number;
-      customTitle?: string;
-      overrideRadius?: number;
-      /** 积分获得比例 (0-200) */
-      pointsRatio?: number;
-      /** 是否营销活动商品 */
-      isPromotionProduct?: boolean;
-      skus: TenantSku[];
-    }
+    type TenantProduct = TenantProductT;
+    type TenantSku = TenantSkuT;
+    type TenantProductList = Api.Common.PaginatingQueryRecord<TenantProductT>;
+    type ListStoreProductParams = ListStoreProductParamsT;
+    type ImportSkuParams = ImportSkuParamsT;
+    type ProductImportParams = ProductImportParamsT;
+    type ProductPriceUpdateParams = ProductPriceUpdateParamsT;
+    type ProductBaseUpdateParams = ProductBaseUpdateParamsT;
 
-    interface TenantSku {
-      id: string;
-      price: number;
-      stock: number;
-      distRate: number;
-      distMode: Pms.DistributionMode;
-      isActive: boolean;
-      specValues: unknown;
-      costPrice: number;
-      guidePrice: number;
-    }
+    type MarketProduct = MarketProductT;
+    type MarketProductList = Api.Common.PaginatingQueryRecord<MarketProductT>;
+    type MarketSearchParams = MarketSearchParamsT;
 
-    type TenantProductList = Common.PaginatingQueryRecord<TenantProduct>;
+    type DistributionConfig = DistributionConfigT;
+    type DistributionConfigUpdateParams = DistributionConfigUpdateParamsT;
+    type UpdateDistributionConfigDto = UpdateDistributionConfigDtoT;
+    type DistributionConfigLog = DistributionConfigLogT;
 
-    interface ListStoreProductParams extends Common.PaginatingCommonParams {
-      name?: string | null;
-      type?: Pms.ProductType | null;
-      status?: Pms.PublishStatus | null;
-      storeId?: string | null;
-    }
+    type Level = LevelT;
+    type CreateLevelDto = CreateLevelDtoT;
+    type UpdateLevelDto = UpdateLevelDtoT;
+    type LevelUpgradeCondition = LevelUpgradeConditionT;
+    type LevelSearchParams = LevelSearchParamsT;
+    type ListLevelDto = LevelSearchParamsT;
+    type UpdateMemberLevelDto = UpdateMemberLevelDtoT;
+    type MemberLevelLog = MemberLevelLogT;
+    type ListMemberLevelLogDto = ListMemberLevelLogDtoT;
+    type LevelCheck = LevelCheckT;
 
-    interface ImportSkuParams {
-      globalSkuId: string;
-      price: number;
-      stock: number;
-      distRate?: number;
-      distMode?: Pms.DistributionMode;
-    }
+    type Application = ApplicationT;
+    type ListApplicationDto = ListApplicationDtoT;
+    type ReviewApplicationDto = ReviewApplicationDtoT;
+    type BatchReviewDto = BatchReviewDtoT;
+    type ReviewConfig = ReviewConfigT;
+    type UpdateReviewConfigDto = UpdateReviewConfigDtoT;
 
-    interface ProductImportParams {
-      productId: string;
-      overrideRadius?: number | null;
-      skus: ImportSkuParams[];
-    }
+    type GetDashboardDto = GetDashboardDtoT;
+    type Dashboard = DashboardT;
+    type DistributorStats = DistributorStatsT;
+    type OrderStats = OrderStatsT;
+    type CommissionPreviewDto = StoreCommissionPreviewDtoT;
+    type CommissionPreview = StoreCommissionPreviewT;
 
-    interface ProductPriceUpdateParams {
-      tenantSkuId: string;
-      price: number;
-      stock: number;
-      distRate: number;
-      distMode?: Pms.DistributionMode;
-    }
-
-    interface ProductBaseUpdateParams {
-      id: string;
-      status: Pms.PublishStatus;
-      customTitle?: string;
-      overrideRadius?: number;
-      pointsRatio?: number;
-      isPromotionProduct?: boolean;
-    }
-
-    /** Market Product (Global Product with Import Status) */
-    type MarketProduct = Pms.Product & {
-      isImported: boolean;
-      price: number;
-      type: Pms.ProductType;
-      serviceRadius?: number;
-      globalSkus?: Pms.GlobalSku[];
-    };
-
-    type MarketProductList = Common.PaginatingQueryRecord<MarketProduct>;
-
-    interface MarketSearchParams extends Common.PaginatingCommonParams {
-      name?: string | null;
-      categoryId?: number | null;
-      type?: 'REAL' | 'SERVICE' | null;
-    }
-
-    interface DistributionConfig {
-      id: number;
-      level1Rate: number;
-      level2Rate: number;
-      enableLV0: boolean;
-      createTime: string;
-      enableCrossTenant?: boolean;
-      crossTenantRate?: number;
-      crossMaxDaily?: number;
-      /** 分佣基数类型: ORIGINAL_PRICE | ACTUAL_PAID | ZERO */
-      commissionBaseType?: string;
-      /** 熔断保护比例 (0-100) */
-      maxCommissionRate?: number;
-    }
-
-    interface DistributionConfigUpdateParams {
-      level1Rate: number;
-      level2Rate: number;
-      enableLV0: boolean;
-      enableCrossTenant?: boolean;
-      crossTenantRate?: number;
-      crossMaxDaily?: number;
-      commissionBaseType?: 'ORIGINAL_PRICE' | 'ACTUAL_PAID' | 'ZERO';
-      maxCommissionRate?: number;
-    }
-
-    interface DistributionConfigLog {
-      id: number;
-      configId: number;
-      level1Rate: number;
-      level2Rate: number;
-      enableLV0: boolean;
-      enableCrossTenant?: boolean;
-      crossTenantRate?: number;
-      crossMaxDaily?: number;
-      operator: string;
-      createTime: string;
-    }
-
-    // ==================== 分销员等级体系 ====================
-
-    interface Level {
-      id: number;
-      tenantId: string;
-      levelId: number;
-      levelName: string;
-      levelIcon?: string;
-      level1Rate: string;
-      level2Rate: string;
-      upgradeCondition?: LevelUpgradeCondition;
-      maintainCondition?: LevelUpgradeCondition;
-      benefits?: string;
-      sort: number;
-      isActive: boolean;
-      createBy: string;
-      createTime: string;
-      updateBy: string;
-      updateTime: string;
-    }
-
-    interface LevelUpgradeCondition {
-      minOrderCount?: number;
-      minOrderAmount?: number;
-      minSelfAmount?: number;
-      minDirectSubCount?: number;
-      minTeamCount?: number;
-    }
-
-    interface CreateLevelDto {
-      levelId: number;
-      levelName: string;
-      levelIcon?: string;
-      level1Rate: number;
-      level2Rate: number;
-      upgradeCondition?: LevelUpgradeCondition;
-      maintainCondition?: LevelUpgradeCondition;
-      benefits?: string;
-      sort?: number;
-      isActive?: boolean;
-    }
-
-    type UpdateLevelDto = Partial<CreateLevelDto>;
-
-    interface ListLevelDto {
-      isActive?: boolean;
-    }
-
-    /** 等级列表搜索参数（含分页，供 useTable + LevelSearch 使用） */
-    interface LevelSearchParams extends Common.PaginatingCommonParams {
-      isActive?: boolean | null | undefined;
-    }
-
-    interface UpdateMemberLevelDto {
-      memberId: string;
-      targetLevel: number;
-      reason: string;
-    }
-
-    interface MemberLevelLog {
-      id: number;
-      memberId: string;
-      oldLevelId: number;
-      newLevelId: number;
-      reason: string;
-      operator: string;
-      createTime: string;
-    }
-
-    interface ListMemberLevelLogDto extends Common.PaginatingCommonParams {
-      memberId?: string;
-    }
-
-    interface LevelCheck {
-      currentLevelId: number;
-      nextLevelId?: number;
-      isUpgradable: boolean;
-      progress: Record<string, unknown>;
-    }
-
-    // ==================== 分销员申请/审核 ====================
-
-    interface Application {
-      id: number;
-      memberId: string;
-      member?: {
-        nickname: string;
-        avatar?: string;
-        mobile?: string;
-      };
-      status: 'PENDING' | 'APPROVED' | 'REJECTED';
-      reason?: string;
-      createTime: string;
-      auditTime?: string;
-      auditor?: string;
-    }
-
-    interface ListApplicationDto extends Common.PaginatingCommonParams {
-      memberId?: string;
-      status?: 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
-      startTime?: string;
-      endTime?: string;
-    }
-
-    interface ReviewApplicationDto {
-      status: 'APPROVED' | 'REJECTED';
-      reason?: string;
-    }
-
-    interface BatchReviewDto {
-      ids: number[];
-      status: '1' | '2';
-      remark?: string;
-    }
-
-    interface ReviewConfig {
-      enableAutoAudit: boolean;
-      autoAuditCondition?: {
-        minOrderCount?: number;
-        minOrderAmount?: number;
-      };
-    }
-
-    type UpdateReviewConfigDto = ReviewConfig;
-
-    // ==================== 看板/预期 ====================
-
-    interface GetDashboardDto {
-      startDate?: string;
-      endDate?: string;
-    }
-
-    interface DistributorStats {
-      total: number;
-      newCount: number;
-      activeCount: number;
-    }
-
-    interface OrderStats {
-      totalCount: number;
-      totalAmount: number;
-      percentage: number;
-    }
-
-    interface CommissionStats {
-      totalAmount: number;
-      pendingAmount: number;
-      settledAmount: number;
-      trend: Array<{ date: string; amount: number }>;
-    }
-
-    interface Dashboard {
-      distributorStats: DistributorStats;
-      orderStats: OrderStats;
-      commissionStats: CommissionStats;
-    }
-
-    interface CommissionPreviewDto {
-      productId: string;
-      orderAmount: number;
-    }
-
-    interface CommissionPreview {
-      level1Commission: number;
-      level2Commission: number;
-      totalCommission: number;
-    }
-
-    // ==================== 商品配置 ====================
-    interface ProductConfig {
-      id: number;
-      productId: string;
-      enableCustom: boolean;
-      level1Rate?: number;
-      level2Rate?: number;
-      createTime: string;
-    }
-
-    interface CreateProductConfigDto {
-      productId: string;
-      enableCustom: boolean;
-      level1Rate?: number;
-      level2Rate?: number;
-    }
-
-    type UpdateProductConfigDto = Partial<CreateProductConfigDto>;
-
-    interface ProductConfigSearchParams extends Common.PaginatingCommonParams {
-      productId?: string;
-    }
-
-    interface BatchImportProductConfigDto {
-      productConfigs: CreateProductConfigDto[];
-    }
+    type ProductConfig = ProductConfigT;
+    type CreateProductConfigDto = CreateProductConfigDtoT;
+    type UpdateProductConfigDto = UpdateProductConfigDtoT;
+    type ProductConfigSearchParams = ProductConfigSearchParamsT;
+    type BatchImportProductConfigDto = BatchImportProductConfigDtoT;
   }
 }

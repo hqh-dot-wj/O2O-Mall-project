@@ -199,9 +199,9 @@ export class JobService {
     const job = new CronJob(cronTime, async () => {
       const lockKey = `sys:job:${name}`;
       // 尝试获取锁，默认锁30秒，根据业务调整
-      const hasLock = await this.redisService.tryLock(lockKey, 30000);
+      const lockToken = await this.redisService.tryLock(lockKey, 30000);
 
-      if (!hasLock) {
+      if (!lockToken) {
         this.logger.warn(`定时任务 ${name} 未获取到锁，跳过本次执行`);
         return;
       }
@@ -210,11 +210,11 @@ export class JobService {
         this.logger.warn(`定时任务 ${name} 正在执行，调用方法: ${invokeTarget}`);
         await this.taskService.executeTask(invokeTarget, name);
       } finally {
-        await this.redisService.unlock(lockKey);
+        await this.redisService.unlock(lockKey, lockToken);
       }
     });
 
-    this.schedulerRegistry.addCronJob(name, job as any);
+    this.schedulerRegistry.addCronJob(name, job as CronJob);
     job.start();
   }
 

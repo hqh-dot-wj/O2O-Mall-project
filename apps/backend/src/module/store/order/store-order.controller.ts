@@ -16,6 +16,7 @@ import {
   BatchVerifyDto,
   BatchRefundDto,
 } from './dto/store-order.dto';
+import { StoreOrderDetailVo, StoreOrderListItemVo } from './vo/store-order.vo';
 
 /**
  * Store端订单管理控制器
@@ -29,7 +30,7 @@ export class StoreOrderController {
    * 查询订单列表
    */
   @Get('list')
-  @Api({ summary: '查询订单列表' })
+  @Api({ summary: '查询订单列表', type: StoreOrderListItemVo, isArray: true, isPager: true })
   @RequirePermission('store:order:list')
   async findAll(@Query() query: ListStoreOrderDto) {
     return await this.storeOrderService.findAll(query);
@@ -39,7 +40,7 @@ export class StoreOrderController {
    * 查询订单详情
    */
   @Get('detail/:id')
-  @Api({ summary: '查询订单详情' })
+  @Api({ summary: '查询订单详情', type: StoreOrderDetailVo })
   @RequirePermission('store:order:query')
   async findOne(@Param('id') id: string) {
     // 默认允许查看佣金
@@ -51,7 +52,7 @@ export class StoreOrderController {
    * 获取待派单列表
    */
   @Get('dispatch/list')
-  @Api({ summary: '获取待派单列表' })
+  @Api({ summary: '获取待派单列表', type: StoreOrderListItemVo, isArray: true, isPager: true })
   @RequirePermission('store:order:dispatch')
   async getDispatchList(@Query() query: ListStoreOrderDto) {
     return await this.storeOrderService.getDispatchList(query);

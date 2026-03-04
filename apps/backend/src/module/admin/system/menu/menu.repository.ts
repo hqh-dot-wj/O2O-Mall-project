@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
 import { Prisma, SysMenu } from '@prisma/client';
@@ -51,23 +51,48 @@ export class MenuRepository extends BaseRepository<
 
   /**
    * 查询用户的所有菜单权限
+   * 通过 user -> userRoles -> roleMenus -> menu 链路查询
    */
   async findUserMenus(userId: number): Promise<SysMenu[]> {
+    const userRoles = await this.prisma.sysUserRole.findMany({
+      where: { userId },
+      select: { roleId: true },
+    });
+    const roleIds = userRoles.map((ur) => ur.roleId);
+
+    if (roleIds.length === 0) {
+      return [];
+    }
+
+    const validRoles = await this.prisma.sysRole.findMany({
+      where: {
+        roleId: { in: roleIds },
+        delFlag: DelFlagEnum.NORMAL,
+        status: StatusEnum.NORMAL,
+      },
+      select: { roleId: true },
+    });
+    const validRoleIds = validRoles.map((r) => r.roleId);
+
+    if (validRoleIds.length === 0) {
+      return [];
+    }
+
+    const roleMenus = await this.prisma.sysRoleMenu.findMany({
+      where: { roleId: { in: validRoleIds } },
+      select: { menuId: true },
+    });
+    const menuIds = [...new Set(roleMenus.map((rm) => rm.menuId))];
+
+    if (menuIds.length === 0) {
+      return [];
+    }
+
     return this.prisma.sysMenu.findMany({
       where: {
-        roleMenus: {
-          some: {
-            role: {
-              userRoles: {
-                some: { userId },
-              },
-              delFlag: DelFlagEnum.NORMAL,
-              status: StatusEnum.NORMAL,
-            },
-          },
-        },
+        menuId: { in: menuIds },
         status: StatusEnum.NORMAL,
-      } as any,
+      },
       orderBy: [{ orderNum: 'asc' }, { createTime: 'asc' }],
     });
   }
@@ -107,7 +132,12 @@ export class MenuRepository extends BaseRepository<
     };
 
     if (query?.status) {
-      where.status = query.status as any;
+      where.status =
+        query.status === '0'
+          ? StatusEnum.NORMAL
+          : query.status === '1'
+            ? StatusEnum.STOP
+            : (query.status as Prisma.SysMenuWhereInput['status']);
     }
 
     if (query?.parentId !== undefined) {

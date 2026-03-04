@@ -63,7 +63,8 @@ export class ServiceSlotService {
   async lockSlot(date: string, time: string, memberId: string): Promise<boolean> {
     const key = `service:lock:${date}:${time}`;
     // Use RedisService tryLock (SET NX PX)
-    return await this.redisService.tryLock(key, 300 * 1000); // 300 seconds
+    const token = await this.redisService.tryLock(key, 300 * 1000); // 300 seconds
+    return token !== null;
   }
 
   // ============ Helper ============

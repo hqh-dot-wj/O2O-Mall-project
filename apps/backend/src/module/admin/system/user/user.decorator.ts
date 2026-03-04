@@ -1,4 +1,4 @@
-﻿import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
 import { UserType } from 'src/module/admin/system/user/dto/user';
 
 export const User = createParamDecorator((data: string | undefined, ctx: ExecutionContext) => {
@@ -18,14 +18,20 @@ export type UserDto = UserType;
 
 export const NotRequireAuth = () => SetMetadata('notRequireAuth', true);
 
-export const UserTool = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+/** 支持 createBy/updateBy 注入的 DTO 接口 */
+interface WithCreateUpdateBy {
+  createBy?: string;
+  updateBy?: string;
+  [key: string]: unknown;
+}
+
+export const UserTool = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
 
   const userName = request.user?.user?.userName;
 
-  const injectCreate = <T>(data: T): T => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const obj = data as any;
+  const injectCreate = <T extends WithCreateUpdateBy>(data: T): T => {
+    const obj = data as WithCreateUpdateBy;
     if (!obj.createBy) {
       obj.createBy = userName;
     }
@@ -35,9 +41,8 @@ export const UserTool = createParamDecorator((data: unknown, ctx: ExecutionConte
     return data;
   };
 
-  const injectUpdate = <T>(data: T): T => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const obj = data as any;
+  const injectUpdate = <T extends WithCreateUpdateBy>(data: T): T => {
+    const obj = data as WithCreateUpdateBy;
     if (!obj.updateBy) {
       obj.updateBy = userName;
     }

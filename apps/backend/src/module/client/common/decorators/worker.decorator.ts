@@ -11,7 +11,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
  * ```typescript
  * @UseGuards(WorkerAuthGuard)
  * @Get('profile')
- * getProfile(@Worker() worker: any) {
+ * getProfile(@Worker() worker: WorkerPayload) {
  *   return worker;
  * }
  *

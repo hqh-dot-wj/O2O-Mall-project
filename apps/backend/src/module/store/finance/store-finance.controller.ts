@@ -8,6 +8,14 @@ import { BusinessType } from 'src/common/constant/business.constant';
 import { User } from 'src/common/decorators/user.decorator';
 import { StoreFinanceService } from './store-finance.service';
 import { ListCommissionDto, ListWithdrawalDto, AuditWithdrawalDto, ListLedgerDto } from './dto/store-finance.dto';
+import {
+  StoreFinanceDashboardVo,
+  StoreCommissionStatsVo,
+  StoreCommissionRecordVo,
+  StoreLedgerRecordVo,
+  StoreLedgerStatsVo,
+} from './vo/store-finance.vo';
+import { WithdrawalVo } from 'src/module/finance/withdrawal/vo/withdrawal.vo';
 
 /**
  * Store端财务管理控制器
@@ -21,7 +29,7 @@ export class StoreFinanceController {
    * 获取资金看板
    */
   @Get('dashboard')
-  @Api({ summary: '获取资金看板' })
+  @Api({ summary: '获取资金看板', type: StoreFinanceDashboardVo })
   @RequirePermission('store:finance:dashboard')
   async getDashboard() {
     return await this.storeFinanceService.getDashboard();
@@ -31,7 +39,7 @@ export class StoreFinanceController {
    * 查询佣金明细列表
    */
   @Get('commission/list')
-  @Api({ summary: '查询佣金明细列表' })
+  @Api({ summary: '查询佣金明细列表', type: StoreCommissionRecordVo, isArray: true, isPager: true })
   @RequirePermission('store:finance:commission')
   async getCommissionList(@Query() query: ListCommissionDto) {
     return await this.storeFinanceService.getCommissionList(query);
@@ -41,7 +49,7 @@ export class StoreFinanceController {
    * 获取佣金统计
    */
   @Get('commission/stats')
-  @Api({ summary: '获取佣金统计' })
+  @Api({ summary: '获取佣金统计', type: StoreCommissionStatsVo })
   @RequirePermission('store:finance:commission')
   async getCommissionStats() {
     return await this.storeFinanceService.getCommissionStats();
@@ -51,7 +59,7 @@ export class StoreFinanceController {
    * 查询提现列表
    */
   @Get('withdrawal/list')
-  @Api({ summary: '查询提现列表' })
+  @Api({ summary: '查询提现列表', type: WithdrawalVo, isArray: true, isPager: true })
   @RequirePermission('store:finance:withdrawal')
   async getWithdrawalList(@Query() query: ListWithdrawalDto) {
     return await this.storeFinanceService.getWithdrawalList(query);
@@ -71,7 +79,7 @@ export class StoreFinanceController {
    * 查询门店流水
    */
   @Get('ledger')
-  @Api({ summary: '查询门店流水' })
+  @Api({ summary: '查询门店流水', type: StoreLedgerRecordVo, isArray: true, isPager: true })
   @RequirePermission('store:finance:ledger')
   async getLedger(@Query() query: ListLedgerDto) {
     return await this.storeFinanceService.getLedger(query);
@@ -81,7 +89,7 @@ export class StoreFinanceController {
    * 获取流水统计
    */
   @Get('ledger/stats')
-  @Api({ summary: '获取流水统计' })
+  @Api({ summary: '获取流水统计', type: StoreLedgerStatsVo })
   @RequirePermission('store:finance:ledger')
   async getLedgerStats(@Query() query: ListLedgerDto) {
     return await this.storeFinanceService.getLedgerStats(query);

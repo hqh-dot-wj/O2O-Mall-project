@@ -26,7 +26,7 @@ export class JobLogService {
     }
 
     if (query.status) {
-      where.status = query.status as any;
+      where.status = query.status as Prisma.SysJobLogWhereInput['status'];
     }
 
     // 使用 getDateRange 便捷方法

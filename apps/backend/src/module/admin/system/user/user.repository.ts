@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { Prisma, SysUser } from '@prisma/client';
@@ -115,7 +115,7 @@ export class UserRepository extends SoftDeleteRepository<
               deptName: true,
             },
           },
-        } as any,
+        },
       }),
       this.prisma.sysUser.count({ where }),
     ]);

@@ -70,3 +70,100 @@ export type ClientUser = components["schemas"]["ClientUserVo"];
 
 // 分销
 export type CommissionPreview = components["schemas"]["CommissionPreviewVo"];
+
+// ─── Store 端 (admin-web store 模块) ───
+
+export type {
+  StoreOrderSearchParams,
+  StoreOrderListItemVo,
+  StoreOrderItemVo,
+  StoreOrderDetailVo,
+} from './store-order';
+
+// ─── Finance (admin-web finance 模块) ───
+
+export type {
+  CommissionSearchParams,
+  WithdrawalSearchParams,
+  LedgerSearchParams,
+  CommissionStatus,
+  WithdrawalStatus,
+  TransType,
+  FinanceDashboardVo,
+  CommissionRecordVo,
+  WithdrawalRecordVo,
+  StoreCommissionStatsVo,
+  LedgerRecordVo,
+  LedgerStatsVo,
+} from './finance';
+
+// ─── Store 分销/商品 (admin-web store 模块) ───
+
+export type {
+  StoreProductVo,
+  StoreSkuVo,
+  TenantProduct,
+  TenantSku,
+  ListStoreProductParams,
+  ImportSkuParams,
+  ProductImportParams,
+  BatchImportProductDto,
+  ProductPriceUpdateParams,
+  ProductBaseUpdateParams,
+  MarketProductVo,
+  MarketProductDetailVo,
+  MarketProduct,
+  MarketSearchParams,
+  DistributionConfig,
+  DistributionConfigUpdateParams,
+  UpdateDistributionConfigDto,
+  DistributionConfigLog,
+  Level,
+  CreateLevelDto,
+  UpdateLevelDto,
+  UpdateMemberLevelDto,
+  MemberLevelLog,
+  LevelCheck,
+  LevelUpgradeCondition,
+  Application,
+  ReviewApplicationDto,
+  BatchReviewDto,
+  ReviewConfig,
+  UpdateReviewConfigDto,
+  ProductConfigSearchParams,
+  LevelSearchParams,
+  ListApplicationDto,
+  ListMemberLevelLogDto,
+  Dashboard,
+  DistributorStats,
+  OrderStats,
+  ProductConfig,
+  CreateProductConfigDto,
+  UpdateProductConfigDto,
+  BatchImportProductConfigDto,
+  GetDashboardDto,
+  StoreCommissionPreviewDto,
+  StoreCommissionPreview,
+} from './store';
+
+// ─── Store 库存 ───
+
+export type {
+  StockSkuVo,
+  StockSearchParams,
+  StockUpdateParams,
+  BatchUpdateStockParams,
+  BatchUpdateStockResult,
+} from './store-stock';
+
+// ─── PMS 属性 ───
+
+export type {
+  AttrUsageType,
+  AttrInputType,
+  AttrApplyType,
+  AttributeItemVo,
+  AttributeTemplateVo,
+  AttributeSearchParams,
+  AttributeOperateParams,
+} from './pms-attribute';

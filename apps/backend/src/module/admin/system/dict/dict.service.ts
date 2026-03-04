@@ -98,7 +98,7 @@ export class DictService {
     }
 
     if (query.status) {
-      where.status = query.status as any;
+      where.status = query.status as Prisma.SysDictTypeWhereInput['status'];
     }
 
     if (query.params?.beginTime && query.params?.endTime) {
@@ -201,7 +201,7 @@ export class DictService {
     }
 
     if (query.status) {
-      where.status = query.status as any;
+      where.status = query.status as Prisma.SysDictDataWhereInput['status'];
     }
 
     const { list, total } = await this.dictDataRepo.findPageWithFilter(where, query.skip, query.take);

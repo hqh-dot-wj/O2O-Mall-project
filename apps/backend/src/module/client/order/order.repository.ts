@@ -18,7 +18,7 @@ export class OrderRepository extends SoftDeleteRepository<OmsOrder, Prisma.OmsOr
   /**
    * Override default where for soft delete (OmsOrder uses deleteTime, not delFlag)
    */
-  protected getDefaultWhere(): Record<string, any> {
+  protected getDefaultWhere(): Record<string, unknown> {
     return { deleteTime: null };
   }
 

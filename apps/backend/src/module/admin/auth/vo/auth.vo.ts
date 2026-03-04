@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { SysDept, SysRole } from '@prisma/client';
 
 /**
  * 登录令牌响应 VO - 匹配 Soybean 前端
@@ -84,8 +85,8 @@ export class UserInfoVo {
     status: string;
     deptId?: number;
     tenantId?: string;
-    dept?: any;
-    roles?: any[];
+    dept?: SysDept | null;
+    roles?: SysRole[];
   };
 
   @ApiProperty({ description: '角色标识列表' })

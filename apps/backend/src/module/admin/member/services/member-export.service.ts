@@ -3,6 +3,24 @@ import { Response } from 'express';
 import { ExportTable } from 'src/common/utils/export';
 import { MemberLevelNameMap } from '../member.constant';
 
+/** 会员导出行数据结构（与 header dataIndex 对齐） */
+export interface MemberExportRow {
+  memberId?: number;
+  nickname?: string;
+  mobile?: string;
+  levelName?: string;
+  status?: string;
+  tenantName?: string;
+  referrerName?: string;
+  referrerMobile?: string;
+  indirectReferrerName?: string;
+  balance?: number | string;
+  commission?: number | string;
+  totalConsumption?: number | string;
+  createTime?: string | Date;
+  [key: string]: unknown;
+}
+
 /**
  * 会员导出服务
  *
@@ -15,7 +33,7 @@ export class MemberExportService {
    * @param res Express Response 对象
    * @param rows 会员 VO 列表（已组装完毕）
    */
-  async export(res: Response, rows: any[]) {
+  async export(res: Response, rows: MemberExportRow[]) {
     const options = {
       sheetName: '会员数据',
       data: rows,

@@ -271,7 +271,7 @@ export class OrderService {
   async getOrderList(memberId: string, dto: ListOrderDto) {
     const where: Prisma.OmsOrderWhereInput = { memberId, deleteTime: null };
     if (dto.status) {
-      where.status = dto.status;
+      where.status = dto.status as Prisma.OmsOrderWhereInput['status'];
     }
 
     const [total, orders] = await Promise.all([
@@ -282,7 +282,7 @@ export class OrderService {
         orderBy: { createTime: 'desc' },
         skip: (dto.pageNum - 1) * dto.pageSize,
         take: dto.pageSize,
-      }),
+      }) as Promise<Array<OmsOrder & { items: OmsOrderItem[] }>>,
     ]);
 
     const list: OrderListItemVo[] = orders.map((order) => ({

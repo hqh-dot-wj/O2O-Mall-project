@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response';
 import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
@@ -168,7 +168,7 @@ export class ToolService {
   async synchDb(tableName: string) {
     const table = await this.findOneByTableName(tableName);
     if (!table) throw new BusinessException(ResponseCode.BUSINESS_ERROR, '同步数据失败，原表结构不存在！');
-    const tableColumns = ((table as any).columns as GenTableColumn[]) ?? [];
+    const tableColumns = table.columns ?? [];
     //更改后的数据库表的列信息
     const columns: DbColumnRow[] = await this.getTableColumnInfo(tableName);
 
