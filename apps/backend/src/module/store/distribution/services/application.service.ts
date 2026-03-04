@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma, SysDistApplication, SysDistReviewConfig } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
@@ -10,7 +11,20 @@ import { ReviewApplicationDto, ReviewResult } from '../dto/review-application.dt
 import { BatchReviewDto } from '../dto/batch-review.dto';
 import { UpdateReviewConfigDto } from '../dto/update-review-config.dto';
 import { ApplicationVo, ApplicationStatusVo, ReviewConfigVo } from '../vo/application.vo';
-import { Prisma } from '@prisma/client';
+
+/**
+ * 内部审核配置类型（用于 getReviewConfigInternal 返回值）
+ */
+interface InternalReviewConfig {
+  id?: number;
+  enableAutoReview: boolean;
+  minRegisterDays: number;
+  minOrderCount: number;
+  minOrderAmount: Prisma.Decimal;
+  requireRealName: boolean;
+  requirePhone: boolean;
+  createTime?: Date;
+}
 
 /**
  * 分销员申请/审核服务
@@ -309,7 +323,7 @@ export class ApplicationService {
   /**
    * 获取审核配置（内部方法）
    */
-  private async getReviewConfigInternal(tenantId: string) {
+  private async getReviewConfigInternal(tenantId: string): Promise<InternalReviewConfig> {
     const config = await this.prisma.sysDistReviewConfig.findUnique({
       where: { tenantId },
     });
@@ -398,7 +412,7 @@ export class ApplicationService {
   /**
    * 转换为VO
    */
-  private toApplicationVo(application: any): ApplicationVo {
+  private toApplicationVo(application: SysDistApplication): ApplicationVo {
     return {
       id: application.id,
       memberId: application.memberId,
@@ -415,7 +429,7 @@ export class ApplicationService {
   /**
    * 转换为ReviewConfigVo
    */
-  private toReviewConfigVo(config: any): ReviewConfigVo {
+  private toReviewConfigVo(config: InternalReviewConfig): ReviewConfigVo {
     return {
       id: config.id || 0,
       enableAutoReview: config.enableAutoReview,

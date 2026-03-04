@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, SysDistConfig, SysDistProductConfig, CommissionBaseType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
@@ -226,7 +226,7 @@ export class ProductConfigService {
   /**
    * 合并配置（商品/品类配置覆盖租户默认值）
    */
-  private mergeConfig(tenantConfig: any, productConfig: any) {
+  private mergeConfig(tenantConfig: SysDistConfig, productConfig: SysDistProductConfig) {
     return {
       level1Rate: productConfig.level1Rate ? Number(productConfig.level1Rate) : Number(tenantConfig.level1Rate),
       level2Rate: productConfig.level2Rate ? Number(productConfig.level2Rate) : Number(tenantConfig.level2Rate),
@@ -243,7 +243,7 @@ export class ProductConfigService {
   /**
    * 转换为 VO
    */
-  private toVo(config: any): ProductConfigVo {
+  private toVo(config: SysDistProductConfig): ProductConfigVo {
     return {
       id: config.id,
       productId: config.productId ?? undefined,
@@ -313,7 +313,7 @@ export class ProductConfigService {
               data: {
                 ...(item.level1Rate !== undefined && { level1Rate: new Prisma.Decimal(item.level1Rate / 100) }),
                 ...(item.level2Rate !== undefined && { level2Rate: new Prisma.Decimal(item.level2Rate / 100) }),
-                ...(item.commissionBaseType && { commissionBaseType: item.commissionBaseType as any }),
+                ...(item.commissionBaseType && { commissionBaseType: item.commissionBaseType as CommissionBaseType }),
                 isActive: true, // 重新激活
                 updateBy: operator,
               },
@@ -327,7 +327,7 @@ export class ProductConfigService {
                 categoryId: item.categoryId ?? null,
                 level1Rate: item.level1Rate !== undefined ? new Prisma.Decimal(item.level1Rate / 100) : null,
                 level2Rate: item.level2Rate !== undefined ? new Prisma.Decimal(item.level2Rate / 100) : null,
-                commissionBaseType: (item.commissionBaseType as any) ?? null,
+                commissionBaseType: (item.commissionBaseType as CommissionBaseType) ?? null,
                 createBy: operator,
                 updateBy: operator,
               },

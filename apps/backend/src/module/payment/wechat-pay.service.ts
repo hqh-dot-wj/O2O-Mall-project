@@ -211,10 +211,14 @@ export class WechatPayService implements IPaymentProvider, OnModuleInit {
 
     // 检查 SDK 是否已初始化
     this.ensureWxPayInitialized();
+    const wxpayClient = this.wxpay; // 类型收窄：ensureWxPayInitialized 保证非空
+    if (!wxpayClient) {
+      throw new BusinessException(ResponseCode.BUSINESS_ERROR, '微信支付 SDK 未初始化');
+    }
 
     try {
       // 调用微信退款 API
-      const result = (await this.wxpay!.refunds({
+      const result = (await wxpayClient.refunds({
         out_trade_no: params.orderSn,
         out_refund_no: params.refundSn,
         notify_url: this.config.refundNotifyUrl,

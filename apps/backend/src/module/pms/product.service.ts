@@ -135,10 +135,13 @@ export class PmsProductService {
 
     const attrValueData = attrs.map((item) => {
       const def = attrDefinitions.find((d) => d.attrId === item.attrId);
+      if (!def) {
+        throw new BusinessException(ResponseCode.BUSINESS_ERROR, `属性 ${item.attrId} 不存在`);
+      }
       return {
         productId,
         attrId: item.attrId,
-        attrName: def!.name, // 已验证存在，可以断言非空
+        attrName: def.name,
         value: item.value,
       };
     });
@@ -199,10 +202,11 @@ export class PmsProductService {
   async findOne(id: string) {
     const product = await this.productRepo.findOneWithDetails(id);
     BusinessException.throwIf(!product, '商品不存在', ResponseCode.NOT_FOUND);
+    const validProduct = product; // 类型收窄：throwIf 保证非空
 
     return Result.ok({
-      ...product,
-      attrs: product!.attrValues.map((av: { attrId: number; value: string }) => ({
+      ...validProduct,
+      attrs: validProduct.attrValues.map((av: { attrId: number; value: string }) => ({
         attrId: av.attrId,
         value: av.value,
       })),

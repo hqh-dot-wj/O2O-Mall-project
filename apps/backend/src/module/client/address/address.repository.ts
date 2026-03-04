@@ -23,6 +23,16 @@ export class AddressRepository extends BaseRepository<UmsAddress, Prisma.UmsAddr
   }
 
   /**
+   * 获取用户第一个地址（按创建时间倒序）
+   */
+  async findFirst(where: Prisma.UmsAddressWhereInput): Promise<UmsAddress | null> {
+    return this.prisma.umsAddress.findFirst({
+      where,
+      orderBy: { createTime: 'desc' },
+    });
+  }
+
+  /**
    * 统计用户地址数量
    */
   async countByMember(memberId: string) {

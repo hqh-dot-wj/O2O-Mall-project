@@ -13,9 +13,13 @@ export class StoreOrderRepository extends BaseRepository<
   constructor(prisma: PrismaService, cls: ClsService) {
     super(prisma, cls, 'omsOrder');
   }
+
+  /**
+   * 聚合查询订单数据
+   */
   async aggregate(
     args: Prisma.OmsOrderAggregateArgs,
   ): Promise<Prisma.GetOmsOrderAggregateType<Prisma.OmsOrderAggregateArgs>> {
-    return (this.delegate as any).aggregate(args);
+    return this.prisma.omsOrder.aggregate(args);
   }
 }

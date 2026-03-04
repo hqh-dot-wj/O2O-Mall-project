@@ -2,13 +2,14 @@ import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, OmsOrder, OmsOrderItem, OrderType } from '@prisma/client';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { CommissionService } from 'src/module/finance/commission/commission.service';
 import { RiskService } from 'src/module/risk/risk.service';
 import { ClientInfoDto } from 'src/common/decorators/common.decorator';
-import { CreateOrderDto, ListOrderDto, CancelOrderDto } from './dto/order.dto';
+import { CreateOrderDto, ListOrderDto, CancelOrderDto, OrderItemDto } from './dto/order.dto';
 import { OrderDetailVo, OrderListItemVo } from './vo/order.vo';
 import { nanoid } from 'nanoid';
 import { OrderRepository } from './order.repository';
@@ -51,7 +52,7 @@ export class OrderService {
   /**
    * 结算预览 - 从购物车或直接购买获取结算信息
    */
-  async getCheckoutPreview(memberId: string, tenantId: string, items: any[], marketingConfigId?: string) {
+  async getCheckoutPreview(memberId: string, tenantId: string, items: OrderItemDto[], marketingConfigId?: string) {
     return this.checkoutService.getCheckoutPreview(memberId, tenantId, items, marketingConfigId);
   }
 
@@ -138,7 +139,7 @@ export class OrderService {
         orderSn,
         memberId,
         tenantId: dto.tenantId,
-        orderType: orderType as any,
+        orderType: orderType as OrderType,
         totalAmount: preview.totalAmount,
         freightAmount: preview.freightAmount,
         discountAmount: preview.discountAmount,
@@ -268,7 +269,7 @@ export class OrderService {
    * 获取订单列表
    */
   async getOrderList(memberId: string, dto: ListOrderDto) {
-    const where: any = { memberId, deleteTime: null };
+    const where: Prisma.OmsOrderWhereInput = { memberId, deleteTime: null };
     if (dto.status) {
       where.status = dto.status;
     }
@@ -284,7 +285,7 @@ export class OrderService {
       }),
     ]);
 
-    const list: OrderListItemVo[] = orders.map((order: any) => ({
+    const list: OrderListItemVo[] = orders.map((order) => ({
       id: order.id,
       orderSn: order.orderSn,
       status: order.status,
@@ -302,31 +303,32 @@ export class OrderService {
    * 获取订单详情
    */
   async getOrderDetail(memberId: string, orderId: string): Promise<OrderDetailVo> {
-    const order = (await this.orderRepo.findOne(
+    const order = await this.orderRepo.findOne(
       { id: orderId, memberId, deleteTime: null },
       { include: { items: true } },
-    )) as any;
+    ) as (OmsOrder & { items: OmsOrderItem[] }) | null;
 
     BusinessException.throwIfNull(order, '订单不存在');
+    const validOrder = order; // 类型收窄：throwIfNull 保证非空
 
     return {
-      id: order.id,
-      orderSn: order.orderSn,
-      status: order.status,
-      payStatus: order.payStatus,
-      orderType: order.orderType,
-      totalAmount: order.totalAmount.toNumber(),
-      freightAmount: order.freightAmount.toNumber(),
-      discountAmount: order.discountAmount.toNumber(),
-      payAmount: order.payAmount.toNumber(),
-      receiverName: order.receiverName || undefined,
-      receiverPhone: order.receiverPhone || undefined,
-      receiverAddress: order.receiverAddress || undefined,
-      bookingTime: order.bookingTime || undefined,
-      serviceRemark: order.serviceRemark || undefined,
-      payTime: order.payTime || undefined,
-      createTime: order.createTime,
-      items: order.items.map((item: any) => ({
+      id: validOrder.id,
+      orderSn: validOrder.orderSn,
+      status: validOrder.status,
+      payStatus: validOrder.payStatus,
+      orderType: validOrder.orderType,
+      totalAmount: validOrder.totalAmount.toNumber(),
+      freightAmount: validOrder.freightAmount.toNumber(),
+      discountAmount: validOrder.discountAmount.toNumber(),
+      payAmount: validOrder.payAmount.toNumber(),
+      receiverName: validOrder.receiverName || undefined,
+      receiverPhone: validOrder.receiverPhone || undefined,
+      receiverAddress: validOrder.receiverAddress || undefined,
+      bookingTime: validOrder.bookingTime || undefined,
+      serviceRemark: validOrder.serviceRemark || undefined,
+      payTime: validOrder.payTime || undefined,
+      createTime: validOrder.createTime,
+      items: validOrder.items.map((item) => ({
         productId: item.productId,
         productName: item.productName,
         productImg: item.productImg,
@@ -343,22 +345,23 @@ export class OrderService {
    * 取消订单
    */
   async cancelOrder(memberId: string, dto: CancelOrderDto) {
-    const order = (await this.orderRepo.findOne(
+    const order = await this.orderRepo.findOne(
       { id: dto.orderId, memberId, deleteTime: null },
       { include: { items: true } },
-    )) as any;
+    ) as (OmsOrder & { items: OmsOrderItem[] }) | null;
 
     BusinessException.throwIfNull(order, '订单不存在');
-    BusinessException.throwIf(order.status !== 'PENDING_PAY', '只能取消待支付订单');
+    const validOrder = order; // 类型收窄：throwIfNull 保证非空
+    BusinessException.throwIf(validOrder.status !== 'PENDING_PAY', '只能取消待支付订单');
 
     // 1. 更新订单状态
     await this.orderRepo.update(dto.orderId, {
       status: 'CANCELLED',
-      remark: dto.reason || order.remark,
+      remark: dto.reason || validOrder.remark,
     });
 
     // 2. 恢复库存
-    for (const item of order.items) {
+    for (const item of validOrder.items) {
       await this.prisma.pmsTenantSku.updateMany({
         where: { id: item.skuId },
         data: { stock: { increment: item.quantity } },
@@ -373,7 +376,7 @@ export class OrderService {
       // 不抛出异常，避免影响取消流程
     }
 
-    this.logger.log(`订单取消: ${order.orderSn} `);
+    this.logger.log(`订单取消: ${validOrder.orderSn} `);
 
     return Result.ok(null, '订单已取消');
   }
@@ -408,7 +411,7 @@ export class OrderService {
    * 系统自动关闭订单
    */
   async cancelOrderBySystem(orderId: string, reason: string) {
-    const order = (await this.orderRepo.findById(orderId, { include: { items: true } })) as any;
+    const order = await this.orderRepo.findById(orderId, { include: { items: true } }) as (OmsOrder & { items: OmsOrderItem[] }) | null;
 
     if (!order) {
       this.logger.warn(`Auto - cancel failed: Order ${orderId} not found`);

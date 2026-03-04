@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Readable } from 'stream';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
@@ -35,15 +36,16 @@ export class UpgradeService {
       where: { memberId },
     });
     BusinessException.throwIfNull(member, '会员不存在');
+    const validMember = member; // 类型收窄：throwIfNull 保证非空
 
     // 2. 校验等级
-    if (member!.levelId >= dto.targetLevel) {
+    if (validMember.levelId >= dto.targetLevel) {
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, '您已是该等级或更高等级');
     }
 
     // 3. 校验推荐码 (扫码申请必须有推荐码)
     let referrerId: string | null = null;
-    let targetTenantId = member!.tenantId;
+    let targetTenantId = validMember.tenantId;
 
     if (dto.referralCode) {
       const codeRecord = await this.prisma.umsReferralCode.findUnique({
@@ -78,7 +80,7 @@ export class UpgradeService {
       data: {
         tenantId: targetTenantId,
         memberId,
-        fromLevel: member!.levelId,
+        fromLevel: validMember.levelId,
         toLevel: dto.targetLevel,
         applyType: dto.applyType || 'REFERRAL_CODE',
         referralCode: dto.referralCode,
@@ -93,7 +95,7 @@ export class UpgradeService {
       data: {
         levelId: dto.targetLevel,
         tenantId: targetTenantId, // 升级归属下单/推荐码门店
-        parentId: referrerId || member!.parentId, // 如有新推荐人则更新
+        parentId: referrerId || validMember.parentId, // 如有新推荐人则更新
         upgradedAt: new Date(),
       },
     });
@@ -211,7 +213,7 @@ export class UpgradeService {
           destination: '',
           filename: '',
           path: '',
-          stream: null as any,
+          stream: Readable.from(qrBuffer),
         };
 
         const uploadResult = await this.uploadService.singleFileUpload(mockFile);

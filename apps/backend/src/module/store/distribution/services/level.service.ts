@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma, SysDistLevel, SysDistLevelLog } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
-import { CreateLevelDto } from '../dto/create-level.dto';
+import { CreateLevelDto, UpgradeCondition } from '../dto/create-level.dto';
 import { UpdateLevelDto } from '../dto/update-level.dto';
 import { ListLevelDto } from '../dto/list-level.dto';
 import { UpdateMemberLevelDto } from '../dto/update-member-level.dto';
@@ -47,8 +48,8 @@ export class LevelService {
         levelIcon: dto.levelIcon,
         level1Rate: new Decimal(dto.level1Rate).div(100), // 转换为小数
         level2Rate: new Decimal(dto.level2Rate).div(100),
-        upgradeCondition: dto.upgradeCondition as any,
-        maintainCondition: dto.maintainCondition as any,
+        upgradeCondition: dto.upgradeCondition ? (dto.upgradeCondition as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+        maintainCondition: dto.maintainCondition ? (dto.maintainCondition as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
         benefits: dto.benefits,
         sort: dto.sort ?? 0,
         isActive: dto.isActive ?? true,
@@ -95,8 +96,8 @@ export class LevelService {
         ...(dto.levelIcon !== undefined && { levelIcon: dto.levelIcon }),
         ...(dto.level1Rate !== undefined && { level1Rate: new Decimal(dto.level1Rate).div(100) }),
         ...(dto.level2Rate !== undefined && { level2Rate: new Decimal(dto.level2Rate).div(100) }),
-        ...(dto.upgradeCondition !== undefined && { upgradeCondition: dto.upgradeCondition as any }),
-        ...(dto.maintainCondition !== undefined && { maintainCondition: dto.maintainCondition as any }),
+        ...(dto.upgradeCondition !== undefined && { upgradeCondition: dto.upgradeCondition ? (dto.upgradeCondition as unknown as Prisma.InputJsonValue) : Prisma.JsonNull }),
+        ...(dto.maintainCondition !== undefined && { maintainCondition: dto.maintainCondition ? (dto.maintainCondition as unknown as Prisma.InputJsonValue) : Prisma.JsonNull }),
         ...(dto.benefits !== undefined && { benefits: dto.benefits }),
         ...(dto.sort !== undefined && { sort: dto.sort }),
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
@@ -302,7 +303,7 @@ export class LevelService {
     const { passed, results } = await this.conditionService.checkCondition(
       tenantId,
       memberId,
-      nextLevel.upgradeCondition as any,
+      nextLevel.upgradeCondition as unknown as UpgradeCondition,
     );
 
     return {
@@ -433,7 +434,7 @@ export class LevelService {
           tenantId,
           memberIds,
           level.levelId,
-          level.upgradeCondition as any,
+          level.upgradeCondition as unknown as UpgradeCondition,
         );
 
         // 升级满足条件的会员
@@ -496,7 +497,7 @@ export class LevelService {
         const checkResults = await this.conditionService.batchCheckMaintain(
           tenantId,
           memberIds,
-          level.maintainCondition as any,
+          level.maintainCondition as unknown as UpgradeCondition,
         );
 
         // 降级不满足条件的会员
@@ -522,18 +523,18 @@ export class LevelService {
   /**
    * 转换为VO
    */
-  private toVo(level: any): LevelVo {
+  private toVo(level: SysDistLevel): LevelVo {
     return {
       id: level.id,
       tenantId: level.tenantId,
       levelId: level.levelId,
       levelName: level.levelName,
-      levelIcon: level.levelIcon,
+      levelIcon: level.levelIcon ?? undefined,
       level1Rate: new Decimal(level.level1Rate).mul(100).toFixed(2), // 转换为百分比
       level2Rate: new Decimal(level.level2Rate).mul(100).toFixed(2),
-      upgradeCondition: level.upgradeCondition as any,
-      maintainCondition: level.maintainCondition as any,
-      benefits: level.benefits,
+      upgradeCondition: level.upgradeCondition as unknown as UpgradeCondition | undefined,
+      maintainCondition: level.maintainCondition as unknown as UpgradeCondition | undefined,
+      benefits: level.benefits ?? undefined,
       sort: level.sort,
       isActive: level.isActive,
       createBy: level.createBy,
@@ -546,7 +547,7 @@ export class LevelService {
   /**
    * 转换为日志VO
    */
-  private toLogVo(log: any): MemberLevelLogVo {
+  private toLogVo(log: SysDistLevelLog): MemberLevelLogVo {
     return {
       id: log.id,
       tenantId: log.tenantId,
@@ -554,8 +555,8 @@ export class LevelService {
       fromLevel: log.fromLevel,
       toLevel: log.toLevel,
       changeType: log.changeType,
-      reason: log.reason,
-      operator: log.operator,
+      reason: log.reason ?? undefined,
+      operator: log.operator ?? undefined,
       createTime: log.createTime,
     };
   }

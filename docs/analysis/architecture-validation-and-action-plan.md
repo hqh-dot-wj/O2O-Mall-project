@@ -12,18 +12,18 @@
 
 架构分析文档中的核心问题**已得到验证**，主要发现：
 
-| 问题类别                    | 文档评估     | 实际验证                | 严重程度   |
-| --------------------------- | ------------ | ----------------------- | ---------- |
-| CommissionService God Class | 500+ 行      | **638 行**              | ✅ 确认 P0 |
-| 租户隔离安全风险            | 存在绕过风险 | **已改进** (有审计日志) | ⚠️ P1      |
-| console.log 滥用            | 100+ 次      | **仅 8 处** (注释中)    | ✅ 已改进  |
-| N+1 查询问题                | 存在         | **已修复** (批量查询)   | ✅ 已改进  |
-| any 类型滥用                | 150+ 次      | **需进一步统计**        | ⚠️ P1      |
+| 问题类别                    | 文档评估     | 实际验证 (2026-03-03)   | 严重程度  |
+| --------------------------- | ------------ | ----------------------- | --------- |
+| CommissionService God Class | 500+ 行      | **93 行** ✅ 已拆分     | ✅ 已完成 |
+| 租户隔离安全风险            | 存在绕过风险 | **已改进** (有审计日志) | ✅ 已完成 |
+| console.log 滥用            | 100+ 次      | **仅 8 处** (注释中)    | ✅ 已改进 |
+| N+1 查询问题                | 存在         | **已修复** (批量查询)   | ✅ 已改进 |
+| any 类型滥用                | 150+ 次      | **447 处** (生产代码)   | ⚠️ P1     |
 
 **关键发现**：
 
-- ✅ **好消息**: 部分问题已在开发中改进（N+1、租户审计、console.log）
-- ⚠️ **核心问题**: CommissionService 仍是 638 行的 God Class，急需拆分
+- ✅ **P0 全部完成**: CommissionService 拆分、租户审计、并发安全、部分退款
+- ⚠️ **P1 进行中**: any 类型消除（Finance 已完成，其他模块待处理）
 - 📊 **测试覆盖**: commission 模块有 4 个测试文件，测试意识较好
 
 ---
@@ -318,25 +318,41 @@ export class CommissionService {
 
 ### 3.2 短期改进 (1-2 月 - P1)
 
-| 任务                       | 工时      | 收益       | 状态                |
-| -------------------------- | --------- | ---------- | ------------------- |
-| 4. 消除核心模块的 any 类型 | 1周 → 1天 | 类型安全   | ✅ Finance 模块完成 |
-| 5. 定义核心接口 SLO        | 3天       | 性能基线   | 待开始              |
-| 6. 完善技术债标记          | 2天       | 债务可视化 | 待开始              |
-| 7. 建立 CODEOWNERS         | 0.5天     | 代码所有权 | ✅ 已完成           |
+| 任务                       | 工时      | 收益       | 状态               |
+| -------------------------- | --------- | ---------- | ------------------ |
+| 4. 消除核心模块的 any 类型 | 1周 → 1天 | 类型安全   | 🔄 进行中 (见下表) |
+| 5. 定义核心接口 SLO        | 3天       | 性能基线   | 待开始             |
+| 6. 完善技术债标记          | 2天       | 债务可视化 | 待开始             |
+| 7. 建立 CODEOWNERS         | 0.5天     | 代码所有权 | ✅ 已完成          |
+
+**any 类型分布统计 (2026-03-03 扫描，排除测试文件)**:
+
+| 模块      | any 数量   | 优先级 | 状态        |
+| --------- | ---------- | ------ | ----------- |
+| pms       | 1 处       | P0     | ✅ 基本完成 |
+| finance   | 2 处       | P0     | ✅ 基本完成 |
+| store     | 22 处      | P1     | 🔄 待处理   |
+| client    | 32 处      | P1     | 🔄 待处理   |
+| admin     | 133 处     | P2     | 🔄 待处理   |
+| marketing | 151 处     | P2     | 🔄 待处理   |
+| common    | 106 处     | P2     | 🔄 待处理   |
+| **总计**  | **447 处** | -      | -           |
 
 **any 类型消除优先级**:
 
 ```typescript
-// P0: 金融核心逻辑
-apps/backend/src/module/finance/**/*.ts
+// P0: 金融核心逻辑 (✅ 已完成)
+apps/backend/src/module/finance/**/*.ts  // 2 处
+apps/backend/src/module/pms/**/*.ts      // 1 处
 
-// P1: 订单和商品
-apps/backend/src/module/store/**/*.ts
-apps/backend/src/module/pms/**/*.ts
+// P1: 订单和客户端 (下一步)
+apps/backend/src/module/store/**/*.ts    // 22 处
+apps/backend/src/module/client/**/*.ts   // 32 处
 
-// P2: 营销和其他
-apps/backend/src/module/marketing/**/*.ts
+// P2: 营销和管理后台
+apps/backend/src/module/marketing/**/*.ts // 151 处
+apps/backend/src/module/admin/**/*.ts     // 133 处
+apps/backend/src/common/**/*.ts           // 106 处
 ```
 
 **SLO 定义示例**:
@@ -508,12 +524,15 @@ grep -r "console\.log" apps/backend/src --include="*.ts" --exclude-dir=node_modu
 
 ### 5.1 短期指标 (1-2 月)
 
-| 指标                   | 当前  | 目标  | 实际达成 | 状态        |
-| ---------------------- | ----- | ----- | -------- | ----------- |
-| CommissionService 行数 | 638   | < 300 | 93 行    | ✅ 超额完成 |
-| 测试覆盖率 (finance)   | ~60%  | > 80% | 待测量   | 🔄 进行中   |
-| any 类型 (finance)     | 24 处 | < 10  | 0 处     | ✅ 超额完成 |
-| console.log (生产代码) | 1     | 0     | 0        | ✅ 完成     |
+| 指标                   | 当前   | 目标  | 实际达成 | 状态        |
+| ---------------------- | ------ | ----- | -------- | ----------- |
+| CommissionService 行数 | 638    | < 300 | 93 行    | ✅ 超额完成 |
+| 测试覆盖率 (finance)   | ~60%   | > 80% | 待测量   | 🔄 进行中   |
+| any 类型 (finance)     | 24 处  | < 10  | 2 处     | ✅ 超额完成 |
+| any 类型 (pms)         | 未统计 | < 10  | 1 处     | ✅ 超额完成 |
+| any 类型 (store)       | 未统计 | < 10  | 22 处    | 🔄 待处理   |
+| any 类型 (总计)        | 未统计 | < 100 | 447 处   | ⚠️ 需改进   |
+| console.log (生产代码) | 1      | 0     | 0        | ✅ 完成     |
 
 ### 5.2 中期指标 (3-6 月)
 
@@ -568,7 +587,8 @@ grep -r "console\.log" apps/backend/src --include="*.ts" --exclude-dir=node_modu
 
 **P1 (1-2 月)**:
 
-- 消除其他模块 any 类型 (1 周)
+- 消除 Store/Client 模块 any 类型 (54 处，预计 2-3 天)
+- 消除 Admin/Marketing/Common 模块 any 类型 (390 处，预计 1 周)
 - 定义 SLO (3 天)
 - 完善技术债标记 (2 天)
 
@@ -582,18 +602,81 @@ grep -r "console\.log" apps/backend/src --include="*.ts" --exclude-dir=node_modu
 
 - **可维护性**: ✅ 提升 85% (CommissionService 从 638 行降至 93 行)
 - **测试覆盖率**: ✅ 保持良好 (26/26 测试通过，无回归)
-- **类型安全**: ✅ Finance 模块 any 类型 100% 消除 (24 处 → 0 处)
+- **类型安全**: 🔄 进行中 (Finance/PMS 完成，总体 447 处待消除)
 - **安全性**: ✅ 完整审计日志 + 并发安全修复
 - **功能完善**: ✅ 支持部分退款按比例回收佣金
 - **代码质量**: ✅ 消除 console.log，符合开发规范
 
 ---
 
+## 8. any 类型分布详情 (2026-03-03 扫描)
+
+### 8.1 按模块分布
+
+| 模块      | 生产代码 | 测试代码 | 主要问题                                    |
+| --------- | -------- | -------- | ------------------------------------------- |
+| pms       | 1 处     | ~40 处   | attribute.service.ts 的 where 条件          |
+| finance   | 2 处     | ~10 处   | commission-calculator 的类型转换            |
+| store     | 22 处    | ~30 处   | level.service.ts、product-config.service.ts |
+| client    | 32 处    | ~5 处    | order.service.ts、auth.service.ts           |
+| admin     | 133 处   | ~20 处   | tool 模块模板生成、user.service.ts          |
+| marketing | 151 处   | ~60 处   | rule-validator.service.ts、task.service.ts  |
+| common    | 106 处   | ~10 处   | tenant.extension.ts、utils/index.ts         |
+
+### 8.2 高频问题模式
+
+1. **Prisma where 条件**: `const where: any = {}` → 应使用 `Prisma.XxxWhereInput`
+2. **JSON 字段类型转换**: `as any` → 应定义具体类型或使用 `unknown`
+3. **模板生成代码**: admin/tool 模块的代码生成器，可考虑豁免
+4. **测试 Mock**: 测试文件中的 `as any` 可接受，但应逐步改进
+
+---
+
+## 9. 非空断言修复 (2026-03-03)
+
+### 9.1 修复概述
+
+消除生产代码中所有非空断言 (`!.`)，改用类型收窄模式。
+
+### 9.2 修复文件清单
+
+| 文件                                               | 修复数量 | 修复方式                         |
+| -------------------------------------------------- | -------- | -------------------------------- |
+| `store/order/store-order.service.ts`               | 25+ 处   | `validOrder` 变量收窄            |
+| `payment/wechat-pay.service.ts`                    | 1 处     | 显式 null 检查                   |
+| `admin/upgrade/admin-upgrade.service.ts`           | 10+ 处   | `validApply`/`validMember` 变量  |
+| `pms/product.service.ts`                           | 2 处     | 显式抛异常 + `validProduct` 变量 |
+| `client/upgrade/upgrade.service.ts`                | 4 处     | `validMember` 变量               |
+| `admin/member/services/member-referral.service.ts` | 3 处     | `validParent` 变量               |
+
+### 9.3 修复模式
+
+```typescript
+// 修复前（非空断言）
+BusinessException.throwIfNull(order, '订单不存在');
+order!.status; // ❌ 非空断言
+
+// 修复后（类型收窄）
+BusinessException.throwIfNull(order, '订单不存在');
+const validOrder = order; // 类型收窄：throwIfNull 保证非空
+validOrder.status; // ✅ 类型安全
+```
+
+### 9.4 测试验证
+
+- ✅ store-order.service.spec.ts: 33 passed
+- ✅ pms/product.service.spec.ts: 18 passed
+- ✅ member-referral.service.spec.ts: 11 passed
+- ✅ 类型检查: 0 errors
+
+---
+
 **报告生成时间**: 2026-02-24  
-**最后更新**: 2026-02-24  
+**最后更新**: 2026-03-03  
 **验证方法**: 代码实际扫描 + 架构分析文档对照  
 **P0 任务完成度**: 6/6 (100%)  
-**下次 Review**: 2026-03-24 (1 个月后)
+**P1 任务进度**: any 类型消除 - Finance/PMS 完成，Store/Client 待处理  
+**下次 Review**: 2026-03-24 (3 周后)
 
 ---
 

@@ -17,6 +17,15 @@ import { PaymentGatewayPort } from 'src/module/payment/ports/payment-gateway.por
 import { CommissionSumResult, OrderListItem } from 'src/common/types';
 
 /**
+ * BusinessException 响应类型
+ */
+interface BusinessExceptionResponse {
+  code: number;
+  msg: string;
+  data: unknown;
+}
+
+/**
  * Store端订单服务
  * 提供租户后台的订单管理功能
  */
@@ -124,15 +133,13 @@ export class StoreOrderService {
       return {
         ...item,
         // 取第一个商品的图片作为列表展示图
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        productImg: (item.items as any)?.[0]?.productImg || '',
+        productImg: item.items?.[0]?.productImg || '',
         // 佣金金额(从 Map 中获取，转换为数字)
         commissionAmount: commissionAmount,
         // 商户收款金额(支付金额 - 佣金总额，转换为数字)
         remainingAmount: Number(remainingAmount.toFixed(2)),
         // 所属租户(从关联数据中获取)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tenantName: (item.tenant as any)?.companyName || '',
+        tenantName: item.tenant?.companyName || '',
       };
     });
 
@@ -331,8 +338,9 @@ export class StoreOrderService {
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
+    const validOrder = order; // 类型收窄：throwIfNull 保证非空
     BusinessException.throwIf(
-      order!.status !== OrderStatus.PAID && order!.status !== OrderStatus.SHIPPED,
+      validOrder.status !== OrderStatus.PAID && validOrder.status !== OrderStatus.SHIPPED,
       '订单状态不允许改派',
       ResponseCode.BUSINESS_ERROR,
     );
@@ -369,7 +377,8 @@ export class StoreOrderService {
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
-    BusinessException.throwIf(order!.status !== OrderStatus.SHIPPED, '订单状态不允许核销', ResponseCode.BUSINESS_ERROR);
+    const validOrder = order; // 类型收窄：throwIfNull 保证非空
+    BusinessException.throwIf(validOrder.status !== OrderStatus.SHIPPED, '订单状态不允许核销', ResponseCode.BUSINESS_ERROR);
 
     // 更新订单状态为已完成
     await this.orderRepo.update(dto.orderId, {
@@ -393,24 +402,25 @@ export class StoreOrderService {
     const order = await this.orderRepo.findOne({ id: orderId, tenantId });
 
     BusinessException.throwIfNull(order, '订单不存在');
+    const validOrder = order; // 类型收窄：throwIfNull 保证非空
 
     // 简单校验
     BusinessException.throwIf(
-      order!.status === OrderStatus.PENDING_PAY ||
-        order!.status === OrderStatus.CANCELLED ||
-        order!.status === OrderStatus.REFUNDED,
+      validOrder.status === OrderStatus.PENDING_PAY ||
+        validOrder.status === OrderStatus.CANCELLED ||
+        validOrder.status === OrderStatus.REFUNDED,
       '当前订单状态不可退款',
     );
 
     // 调用微信退款 API
     try {
-      const refundSn = `REFUND_${order!.orderSn}_${Date.now()}`;
+      const refundSn = `REFUND_${validOrder.orderSn}_${Date.now()}`;
 
       const refundResult = await this.paymentGateway.refund({
-        orderSn: order!.orderSn,
+        orderSn: validOrder.orderSn,
         refundSn,
-        refundAmount: order!.payAmount,
-        totalAmount: order!.payAmount,
+        refundAmount: validOrder.payAmount,
+        totalAmount: validOrder.payAmount,
         reason: remark || '订单退款',
       });
 
@@ -432,7 +442,7 @@ export class StoreOrderService {
     await this.commissionService.cancelCommissions(orderId);
 
     // 触发订单退款事件处理（优惠券和积分）（失败时抛出异常，确保数据一致性）
-    await this.orderIntegrationService.handleOrderRefunded(orderId, order!.memberId);
+    await this.orderIntegrationService.handleOrderRefunded(orderId, validOrder.memberId);
 
     this.logger.log(`订单 ${orderId} 退款, 操作人: ${operatorId}`);
     return Result.ok(null, '退款处理成功');
@@ -470,23 +480,25 @@ export class StoreOrderService {
     });
 
     BusinessException.throwIfNull(order, '订单不存在');
+    const validOrder = order; // 类型收窄：throwIfNull 保证非空
 
     // 2. 校验订单状态
     BusinessException.throwIf(
-      order!.status === OrderStatus.PENDING_PAY ||
-        order!.status === OrderStatus.CANCELLED ||
-        order!.status === OrderStatus.REFUNDED,
+      validOrder.status === OrderStatus.PENDING_PAY ||
+        validOrder.status === OrderStatus.CANCELLED ||
+        validOrder.status === OrderStatus.REFUNDED,
       '当前订单状态不可退款',
     );
 
     // 3. 校验退款订单项
-    const orderItems = order!.items;
+    const orderItems = validOrder.items;
 
     for (const refundItem of dto.items) {
       const orderItem = orderItems.find((item) => item.id === refundItem.itemId);
       BusinessException.throwIfNull(orderItem, `订单项 ${refundItem.itemId} 不存在`);
+      const validOrderItem = orderItem; // 类型收窄
       BusinessException.throwIf(
-        refundItem.quantity > orderItem!.quantity,
+        refundItem.quantity > validOrderItem.quantity,
         `订单项 ${refundItem.itemId} 退款数量不能超过购买数量`,
       );
     }
@@ -496,7 +508,8 @@ export class StoreOrderService {
     const refundDetails: Array<{ itemId: number; quantity: number; amount: string }> = [];
 
     for (const refundItem of dto.items) {
-      const orderItem = orderItems.find((item) => item.id === refundItem.itemId)!;
+      const orderItem = orderItems.find((item) => item.id === refundItem.itemId);
+      if (!orderItem) continue; // 已在上面校验过，这里做防御性检查
       // 按比例计算退款金额
       const itemRefundAmount = new Prisma.Decimal(orderItem.price)
         .mul(refundItem.quantity)
@@ -512,13 +525,13 @@ export class StoreOrderService {
 
     // 5. 调用微信部分退款 API
     try {
-      const refundSn = `REFUND_${order!.orderSn}_${Date.now()}`;
+      const refundSn = `REFUND_${validOrder.orderSn}_${Date.now()}`;
 
       const refundResult = await this.paymentGateway.refund({
-        orderSn: order!.orderSn,
+        orderSn: validOrder.orderSn,
         refundSn,
         refundAmount: refundAmount.toString(),
-        totalAmount: order!.payAmount,
+        totalAmount: validOrder.payAmount,
         reason: dto.remark || '部分退款',
       });
 
@@ -531,11 +544,11 @@ export class StoreOrderService {
     }
 
     // 6. 计算退款比例（用于佣金和优惠券/积分的按比例退还）
-    const refundRatio = refundAmount.div(order!.payAmount).toDecimalPlaces(4);
+    const refundRatio = refundAmount.div(validOrder.payAmount).toDecimalPlaces(4);
 
     // 7. 按比例回滚佣金
-    if (order!.commissions && order!.commissions.length > 0) {
-      for (const commission of order!.commissions) {
+    if (validOrder.commissions && validOrder.commissions.length > 0) {
+      for (const commission of validOrder.commissions) {
         const refundCommissionAmount = new Prisma.Decimal(commission.amount)
           .mul(refundRatio)
           .toDecimalPlaces(2);
@@ -562,17 +575,17 @@ export class StoreOrderService {
     }
 
     // 8. 按比例退还优惠券和积分
-    const refundPointsAmount = Math.floor(Number(order!.pointsUsed || 0) * Number(refundRatio));
+    const refundPointsAmount = Math.floor(Number(validOrder.pointsUsed || 0) * Number(refundRatio));
 
-    if (order!.userCouponId || refundPointsAmount > 0) {
-      await this.orderIntegrationService.handleOrderRefunded(dto.orderId, order!.memberId);
+    if (validOrder.userCouponId || refundPointsAmount > 0) {
+      await this.orderIntegrationService.handleOrderRefunded(dto.orderId, validOrder.memberId);
     }
 
     // 9. 判断是否全部退款
     const isFullRefund = dto.items.length === orderItems.length &&
       dto.items.every((refundItem) => {
-        const orderItem = orderItems.find((item) => item.id === refundItem.itemId)!;
-        return refundItem.quantity === orderItem.quantity;
+        const orderItem = orderItems.find((item) => item.id === refundItem.itemId);
+        return orderItem ? refundItem.quantity === orderItem.quantity : false;
       });
 
     // 10. 更新订单状态和备注
@@ -582,12 +595,12 @@ export class StoreOrderService {
       // 全部退款，更新订单状态为 REFUNDED
       await this.orderRepo.update(dto.orderId, {
         status: OrderStatus.REFUNDED,
-        remark: order!.remark ? `${order!.remark}\n${refundRemark}` : refundRemark,
+        remark: validOrder.remark ? `${validOrder.remark}\n${refundRemark}` : refundRemark,
       });
     } else {
       // 部分退款，订单状态保持不变，仅更新备注
       await this.orderRepo.update(dto.orderId, {
-        remark: order!.remark ? `${order!.remark}\n${refundRemark}` : refundRemark,
+        remark: validOrder.remark ? `${validOrder.remark}\n${refundRemark}` : refundRemark,
       });
     }
 
@@ -777,7 +790,7 @@ export class StoreOrderService {
         // 从 BusinessException 中提取错误信息
         let errorMessage = '未知错误';
         if (error instanceof BusinessException) {
-          const response = error.getResponse() as any;
+          const response = error.getResponse() as BusinessExceptionResponse;
           errorMessage = response.msg || error.message;
         } else {
           errorMessage = getErrorMessage(error);
@@ -819,7 +832,7 @@ export class StoreOrderService {
         // 从 BusinessException 中提取错误信息
         let errorMessage = '未知错误';
         if (error instanceof BusinessException) {
-          const response = error.getResponse() as any;
+          const response = error.getResponse() as BusinessExceptionResponse;
           errorMessage = response.msg || error.message;
         } else {
           errorMessage = getErrorMessage(error);

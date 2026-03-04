@@ -1,6 +1,11 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
+interface MemberUser {
+  memberId: string;
+  platform: string;
+}
+
 /**
  * Worker 端认证守卫
  *
@@ -14,13 +19,13 @@ import { AuthGuard } from '@nestjs/passport';
  */
 @Injectable()
 export class WorkerAuthGuard extends AuthGuard('member-jwt') {
-  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+  handleRequest<TUser = MemberUser>(err: Error | null, user: TUser | false, _info: unknown, _context: ExecutionContext): TUser {
     if (err || !user) {
       throw err || new UnauthorizedException('登录已过期，请重新登录');
     }
 
     // 校验 platform 必须为 MP_WORK
-    if (user.platform !== 'MP_WORK') {
+    if ((user as MemberUser).platform !== 'MP_WORK') {
       throw new UnauthorizedException('该接口仅限师傅端访问');
     }
 

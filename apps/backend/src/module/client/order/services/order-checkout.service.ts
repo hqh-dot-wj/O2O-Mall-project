@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StorePlayConfigService } from 'src/module/marketing/config/config.service';
 import { PlayStrategyFactory } from 'src/module/marketing/play/play.factory';
+import { IMarketingStrategy } from 'src/module/marketing/play/strategy.interface';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response';
 import { Decimal } from '@prisma/client/runtime/library';
-import { PublishStatus, DelFlag } from '@prisma/client';
+import { PublishStatus, DelFlag, StorePlayConfig, ProductType } from '@prisma/client';
 import { OrderItemDto } from '../dto/order.dto';
 import { OrderItemVo, CheckoutPreviewVo } from '../vo/order.vo';
 import { AddressRepository } from '../../address/address.repository';
@@ -57,12 +58,12 @@ export class OrderCheckoutService {
     let totalAmount = new Decimal(0);
 
     // [Marketing] Pre-load config and strategy
-    let marketingConfig: any = null;
-    let marketingStrategy: any = null;
+    let marketingConfig: StorePlayConfig | null = null;
+    let marketingStrategy: IMarketingStrategy | null = null;
     if (marketingConfigId) {
       const configRes = await this.storePlayConfigService.findOne(marketingConfigId);
       if (configRes && configRes.data) {
-        marketingConfig = configRes.data;
+        marketingConfig = configRes.data as StorePlayConfig;
         marketingStrategy = this.playStrategyFactory.getStrategy(marketingConfig.templateCode);
       }
     }
@@ -134,7 +135,7 @@ export class OrderCheckoutService {
     }
 
     // 5. 判断是否包含服务商品
-    const hasService = skus.some((s) => (s.tenantProd.product as any).type === 'SERVICE');
+    const hasService = skus.some((s) => s.tenantProd.product.type === ProductType.SERVICE);
 
     return {
       items: previewItems,

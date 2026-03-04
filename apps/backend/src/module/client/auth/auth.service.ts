@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, UmsMember } from '@prisma/client';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { CheckLoginDto, RegisterDto, BindPhoneDto } from './dto/auth.dto';
 import { SocialPlatform, MemberStatus } from '@prisma/client';
@@ -235,7 +236,7 @@ export class AuthService {
     try {
       if (!token) return;
       const realToken = token.replace('Bearer ', '');
-      const payload = this.jwtService.decode(realToken) as any;
+      const payload = this.jwtService.decode(realToken) as { uuid?: string } | null;
       if (payload?.uuid) {
         const tokenKey = `${CacheEnum.LOGIN_TOKEN_KEY}${payload.uuid}`;
         await this.redisService.del(tokenKey);
@@ -252,7 +253,7 @@ export class AuthService {
    * JWT payload 包含 platform 字段，便于后续 Guard 识别来源
    */
   private async genToken(
-    member: any,
+    member: UmsMember,
     platform: SocialPlatform = SocialPlatform.MP_MALL,
   ): Promise<{ token: string; expiresIn: number }> {
     const uuid = GenerateUUID();
@@ -266,7 +267,7 @@ export class AuthService {
   /**
    * 解析目标租户ID
    */
-  private async resolveTenantId(tx: any, tenantId?: string): Promise<string> {
+  private async resolveTenantId(tx: Prisma.TransactionClient, tenantId?: string): Promise<string> {
     const defaultTenantId = '000000';
     if (!tenantId) return defaultTenantId;
     const tenant = await tx.sysTenant.findUnique({ where: { tenantId } });
@@ -277,7 +278,7 @@ export class AuthService {
    * 解析推荐人关系（含跨店检测）
    */
   private async resolveReferrer(
-    tx: any,
+    tx: Prisma.TransactionClient,
     referrerId: string | undefined,
     targetTenantId: string,
   ): Promise<{ finalParentId: string | null; finalIndirectParentId: string | null }> {

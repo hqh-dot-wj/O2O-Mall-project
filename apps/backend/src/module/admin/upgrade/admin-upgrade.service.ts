@@ -87,7 +87,8 @@ export class AdminUpgradeService {
   async approve(applyId: string, dto: ApproveUpgradeDto, operatorId: string) {
     const apply = await this.upgradeRepo.findById(applyId);
     BusinessException.throwIfNull(apply, '申请不存在');
-    BusinessException.throwIf(apply!.status !== 'PENDING', '该申请已处理');
+    const validApply = apply; // 类型收窄：throwIfNull 保证非空
+    BusinessException.throwIf(validApply.status !== 'PENDING', '该申请已处理');
 
     const client = this.prisma; // 获取事务客户端 (由 @Transactional 自动管理)
 
@@ -100,21 +101,21 @@ export class AdminUpgradeService {
 
       // 2. 执行会员等级变更
       await client.umsMember.update({
-        where: { memberId: apply!.memberId },
+        where: { memberId: validApply.memberId },
         data: {
-          levelId: apply!.toLevel,
+          levelId: validApply.toLevel,
           upgradedAt: new Date(),
-          upgradeOrderId: apply!.orderId || null,
+          upgradeOrderId: validApply.orderId || null,
         },
       });
 
       // 3. 特殊逻辑: 升级到 C2 (股东) 时自动生成推荐码
-      if (apply!.toLevel === MemberLevel.SHAREHOLDER) {
-        await this.referralService.generateAndBindCode(client, apply!.memberId, apply!.tenantId);
+      if (validApply.toLevel === MemberLevel.SHAREHOLDER) {
+        await this.referralService.generateAndBindCode(client, validApply.memberId, validApply.tenantId);
       }
 
       this.logger.log(
-        `审批通过: 申请 ${applyId}, 会员 ${apply!.memberId}, 等级 ${apply!.fromLevel}->${apply!.toLevel}, 操作人 ${operatorId}`,
+        `审批通过: 申请 ${applyId}, 会员 ${validApply.memberId}, 等级 ${validApply.fromLevel}->${validApply.toLevel}, 操作人 ${operatorId}`,
       );
       return Result.ok(null, '审批通过');
     } else {
@@ -141,7 +142,8 @@ export class AdminUpgradeService {
     const member = await this.prisma.umsMember.findUnique({ where: { memberId } });
 
     BusinessException.throwIfNull(member, '会员不存在');
-    BusinessException.throwIf(member!.levelId === dto.targetLevel, '会员已是该等级');
+    const validMember = member; // 类型收窄：throwIfNull 保证非空
+    BusinessException.throwIf(validMember.levelId === dto.targetLevel, '会员已是该等级');
 
     const client = this.prisma;
 
@@ -150,7 +152,7 @@ export class AdminUpgradeService {
       data: {
         tenantId: tenantId!,
         memberId,
-        fromLevel: member!.levelId,
+        fromLevel: validMember.levelId,
         toLevel: dto.targetLevel,
         applyType: 'MANUAL_ADJUST',
         status: 'APPROVED',
@@ -168,11 +170,11 @@ export class AdminUpgradeService {
     });
 
     // 3. 如果调整为 C2 且尚无推荐码，则自动补全
-    if (dto.targetLevel === MemberLevel.SHAREHOLDER && !member!.referralCode) {
+    if (dto.targetLevel === MemberLevel.SHAREHOLDER && !validMember.referralCode) {
       await this.referralService.generateAndBindCode(client, memberId, tenantId!);
     }
 
-    this.logger.log(`手动调级: 会员 ${memberId}, 等级 ${member!.levelId}->${dto.targetLevel}, 操作人 ${operatorId}`);
+    this.logger.log(`手动调级: 会员 ${memberId}, 等级 ${validMember.levelId}->${dto.targetLevel}, 操作人 ${operatorId}`);
     return Result.ok(null, '调级成功');
   }
 

@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { UserCouponStatus } from '@prisma/client';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Member } from 'src/module/client/common/decorators/member.decorator';
 import { MemberAuthGuard } from 'src/module/client/common/guards/member-auth.guard';
@@ -58,7 +59,7 @@ export class ClientCouponController {
   ) {
     const result = await this.userCouponRepo.findUserCouponsPage(
       memberId,
-      status as any,
+      status as UserCouponStatus | undefined,
       pageNum,
       pageSize,
     );

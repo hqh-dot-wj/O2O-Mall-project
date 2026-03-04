@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, PmsCategory, ProductType } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { getErrorMessage } from 'src/common/utils/error';
@@ -11,6 +11,18 @@ import { ClientProductRepository } from './product.repository';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { Cacheable } from 'src/common/decorators/redis.decorator';
 import * as crypto from 'crypto';
+
+/**
+ * 分类树节点
+ */
+interface CategoryTreeNode {
+  catId: number;
+  name: string;
+  icon: string | null;
+  parentId: number | null;
+  sort: number;
+  children?: CategoryTreeNode[];
+}
 
 /**
  * C端商品服务层
@@ -99,7 +111,7 @@ export class ClientProductService {
       productConditions.push({ categoryId: { in: categoryIds } });
     }
     if (type) {
-      productConditions.push({ type: type as any });
+      productConditions.push({ type: type as ProductType });
     }
 
     const tenantProductWhere: Prisma.PmsTenantProductWhereInput = {
@@ -167,7 +179,7 @@ export class ClientProductService {
       where.categoryId = { in: categoryIds };
     }
     if (type) {
-      where.type = type as any;
+      where.type = type as ProductType;
     }
 
     // [MODIFIED] Use ClientProductRepository
@@ -219,8 +231,12 @@ export class ClientProductService {
     }
 
     // 获取门店商品信息 (如果有)
-    const tenantProduct = (product as any).tenantProducts?.[0];
-    const tenantSkuMap = new Map<string, any>();
+    type TenantProductWithSkus = {
+      skus: Array<{ id: string; globalSkuId: string; price: Prisma.Decimal; stock: number }>;
+    };
+    const tenantProducts = (product as { tenantProducts?: TenantProductWithSkus[] }).tenantProducts;
+    const tenantProduct = tenantProducts?.[0];
+    const tenantSkuMap = new Map<string, { id: string; price: Prisma.Decimal; stock: number }>();
     if (tenantProduct?.skus) {
       for (const sku of tenantProduct.skus) {
         tenantSkuMap.set(sku.globalSkuId, sku);
@@ -228,7 +244,14 @@ export class ClientProductService {
     }
 
     // --- Aggregation: Generic Marketing Activities ---
-    const marketingActivities: any[] = [];
+    interface MarketingActivity {
+      configId: string;
+      type: string;
+      rules: Prisma.JsonValue;
+      displayData: Record<string, unknown>;
+      priority: number;
+    }
+    const marketingActivities: MarketingActivity[] = [];
     // 只有在特定门店租户环境下才查询具体活动
     if (tenantId && tenantId !== TenantContext.SUPER_TENANT_ID) {
       const configs = await this.prisma.storePlayConfig.findMany({
@@ -243,7 +266,7 @@ export class ClientProductService {
       const activityPromises = configs.map(async (config) => {
         try {
           const strategy = this.strategyFactory.getStrategy(config.templateCode);
-          let displayData = {};
+          let displayData: Record<string, unknown> = {};
           if (strategy.getDisplayData) {
             displayData = await strategy.getDisplayData(config);
           }
@@ -264,7 +287,7 @@ export class ClientProductService {
       });
 
       const results = await Promise.all(activityPromises);
-      marketingActivities.push(...results.filter((item) => item !== null));
+      marketingActivities.push(...results.filter((item): item is MarketingActivity => item !== null));
 
       // Sort by priority (High to Low)
       marketingActivities.sort((a, b) => b.priority - a.priority);
@@ -341,23 +364,18 @@ export class ClientProductService {
   /**
    * 构建分类树结构
    */
-  private buildTree(items: any[], parentId: number | null = null) {
-    const tree: any[] = [];
+  private buildTree(items: PmsCategory[], parentId: number | null = null): CategoryTreeNode[] {
+    const tree: CategoryTreeNode[] = [];
     for (const item of items) {
       if (item.parentId === parentId) {
         const children = this.buildTree(items, item.catId);
-        if (children.length) {
-          item.children = children;
-        } else {
-          item.children = undefined;
-        }
         tree.push({
           catId: item.catId,
           name: item.name,
           icon: item.icon,
           parentId: item.parentId,
           sort: item.sort,
-          children: item.children,
+          children: children.length > 0 ? children : undefined,
         });
       }
     }

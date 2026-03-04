@@ -56,14 +56,15 @@ export class MemberReferralService {
 
     const parent = await this.memberRepo.findById(parentId);
     BusinessException.throwIfNull(parent, '推荐人不存在');
-    BusinessException.throwIf(parent!.levelId < 1, '推荐人必须是 C1团长 或 C2股东');
+    const validParent = parent; // 类型收窄：throwIfNull 保证非空
+    BusinessException.throwIf(validParent.levelId < 1, '推荐人必须是 C1团长 或 C2股东');
 
     // 循环推荐检测：沿推荐链向上遍历，确保 memberId 不在链中
     await this.checkCircularReferral(memberId, parentId);
 
     // 间接推荐人计算
-    if (parent!.levelId === 1) {
-      return parent!.parentId;
+    if (validParent.levelId === 1) {
+      return validParent.parentId;
     }
     // C2 股东为顶级，无间接推荐人
     return null;

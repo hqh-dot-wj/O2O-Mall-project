@@ -90,7 +90,7 @@ export interface OrderListItem {
   receiverName?: string;
   receiverPhone?: string;
   receiverAddress?: string;
-  items?: Array<OrderItemSummary | { productImg?: string; productName?: string }>;
+  items?: Array<{ productImg?: string; productName?: string }>;
   tenant?: { companyName?: string };
 }
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { WalletService } from 'src/module/finance/wallet/wallet.service';
 import { WithdrawalService } from 'src/module/finance/withdrawal/withdrawal.service';
@@ -71,7 +72,7 @@ export class ClientFinanceService {
    * 提现记录列表
    */
   async getWithdrawalList(tenantId: string, memberId: string, query: ListWithdrawalDto) {
-    const where: any = {
+    const where: Prisma.FinWithdrawalWhereInput = {
       tenantId,
       memberId,
     };
@@ -97,7 +98,7 @@ export class ClientFinanceService {
    * 佣金记录列表
    */
   async getCommissionList(tenantId: string, memberId: string, query: ListCommissionDto) {
-    const where: any = {
+    const where: Prisma.FinCommissionWhereInput = {
       tenantId,
       beneficiaryId: memberId,
     };
@@ -137,7 +138,7 @@ export class ClientFinanceService {
       return Result.page([], 0);
     }
 
-    const where: any = {
+    const where: Prisma.FinTransactionWhereInput = {
       tenantId,
       walletId: wallet.id,
     };

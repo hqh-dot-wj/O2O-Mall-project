@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { UmsAddress } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { CreateAddressDto, UpdateAddressDto } from './dto/address.dto';
@@ -57,10 +58,8 @@ export class AddressService {
 
     if (!address) {
       // 如果没有默认地址，返回第一个
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const first = await (this.addressRepo as any).findOne({
-        where: { memberId },
-        orderBy: { createTime: 'desc' },
+      const first = await this.addressRepo.findFirst({
+        memberId,
       });
       return first ? this.toVo(first) : null;
     }
@@ -151,10 +150,8 @@ export class AddressService {
 
     // 如果删除的是默认地址，自动设置另一个为默认
     if (address.isDefault) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const first = await (this.addressRepo as any).findOne({
-        where: { memberId },
-        orderBy: { createTime: 'desc' },
+      const first = await this.addressRepo.findFirst({
+        memberId,
       });
       if (first) {
         await this.addressRepo.update(first.id, { isDefault: true });
@@ -188,7 +185,7 @@ export class AddressService {
   /**
    * 转换为 VO
    */
-  private toVo(address: any): AddressVo {
+  private toVo(address: UmsAddress): AddressVo {
     return {
       id: address.id,
       name: address.name,
@@ -198,10 +195,10 @@ export class AddressService {
       district: address.district,
       detail: address.detail,
       fullAddress: `${address.province}${address.city}${address.district}${address.detail}`,
-      latitude: address.latitude,
-      longitude: address.longitude,
+      latitude: address.latitude ?? undefined,
+      longitude: address.longitude ?? undefined,
       isDefault: address.isDefault,
-      tag: address.tag,
+      tag: address.tag ?? undefined,
     };
   }
 }
