@@ -9,14 +9,7 @@ import { expect, test } from '@playwright/test';
 const TEST_USER = { username: 'admin', password: 'admin123' };
 
 /** 忽略的请求 URL 模式（如静态资源、第三方脚本等可选忽略） */
-const IGNORE_URL_PATTERNS = [
-  /\.png$/i,
-  /\.ico$/i,
-  /\.woff2?$/i,
-  /\.ttf$/i,
-  /google-analytics/i,
-  /gtm\.js/i
-];
+const IGNORE_URL_PATTERNS = [/\.png$/i, /\.ico$/i, /\.woff2?$/i, /\.ttf$/i, /google-analytics/i, /gtm\.js/i];
 
 function shouldIgnoreUrl(url: string): boolean {
   return IGNORE_URL_PATTERNS.some(p => p.test(url));
@@ -75,9 +68,7 @@ test.describe('登录到首页', () => {
     await expect(page.locator('body')).toBeVisible();
 
     if (failedRequests.length > 0) {
-      const report = failedRequests
-        .map((r, i) => `${i + 1}. ${r.url}\n   原因: ${r.failure}`)
-        .join('\n');
+      const report = failedRequests.map((r, i) => `${i + 1}. ${r.url}\n   原因: ${r.failure}`).join('\n');
       throw new Error(`检测到 ${failedRequests.length} 个网络请求失败:\n${report}`);
     }
   });

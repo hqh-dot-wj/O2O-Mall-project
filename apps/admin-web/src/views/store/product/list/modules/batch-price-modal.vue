@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import {
-  NButton,
-  NDrawer,
-  NDrawerContent,
-  NInputNumber,
-  NTable,
-  NTag,
-  useMessage
-} from 'naive-ui';
+import { NButton, NDrawer, NDrawerContent, NInputNumber, NTable, NTag, useMessage } from 'naive-ui';
 import { fetchBatchUpdateProductPrice } from '@/service/api/store/product';
 
 defineOptions({
@@ -98,7 +90,7 @@ function specsToString(specs: unknown): string {
   <NDrawer v-model:show="visible" :width="700" display-directive="show">
     <NDrawerContent title="批量调价" native-scrollbar>
       <div class="flex flex-col gap-4">
-        <div class="text-gray-500 text-sm">
+        <div class="text-sm text-gray-500">
           已选 {{ products.length }} 个商品，共 {{ skuRows.length }} 个 SKU。修改后点击保存。
         </div>
         <NTable :bordered="false" :single-line="false" size="small">
@@ -116,31 +108,13 @@ function specsToString(specs: unknown): string {
               <td>{{ row._productName }}</td>
               <td>{{ specsToString(row.specValues) }}</td>
               <td>
-                <NInputNumber
-                  v-model:value="row.price"
-                  :min="0"
-                  :precision="2"
-                  size="small"
-                  style="width: 100px"
-                />
+                <NInputNumber v-model:value="row.price" :min="0" :precision="2" size="small" style="width: 100px" />
               </td>
               <td>
-                <NInputNumber
-                  v-model:value="row.stock"
-                  :min="0"
-                  :precision="0"
-                  size="small"
-                  style="width: 90px"
-                />
+                <NInputNumber v-model:value="row.stock" :min="0" :precision="0" size="small" style="width: 90px" />
               </td>
               <td>
-                <NInputNumber
-                  v-model:value="row.distRate"
-                  :min="0"
-                  :precision="2"
-                  size="small"
-                  style="width: 90px"
-                />
+                <NInputNumber v-model:value="row.distRate" :min="0" :precision="2" size="small" style="width: 90px" />
                 <NTag size="small" class="ml-1">{{ row.distMode }}</NTag>
               </td>
             </tr>

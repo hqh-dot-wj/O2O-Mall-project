@@ -1,17 +1,13 @@
 <script setup lang="tsx">
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NDivider, NInput, NModal, NSpace, NTag } from 'naive-ui';
-import { ref } from 'vue';
-import {
-  fetchBatchRefund,
-  fetchBatchVerify,
-  fetchGetOrderList
-} from '@/service/api/store/order';
+import { useBoolean } from '@sa/hooks';
+import { fetchBatchRefund, fetchBatchVerify, fetchGetOrderList } from '@/service/api/store/order';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { useDownload } from '@/hooks/business/download';
 import { useTable, useTableOperate, useTableProps } from '@/hooks/common/table';
-import { useBoolean } from '@sa/hooks';
 import { $t } from '@/locales';
 import ButtonIcon from '@/components/custom/button-icon.vue';
 import OrderSearch from './modules/order-search.vue';
@@ -221,11 +217,7 @@ function handleExport() {
     status: searchParams.status ?? '',
     orderType: searchParams.orderType ?? ''
   };
-  getDownload(
-    '/store/order/export',
-    params,
-    `订单数据_${new Date().toISOString().slice(0, 10)}.xlsx`
-  );
+  getDownload('/store/order/export', params, `订单数据_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
 /** 批量核销 */
@@ -344,13 +336,7 @@ async function submitBatchRefund() {
       :loading="batchLoading"
       @positive-click="submitBatchVerify"
     >
-      <NInput
-        v-model:value="batchRemark"
-        type="textarea"
-        placeholder="核销备注（选填）"
-        :rows="3"
-        class="mt-12px"
-      />
+      <NInput v-model:value="batchRemark" type="textarea" placeholder="核销备注（选填）" :rows="3" class="mt-12px" />
     </NModal>
 
     <!-- 批量退款弹窗 -->
@@ -362,13 +348,7 @@ async function submitBatchRefund() {
       :loading="batchLoading"
       @positive-click="submitBatchRefund"
     >
-      <NInput
-        v-model:value="batchRemark"
-        type="textarea"
-        placeholder="退款原因（选填）"
-        :rows="3"
-        class="mt-12px"
-      />
+      <NInput v-model:value="batchRemark" type="textarea" placeholder="退款原因（选填）" :rows="3" class="mt-12px" />
     </NModal>
   </div>
 </template>

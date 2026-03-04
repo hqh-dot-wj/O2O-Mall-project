@@ -2,11 +2,11 @@
  * Api.Store 库存 - 来自 @libs/common-types
  */
 import type {
-  StockSkuVo,
-  StockSearchParams as StockSearchParamsT,
-  StockUpdateParams as StockUpdateParamsT,
   BatchUpdateStockParams as BatchUpdateStockParamsT,
   BatchUpdateStockResult as BatchUpdateStockResultT,
+  StockSearchParams as StockSearchParamsT,
+  StockSkuVo,
+  StockUpdateParams as StockUpdateParamsT
 } from '@libs/common-types';
 
 declare namespace Api {

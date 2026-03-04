@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  fetchGetDistributionConfig,
-  fetchUpdateDistributionConfig,
-  fetchGetDistributionConfigLogs,
+  fetchGetApplicationList,
   fetchGetCommissionPreview,
-  fetchGetProductConfigList,
+  fetchGetDistributionConfig,
+  fetchGetDistributionConfigLogs,
   fetchGetDistributionDashboard,
   fetchGetLevelList,
-  fetchGetApplicationList,
+  fetchGetProductConfigList,
   fetchGetReviewConfig,
+  fetchUpdateDistributionConfig
 } from './distribution';
 
 vi.mock('@/service/request', () => ({

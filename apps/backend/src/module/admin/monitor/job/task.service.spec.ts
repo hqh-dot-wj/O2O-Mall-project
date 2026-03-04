@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Status } from '@prisma/client';
 import { TaskService } from './task.service';
 import { createPrismaMock, PrismaMock } from 'src/test-utils/prisma-mock';

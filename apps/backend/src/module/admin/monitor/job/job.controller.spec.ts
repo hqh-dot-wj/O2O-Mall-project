@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { JobController } from './job.controller';
 import { JobService } from './job.service';
 import { Result } from 'src/common/response';

@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CacheService } from './cache.service';
 import { RedisService } from 'src/module/common/redis/redis.service';

@@ -2,18 +2,18 @@
  * Api.Finance - 来自 @libs/common-types
  */
 import type {
-  CommissionSearchParams as CommissionSearchParamsT,
-  WithdrawalSearchParams as WithdrawalSearchParamsT,
-  LedgerSearchParams as LedgerSearchParamsT,
-  CommissionStatus as CommissionStatusT,
-  WithdrawalStatus as WithdrawalStatusT,
-  TransType as TransTypeT,
-  FinanceDashboardVo,
   CommissionRecordVo,
-  WithdrawalRecordVo,
-  StoreCommissionStatsVo,
+  CommissionSearchParams as CommissionSearchParamsT,
+  CommissionStatus as CommissionStatusT,
+  FinanceDashboardVo,
   LedgerRecordVo,
+  LedgerSearchParams as LedgerSearchParamsT,
   LedgerStatsVo,
+  StoreCommissionStatsVo,
+  TransType as TransTypeT,
+  WithdrawalRecordVo,
+  WithdrawalSearchParams as WithdrawalSearchParamsT,
+  WithdrawalStatus as WithdrawalStatusT
 } from '@libs/common-types';
 
 declare namespace Api {

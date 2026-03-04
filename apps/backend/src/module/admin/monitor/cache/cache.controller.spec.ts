@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { CacheController } from './cache.controller';
 import { CacheService } from './cache.service';
 import { Result } from 'src/common/response';

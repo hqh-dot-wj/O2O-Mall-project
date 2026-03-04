@@ -16,7 +16,6 @@ import {
   NTag,
   NText
 } from 'naive-ui';
-import { useAuth } from '@/hooks/business/auth';
 import { useBoolean } from '@sa/hooks';
 import {
   fetchGetOrderDetail,
@@ -25,6 +24,7 @@ import {
   fetchRefundOrder,
   fetchVerifyService
 } from '@/service/api/store/order';
+import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({
   name: 'OrderDetail'
@@ -61,8 +61,11 @@ const orderData = ref<Api.Order.DetailResult | null>(null);
 // 操作弹窗
 const { bool: verifyModalVisible, setTrue: openVerifyModal, setFalse: closeVerifyModal } = useBoolean(false);
 const { bool: refundModalVisible, setTrue: openRefundModal, setFalse: closeRefundModal } = useBoolean(false);
-const { bool: partialRefundModalVisible, setTrue: openPartialRefundModal, setFalse: closePartialRefundModal } =
-  useBoolean(false);
+const {
+  bool: partialRefundModalVisible,
+  setTrue: openPartialRefundModal,
+  setFalse: closePartialRefundModal
+} = useBoolean(false);
 const { bool: reassignModalVisible, setTrue: openReassignModal, setFalse: closeReassignModal } = useBoolean(false);
 const actionRemark = ref('');
 const actionLoading = ref(false);
@@ -90,9 +93,7 @@ const canReassign = computed(() => {
   const order = orderData.value?.order;
   const status = order?.status;
   return (
-    order?.orderType === 'SERVICE' &&
-    (status === 'PAID' || status === 'SHIPPED') &&
-    hasAuth('store:order:dispatch')
+    order?.orderType === 'SERVICE' && (status === 'PAID' || status === 'SHIPPED') && hasAuth('store:order:dispatch')
   );
 });
 
@@ -223,7 +224,7 @@ onMounted(() => {
 <template>
   <div class="flex-col-stretch gap-16px">
     <!-- 页头 -->
-    <div class="flex items-center justify-between flex-wrap gap-8px">
+    <div class="flex flex-wrap items-center justify-between gap-8px">
       <NButton text @click="handleBack">
         <template #icon>
           <icon-carbon-arrow-left />
@@ -444,11 +445,11 @@ onMounted(() => {
       @positive-click="submitPartialRefund"
     >
       <div class="mt-12px space-y-8px">
-        <p class="text-gray-600 text-14px">选择要退款的商品及数量：</p>
+        <p class="text-14px text-gray-600">选择要退款的商品及数量：</p>
         <div
           v-for="row in partialRefundItems"
           :key="row.itemId"
-          class="flex items-center justify-between gap-12px py-8px border-b border-gray-100"
+          class="flex items-center justify-between gap-12px border-b border-gray-100 py-8px"
         >
           <span class="flex-1 truncate">{{ row.productName }}</span>
           <NInputNumber
@@ -459,13 +460,7 @@ onMounted(() => {
             class="w-120px"
           />
         </div>
-        <NInput
-          v-model:value="actionRemark"
-          type="textarea"
-          placeholder="退款原因（选填）"
-          :rows="2"
-          class="mt-8px"
-        />
+        <NInput v-model:value="actionRemark" type="textarea" placeholder="退款原因（选填）" :rows="2" class="mt-8px" />
       </div>
     </NModal>
 
@@ -479,7 +474,7 @@ onMounted(() => {
       @positive-click="submitReassign"
     >
       <div class="mt-12px">
-        <p class="text-gray-600 text-14px mb-8px">请输入新技师的 ID（可在技师管理中查看）：</p>
+        <p class="mb-8px text-14px text-gray-600">请输入新技师的 ID（可在技师管理中查看）：</p>
         <NInputNumber v-model:value="newWorkerId" placeholder="技师ID" :min="1" class="w-full" />
       </div>
     </NModal>

@@ -15,7 +15,11 @@ import {
   useMessage
 } from 'naive-ui';
 import { fetchGetCategoryTree } from '@/service/api/pms/category';
-import { fetchBatchImportProducts, fetchGetMarketProductDetail, fetchGetProductMarketList } from '@/service/api/store/product';
+import {
+  fetchBatchImportProducts,
+  fetchGetMarketProductDetail,
+  fetchGetProductMarketList
+} from '@/service/api/store/product';
 import ProductMarketCard from './components/ProductMarketCard.vue';
 import ImportDialog from './components/ImportDialog.vue';
 
@@ -130,9 +134,7 @@ async function handleBatchImport() {
 
   batchImportLoading.value = true;
   try {
-    const details = await Promise.all(
-      ids.map(id => fetchGetMarketProductDetail(id).then(r => r.data))
-    );
+    const details = await Promise.all(ids.map(id => fetchGetMarketProductDetail(id).then(r => r.data)));
 
     const items = details
       .filter((d): d is NonNullable<typeof d> => Boolean(d?.globalSkus?.length))

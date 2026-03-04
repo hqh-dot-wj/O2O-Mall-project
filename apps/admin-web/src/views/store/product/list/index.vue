@@ -172,9 +172,7 @@ const selectedProducts = computed(() => {
   return data.value.filter(row => checkedRowKeys.value.includes(row.id));
 });
 
-const hasSelectedWithSkus = computed(() =>
-  selectedProducts.value.some(p => p.skus && p.skus.length > 0)
-);
+const hasSelectedWithSkus = computed(() => selectedProducts.value.some(p => p.skus && p.skus.length > 0));
 
 async function handleRemove(id: string) {
   try {
@@ -232,22 +230,11 @@ function handleBatchPriceSubmitted() {
           @refresh="getData"
         >
           <template #after>
-            <NButton
-              v-if="hasAuth('store:product:query')"
-              size="small"
-              ghost
-              @click="stockAlertVisible = true"
-            >
+            <NButton v-if="hasAuth('store:product:query')" size="small" ghost @click="stockAlertVisible = true">
               库存预警
             </NButton>
             <template v-if="hasAuth('store:product:update')">
-              <NButton
-                size="small"
-                ghost
-                type="primary"
-                :disabled="!hasSelectedWithSkus"
-                @click="openBatchPrice"
-              >
+              <NButton size="small" ghost type="primary" :disabled="!hasSelectedWithSkus" @click="openBatchPrice">
                 批量调价
               </NButton>
               <NPopconfirm @positive-click="handleBatchRemove">

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { request } from '@/service/request';
 import {
   fetchBatchDeleteGlobalProduct,
   fetchCreateGlobalProduct,
@@ -8,7 +9,6 @@ import {
   fetchUpdateGlobalProduct,
   fetchUpdateGlobalProductStatus
 } from './product';
-import { request } from '@/service/request';
 
 // Mock request
 vi.mock('@/service/request', () => ({
@@ -115,8 +115,17 @@ describe('PMS Product API', () => {
     expect(res.data).toBe(true);
     expect(res.error).toBeUndefined();
     expect(request).toHaveBeenCalledTimes(3);
-    expect(request).toHaveBeenNthCalledWith(1, expect.objectContaining({ url: '/admin/pms/product/id1', method: 'delete' }));
-    expect(request).toHaveBeenNthCalledWith(2, expect.objectContaining({ url: '/admin/pms/product/id2', method: 'delete' }));
-    expect(request).toHaveBeenNthCalledWith(3, expect.objectContaining({ url: '/admin/pms/product/id3', method: 'delete' }));
+    expect(request).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ url: '/admin/pms/product/id1', method: 'delete' })
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ url: '/admin/pms/product/id2', method: 'delete' })
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({ url: '/admin/pms/product/id3', method: 'delete' })
+    );
   });
 });

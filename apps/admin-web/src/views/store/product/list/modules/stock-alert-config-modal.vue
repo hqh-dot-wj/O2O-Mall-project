@@ -61,7 +61,7 @@ watch(visible, val => {
         </NInputNumber>
       </NFormItem>
       <NFormItem>
-        <span class="text-gray-500 text-sm">库存低于阈值时，系统将进行预警提示</span>
+        <span class="text-sm text-gray-500">库存低于阈值时，系统将进行预警提示</span>
       </NFormItem>
     </NForm>
   </NModal>

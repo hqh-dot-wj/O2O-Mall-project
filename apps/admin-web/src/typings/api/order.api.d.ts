@@ -2,10 +2,10 @@
  * Api.Order - 来自 @libs/common-types
  */
 import type {
-  StoreOrderSearchParams,
-  StoreOrderListItemVo,
-  StoreOrderItemVo,
   StoreOrderDetailVo,
+  StoreOrderItemVo,
+  StoreOrderListItemVo,
+  StoreOrderSearchParams
 } from '@libs/common-types';
 
 declare namespace Api {

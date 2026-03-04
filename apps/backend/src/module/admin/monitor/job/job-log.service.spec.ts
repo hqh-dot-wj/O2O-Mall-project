@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { JobLogService } from './job-log.service';
 import { createPrismaMock, PrismaMock } from 'src/test-utils/prisma-mock';
 import { ExportTable } from 'src/common/utils/export';

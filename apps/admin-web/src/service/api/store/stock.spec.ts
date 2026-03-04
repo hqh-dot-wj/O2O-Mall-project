@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  fetchBatchUpdateStock,
-  fetchGetStockList,
-  fetchUpdateStock
-} from './stock';
+import { fetchBatchUpdateStock, fetchGetStockList, fetchUpdateStock } from './stock';
 
 vi.mock('@/service/request', () => ({
   request: vi.fn((config: unknown) => Promise.resolve({ data: config }))

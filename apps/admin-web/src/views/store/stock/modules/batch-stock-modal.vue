@@ -91,7 +91,7 @@ async function handleSubmit() {
   <NDrawer v-model:show="visible" :width="700" display-directive="show">
     <NDrawerContent title="批量调整库存" native-scrollbar>
       <div class="flex flex-col gap-4">
-        <div class="text-gray-500 text-sm">
+        <div class="text-sm text-gray-500">
           已选 {{ rows.length }} 个 SKU。填写库存变动值（正数增加、负数减少），修改后点击保存。
         </div>
         <NTable :bordered="false" :single-line="false" size="small">
@@ -121,13 +121,7 @@ async function handleSubmit() {
                 />
               </td>
               <td>
-                <NInput
-                  v-model:value="row._reason"
-                  size="small"
-                  placeholder="选填"
-                  clearable
-                  style="width: 140px"
-                />
+                <NInput v-model:value="row._reason" size="small" placeholder="选填" clearable style="width: 140px" />
               </td>
             </tr>
           </tbody>

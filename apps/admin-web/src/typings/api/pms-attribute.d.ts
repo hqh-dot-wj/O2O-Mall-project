@@ -2,13 +2,13 @@
  * Api.Pms 属性 - 来自 @libs/common-types
  */
 import type {
-  AttrUsageType as AttrUsageTypeT,
-  AttrInputType as AttrInputTypeT,
   AttrApplyType as AttrApplyTypeT,
+  AttrInputType as AttrInputTypeT,
+  AttrUsageType as AttrUsageTypeT,
   AttributeItemVo,
-  AttributeTemplateVo,
-  AttributeSearchParams as AttributeSearchParamsT,
   AttributeOperateParams as AttributeOperateParamsT,
+  AttributeSearchParams as AttributeSearchParamsT,
+  AttributeTemplateVo
 } from '@libs/common-types';
 
 declare namespace Api {

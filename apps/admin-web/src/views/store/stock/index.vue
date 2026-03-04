@@ -1,10 +1,10 @@
 <script setup lang="tsx">
 import { ref } from 'vue';
 import { NAvatar, NButton, NCard, NDataTable, NInput, NInputNumber, NPopover, NSpace } from 'naive-ui';
+import { useBoolean } from '@sa/hooks';
 import { fetchGetStockList, fetchUpdateStock } from '@/service/api/store/stock';
 import { useTable, useTableOperate } from '@/hooks/common/table';
 import { useDownload } from '@/hooks/business/download';
-import { useBoolean } from '@sa/hooks';
 import BatchStockModal from './modules/batch-stock-modal.vue';
 
 defineOptions({
@@ -97,11 +97,7 @@ function handleExport() {
   const params: Record<string, string | number | null> = {
     productName: searchParams.productName ?? ''
   };
-  getDownload(
-    '/store/stock/export',
-    params,
-    `库存数据_${new Date().toISOString().slice(0, 10)}.xlsx`
-  );
+  getDownload('/store/stock/export', params, `库存数据_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
 // Inline Component for Popover Logic
@@ -142,9 +138,7 @@ const StockUpdatePopover = (props: { row: Api.Store.StockSku; type: 'add' | 'red
         ),
         default: () => (
           <NSpace vertical class="min-w-200px">
-            <span class="text-12px text-gray">
-              {props.type === 'add' ? '补货' : '减货'}数量:
-            </span>
+            <span class="text-12px text-gray">{props.type === 'add' ? '补货' : '减货'}数量:</span>
             <NInputNumber v-model:value={amount.value} min={1} class="w-full" />
             <span class="text-12px text-gray">变动原因（选填）:</span>
             <NInput v-model:value={reason.value} placeholder="如：进货补货、盘点调整" clearable />
@@ -176,9 +170,7 @@ const StockUpdatePopover = (props: { row: Api.Store.StockSku; type: 'add' | 'red
             <NButton @click="resetSearchParams">重置</NButton>
             <NButton :disabled="checkedRowKeys.length === 0" @click="handleBatchAdjust">
               批量调整
-              <template v-if="checkedRowKeys.length > 0">
-                ({{ checkedRowKeys.length }})
-              </template>
+              <template v-if="checkedRowKeys.length > 0">({{ checkedRowKeys.length }})</template>
             </NButton>
             <NButton @click="handleExport">导出</NButton>
           </NSpace>
@@ -195,11 +187,7 @@ const StockUpdatePopover = (props: { row: Api.Store.StockSku; type: 'add' | 'red
         />
       </div>
     </NCard>
-    <BatchStockModal
-      v-model:visible="batchModalVisible"
-      :rows="selectedRows()"
-      @submitted="handleBatchSubmitted"
-    />
+    <BatchStockModal v-model:visible="batchModalVisible" :rows="selectedRows()" @submitted="handleBatchSubmitted" />
   </div>
 </template>
 

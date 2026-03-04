@@ -1,11 +1,11 @@
 <script setup lang="tsx">
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NInputNumber, NModal, NTag } from 'naive-ui';
-import { ref } from 'vue';
+import { useBoolean } from '@sa/hooks';
 import { fetchGetDispatchList, fetchReassignWorker } from '@/service/api/store/order';
 import { useAuth } from '@/hooks/business/auth';
 import { useTable, useTableProps } from '@/hooks/common/table';
-import { useBoolean } from '@sa/hooks';
 import { $t } from '@/locales';
 import ButtonIcon from '@/components/custom/button-icon.vue';
 
@@ -22,14 +22,7 @@ const newWorkerId = ref<number | null>(null);
 const reassignLoading = ref(false);
 
 const tableProps = useTableProps();
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  loading,
-  mobilePagination
-} = useTable({
+const { columns, columnChecks, data, getData, loading, mobilePagination } = useTable({
   apiFn: fetchGetDispatchList,
   apiParams: {
     pageNum: 1,
@@ -179,7 +172,7 @@ async function submitReassign() {
       :loading="reassignLoading"
       @positive-click="submitReassign"
     >
-      <p class="text-gray-600 text-14px mb-8px">请输入技师的 ID（可在技师管理中查看）：</p>
+      <p class="mb-8px text-14px text-gray-600">请输入技师的 ID（可在技师管理中查看）：</p>
       <NInputNumber v-model:value="newWorkerId" placeholder="技师 ID" :min="1" class="w-full" />
     </NModal>
   </div>

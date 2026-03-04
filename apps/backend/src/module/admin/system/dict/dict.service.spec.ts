@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { Test, TestingModule } from '@nestjs/testing';
 import { DictService } from './dict.service';
 import { PrismaService } from 'src/prisma/prisma.service';
