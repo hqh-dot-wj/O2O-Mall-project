@@ -65,7 +65,7 @@ export class RoleService {
     }
 
     if (query.status) {
-      where.status = query.status as any;
+      where.status = query.status as StatusEnum;
     }
 
     if (query.params?.beginTime && query.params?.endTime) {
@@ -89,10 +89,10 @@ export class RoleService {
 
   async findOne(roleId: number) {
     const res = await this.roleRepo.findById(roleId);
-    if (res) {
-      (res as any).status = res.status === StatusEnum.NORMAL ? '0' : '1';
-    }
-    return Result.ok(res);
+    const result = res
+      ? { ...res, status: res.status === StatusEnum.NORMAL ? '0' : '1' }
+      : res;
+    return Result.ok(result);
   }
 
   @Transactional()

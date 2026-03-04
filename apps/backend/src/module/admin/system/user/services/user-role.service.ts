@@ -13,7 +13,7 @@ import { RoleService } from '../../role/role.service';
 import { SysDept, SysRole, SysUser, Prisma } from '@prisma/client';
 
 type UserWithDept = SysUser & { dept?: SysDept | null };
-type UserWithRelations = UserWithDept & { roles?: SysRole[] };
+type UserWithRelations = UserWithDept & { roles?: (SysRole & { flag: boolean })[] };
 
 /**
  * 用户角色分配服务
@@ -95,12 +95,10 @@ export class UserRoleService {
     const enrichedUser: UserWithRelations = {
       ...user,
       dept,
-      roles: allRoles.filter((item) => {
-        if (roleIds.includes(item.roleId)) {
-          (item as any).flag = true;
-        }
-        return true;
-      }),
+      roles: allRoles.map((item) => ({
+        ...item,
+        flag: roleIds.includes(item.roleId),
+      })),
     };
 
     return Result.ok({

@@ -142,8 +142,8 @@ export type {
   UpdateProductConfigDto,
   BatchImportProductConfigDto,
   GetDashboardDto,
-  StoreCommissionPreviewDto,
-  StoreCommissionPreview,
+  CommissionPreviewDto,
+  CommissionPreviewVo,
 } from './store';
 
 // ─── Store 库存 ───

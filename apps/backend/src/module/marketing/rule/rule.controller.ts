@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Body, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RuleValidatorService, ValidationResult } from './rule-validator.service';
+import { RuleValidatorService, ValidationResult, FormSchema } from './rule-validator.service';
 import { Api } from 'src/common/decorators/api.decorator';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
@@ -23,7 +23,7 @@ export class ValidateRuleDto {
    * 规则配置对象
    * @example { "minCount": 2, "maxCount": 10, "price": 99 }
    */
-  rules: any;
+  rules: unknown;
 }
 
 /**
@@ -214,7 +214,7 @@ export class RuleController {
     description: '根据玩法代码获取该玩法的规则表单 Schema，用于前端动态表单生成',
   })
   @RequirePermission('marketing:rule:schema:query')
-  async getRuleFormSchema(@Param('templateCode') templateCode: string): Promise<any> {
+  async getRuleFormSchema(@Param('templateCode') templateCode: string): Promise<FormSchema> {
     return this.validatorService.getRuleFormSchema(templateCode);
   }
 }

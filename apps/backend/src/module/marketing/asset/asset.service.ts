@@ -3,7 +3,7 @@ import { UserAssetRepository } from './asset.repository';
 import { ListUserAssetDto } from './dto/asset.dto';
 import { Result } from 'src/common/response/result';
 import { BusinessException } from 'src/common/exceptions/business.exception';
-import { AssetStatus } from '@prisma/client';
+import { AssetStatus, Prisma } from '@prisma/client';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { FormatDateFields } from 'src/common/utils';
 import { Transactional } from 'src/common/decorators/transactional.decorator'; // 使用声明式事务
@@ -82,7 +82,7 @@ export class UserAssetService {
   /**
    * 系统发放资产 (由支付完成回调触发)
    */
-  async grantAsset(data: any) {
+  async grantAsset(data: Prisma.MktUserAssetCreateInput) {
     // 由 MarketingInstanceService 调用
     return this.repo.create(data);
   }

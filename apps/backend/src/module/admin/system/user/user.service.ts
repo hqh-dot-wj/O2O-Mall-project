@@ -1,4 +1,4 @@
-﻿import { Injectable, forwardRef, Inject } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { BusinessException } from 'src/common/exceptions';
 import { RedisService } from 'src/module/common/redis/redis.service';
@@ -301,7 +301,7 @@ export class UserService {
     ]);
 
     const postIds = postList.map((item) => item.postId);
-    const enrichedData: any = {
+    const enrichedData: Record<string, unknown> = {
       ...data,
       dept,
       roles: allRoles.filter((role) => roleIds.includes(role.roleId)),
@@ -352,7 +352,7 @@ export class UserService {
       });
     }
 
-    const updateData: any = { ...rest };
+    const updateData: Record<string, unknown> = { ...rest };
     delete updateData.password;
     delete updateData.dept;
     delete updateData.roles;
@@ -487,7 +487,7 @@ export class UserService {
   }
 
   @Transactional()
-  async updateAuthRole(query: any) {
+  async updateAuthRole(query: { userId: number; roleIds: string }) {
     return this.userRoleService.updateAuthRole(query);
   }
 

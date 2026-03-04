@@ -180,7 +180,7 @@ export class MarketingEventEmitter {
     instanceId: string,
     configId: string,
     memberId: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<void> {
     await this.emit({
       type: MarketingEventType.INSTANCE_CREATED,
@@ -199,7 +199,7 @@ export class MarketingEventEmitter {
     instanceId: string,
     configId: string,
     memberId: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<void> {
     await this.emit({
       type: MarketingEventType.INSTANCE_PAID,
@@ -218,7 +218,7 @@ export class MarketingEventEmitter {
     instanceId: string,
     configId: string,
     memberId: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<void> {
     await this.emit({
       type: MarketingEventType.INSTANCE_SUCCESS,
@@ -237,7 +237,7 @@ export class MarketingEventEmitter {
     instanceId: string,
     configId: string,
     memberId: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<void> {
     await this.emit({
       type: MarketingEventType.INSTANCE_FAILED,
@@ -256,7 +256,7 @@ export class MarketingEventEmitter {
     instanceId: string,
     configId: string,
     memberId: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<void> {
     await this.emit({
       type: MarketingEventType.INSTANCE_TIMEOUT,
@@ -275,7 +275,7 @@ export class MarketingEventEmitter {
     instanceId: string,
     configId: string,
     memberId: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<void> {
     await this.emit({
       type: MarketingEventType.INSTANCE_REFUNDED,

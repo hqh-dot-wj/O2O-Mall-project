@@ -7,7 +7,7 @@ export { CreateUserDto } from './create-user.dto';
 export { UpdateUserDto } from './update-user.dto';
 
 // 列表查询
-export { ListUserDto, AllocatedListDto } from './list-user.dto';
+export { ListUserDto, AllocatedListDto, UpdateAuthRoleQueryDto } from './list-user.dto';
 
 // 状态变更
 export { ChangeUserStatusDto } from './change-status.dto';

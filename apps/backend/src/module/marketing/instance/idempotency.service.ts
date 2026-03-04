@@ -59,8 +59,8 @@ export class IdempotencyService {
   async checkJoinIdempotency(
     configId: string,
     memberId: string,
-    params?: any,
-  ): Promise<any | null> {
+    params?: Record<string, unknown>,
+  ): Promise<unknown | null> {
     // 生成幂等键：活动ID + 用户ID + 参数哈希
     const key = this.generateJoinKey(configId, memberId, params);
 
@@ -87,8 +87,8 @@ export class IdempotencyService {
   async cacheJoinResult(
     configId: string,
     memberId: string,
-    params: any,
-    result: any,
+    params: Record<string, unknown>,
+    result: unknown,
   ): Promise<void> {
     const key = this.generateJoinKey(configId, memberId, params);
     await this.redis.set(key, JSON.stringify(result), this.DEFAULT_TTL.JOIN);
@@ -189,7 +189,7 @@ export class IdempotencyService {
    * @param params 参与参数
    * @returns 幂等键
    */
-  private generateJoinKey(configId: string, memberId: string, params?: any): string {
+  private generateJoinKey(configId: string, memberId: string, params?: Record<string, unknown>): string {
     let key = `${this.PREFIX.JOIN}${configId}:${memberId}`;
 
     // 如果有参团ID，加入到幂等键中（允许同一用户参与多个不同的团）

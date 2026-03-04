@@ -11,12 +11,15 @@ import { DictService } from 'src/module/admin/system/dict/dict.service';
 import { isEmpty } from 'src/common/utils';
 import { StatusEnum } from 'src/common/enum';
 import { PrismaService } from 'src/prisma/prisma.service';
+import type { UserType } from 'src/module/admin/system/user/dto/user';
+
+export type OperlogRequest = Request & { user?: { user?: UserType['user'] } };
 
 @Injectable({ scope: Scope.REQUEST })
 export class OperlogService {
   constructor(
     @Inject(REQUEST)
-    private readonly request: Request & { user: any },
+    private readonly request: OperlogRequest,
     private readonly prisma: PrismaService,
     private readonly axiosService: AxiosService,
     @Inject(DictService)
@@ -75,7 +78,7 @@ export class OperlogService {
       };
     }
     if (!isEmpty(query.status)) {
-      where.status = query.status as any;
+      where.status = query.status as StatusEnum;
     }
 
     const orderBy =
@@ -140,7 +143,7 @@ export class OperlogService {
     errorMsg,
     businessType,
   }: {
-    resultData?: any;
+    resultData?: unknown;
     costTime: number;
     title: string;
     handlerName: string;
@@ -151,7 +154,7 @@ export class OperlogService {
     const loginUser = this.request.user?.user ?? {};
     const operLocation = await this.axiosService.getIpAddress(ip);
 
-    const safeStringify = (payload: any) => {
+    const safeStringify = (payload: unknown) => {
       try {
         const result = JSON.stringify(payload);
         return result ?? '';
@@ -199,9 +202,11 @@ export class OperlogService {
     const list = await this.findAll(body);
     const { data: operatorTypeDict } = await this.dictService.findOneDataType('sys_oper_type');
     const operatorTypeDictMap: Record<string, string> = {};
-    operatorTypeDict.forEach((item: any) => {
+    type DictItem = { dictValue: string; dictLabel: string };
+    const dictList = (Array.isArray(operatorTypeDict) ? operatorTypeDict : []) as DictItem[];
+    for (const item of dictList) {
       operatorTypeDictMap[item.dictValue] = item.dictLabel;
-    });
+    }
     const options = {
       sheetName: '操作日志数据',
       data: list.data.rows,

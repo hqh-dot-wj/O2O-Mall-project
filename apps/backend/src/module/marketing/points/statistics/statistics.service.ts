@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PointsTransactionType } from '@prisma/client';
+import { Prisma, PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
@@ -34,7 +34,7 @@ export class PointsStatisticsService {
     endTime?: Date;
   }) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
-    const where: any = {
+    const where: Prisma.MktPointsTransactionWhereInput = {
       tenantId,
       type: {
         in: [
@@ -103,7 +103,7 @@ export class PointsStatisticsService {
     endTime?: Date;
   }) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
-    const where: any = {
+    const where: Prisma.MktPointsTransactionWhereInput = {
       tenantId,
       type: {
         in: [
@@ -205,7 +205,7 @@ export class PointsStatisticsService {
     endTime?: Date;
   }) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
-    const where: any = {
+    const where: Prisma.MktPointsTransactionWhereInput = {
       tenantId,
       type: PointsTransactionType.EXPIRE,
     };
@@ -278,7 +278,7 @@ export class PointsStatisticsService {
     endTime?: Date;
   }) {
     const tenantId = TenantContext.getTenantId() ?? TenantContext.SUPER_TENANT_ID;
-    const where: any = {
+    const where: Prisma.MktPointsTransactionWhereInput = {
       tenantId,
     };
 

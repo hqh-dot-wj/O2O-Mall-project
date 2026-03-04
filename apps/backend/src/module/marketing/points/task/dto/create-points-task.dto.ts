@@ -29,7 +29,7 @@ export class CreatePointsTaskDto {
 
   @ApiProperty({ description: '完成条件（JSON格式）', example: {} })
   @IsOptional()
-  completionCondition?: any;
+  completionCondition?: unknown;
 
   @ApiProperty({ description: '是否可重复完成', example: false })
   @IsOptional()

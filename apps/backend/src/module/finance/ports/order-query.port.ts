@@ -19,6 +19,8 @@ export interface OrderItemForCommission {
   productId: string;
   quantity: number;
   price: Decimal;
+  /** 商品小计金额，baseCalculator 需要此字段 */
+  totalAmount: Decimal;
 }
 
 /**

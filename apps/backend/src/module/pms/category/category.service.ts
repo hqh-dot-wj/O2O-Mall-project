@@ -59,13 +59,14 @@ export class CategoryService {
       where.parentId = query.parentId === 0 ? null : query.parentId;
     }
 
-    // 执行分页查询，按排序号升序
+    // 执行分页查询，按排序号升序，包含属性模板用于前端展示
     const { rows, total } = await this.categoryRepo.findPage({
       where,
       pageNum,
       pageSize,
       orderBy: 'sort',
       order: 'asc',
+      include: { attrTemplate: true },
     });
 
     return Result.page(rows, total, pageNum, pageSize);
@@ -97,6 +98,7 @@ export class CategoryService {
       level,
       icon: dto.icon || null,
       sort: dto.sort || 0,
+      ...(dto.bindType !== undefined && { bindType: dto.bindType }),
       ...(dto.parentId && { parent: { connect: { catId: dto.parentId } } }),
       ...(dto.attrTemplateId && { attrTemplate: { connect: { templateId: dto.attrTemplateId } } }),
     });

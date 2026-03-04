@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { Prisma, SysPost } from '@prisma/client';
 import { SoftDeleteRepository } from '../../../../common/repository/soft-delete.repository';
@@ -101,7 +101,7 @@ export class PostRepository extends SoftDeleteRepository<
         userPosts: {
           some: { userId },
         },
-      } as any,
+      } as Prisma.SysPostWhereInput,
       orderBy: [{ postSort: 'asc' }, { createTime: 'desc' }],
     });
   }

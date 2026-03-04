@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PointsTransactionType } from '@prisma/client';
@@ -122,7 +123,7 @@ export class PointsGracefulDegradationService {
     errorMessage?: string,
   ) {
     try {
-      const whereClause: any = {
+      const whereClause: Prisma.MktPointsGrantFailureWhereInput = {
         memberId,
         status: 'PENDING',
       };
@@ -191,7 +192,7 @@ export class PointsGracefulDegradationService {
     errorMessage: string,
   ) {
     try {
-      const whereClause: any = {
+      const whereClause: Prisma.MktPointsGrantFailureWhereInput = {
         memberId,
         status: 'PENDING',
       };
@@ -234,7 +235,7 @@ export class PointsGracefulDegradationService {
    * @returns 失败记录列表
    */
   async getFailureRecords(status?: string, limit: number = 100) {
-    const where: any = {};
+    const where: Prisma.MktPointsGrantFailureWhereInput = {};
     if (status) {
       where.status = status;
     }

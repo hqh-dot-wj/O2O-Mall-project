@@ -35,7 +35,7 @@ export class PlayInstanceDto {
   @ApiProperty({ description: '实例动态数据' })
   @IsObject()
   @IsNotEmpty()
-  instanceData: Record<string, any>;
+  instanceData: Record<string, unknown>;
 
   @ApiProperty({ description: '状态', enum: PlayInstanceStatus })
   @IsEnum(PlayInstanceStatus)

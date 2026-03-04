@@ -30,8 +30,8 @@ export class CouponSchedulerService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async cleanExpiredCoupons() {
-    const lockAcquired = await this.redisService.tryLock(this.lockKey, this.lockTtlMs);
-    if (!lockAcquired) {
+    const lockToken = await this.redisService.tryLock(this.lockKey, this.lockTtlMs);
+    if (!lockToken) {
       this.logger.log('跳过清理过期优惠券：已有实例正在执行');
       return;
     }
@@ -80,7 +80,7 @@ export class CouponSchedulerService {
       this.logger.error(`清理过期优惠券失败: ${getErrorMessage(error)}`, getErrorStack(error));
     } finally {
       try {
-        await this.redisService.unlock(this.lockKey);
+        await this.redisService.unlock(this.lockKey, lockToken);
       } catch (error) {
         this.logger.warn(`释放清理过期优惠券锁失败: ${getErrorMessage(error)}`);
       }

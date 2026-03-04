@@ -57,7 +57,8 @@
       "unconfig": "7.4.2",
       "string-width": "4.2.3",
       "bin-wrapper": "npm:bin-wrapper-china",
-      "typescript": "5.8.3"
+      "typescript": "5.8.3",
+      "cron": "3.2.1"
     }
   }
 }

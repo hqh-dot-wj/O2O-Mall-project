@@ -107,10 +107,12 @@ export class StoreLedgerService {
 
       // 按订单ID分组
       commissions.forEach((comm) => {
-        if (!orderCommissionsMap.has(comm.orderId)) {
-          orderCommissionsMap.set(comm.orderId, []);
+        let list = orderCommissionsMap.get(comm.orderId);
+        if (!list) {
+          list = [];
+          orderCommissionsMap.set(comm.orderId, list);
         }
-        orderCommissionsMap.get(comm.orderId)!.push({
+        list.push({
           level: comm.level,
           beneficiary: comm.beneficiary,
           amount: comm.amount,

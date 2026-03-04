@@ -46,7 +46,7 @@ export class CouponStatisticsService {
     pageNum?: number;
     pageSize?: number;
   }) {
-    const where: any = {};
+    const where: Prisma.MktCouponUsageWhereInput = {};
 
     if (query.memberId) {
       where.memberId = query.memberId;
@@ -83,7 +83,8 @@ export class CouponStatisticsService {
       order: 'desc',
     });
 
-    const memberIds = [...new Set((rows as any[]).map((r) => r.memberId))];
+    type RowWithMember = { memberId: string; userCoupon?: { template?: { name?: string } } };
+    const memberIds = [...new Set((rows as RowWithMember[]).map((r) => r.memberId))];
     const memberMap = new Map<string, { nickname?: string; mobile?: string }>();
     if (memberIds.length > 0) {
       const members = await this.memberRepo.findMany({
@@ -95,7 +96,7 @@ export class CouponStatisticsService {
       );
     }
 
-    const list = (rows as any[]).map((r) => ({
+    const list = (rows as RowWithMember[]).map((r) => ({
       ...r,
       templateName: r.userCoupon?.template?.name ?? '',
       nickname: memberMap.get(r.memberId)?.nickname ?? '',
@@ -112,7 +113,7 @@ export class CouponStatisticsService {
    * @returns 核销率统计
    */
   async getUsageRate(templateId?: string) {
-    const where: any = {};
+    const where: Prisma.MktUserCouponWhereInput = {};
     if (templateId) {
       where.templateId = templateId;
     }
@@ -257,7 +258,7 @@ export class CouponStatisticsService {
     },
     res: Response,
   ): Promise<void> {
-    const where: any = {};
+    const where: Prisma.MktCouponUsageWhereInput = {};
 
     if (query.memberId) {
       where.memberId = query.memberId;
@@ -280,7 +281,7 @@ export class CouponStatisticsService {
     }
 
     const total = await this.prisma.mktCouponUsage.count({
-      where: where as any,
+      where,
     });
     BusinessException.throwIf(
       total > EXPORT_RECORD_LIMIT,
@@ -288,7 +289,7 @@ export class CouponStatisticsService {
     );
 
     const records = await this.prisma.mktCouponUsage.findMany({
-      where: where as any,
+      where,
       include: {
         userCoupon: {
           include: {

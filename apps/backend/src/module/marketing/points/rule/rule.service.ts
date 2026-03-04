@@ -52,7 +52,7 @@ export class PointsRuleService {
         maxDiscountPercentOrder: 50,
         systemEnabled: true,
         createBy: userId,
-      } as any);
+      });
     }
 
     return Result.ok(FormatDateFields(rules));
@@ -71,7 +71,7 @@ export class PointsRuleService {
     // 验证配置
     this.validateRuleConfig(dto);
 
-    const rules = await this.repo.upsert(tenantId, dto as any, userId);
+    const rules = await this.repo.upsert(tenantId, dto as Partial<import('@prisma/client').MktPointsRule>, userId);
 
     this.logger.log(`积分规则已更新: tenantId=${tenantId}`);
 

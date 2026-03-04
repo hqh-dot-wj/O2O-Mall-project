@@ -316,15 +316,26 @@ export class ClientProductService {
       serviceRadius: product.serviceRadius,
       needBooking: product.needBooking,
       // 优先使用门店价格
-      price: tenantSkuMap.get(product.globalSkus?.[0]?.skuId)?.price || product.globalSkus?.[0]?.guidePrice || 0,
+      price: Number(
+        tenantSkuMap.get(product.globalSkus?.[0]?.skuId)?.price ??
+          product.globalSkus?.[0]?.guidePrice ??
+          0,
+      ),
       skus: product.globalSkus.map((sku) => {
         const tenantSku = tenantSkuMap.get(sku.skuId);
+        const rawSpec = sku.specValues;
+        const specValues: Record<string, string> =
+          rawSpec && typeof rawSpec === 'object' && !Array.isArray(rawSpec)
+            ? Object.fromEntries(
+                Object.entries(rawSpec).map(([k, v]) => [k, v != null ? String(v) : '']),
+              )
+            : {};
         return {
           skuId: tenantSku?.id || sku.skuId,
-          specValues: sku.specValues || {},
+          specValues,
           skuImage: sku.skuImage,
           // 优先使用门店价格
-          price: tenantSku?.price || sku.guidePrice,
+          price: Number(tenantSku?.price ?? sku.guidePrice ?? 0),
           stock: tenantSku?.stock ?? 0,
         };
       }),

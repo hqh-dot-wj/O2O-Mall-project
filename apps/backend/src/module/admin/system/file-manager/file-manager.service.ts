@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { DelFlagEnum, StatusEnum } from 'src/common/enum/index';
@@ -241,7 +241,8 @@ export class FileManagerService {
     });
 
     // 构建树形结构
-    const buildTree = (parentId: number = 0): any[] => {
+    type FolderTreeNode = (typeof folders)[number] & { children: FolderTreeNode[] };
+    const buildTree = (parentId: number = 0): FolderTreeNode[] => {
       return folders
         .filter((f) => f.parentId === parentId)
         .map((folder) => ({

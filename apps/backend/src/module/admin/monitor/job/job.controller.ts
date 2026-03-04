@@ -1,9 +1,10 @@
-﻿import { Controller, Get, Post, Body, Delete, Param, Put, Query, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, Put, Query, Req, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JobService } from './job.service';
 import { CreateJobDto, ListJobDto } from './dto/create-job.dto';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { StatusEnum } from 'src/common/enum';
 import { Api } from 'src/common/decorators/api.decorator';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
@@ -56,7 +57,8 @@ export class JobController {
   @RequirePermission('monitor:job:changeStatus')
   @Operlog({ businessType: BusinessType.UPDATE })
   changeStatus(@Body('jobId') jobId: number, @Body('status') status: string, @User('user.userName') userName: string) {
-    return this.jobService.changeStatus(jobId, status as any, userName);
+    const statusEnum = status === '0' ? StatusEnum.NORMAL : StatusEnum.STOP;
+    return this.jobService.changeStatus(jobId, statusEnum, userName);
   }
 
   @Api({

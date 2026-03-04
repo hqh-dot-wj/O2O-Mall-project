@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Api } from 'src/common/decorators/api.decorator';
+import { Result } from 'src/common/response';
 import { ClientProductService } from './product.service';
 import { ClientListProductDto } from './dto';
 import { ClientProductVo, ClientProductDetailVo, ClientCategoryVo } from './vo';
@@ -24,7 +25,7 @@ export class ClientProductController {
    */
   @Api({ summary: '获取商品详情', type: ClientProductDetailVo })
   @Get('detail/:id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<Result<ClientProductDetailVo>> {
     return this.productService.findOne(id);
   }
 
@@ -33,7 +34,7 @@ export class ClientProductController {
    */
   @Api({ summary: '获取商品分类树', type: ClientCategoryVo, isArray: true })
   @Get('category/tree')
-  findCategoryTree() {
+  findCategoryTree(): Promise<Result<ClientCategoryVo[]>> {
     return this.productService.findCategoryTree();
   }
 

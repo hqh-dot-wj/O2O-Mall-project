@@ -52,12 +52,14 @@ export function fetchDeleteGlobalProduct(productId: string) {
   });
 }
 
-/** Batch Delete Global Product */
-export function fetchBatchDeleteGlobalProduct(productIds: string[]) {
-  // Since backend might only support single delete for now, or we might need to loop/batch
-  // If backend supports comma-separated ids in one path:
-  return request<boolean>({
-    url: `/admin/pms/product/${productIds.join(',')}`,
-    method: 'delete'
-  });
+/** Batch Delete Global Product（后端仅支持单删，前端循环调用） */
+export async function fetchBatchDeleteGlobalProduct(productIds: string[]): Promise<{ data?: boolean; error?: Error }> {
+  for (const id of productIds) {
+    const res = await request<boolean>({
+      url: `/admin/pms/product/${id}`,
+      method: 'delete'
+    });
+    if (res.error) return res;
+  }
+  return { data: true };
 }

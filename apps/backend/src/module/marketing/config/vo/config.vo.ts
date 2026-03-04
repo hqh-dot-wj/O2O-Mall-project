@@ -21,7 +21,7 @@ export class StorePlayConfigVo {
   templateCode: string;
 
   @ApiProperty({ description: '营销规则配置' })
-  rules: any;
+  rules: Record<string, unknown>;
 
   @ApiProperty({ description: '库存策略', enum: MarketingStockMode })
   stockMode: MarketingStockMode;

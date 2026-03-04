@@ -24,12 +24,6 @@ declare module "@elegant-router/types" {
     "403": "/403";
     "404": "/404";
     "500": "/500";
-    "store_finance": "/store/finance";
-    "store_finance_commission": "/store/finance/commission";
-    "store_finance_dashboard": "/store/finance/dashboard";
-    "store_finance_distribution-config": "/store/finance/distribution-config";
-    "store_finance_ledger": "/store/finance/ledger";
-    "store_finance_withdrawal": "/store/finance/withdrawal";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
@@ -61,9 +55,6 @@ declare module "@elegant-router/types" {
     "monitor_online": "/monitor/online";
     "monitor_operlog": "/monitor/operlog";
     "monitor_server": "/monitor/server";
-    "store_order": "/store/order";
-    "store_order_detail": "/store/order/detail";
-    "store_order_list": "/store/order/list";
     "pms": "/pms";
     "pms_attribute": "/pms/attribute";
     "pms_brand": "/pms/brand";
@@ -81,6 +72,16 @@ declare module "@elegant-router/types" {
     "store_distribution_distribution-dashboard": "/store/distribution/distribution-dashboard";
     "store_distribution_distribution-level": "/store/distribution/distribution-level";
     "store_distribution_distribution-product": "/store/distribution/distribution-product";
+    "store_finance": "/store/finance";
+    "store_finance_commission": "/store/finance/commission";
+    "store_finance_dashboard": "/store/finance/dashboard";
+    "store_finance_distribution-config": "/store/finance/distribution-config";
+    "store_finance_ledger": "/store/finance/ledger";
+    "store_finance_withdrawal": "/store/finance/withdrawal";
+    "store_order": "/store/order";
+    "store_order_detail": "/store/order/detail";
+    "store_order_dispatch": "/store/order/dispatch";
+    "store_order_list": "/store/order/list";
     "store_product": "/store/product";
     "store_product_list": "/store/product/list";
     "store_product_market": "/store/product/market";
@@ -180,11 +181,6 @@ declare module "@elegant-router/types" {
     | "login"
     | "social-callback"
     | "user-center"
-    | "store_finance_commission"
-    | "store_finance_dashboard"
-    | "store_finance_distribution-config"
-    | "store_finance_ledger"
-    | "store_finance_withdrawal"
     | "home"
     | "marketing_asset"
     | "marketing_coupon_template"
@@ -208,8 +204,6 @@ declare module "@elegant-router/types" {
     | "monitor_online"
     | "monitor_operlog"
     | "monitor_server"
-    | "store_order_detail"
-    | "store_order_list"
     | "pms_attribute"
     | "pms_brand"
     | "pms_category"
@@ -224,6 +218,16 @@ declare module "@elegant-router/types" {
     | "store_distribution_distribution-product"
     | "store_distribution_distribution"
     | "store_distribution"
+    | "store_finance_commission"
+    | "store_finance_dashboard"
+    | "store_finance_distribution-config"
+    | "store_finance"
+    | "store_finance_ledger"
+    | "store_finance_withdrawal"
+    | "store_order_detail"
+    | "store_order_dispatch"
+    | "store_order"
+    | "store_order_list"
     | "store_product_list"
     | "store_product_market"
     | "store_stock"

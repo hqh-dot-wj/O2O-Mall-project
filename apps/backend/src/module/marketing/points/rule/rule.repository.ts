@@ -44,13 +44,13 @@ export class PointsRuleRepository extends BaseRepository<
       return this.update(existing.id, {
         ...data,
         updateBy: userId,
-      } as any);
+      } as Prisma.MktPointsRuleUpdateInput);
     } else {
       return this.create({
         ...data,
         tenantId,
         createBy: userId,
-      } as any);
+      } as Prisma.MktPointsRuleCreateInput);
     }
   }
 }

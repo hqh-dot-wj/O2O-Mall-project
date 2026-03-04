@@ -52,8 +52,8 @@ export class ActivityLifecycleScheduler {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleTimeoutInstances() {
-    const lockAcquired = await this.redisService.tryLock(this.timeoutLockKey, this.timeoutLockTtlMs);
-    if (!lockAcquired) {
+    const lockToken = await this.redisService.tryLock(this.timeoutLockKey, this.timeoutLockTtlMs);
+    if (!lockToken) {
       this.logger.log('[定时任务] 跳过处理超时实例：已有实例正在执行');
       return;
     }
@@ -107,8 +107,8 @@ export class ActivityLifecycleScheduler {
       let activeTimeoutCount = 0;
       for (const instance of activeInstances) {
         try {
-          const rules = instance.config.rules as any;
-          const validDays = rules?.validDays || 7; // 默认 7 天有效期
+          const rules = instance.config.rules as Record<string, unknown> | null;
+          const validDays = Number(rules?.validDays) || 7; // 默认 7 天有效期
           const deadline = new Date(instance.createTime.getTime() + validDays * 24 * 60 * 60 * 1000);
 
           if (Date.now() > deadline.getTime()) {
@@ -134,7 +134,7 @@ export class ActivityLifecycleScheduler {
       this.logger.error(`[定时任务] 处理超时实例失败: ${getErrorMessage(error)}`, getErrorStack(error));
     } finally {
       try {
-        await this.redisService.unlock(this.timeoutLockKey);
+        await this.redisService.unlock(this.timeoutLockKey, lockToken);
       } catch (error) {
         this.logger.warn(`[定时任务] 释放超时实例任务锁失败: ${getErrorMessage(error)}`);
       }
@@ -153,11 +153,11 @@ export class ActivityLifecycleScheduler {
    */
   @Cron(CronExpression.EVERY_HOUR)
   async handleActivityStatus() {
-    const lockAcquired = await this.redisService.tryLock(
+    const lockToken = await this.redisService.tryLock(
       this.activityStatusLockKey,
       this.activityStatusLockTtlMs,
     );
-    if (!lockAcquired) {
+    if (!lockToken) {
       this.logger.log('[定时任务] 跳过活动状态检查：已有实例正在执行');
       return;
     }
@@ -218,7 +218,7 @@ export class ActivityLifecycleScheduler {
       this.logger.error(`[定时任务] 检查活动状态失败: ${getErrorMessage(error)}`, getErrorStack(error));
     } finally {
       try {
-        await this.redisService.unlock(this.activityStatusLockKey);
+        await this.redisService.unlock(this.activityStatusLockKey, lockToken);
       } catch (error) {
         this.logger.warn(`[定时任务] 释放活动状态检查锁失败: ${getErrorMessage(error)}`);
       }
@@ -237,8 +237,8 @@ export class ActivityLifecycleScheduler {
    */
   @Cron('0 0 2 * * *')
   async cleanupExpiredData() {
-    const lockAcquired = await this.redisService.tryLock(this.cleanupLockKey, this.cleanupLockTtlMs);
-    if (!lockAcquired) {
+    const lockToken = await this.redisService.tryLock(this.cleanupLockKey, this.cleanupLockTtlMs);
+    if (!lockToken) {
       this.logger.log('[定时任务] 跳过过期数据清理：已有实例正在执行');
       return;
     }
@@ -280,7 +280,7 @@ export class ActivityLifecycleScheduler {
       this.logger.error(`[定时任务] 清理过期数据失败: ${getErrorMessage(error)}`, getErrorStack(error));
     } finally {
       try {
-        await this.redisService.unlock(this.cleanupLockKey);
+        await this.redisService.unlock(this.cleanupLockKey, lockToken);
       } catch (error) {
         this.logger.warn(`[定时任务] 释放过期数据清理锁失败: ${getErrorMessage(error)}`);
       }
@@ -300,8 +300,8 @@ export class ActivityLifecycleScheduler {
    */
   @Cron('0 */5 * * * *')
   async healthCheck() {
-    const lockAcquired = await this.redisService.tryLock(this.healthLockKey, this.healthLockTtlMs);
-    if (!lockAcquired) {
+    const lockToken = await this.redisService.tryLock(this.healthLockKey, this.healthLockTtlMs);
+    if (!lockToken) {
       this.logger.log('[定时任务] 跳过健康检查：已有实例正在执行');
       return;
     }
@@ -346,7 +346,7 @@ export class ActivityLifecycleScheduler {
       this.logger.error(`[健康检查] 执行失败: ${getErrorMessage(error)}`, getErrorStack(error));
     } finally {
       try {
-        await this.redisService.unlock(this.healthLockKey);
+        await this.redisService.unlock(this.healthLockKey, lockToken);
       } catch (error) {
         this.logger.warn(`[健康检查] 释放健康检查锁失败: ${getErrorMessage(error)}`);
       }

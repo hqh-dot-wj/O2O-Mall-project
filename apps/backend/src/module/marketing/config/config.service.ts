@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MarketingStockMode, PublishStatus, ProductType } from '@prisma/client';
+import { MarketingStockMode, Prisma, PublishStatus, ProductType } from '@prisma/client';
 import { StorePlayConfigRepository } from './config.repository';
+
+/** 规则历史记录结构（与 Prisma Json 存储结构一致） */
+interface RulesHistoryRecord {
+  version?: number;
+  rules?: unknown;
+  updateTime?: string;
+  operator?: string;
+}
 import { CreateStorePlayConfigDto, ListStorePlayConfigDto, UpdateStorePlayConfigDto } from './dto/config.dto';
 import { Result } from 'src/common/response/result';
 import { BusinessException } from 'src/common/exceptions/business.exception';
@@ -37,7 +45,8 @@ export class StorePlayConfigService {
     // ✅ 中文注释：批量查询关联商品名称，减少单次循环查库的 N+1 问题 (内存组装模式)
     const serviceIds = rows.map((r) => r.serviceId);
 
-    let productMap = new Map<string, any>();
+    type ProductInfo = { productId: string; name: string; publishStatus: string; mainImages: string[]; type: string };
+    let productMap = new Map<string, ProductInfo>();
     if (serviceIds.length > 0) {
       const products = await this.prisma.pmsProduct.findMany({
         where: { productId: { in: serviceIds } },
@@ -49,12 +58,12 @@ export class StorePlayConfigService {
           type: true,
         },
       });
-      productMap = new Map(products.map((p: any) => [p.productId, p]));
+      productMap = new Map(products.map((p) => [p.productId, p]));
     }
 
     const list = rows.map((row) => {
       const product = productMap.get(row.serviceId);
-      const rules = row.rules as any;
+      const rules = row.rules as Record<string, unknown> | null;
       return {
         ...row,
         productName: product?.name || '未知商品',
@@ -134,9 +143,9 @@ export class StorePlayConfigService {
     const config = await this.repo.create({
       ...dto,
       tenantId,
-      storeId: dto.storeId || tenantId, // 如果没有传 storeId，使用 tenantId
+      storeId: dto.storeId ?? tenantId, // 如果没有传 storeId，使用 tenantId
       stockMode, // 强制覆盖
-    } as any);
+    });
     return Result.ok(FormatDateFields(config), '配置创建成功');
   }
 
@@ -165,7 +174,7 @@ export class StorePlayConfigService {
       const { conflict, rule } = checkConflict(existing.templateCode, newTemplateCode);
 
       if (conflict) {
-        const existingName = (existing.rules as any)?.name || existing.templateCode;
+        const existingName = (existing.rules as Record<string, unknown> | null)?.name ?? existing.templateCode;
         throw new BusinessException(
           409,
           `该商品已有【${existingName}】活动，与【${newTemplateCode}】冲突。原因：${rule?.reason}`,
@@ -208,7 +217,7 @@ export class StorePlayConfigService {
       const rulesHistory = await this.saveRulesHistory(config, operatorId);
       updateData = {
         ...updateData,
-        rulesHistory: rulesHistory as any,
+        rulesHistory,
       };
     }
 
@@ -226,7 +235,7 @@ export class StorePlayConfigService {
    * ```typescript
    * {
    *   version: number,        // 版本号（从1开始递增）
-   *   rules: any,            // 规则内容
+   *   rules: unknown,        // 规则内容
    *   updateTime: string,    // 更新时间（ISO格式）
    *   operator: string       // 操作人ID
    * }
@@ -239,14 +248,18 @@ export class StorePlayConfigService {
    * @private
    * @验证需求 FR-7.1
    */
-  private async saveRulesHistory(config: any, operatorId?: string): Promise<any[]> {
+  private async saveRulesHistory(
+    config: { rules: unknown; rulesHistory?: unknown },
+    operatorId?: string,
+  ): Promise<RulesHistoryRecord[]> {
     // 获取现有历史版本
-    const existingHistory = (config.rulesHistory as any[]) || [];
-    
+    const existingHistory = Array.isArray(config.rulesHistory)
+      ? (config.rulesHistory as RulesHistoryRecord[])
+      : [];
+
     // 计算新版本号（最新版本号 + 1）
-    const latestVersion = existingHistory.length > 0 
-      ? Math.max(...existingHistory.map((h: any) => h.version || 0))
-      : 0;
+    const latestVersion =
+      existingHistory.length > 0 ? Math.max(...existingHistory.map((h) => h.version ?? 0)) : 0;
     const newVersion = latestVersion + 1;
     
     // 创建新的历史版本记录
@@ -304,10 +317,10 @@ export class StorePlayConfigService {
     BusinessException.throwIfNull(config, '配置不存在');
 
     // 2. 获取历史版本
-    const rulesHistory = (config.rulesHistory as any[]) || [];
-    
-    // 3. 查找目标版本
-    const targetHistoryRecord = rulesHistory.find((h: any) => h.version === targetVersion);
+    const rulesHistory = (Array.isArray(config.rulesHistory)
+      ? config.rulesHistory
+      : []) as RulesHistoryRecord[];
+    const targetHistoryRecord = rulesHistory.find((h) => h.version === targetVersion);
     if (!targetHistoryRecord) {
       throw new BusinessException(404, `版本 ${targetVersion} 不存在`);
     }
@@ -316,10 +329,11 @@ export class StorePlayConfigService {
     const updatedHistory = await this.saveRulesHistory(config, operatorId);
 
     // 5. 将目标版本的规则设置为当前规则
-    const updated = await this.repo.update(id, {
-      rules: targetHistoryRecord.rules,
-      rulesHistory: updatedHistory as any,
-    });
+    const updatePayload: UpdateStorePlayConfigDto = {
+      rules: targetHistoryRecord.rules as Record<string, unknown>,
+      rulesHistory: updatedHistory,
+    };
+    const updated = await this.repo.update(id, updatePayload);
 
     return Result.ok(
       FormatDateFields(updated),
@@ -354,7 +368,7 @@ export class StorePlayConfigService {
     const config = await this.repo.findById(id);
     BusinessException.throwIfNull(config, '配置不存在');
 
-    const rulesHistory = (config.rulesHistory as any[]) || [];
+    const rulesHistory = Array.isArray(config.rulesHistory) ? config.rulesHistory : [];
     
     return Result.ok({
       configId: id,
@@ -392,8 +406,10 @@ export class StorePlayConfigService {
     const config = await this.repo.findById(id);
     BusinessException.throwIfNull(config, '配置不存在');
 
-    const rulesHistory = (config.rulesHistory as any[]) || [];
-    const targetHistoryRecord = rulesHistory.find((h: any) => h.version === targetVersion);
+    const rulesHistory = (Array.isArray(config.rulesHistory)
+      ? config.rulesHistory
+      : []) as RulesHistoryRecord[];
+    const targetHistoryRecord = rulesHistory.find((h) => h.version === targetVersion);
     
     if (!targetHistoryRecord) {
       throw new BusinessException(404, `版本 ${targetVersion} 不存在`);
@@ -437,7 +453,7 @@ export class StorePlayConfigService {
     const config = await this.repo.findById(id);
     BusinessException.throwIfNull(config, '配置不存在');
 
-    const updated = await this.repo.update(id, { status } as any);
+    const updated = await this.repo.update(id, { status: status as PublishStatus });
     return Result.ok(FormatDateFields(updated), '状态更新成功');
   }
 }

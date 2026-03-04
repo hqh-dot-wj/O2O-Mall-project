@@ -280,7 +280,12 @@ export class CouponDistributionService {
    * @param template 优惠券模板
    * @returns 有效期起止时间
    */
-  private calculateValidity(template: any): { startTime: Date; endTime: Date } {
+  private calculateValidity(template: {
+    validityType: string;
+    startTime?: Date | null;
+    endTime?: Date | null;
+    validDays?: number | null;
+  }): { startTime: Date; endTime: Date } {
     if (template.validityType === CouponValidityType.FIXED) {
       // 固定时间段
       return {

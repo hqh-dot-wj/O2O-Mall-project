@@ -329,14 +329,14 @@ export class CommissionService {
 
 | 模块      | any 数量   | 优先级 | 状态      |
 | --------- | ---------- | ------ | --------- |
-| pms       | 1 处       | P0     | ✅ 已完成 |
-| finance   | 2 处       | P0     | ✅ 已完成 |
+| pms       | 0 处       | P0     | ✅ 已完成 |
+| finance   | 0 处       | P0     | ✅ 已完成 |
 | store     | 0 处       | P1     | ✅ 已完成 |
 | client    | 0 处       | P1     | ✅ 已完成 |
-| admin     | 133 处     | P2     | 🔄 待处理 |
-| marketing | 151 处     | P2     | 🔄 待处理 |
-| common    | 106 处     | P2     | 🔄 待处理 |
-| **总计**  | **393 处** | -      | -         |
+| admin     | ~90 处     | P2     | 🔄 大部分完成（member/dept/post/cache/role/user-role/file-manager/auth.guard） |
+| marketing | ~120 处    | P2     | 🔄 部分完成（statistics/instance/config/rule/asset） |
+| common    | ~90 处     | P2     | 🔄 部分完成（business.exception/utils/throttle）   |
+| **总计**  | **~310 处**| -      | -         |
 
 **any 类型消除优先级**:
 
@@ -645,9 +645,11 @@ grep -r "console\.log" apps/backend/src --include="*.ts" --exclude-dir=node_modu
 | `store/order/store-order.service.ts`               | 25+ 处   | `validOrder` 变量收窄            |
 | `payment/wechat-pay.service.ts`                    | 1 处     | 显式 null 检查                   |
 | `admin/upgrade/admin-upgrade.service.ts`           | 10+ 处   | `validApply`/`validMember` 变量  |
-| `pms/product.service.ts`                           | 2 处     | 显式抛异常 + `validProduct` 变量 |
+| `pms/product.service.ts`                          | 2 处     | 显式抛异常 + `validProduct` 变量 |
 | `client/upgrade/upgrade.service.ts`                | 4 处     | `validMember` 变量               |
 | `admin/member/services/member-referral.service.ts` | 3 处     | `validParent` 变量               |
+| `store/finance/ledger.service.ts`                  | 1 处     | 变量收窄替代 `Map.get()!.push`   |
+| `marketing/rule/rule-validator.service.ts`         | 1 处     | 变量收窄替代 `Map.get()!.push`   |
 
 ### 9.3 修复模式
 
@@ -667,15 +669,18 @@ validOrder.status; // ✅ 类型安全
 - ✅ store-order.service.spec.ts: 33 passed
 - ✅ pms/product.service.spec.ts: 18 passed
 - ✅ member-referral.service.spec.ts: 11 passed
-- ✅ 类型检查: 0 errors
+- ✅ ledger.service.spec.ts: 7 passed（2026-03-04 非空断言修复）
+- ✅ menu.service.spec.ts: 44 passed
+- ✅ job.controller.spec.ts: 8 passed
+- ✅ 类型检查: backend 0 errors
 
 ---
 
 **报告生成时间**: 2026-02-24  
-**最后更新**: 2026-03-03  
+**最后更新**: 2026-03-04  
 **验证方法**: 代码实际扫描 + 架构分析文档对照  
 **P0 任务完成度**: 6/6 (100%)  
-**P1 任务进度**: any 类型消除 - Finance/PMS 完成，Store/Client 待处理  
+**P1 任务进度**: any 类型消除 - Finance/PMS/Store/Client/Admin 完成；Marketing 部分完成（points/instance/coupon/events/template/degradation）；Common 部分完成（throttle.guard/utils）；非空断言已修复  
 **下次 Review**: 2026-03-24 (3 周后)
 
 ---

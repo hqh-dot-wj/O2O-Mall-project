@@ -97,7 +97,6 @@ import { MemberQueryAdapter } from './adapters/member-query.adapter';
     TransactionRepository,
     // 导出事件模块
     FinanceEventsModule,
-    FinanceEventEmitter,
     // 导出 Ports 供测试使用
     OrderQueryPort,
     MemberQueryPort,

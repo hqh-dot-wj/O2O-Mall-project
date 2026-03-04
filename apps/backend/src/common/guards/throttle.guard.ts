@@ -1,20 +1,31 @@
 import { Injectable, ExecutionContext } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerException } from '@nestjs/throttler';
-import { Request } from 'express';
+
+/** 限流器可识别的请求结构 */
+interface ThrottleRequestLike {
+  user?: { userId?: string };
+  ip?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  socket?: { remoteAddress?: string };
+}
 
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
-  protected async getTracker(req: Record<string, any>): Promise<string> {
-    // In newer versions, req is already the request object, not ExecutionContext
+  protected async getTracker(req: ThrottleRequestLike): Promise<string> {
     const user = req.user;
-    if (user && user.userId) return `user-${user.userId}`;
+    if (user?.userId) return `user-${user.userId}`;
 
-    const ip = req.ip || req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+    const headers = req.headers;
+    const forwarded = Array.isArray(headers?.['x-forwarded-for'])
+      ? headers['x-forwarded-for'][0]
+      : headers?.['x-forwarded-for'];
+    const ip =
+      req.ip ?? (typeof forwarded === 'string' ? forwarded : undefined) ?? req.socket?.remoteAddress ?? 'unknown';
     return `ip-${ip}`;
   }
 
   // ThrottlerGuard in newer versions expects an async method with this signature
-  protected async throwThrottlingException(context: ExecutionContext, _throttlerLimitDetail?: any): Promise<void> {
+  protected async throwThrottlingException(context: ExecutionContext, _throttlerLimitDetail?: unknown): Promise<void> {
     throw new ThrottlerException('请求过于频繁，请稍后再试');
   }
 }

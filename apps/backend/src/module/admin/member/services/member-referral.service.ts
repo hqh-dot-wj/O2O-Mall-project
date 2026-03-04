@@ -18,7 +18,7 @@ export class MemberReferralService {
    * 批量获取会员的推荐人信息 (含 C1 直接推荐和 C2 间接推荐)
    * @param list 会员记录列表
    */
-  async getBatchReferralInfo(list: any[]) {
+  async getBatchReferralInfo(list: Array<{ parentId?: string | null }>) {
     const parentIds = [...new Set(list.map((item) => item.parentId).filter(Boolean))] as string[];
 
     // 1. 批量查询直接上级 (C1/C2)

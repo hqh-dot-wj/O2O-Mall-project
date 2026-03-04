@@ -8,15 +8,32 @@ import {
   fetchUpdateGlobalProduct,
   fetchUpdateGlobalProductStatus
 } from './product';
+import { request } from '@/service/request';
 
 // Mock request
 vi.mock('@/service/request', () => ({
-  request: vi.fn(config => Promise.resolve({ data: config }))
+  request: vi.fn((config: { url: string }) => Promise.resolve({ data: config }))
 }));
 
 describe('PMS Product API', () => {
   it('fetchGetGlobalProductList should have correct config', async () => {
     const params: Api.Pms.ProductSearchParams = { pageNum: 1, pageSize: 10 };
+    const res = await fetchGetGlobalProductList(params);
+    expect(res.data).toMatchObject({
+      url: '/admin/pms/product/list',
+      method: 'get',
+      params
+    });
+  });
+
+  it('fetchGetGlobalProductList should pass all ListProductDto params', async () => {
+    const params: Api.Pms.ProductSearchParams = {
+      pageNum: 1,
+      pageSize: 10,
+      name: '测试商品',
+      categoryId: 1,
+      publishStatus: 'ON_SHELF'
+    };
     const res = await fetchGetGlobalProductList(params);
     expect(res.data).toMatchObject({
       url: '/admin/pms/product/list',
@@ -91,12 +108,15 @@ describe('PMS Product API', () => {
     });
   });
 
-  it('fetchBatchDeleteGlobalProduct should have correct config', async () => {
+  it('fetchBatchDeleteGlobalProduct should loop single deletes', async () => {
     const productIds = ['id1', 'id2', 'id3'];
+    vi.mocked(request).mockClear();
     const res = await fetchBatchDeleteGlobalProduct(productIds);
-    expect(res.data).toMatchObject({
-      url: '/admin/pms/product/id1,id2,id3',
-      method: 'delete'
-    });
+    expect(res.data).toBe(true);
+    expect(res.error).toBeUndefined();
+    expect(request).toHaveBeenCalledTimes(3);
+    expect(request).toHaveBeenNthCalledWith(1, expect.objectContaining({ url: '/admin/pms/product/id1', method: 'delete' }));
+    expect(request).toHaveBeenNthCalledWith(2, expect.objectContaining({ url: '/admin/pms/product/id2', method: 'delete' }));
+    expect(request).toHaveBeenNthCalledWith(3, expect.objectContaining({ url: '/admin/pms/product/id3', method: 'delete' }));
   });
 });

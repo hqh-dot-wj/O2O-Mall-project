@@ -25,7 +25,7 @@ export class PointsTaskVo {
   pointsReward: number;
 
   @ApiProperty({ description: '完成条件' })
-  completionCondition: any;
+  completionCondition: unknown;
 
   @ApiProperty({ description: '是否可重复完成' })
   isRepeatable: boolean;

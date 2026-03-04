@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { DeepClone } from 'src/common/utils/index';
 import { Result } from 'src/common/response';
+import { ResponseCode } from 'src/common/response/response.interface';
 
 @Injectable()
 export class CacheService {
@@ -77,9 +78,10 @@ export class CacheService {
     return Result.ok(data);
   }
 
-  async getValue(params: any) {
-    const list = DeepClone(this.caches);
-    const data: any = list.find((item: any) => item.cacheName === params.cacheName);
+  async getValue(params: { cacheName: string; cacheKey: string }) {
+    const list = DeepClone(this.caches) as Array<{ cacheName: string; cacheKey: string; cacheValue: string; remark: string }>;
+    const data = list.find((item) => item.cacheName === params.cacheName);
+    if (!data) return Result.fail(ResponseCode.DATA_NOT_FOUND, '缓存配置不存在');
     const cacheValue = await this.redisService.get(params.cacheKey);
     data.cacheValue = JSON.stringify(cacheValue);
     data.cacheKey = params.cacheKey;

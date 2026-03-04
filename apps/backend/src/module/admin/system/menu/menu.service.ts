@@ -58,7 +58,7 @@ export class MenuService {
     return Result.ok(tree);
   }
 
-  async roleMenuTreeselect(roleId: number): Promise<any> {
+  async roleMenuTreeselect(roleId: number) {
     const res = await this.menuRepo.findAllMenus();
     const tree = ListToTree(
       res,
@@ -76,7 +76,7 @@ export class MenuService {
   /**
    * 租户套餐菜单树
    */
-  async tenantPackageMenuTreeselect(packageId: number): Promise<any> {
+  async tenantPackageMenuTreeselect(packageId: number) {
     const res = await this.prisma.sysMenu.findMany({
       where: {
         delFlag: DelFlagEnum.NORMAL,
@@ -118,9 +118,9 @@ export class MenuService {
   }
 
   async update(updateMenuDto: UpdateMenuDto) {
-    const { queryParam, status, ...data } = updateMenuDto;
-    const updateData: any = {
-      ...data,
+    const { queryParam, status, menuId, ...rest } = updateMenuDto;
+    const updateData: Prisma.SysMenuUpdateInput = {
+      ...rest,
       query: queryParam ?? '',
     };
 
@@ -128,7 +128,7 @@ export class MenuService {
       updateData.status = status === '0' ? StatusEnum.NORMAL : StatusEnum.STOP;
     }
 
-    const res = await this.menuRepo.update(updateMenuDto.menuId, updateData);
+    const res = await this.menuRepo.update(menuId, updateData);
     await this.clearCache();
     return Result.ok(res);
   }

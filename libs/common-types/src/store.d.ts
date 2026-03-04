@@ -96,15 +96,7 @@ export interface GetDashboardDto {
   endDate?: string;
 }
 
-/** 佣金预估请求（商品维度，用于前端展示） */
-export interface StoreCommissionPreviewDto {
-  productId: string;
-  orderAmount: number;
-}
+// ─── 佣金预估 (来自 OpenAPI，与后端 CommissionPreviewDto/Vo 对齐) ───
 
-/** 佣金预估结果（商品维度） */
-export interface StoreCommissionPreview {
-  level1Commission: number;
-  level2Commission: number;
-  totalCommission: number;
-}
+export type CommissionPreviewDto = components['schemas']['CommissionPreviewDto'];
+export type CommissionPreviewVo = components['schemas']['CommissionPreviewVo'];

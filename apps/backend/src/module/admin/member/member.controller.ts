@@ -111,7 +111,7 @@ export class MemberController {
     return this.memberService.adjustMemberPoints(dto);
   }
 
-  @ApiOperation({
+  @Api({
     summary: '导出会员数据',
     produces: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
   })

@@ -36,7 +36,7 @@ export class PointsTransactionRepository extends BaseRepository<
       pageSize?: number;
     },
   ) {
-    const where: any = {
+    const where: Prisma.MktPointsTransactionWhereInput = {
       memberId,
     };
 
@@ -74,7 +74,7 @@ export class PointsTransactionRepository extends BaseRepository<
     pageNum?: number;
     pageSize?: number;
   }) {
-    const where: any = {};
+    const where: Prisma.MktPointsTransactionWhereInput = {};
     if (query.memberId) where.memberId = query.memberId;
     if (query.type) where.type = query.type;
     if (query.startTime || query.endTime) {

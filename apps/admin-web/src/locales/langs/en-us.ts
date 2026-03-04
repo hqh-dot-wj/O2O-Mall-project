@@ -330,6 +330,7 @@ const local: App.I18n.Schema = {
     'store_finance_distribution-config': 'Distribution Config',
     store_order: 'Orders',
     store_order_list: 'Order List',
+    store_order_dispatch: 'Pending Dispatch',
     store_order_detail: 'Order Detail',
     store_distribution: 'Distribution',
     store_distribution_activity: 'Activity Config',

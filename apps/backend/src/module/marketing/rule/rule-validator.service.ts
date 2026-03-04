@@ -7,6 +7,7 @@ import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { getMetadataStorage } from 'class-validator';
 import { ValidationMetadata } from 'class-validator/types/metadata/ValidationMetadata';
+import type { ConfigDto } from 'src/common/types';
 
 /**
  * 规则校验结果接口
@@ -71,7 +72,7 @@ export interface FormFieldSchema {
   /**
    * 默认值
    */
-  defaultValue?: any;
+  defaultValue?: unknown;
 
   /**
    * 校验规则
@@ -179,7 +180,7 @@ export class RuleValidatorService {
    * }
    * ```
    */
-  async validate(templateCode: string, rules: any): Promise<ValidationResult> {
+  async validate(templateCode: string, rules: Record<string, unknown>): Promise<ValidationResult> {
     try {
       // 1. 获取玩法元数据
       const metadata = this.playFactory.getMetadata(templateCode);
@@ -253,10 +254,13 @@ export class RuleValidatorService {
    * @returns 校验结果
    * @private
    */
-  private async validateDto(dtoClass: any, rules: any): Promise<ValidationResult> {
+  private async validateDto(
+    dtoClass: new (...args: unknown[]) => unknown,
+    rules: Record<string, unknown>,
+  ): Promise<ValidationResult> {
     try {
       // 将普通对象转换为 DTO 实例
-      const dtoInstance = plainToInstance(dtoClass, rules);
+      const dtoInstance = plainToInstance(dtoClass, rules) as object;
 
       // 执行校验
       const errors: ValidationError[] = await validate(dtoInstance, {
@@ -306,7 +310,10 @@ export class RuleValidatorService {
    * @returns 校验结果
    * @private
    */
-  private async validateBusinessLogic(templateCode: string, rules: any): Promise<ValidationResult> {
+  private async validateBusinessLogic(
+    templateCode: string,
+    rules: Record<string, unknown>,
+  ): Promise<ValidationResult> {
     try {
       // 获取策略实例
       const strategy = this.playFactory.getStrategy(templateCode);
@@ -319,8 +326,13 @@ export class RuleValidatorService {
         };
       }
 
-      // 执行业务逻辑校验
-      await strategy.validateConfig(rules);
+      // 执行业务逻辑校验（策略的 validateConfig 接收 ConfigDto，传 code/name/rules）
+      const configDto: ConfigDto = {
+        code: templateCode,
+        name: templateCode,
+        rules,
+      };
+      await strategy.validateConfig(configDto);
 
       return {
         valid: true,
@@ -488,7 +500,7 @@ export class RuleValidatorService {
    * @returns 表单字段数组
    * @private
    */
-  private parseClassToFormFields(dtoClass: any): FormFieldSchema[] {
+  private parseClassToFormFields(dtoClass: new (...args: unknown[]) => unknown): FormFieldSchema[] {
     const fields: FormFieldSchema[] = [];
 
     try {
@@ -507,10 +519,12 @@ export class RuleValidatorService {
       const metadatasByProperty = new Map<string, ValidationMetadata[]>();
       for (const metadata of validationMetadatas) {
         const propertyName = metadata.propertyName;
-        if (!metadatasByProperty.has(propertyName)) {
-          metadatasByProperty.set(propertyName, []);
+        let list = metadatasByProperty.get(propertyName);
+        if (!list) {
+          list = [];
+          metadatasByProperty.set(propertyName, list);
         }
-        metadatasByProperty.get(propertyName)!.push(metadata);
+        list.push(metadata);
       }
 
       // 为每个属性生成表单字段
@@ -540,7 +554,11 @@ export class RuleValidatorService {
    * @returns 表单字段定义
    * @private
    */
-  private createFormField(propertyName: string, metadatas: ValidationMetadata[], dtoClass: any): FormFieldSchema | null {
+  private createFormField(
+    propertyName: string,
+    metadatas: ValidationMetadata[],
+    dtoClass: new (...args: unknown[]) => unknown,
+  ): FormFieldSchema | null {
     try {
       // 基础字段信息
       const field: FormFieldSchema = {

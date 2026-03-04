@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { IMarketingStrategy } from './strategy.interface';
-import { PlayInstance, StorePlayConfig, PlayInstanceStatus } from '@prisma/client';
+import { Prisma, PlayInstance, StorePlayConfig, PlayInstanceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ResponseCode } from 'src/common/response/response.interface';
@@ -29,7 +29,7 @@ export class CourseGroupBuyService implements IMarketingStrategy {
   /**
    * 1.1 配置校验
    */
-  async validateConfig(dto: any): Promise<void> {
+  async validateConfig(dto: { rules?: unknown }): Promise<void> {
     const rules = dto.rules;
     BusinessException.throwIf(!rules, '规则配置不能为空');
 
@@ -70,13 +70,13 @@ export class CourseGroupBuyService implements IMarketingStrategy {
   /**
    * 1. 准入校验
    */
-  async validateJoin(config: StorePlayConfig, memberId: string, params: any = {}): Promise<void> {
-    const rules = config.rules as any;
+  async validateJoin(config: StorePlayConfig, memberId: string, params: Record<string, unknown> = {}): Promise<void> {
+    const rules = config.rules as Record<string, unknown>;
     const joinDto = plainToInstance(CourseGroupBuyJoinDto, params);
 
     // A. 报名截止时间校验
     if (rules.joinDeadline) {
-      const deadline = new Date(rules.joinDeadline).getTime();
+      const deadline = new Date(String(rules.joinDeadline)).getTime();
       if (Date.now() > deadline) {
         throw new BusinessException(ResponseCode.BUSINESS_ERROR, '报名已截止');
       }
@@ -94,10 +94,11 @@ export class CourseGroupBuyService implements IMarketingStrategy {
 
     // C. 人数校验 (参团时检查是否已满)
     if (joinDto.groupId) {
-      const group = await this.instanceService.findOne(joinDto.groupId);
+      const group = await this.instanceService.findOne(String(joinDto.groupId));
       if (group.data) {
-        const current = (group.data.instanceData as any).currentCount || 0;
-        const limit = rules.maxCount || 99;
+        const data = (group.data as { instanceData?: Record<string, unknown> }).instanceData;
+        const current = Number(data?.currentCount) || 0;
+        const limit = Number(rules.maxCount) || 99;
         if (current >= limit) {
           throw new BusinessException(ResponseCode.BUSINESS_ERROR, '该团人员已满');
         }
@@ -110,13 +111,14 @@ export class CourseGroupBuyService implements IMarketingStrategy {
   /**
    * 2. 计算价格 (含团长优惠/免单)
    */
-  async calculatePrice(config: StorePlayConfig, params: any): Promise<Decimal> {
-    const rules = config.rules as any;
-    let price = new Decimal(rules.price || 0);
+  async calculatePrice(config: StorePlayConfig, params: Record<string, unknown>): Promise<Decimal> {
+    const rules = config.rules as Record<string, unknown>;
+    let price = new Decimal(Number(rules.price ?? 0));
 
     // 优先使用 SKU 维度的配置
     if (params.skuId && Array.isArray(rules.skus)) {
-      const skuRule = rules.skus.find((s: any) => s.skuId === params.skuId);
+      const skus = rules.skus as Array<{ skuId?: string; price?: number }>;
+      const skuRule = skus.find((s) => s.skuId === params.skuId);
       if (skuRule && skuRule.price) {
         price = new Decimal(skuRule.price);
       }
@@ -131,7 +133,7 @@ export class CourseGroupBuyService implements IMarketingStrategy {
 
       // 2. 团长优惠券
       if (rules.leaderDiscount) {
-        const discount = new Decimal(rules.leaderDiscount);
+        const discount = new Decimal(Number(rules.leaderDiscount));
         price = price.minus(discount);
       }
     }
@@ -165,7 +167,7 @@ export class CourseGroupBuyService implements IMarketingStrategy {
    * @description 将 JSON 规则转换为 C 端易读的文本
    */
   async getDisplayData(config: StorePlayConfig): Promise<any> {
-    const rules = config.rules as any;
+    const rules = config.rules as Record<string, unknown>;
 
     // A. 基础人数文案
     const countText = `最低${rules.minCount || 1}人 ~ 最多${rules.maxCount || 99}人`;
@@ -183,14 +185,14 @@ export class CourseGroupBuyService implements IMarketingStrategy {
     // C. 时间地点文案
     let scheduleText = '';
     if (rules.classStartTime && rules.classEndTime) {
-      const startDate = new Date(rules.classStartTime).toLocaleDateString('zh-CN');
-      const endDate = new Date(rules.classEndTime).toLocaleDateString('zh-CN');
+      const startDate = new Date(String(rules.classStartTime)).toLocaleDateString('zh-CN');
+      const endDate = new Date(String(rules.classEndTime)).toLocaleDateString('zh-CN');
       scheduleText = `上课时间：${startDate} ~ ${endDate}`;
     }
 
     const addressText = rules.classAddress ? `上课地址：${rules.classAddress}` : '';
-    const deadlineText = rules.joinDeadline 
-      ? `报名截止：${new Date(rules.joinDeadline).toLocaleString('zh-CN')}` 
+    const deadlineText = rules.joinDeadline
+      ? `报名截止：${new Date(String(rules.joinDeadline)).toLocaleString('zh-CN')}`
       : '长期有效';
 
     return {
@@ -206,21 +208,21 @@ export class CourseGroupBuyService implements IMarketingStrategy {
   // --- Private Logic ---
 
   private async updateProgress(instance: PlayInstance) {
-    const data = instance.instanceData as any;
-    const parentId = data.parentId || (data.isLeader ? instance.id : null);
+    const data = instance.instanceData as Record<string, unknown>;
+    const parentId = (data.parentId ?? (data.isLeader ? instance.id : null)) as string | null;
     if (!parentId) return;
 
     // 简单更新计数
     // 在真实业务中需加锁
-    const parent = await this.prisma.playInstance.findUnique({ where: { id: parentId } });
+    const parent = await this.prisma.playInstance.findUnique({ where: { id: parentId as string } });
     if (!parent) return;
 
-    const parentData = parent.instanceData as any;
-    const newCount = (parentData.currentCount || 0) + 1;
+    const parentData = parent.instanceData as Record<string, unknown>;
+    const newCount = Number(parentData.currentCount ?? 0) + 1;
 
     await this.prisma.playInstance.update({
-      where: { id: parentId },
-      data: { instanceData: { ...parentData, currentCount: newCount } },
+      where: { id: parentId as string },
+      data: { instanceData: { ...parentData, currentCount: newCount } as Prisma.InputJsonValue },
     });
 
     // 检查是否达到"最低开班人数" (minCount)
@@ -228,9 +230,9 @@ export class CourseGroupBuyService implements IMarketingStrategy {
     // 或者"满员自动成团"?
     // 假设: 只要达到 minCount，就可以流转为 SUCCESS (开班成功)
     const config = await this.prisma.storePlayConfig.findUnique({ where: { id: instance.configId } });
-    const rules = config?.rules as any;
+    const rules = config?.rules as Record<string, unknown>;
 
-    if (newCount >= (rules.minCount || 1)) {
+    if (newCount >= Number(rules.minCount ?? 1)) {
       // 触发成团 -> 这里简单处理，直接把相关人员全部 SUCCESS
       await this.finalizeGroup(parentId);
     }
@@ -257,21 +259,23 @@ export class CourseGroupBuyService implements IMarketingStrategy {
 
   private async grantCourseAsset(instance: PlayInstance) {
     const config = await this.prisma.storePlayConfig.findUnique({ where: { id: instance.configId } });
-    const rules = config?.rules as any;
+    const rules = config?.rules as Record<string, unknown>;
 
     // 发放次卡
-    if (rules.totalLessons) {
+    const totalLessons = Number(rules.totalLessons ?? 0);
+    if (totalLessons > 0) {
+      const validDays = Number(rules.validDays ?? 0);
       await this.assetService.grantAsset({
         tenantId: instance.tenantId,
         memberId: instance.memberId,
         instanceId: instance.id,
         configId: instance.configId,
-        assetName: `课程: ${config?.id} (${rules.totalLessons}课时)`,
+        assetName: `课程: ${config?.id ?? ''} (${totalLessons}课时)`,
         assetType: 'TIMES_CARD',
-        balance: new Decimal(rules.totalLessons),
-        initialBalance: new Decimal(rules.totalLessons),
+        balance: new Decimal(totalLessons),
+        initialBalance: new Decimal(totalLessons),
         status: 'UNUSED',
-        expiredTime: rules.validDays ? new Date(Date.now() + rules.validDays * 86400000) : null,
+        expireTime: validDays > 0 ? new Date(Date.now() + validDays * 86400000) : null,
       });
     }
   }
@@ -282,11 +286,11 @@ export class CourseGroupBuyService implements IMarketingStrategy {
    */
   private async createExtensionRecord(instance: PlayInstance) {
     const config = await this.prisma.storePlayConfig.findUnique({ where: { id: instance.configId } });
-    const rules = config?.rules as any;
-    const instanceData = instance.instanceData as any;
+    const rules = config?.rules as Record<string, unknown>;
+    const instanceData = instance.instanceData as Record<string, unknown>;
 
     // 确定团ID (团长用自己的ID，团员用parentId)
-    const groupId = instanceData.isLeader ? instance.id : instanceData.parentId;
+    const groupId = (instanceData.isLeader ? instance.id : instanceData.parentId) as string | undefined;
     if (!groupId) return;
 
     // 检查是否已存在扩展记录
@@ -297,18 +301,18 @@ export class CourseGroupBuyService implements IMarketingStrategy {
     const leaderInstance = await this.prisma.playInstance.findUnique({
       where: { id: groupId },
     });
-    const leaderData = leaderInstance?.instanceData as any;
+    const leaderData = leaderInstance?.instanceData as Record<string, unknown> | null;
 
     // 创建扩展记录
     await this.extensionRepo.create({
       tenantId: instance.tenantId,
-      totalLessons: rules.totalLessons || 0,
+      totalLessons: Number(rules.totalLessons ?? 0),
       completedLessons: 0,
-      classAddress: rules.classAddress || '',
-      classStartTime: rules.classStartTime ? new Date(rules.classStartTime) : null,
-      classEndTime: rules.classEndTime ? new Date(rules.classEndTime) : null,
-      leaderId: leaderData?.memberId || instance.memberId,
-      leaderDiscount: rules.leaderDiscount || 0,
+      classAddress: String(rules.classAddress ?? ''),
+      classStartTime: rules.classStartTime ? new Date(String(rules.classStartTime)) : null,
+      classEndTime: rules.classEndTime ? new Date(String(rules.classEndTime)) : null,
+      leaderId: String(leaderData?.memberId ?? instance.memberId),
+      leaderDiscount: Number(rules.leaderDiscount ?? 0),
       instance: {
         connect: { id: instance.id },
       },
@@ -324,7 +328,7 @@ export class CourseGroupBuyService implements IMarketingStrategy {
     const config = await this.prisma.storePlayConfig.findUnique({
       where: { id: leaderInstance.configId },
     });
-    const rules = config?.rules as any;
+    const rules = config?.rules as Record<string, unknown>;
 
     // 获取团长的扩展记录
     const extension = await this.extensionRepo.findByInstanceId(leaderInstance.id);
@@ -333,12 +337,20 @@ export class CourseGroupBuyService implements IMarketingStrategy {
     // 如果没有配置上课时间或总课时，则不创建排课
     if (!rules.classStartTime || !rules.totalLessons) return;
 
-    const startTime = new Date(rules.classStartTime);
-    const totalLessons = rules.totalLessons;
-    const dayLessons = rules.dayLessons || 1; // 每天上几节课
+    const startTime = new Date(String(rules.classStartTime));
+    const totalLessons = Number(rules.totalLessons);
+    const dayLessons = Number(rules.dayLessons ?? 1); // 每天上几节课
 
     // 生成排课记录
-    const schedules = [];
+    const schedules: Array<{
+      extensionId: string;
+      tenantId: string;
+      date: Date;
+      startTime: string;
+      endTime: string;
+      lessons: number;
+      status: string;
+    }> = [];
     const currentDate = new Date(startTime);
     let remainingLessons = totalLessons;
 

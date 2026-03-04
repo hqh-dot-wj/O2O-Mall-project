@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ProductType } from '@prisma/client';
 
 /**
  * 创建分类DTO
@@ -34,6 +35,12 @@ export class CreateCategoryDto {
   @Min(0, { message: '排序不能小于0' })
   @IsOptional()
   sort?: number;
+
+  /** 绑定商品类型：REAL=实物，SERVICE=服务，空表示不限 */
+  @ApiProperty({ description: '绑定商品类型', enum: ProductType, required: false })
+  @IsOptional()
+  @IsEnum(ProductType)
+  bindType?: ProductType;
 
   /** 关联的属性模板ID */
   @ApiProperty({ description: '属性模板ID', required: false, example: 1 })

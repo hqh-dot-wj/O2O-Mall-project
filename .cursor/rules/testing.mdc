@@ -37,10 +37,12 @@ alwaysApply: false
 |----------|----------|
 | **新增/修改 API 接口**（`service/api/**/*.ts`） | 补充或更新 `*.spec.ts`，覆盖各接口的 url/method/params；运行 `pnpm test -- src/service/api/对应模块` |
 | **新增/修改后端 Controller/Service** | 补充或更新 `*.spec.ts`；运行 `pnpm --filter @apps/backend test -- 对应路径` |
-| **新增页面或路由** | 若为关键路由，补充 E2E 冒烟（`e2e/*.spec.ts`）；运行 `pnpm --filter @apps/admin-web test:e2e` |
+| **新增页面或路由** | 若为关键路由，补充 E2E 冒烟（`e2e/*.spec.ts`）；**必须运行 E2E，不得跳过** |
 | **修改核心业务逻辑** | 确保相关单测/集成测通过；运行 `pnpm test` |
 
 **流程**：编写/修改代码 → 补充/更新对应测试 → 本地运行测试并通过 → 再提交 PR。
+
+**E2E 测试不可跳过**：涉及 admin-web 路由/页面的对齐或改动时，**必须运行 E2E 测试**（含登录流程与登录后路由访问）。前置条件：先启动 `pnpm dev` 与 backend，再执行 `pnpm --filter @apps/admin-web test:e2e`（或指定用例如 `pnpm test:e2e e2e/pms-routes.spec.ts`）。若 E2E 失败，需修复后再提交。
 
 ---
 

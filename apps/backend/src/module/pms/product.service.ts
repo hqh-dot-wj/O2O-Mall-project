@@ -159,7 +159,7 @@ export class PmsProductService {
    */
   async findAll(query: ListProductDto) {
     const { skip, take } = PaginationHelper.getPagination(query);
-    const { name, categoryId } = query;
+    const { name, categoryId, publishStatus } = query;
 
     // 构建查询条件
     const where: Prisma.PmsProductWhereInput = {};
@@ -168,6 +168,9 @@ export class PmsProductService {
     }
     if (categoryId) {
       where.categoryId = Number(categoryId);
+    }
+    if (publishStatus) {
+      where.publishStatus = publishStatus;
     }
 
     // 使用Repository查询

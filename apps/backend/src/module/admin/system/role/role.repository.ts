@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { DelFlagEnum } from 'src/common/enum/index';
 import { Prisma, SysRole } from '@prisma/client';
@@ -75,7 +75,7 @@ export class RoleRepository extends SoftDeleteRepository<
         userRoles: {
           some: { userId },
         },
-      } as any,
+      } as Prisma.SysRoleWhereInput,
     });
   }
 
@@ -87,7 +87,7 @@ export class RoleRepository extends SoftDeleteRepository<
     skip: number,
     take: number,
     orderBy?: Prisma.SysRoleOrderByWithRelationInput,
-  ): Promise<{ list: any[]; total: number }> {
+  ): Promise<{ list: (SysRole & { menuCount: number })[]; total: number }> {
     // 先查询角色列表
     const [roles, total] = await this.prisma.$transaction([
       this.prisma.sysRole.findMany({
@@ -113,7 +113,7 @@ export class RoleRepository extends SoftDeleteRepository<
 
     const menuCountMap = new Map(menuCounts.map((item) => [item.roleId, item._count.menuId]));
 
-    const list = roles.map((role: any) => ({
+    const list = roles.map((role: SysRole) => ({
       ...role,
       menuCount: menuCountMap.get(role.roleId) || 0,
     }));

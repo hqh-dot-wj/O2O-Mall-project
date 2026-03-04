@@ -1,3 +1,7 @@
+/**
+ * PMS 商品类型
+ * 优先使用 @libs/common-types 生成类型，SearchParams 使用 RequestParams 与后端 ListProductDto 对齐
+ */
 declare namespace Api {
   namespace Pms {
     type DistributionMode = import('@libs/common-types').components['schemas']['CreateSkuDto']['distMode'];
@@ -28,12 +32,11 @@ declare namespace Api {
 
     type ProductList = Common.PaginatingQueryRecord<Product>;
 
+    /** 与后端 ListProductDto 对齐，优先使用 RequestParams；publishStatus 在后端已支持，generate-types 后会自动包含 */
     type ProductSearchParams = CommonType.RecordNullable<
-      Pick<Product, 'name' | 'categoryId' | 'publishStatus'> & {
-        startTime?: string;
-        endTime?: string;
+      import('@libs/common-types').RequestParams<'/api/admin/pms/product/list', 'get'> & {
+        publishStatus?: PublishStatus;
       }
-    > &
-      Pick<Common.PaginatingCommonParams, 'pageNum' | 'pageSize'>;
+    >;
   }
 }

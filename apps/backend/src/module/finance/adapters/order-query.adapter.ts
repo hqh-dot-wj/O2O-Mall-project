@@ -100,11 +100,14 @@ export class OrderQueryAdapter extends OrderQueryPort {
     quantity: number;
     price: Decimal | number | string;
   }): OrderItemForCommission {
+    const price = this.toDecimal(item.price);
+    const totalAmount = price.mul(item.quantity);
     return {
       skuId: item.skuId,
       productId: item.productId || '',
       quantity: item.quantity,
-      price: this.toDecimal(item.price),
+      price,
+      totalAmount,
     };
   }
 

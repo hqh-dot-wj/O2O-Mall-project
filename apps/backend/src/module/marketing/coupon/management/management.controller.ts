@@ -33,7 +33,12 @@ export class CouponManagementController {
     @Query('pageNum') pageNum?: number,
     @Query('pageSize') pageSize?: number,
   ) {
-    const result = await this.userCouponRepo.findUserCouponsPage(memberId, status as any, pageNum, pageSize);
+    const result = await this.userCouponRepo.findUserCouponsPage(
+      memberId,
+      status as import('@prisma/client').UserCouponStatus | undefined,
+      pageNum,
+      pageSize,
+    );
     return Result.page(FormatDateFields(result.rows), result.total);
   }
 

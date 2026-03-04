@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PointsTransactionType } from '@prisma/client';
+import { Prisma, PointsTransactionType } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
@@ -57,7 +57,7 @@ export class PointsTaskService {
       maxCompletions: dto.maxCompletions,
       isEnabled: dto.isEnabled ?? true,
       createBy: userId,
-    } as any);
+    });
 
     this.logger.log(`创建积分任务: taskKey=${dto.taskKey}, reward=${dto.pointsReward}`);
 
@@ -80,7 +80,7 @@ export class PointsTaskService {
     const updated = await this.taskRepo.update(id, {
       ...dto,
       updateBy: userId,
-    } as any);
+    });
 
     this.logger.log(`更新积分任务: taskId=${id}`);
 
@@ -94,7 +94,7 @@ export class PointsTaskService {
    * @returns 任务列表
    */
   async findAll(query: PointsTaskQueryDto) {
-    const where: any = {};
+    const where: Prisma.MktPointsTaskWhereInput = {};
 
     if (query.isEnabled !== undefined) {
       where.isEnabled = query.isEnabled;
@@ -163,14 +163,15 @@ export class PointsTaskService {
     });
 
     // 记录完成
-    const completion = await this.completionRepo.create({
+    const completionData: Prisma.MktUserTaskCompletionCreateInput = {
       tenantId,
       memberId,
       taskId: task.id,
       completionTime: new Date(),
       pointsAwarded: task.pointsReward,
-      transactionId: pointsResult.data.id,
-    } as any);
+      transactionId: pointsResult.data?.id ?? '',
+    };
+    const completion = await this.completionRepo.create(completionData);
 
     const result = { completion, transaction: pointsResult.data };
 

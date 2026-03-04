@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Get,
   Post,
@@ -26,6 +26,7 @@ import {
   ResetPwdDto,
   UpdateProfileDto,
   UpdatePwdDto,
+  UpdateAuthRoleQueryDto,
 } from './dto/index';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Result } from 'src/common/response';
@@ -189,7 +190,7 @@ export class UserController {
   })
   @RequireRole('admin')
   @Put('authRole')
-  updateAuthRole(@Query() query: any) {
+  updateAuthRole(@Query() query: UpdateAuthRoleQueryDto) {
     return this.userService.updateAuthRole(query);
   }
 

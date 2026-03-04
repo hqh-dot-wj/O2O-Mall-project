@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PointsTransactionStatus } from '@prisma/client';
+import { PointsTransactionType, Prisma, PointsTransactionStatus } from '@prisma/client';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Result } from 'src/common/response/result';
 import { TenantContext } from 'src/common/tenant/tenant.context';
@@ -52,7 +52,7 @@ export class PointsAccountService {
         usedPoints: 0,
         expiredPoints: 0,
         version: 0,
-      } as any);
+      } as Prisma.MktPointsAccountCreateInput);
 
       this.logger.log(`创建积分账户: memberId=${memberId}`);
     }
@@ -100,7 +100,8 @@ export class PointsAccountService {
     let account = await this.accountRepo.findByMemberId(dto.memberId);
     if (!account) {
       const result = await this.getOrCreateAccount(dto.memberId);
-      account = result.data as any;
+      BusinessException.throwIfNull(result.data, PointsErrorMessages[PointsErrorCode.ACCOUNT_NOT_FOUND]);
+      account = result.data;
     }
 
     const balanceBefore = account.availablePoints;
@@ -110,7 +111,7 @@ export class PointsAccountService {
     await this.accountRepo.update(account.id, {
       totalPoints: { increment: dto.amount },
       availablePoints: { increment: dto.amount },
-    } as any);
+    });
 
     // 创建交易记录
     const transaction = await this.transactionRepo.create({
@@ -125,7 +126,7 @@ export class PointsAccountService {
       relatedId: dto.relatedId,
       remark: dto.remark,
       expireTime: dto.expireTime,
-    } as any);
+    });
 
     await this.eventEmitter.emitAsync({
       type: MarketingEventType.POINTS_EARNED,
@@ -197,7 +198,7 @@ export class PointsAccountService {
           relatedId: dto.relatedId,
           remark: dto.remark,
           expireTime: null,
-        } as any);
+        });
 
         await this.eventEmitter.emitAsync({
           type: MarketingEventType.POINTS_USED,
@@ -281,7 +282,7 @@ export class PointsAccountService {
           relatedId,
           remark: '冻结积分',
           expireTime: null,
-        } as any);
+        });
 
         this.logger.log(`冻结积分: memberId=${memberId}, amount=${amount}`);
 
@@ -351,7 +352,7 @@ export class PointsAccountService {
           relatedId,
           remark: '解冻积分',
           expireTime: null,
-        } as any);
+        });
 
         this.logger.log(`解冻积分: memberId=${memberId}, amount=${amount}`);
 
@@ -402,7 +403,7 @@ export class PointsAccountService {
    * 管理端：分页查询积分账户列表
    */
   async getAccountsForAdmin(query: { pageNum?: number; pageSize?: number; memberId?: string }) {
-    const where: any = {};
+    const where: Prisma.MktPointsAccountWhereInput = {};
     if (query.memberId) where.memberId = query.memberId;
     const { rows, total } = await this.accountRepo.findPage({
       where,
@@ -411,7 +412,7 @@ export class PointsAccountService {
       orderBy: 'createTime',
       order: 'desc',
     });
-    const memberIds = [...new Set((rows as any[]).map((r) => r.memberId))];
+    const memberIds = [...new Set(rows.map((r) => r.memberId))];
     const members =
       memberIds.length > 0
         ? await this.memberRepo.findMany({
@@ -420,7 +421,7 @@ export class PointsAccountService {
           })
         : [];
     const memberMap = new Map(members.map((m) => [m.memberId, m]));
-    const rowsWithMember = (rows as any[]).map((r) => ({
+    const rowsWithMember = rows.map((r) => ({
       ...FormatDateFields(r),
       member: memberMap.get(r.memberId) || null,
     }));
@@ -432,7 +433,7 @@ export class PointsAccountService {
    */
   async getTransactionsForAdmin(query: {
     memberId?: string;
-    type?: any;
+    type?: PointsTransactionType;
     startTime?: Date;
     endTime?: Date;
     pageNum?: number;

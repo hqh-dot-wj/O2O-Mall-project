@@ -1,4 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { PlayInstance, StorePlayConfig } from '@prisma/client';
 import { PlayInstanceRepository } from './instance.repository';
 import { CreatePlayInstanceDto, ListPlayInstanceDto } from './dto/instance.dto';
 import { Result } from 'src/common/response/result';
@@ -55,7 +56,9 @@ export class PlayInstanceService {
    * @param id 实例ID
    */
   async findOne(id: string) {
-    const instance = (await this.repo.findById(id, { include: { config: true } })) as any;
+    const instance = (await this.repo.findById(id, {
+      include: { config: true },
+    })) as (PlayInstance & { config: StorePlayConfig }) | null;
     BusinessException.throwIfNull(instance, '营销实例不存在');
 
     // ✅ 中文注释：策略模式应用 - 获取特定玩法需要的个性化展示数据（如拼团进度）
@@ -198,7 +201,7 @@ export class PlayInstanceService {
    * @param extraData 附加数据
    */
   @Transactional()
-  async transitStatus(id: string, nextStatus: PlayInstanceStatus, extraData?: any) {
+  async transitStatus(id: string, nextStatus: PlayInstanceStatus, extraData?: Record<string, unknown>) {
     // === 1. 使用分布式锁防止并发状态变更 ===
     return await this.idempotencyService.withStateLock(id, async () => {
       // === 2. 查询当前实例 ===
@@ -257,16 +260,17 @@ export class PlayInstanceService {
    * @param newStatus 新状态
    */
   private async emitStatusChangeEvent(
-    instance: any,
+    instance: PlayInstance,
     oldStatus: PlayInstanceStatus,
     newStatus: PlayInstanceStatus,
   ): Promise<void> {
+    const data = instance.instanceData as Record<string, unknown> | null;
     const payload = {
       oldStatus,
       newStatus,
       instanceData: instance.instanceData,
-      orderSn: (instance.instanceData as any)?.orderSn,
-      amount: (instance.instanceData as any)?.price,
+      orderSn: data?.orderSn,
+      amount: data?.price,
     };
 
     // 根据新状态发送对应的事件
@@ -317,7 +321,7 @@ export class PlayInstanceService {
    * 批量状态流转
    */
   @Transactional()
-  async batchTransitStatus(ids: string[], nextStatus: PlayInstanceStatus, extraData?: any) {
+  async batchTransitStatus(ids: string[], nextStatus: PlayInstanceStatus, extraData?: Record<string, unknown>) {
     if (ids.length === 0) {
       return;
     }
@@ -352,7 +356,7 @@ export class PlayInstanceService {
   /**
    * 自动分账入账 (Store Wallet) + 权益自动发放 (User Asset)
    */
-  private async creditToStore(instance: any) {
+  private async creditToStore(instance: PlayInstance) {
     // 1. 查询关联配置获取门店ID
     const config = await this.prisma.storePlayConfig.findUnique({
       where: { id: instance.configId },
@@ -360,7 +364,8 @@ export class PlayInstanceService {
     if (!config || !config.storeId) return;
 
     // === A. 资金入账 (Wallet) ===
-    const amount = new Decimal((instance.instanceData as any)?.price || 0);
+    const data = instance.instanceData as Record<string, unknown> | null;
+    const amount = new Decimal(Number(data?.price ?? 0));
     if (amount.gt(0)) {
       // 获取平台费率配置
       const feeRateStr = await this.configService.getSystemConfigValue('marketing.fee_rate');
@@ -385,21 +390,21 @@ export class PlayInstanceService {
 
     // === B. 权益发放 (Asset) ===
     // 假设 rules: { giftAssetId: 'coupon_template_123', giftCount: 1 }
-    const rules = config.rules as any;
+    const rules = config.rules as Record<string, unknown> | null;
     if (rules?.giftAssetId) {
       const giftAssetType =
-        typeof rules.giftAssetType === 'string' && rules.giftAssetType.trim().length > 0
-          ? rules.giftAssetType
+        typeof rules.giftAssetType === 'string' && String(rules.giftAssetType).trim().length > 0
+          ? String(rules.giftAssetType)
           : 'VOUCHER';
       await this.assetService.grantAsset({
         tenantId: instance.tenantId,
         memberId: instance.memberId,
         instanceId: instance.id,
         configId: instance.configId,
-        assetName: rules.giftAssetName || '活动赠送权益',
+        assetName: String(rules.giftAssetName ?? '活动赠送权益'),
         assetType: giftAssetType,
-        balance: new Decimal(rules.giftCount || 1),
-        initialBalance: new Decimal(rules.giftCount || 1),
+        balance: new Decimal(Number(rules.giftCount ?? 1)),
+        initialBalance: new Decimal(Number(rules.giftCount ?? 1)),
         status: 'UNUSED',
       });
     }

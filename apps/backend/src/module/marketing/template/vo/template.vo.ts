@@ -14,7 +14,7 @@ export class PlayTemplateVo {
   unitName: string;
 
   @ApiProperty({ description: '规则Schema配置' })
-  ruleSchema: any;
+  ruleSchema: Record<string, unknown>;
 
   @ApiProperty({ description: '前端组件ID', required: false })
   uiComponentId: string;

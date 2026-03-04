@@ -27,8 +27,8 @@ export class RegionService implements OnModuleInit {
   }
 
   async seedRegions() {
-    const locked = await this.redisService.tryLock(this.seedLockKey, this.seedLockTtlMs);
-    if (!locked) {
+    const lockToken = await this.redisService.tryLock(this.seedLockKey, this.seedLockTtlMs);
+    if (!lockToken) {
       this.logger.log('Region seed lock is held by another instance, skip seeding.');
       return;
     }
@@ -81,7 +81,7 @@ export class RegionService implements OnModuleInit {
       this.logger.log('Region seeding completed.');
     } finally {
       try {
-        await this.redisService.unlock(this.seedLockKey);
+        await this.redisService.unlock(this.seedLockKey, lockToken);
       } catch (error) {
         this.logger.warn(`Region seed lock release failed: ${getErrorMessage(error)}`);
       }

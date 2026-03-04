@@ -128,10 +128,10 @@ export class CouponTemplateService {
     const hasDistributed = await this.repo.hasDistributed(id);
     BusinessException.throwIf(hasDistributed, CouponErrorMessages[CouponErrorCode.TEMPLATE_CANNOT_MODIFY]);
 
-    // 3. 如果更新了配置，需要验证
+    // 3. 如果更新了配置，需要验证（mergedDto 含 template 与 dto 的并集，满足校验所需字段）
     if (dto.type || dto.discountAmount || dto.discountPercent || dto.validityType) {
-      const mergedDto = { ...template, ...dto };
-      this.validateTemplateConfig(mergedDto as any);
+      const mergedDto = { ...template, ...dto } as UpdateCouponTemplateDto;
+      this.validateTemplateConfig(mergedDto);
     }
 
     // 4. 执行更新
@@ -186,7 +186,7 @@ export class CouponTemplateService {
    * @param dto 模板数据
    * @throws BusinessException 验证失败时抛出异常
    */
-  private validateTemplateConfig(dto: CreateCouponTemplateDto | any): void {
+  private validateTemplateConfig(dto: CreateCouponTemplateDto | UpdateCouponTemplateDto): void {
     // 满减券验证
     if (dto.type === 'DISCOUNT') {
       BusinessException.throwIf(

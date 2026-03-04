@@ -334,6 +334,7 @@ const local: App.I18n.Schema = {
     'store_finance_distribution-config': '分销配置',
     store_order: '订单中心',
     store_order_list: '订单列表',
+    store_order_dispatch: '待派单',
     store_order_detail: '订单详情',
     store_distribution: '分销管理',
     store_distribution_activity: '营销活动配置',

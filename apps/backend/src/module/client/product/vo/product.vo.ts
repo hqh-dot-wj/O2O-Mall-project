@@ -53,6 +53,9 @@ export class ClientProductDetailVo extends ClientProductVo {
 
   @ApiProperty({ description: 'SKU列表' })
   skus?: ClientSkuVo[];
+
+  @ApiProperty({ description: '营销活动列表', required: false })
+  marketingActivities?: Array<{ configId: string; type: string; rules: unknown; displayData: Record<string, unknown>; priority: number }>;
 }
 
 /**

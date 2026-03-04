@@ -1,3 +1,7 @@
+/**
+ * PMS 分类类型
+ * 全部来自 @libs/common-types，CreateCategoryDto 已含 bindType（需 pnpm generate-types）
+ */
 declare namespace Api {
   namespace Pms {
     type Category = import('@libs/common-types').components['schemas']['CategoryVo'];
@@ -6,8 +10,9 @@ declare namespace Api {
 
     type CategoryList = Common.PaginatingQueryRecord<Category>;
 
+    /** 与后端 ListCategoryDto 对齐 */
     type CategorySearchParams = CommonType.RecordNullable<
-      Pick<Category, 'name' | 'parentId'> & Api.Common.CommonSearchParams
+      import('@libs/common-types').RequestParams<'/api/admin/pms/category/list', 'get'>
     >;
 
     type CategoryOperateParams = import('@libs/common-types').components['schemas']['CreateCategoryDto'] & {

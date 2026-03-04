@@ -25,7 +25,7 @@ export class StorePlayConfigDto {
 
   @ApiProperty({ description: '营销规则配置' })
   @IsNotEmpty()
-  rules: Record<string, any>;
+  rules: Record<string, unknown>;
 
   @ApiProperty({ description: '库存策略 (自动计算)', enum: MarketingStockMode, required: false })
   @IsEnum(MarketingStockMode)
@@ -63,11 +63,11 @@ export class UpdateStorePlayConfigDto {
 
   @ApiProperty({ description: '营销规则配置', required: false })
   @IsOptional()
-  rules?: Record<string, any>;
+  rules?: Record<string, unknown>;
 
   @ApiProperty({ description: '规则历史版本', required: false })
   @IsOptional()
-  rulesHistory?: any[];
+  rulesHistory?: Array<{ version?: number; rules?: unknown; operator?: string }>;
 
   @ApiProperty({ description: '库存策略', enum: MarketingStockMode, required: false })
   @IsEnum(MarketingStockMode)

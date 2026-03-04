@@ -21,13 +21,13 @@ export class PlayInstanceVo {
   orderSn?: string;
 
   @ApiProperty({ description: '实例动态数据' })
-  instanceData: any;
+  instanceData: Record<string, unknown>;
 
   @ApiProperty({ description: '状态', enum: PlayInstanceStatus })
   status: PlayInstanceStatus;
 
   @ApiProperty({ description: '前端显示数据 (增强字段)' })
-  displayData?: any;
+  displayData?: Record<string, unknown>;
 
   @ApiProperty({ description: '创建时间' })
   createTime: string;

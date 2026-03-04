@@ -53,7 +53,7 @@ export class PlayInstanceController {
   async updateStatus(
     @Param('id') id: string,
     @Body('status') status: PlayInstanceStatus,
-    @Body('extraData') extraData?: any,
+    @Body('extraData') extraData?: Record<string, unknown>,
   ) {
     return await this.service.transitStatus(id, status, extraData);
   }

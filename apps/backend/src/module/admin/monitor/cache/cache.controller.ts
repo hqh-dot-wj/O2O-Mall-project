@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CacheService } from './cache.service';
 import { Api } from 'src/common/decorators/api.decorator';
@@ -51,8 +51,8 @@ export class CacheController {
     ],
   })
   @Get('/getValue/:cacheName/:cacheKey')
-  getValue(@Param() params: string[]) {
-    return this.cacheService.getValue(params);
+  getValue(@Param('cacheName') cacheName: string, @Param('cacheKey') cacheKey: string) {
+    return this.cacheService.getValue({ cacheName, cacheKey });
   }
 
   @Api({

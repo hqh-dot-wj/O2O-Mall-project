@@ -1,4 +1,4 @@
-﻿import { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import { AppConfigService } from 'src/config/app-config.service';
 import { AuthGuard } from '@nestjs/passport';
 import { pathToRegexp } from 'path-to-regexp';
@@ -8,7 +8,7 @@ import { UserService } from 'src/module/admin/system/user/user.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  private globalWhiteList: any[] = [];
+  private globalWhiteList: Array<{ method?: string; path: string }> = [];
   constructor(
     private readonly reflector: Reflector,
     @Inject(UserService)

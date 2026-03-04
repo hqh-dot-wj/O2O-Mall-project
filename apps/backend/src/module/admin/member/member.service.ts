@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberVo } from './vo/member.vo';
 import { Result } from 'src/common/response';
 import { TenantContext } from 'src/common/tenant/tenant.context';
-import { Prisma } from '@prisma/client';
+import { Prisma, UmsMember } from '@prisma/client';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { BusinessException } from 'src/common/exceptions';
 import { ResponseCode } from 'src/common/response/response.interface';
@@ -75,7 +75,7 @@ export class MemberService {
     if (list.length === 0) return Result.page([], total);
 
     // 2. 批量获取关联数据 (子服务处理)
-    const memberIds = list.map((m: any) => m.memberId);
+    const memberIds = list.map((m: UmsMember) => m.memberId);
     const [referralInfo, stats, tenantMap] = await Promise.all([
       this.memberReferralService.getBatchReferralInfo(list),
       this.memberStatsService.getBatchStats(memberIds),
@@ -83,7 +83,7 @@ export class MemberService {
     ]);
 
     // 3. 组装 VO (View Object)
-    const rows: MemberVo[] = list.map((item: any) => {
+    const rows: MemberVo[] = list.map((item: UmsMember) => {
       const parent = item.parentId ? referralInfo.parentMap.get(item.parentId) : null;
       const indirectParentId = item.indirectParentId || parent?.parentId;
       const indirectParent = indirectParentId ? referralInfo.indirectParentMap.get(indirectParentId) : null;
@@ -165,7 +165,7 @@ export class MemberService {
   /**
    * 获取租户 ID 到名称的映射
    */
-  private async getTenantMap(list: any[]) {
+  private async getTenantMap(list: Array<{ tenantId: string }>) {
     const tenantIds = [...new Set(list.map((item) => item.tenantId).filter((id) => id !== '000000'))];
     const tenants = await this.prisma.sysTenant.findMany({
       where: { tenantId: { in: tenantIds } },
@@ -216,7 +216,7 @@ export class MemberService {
     await this.memberRepo.update(memberId, {
       parentId: referrerId || null,
       indirectParentId: indirectParentId || null,
-    } as any);
+    } as Prisma.UmsMemberUpdateInput);
 
     return Result.ok(null, '推荐关系更新成功');
   }
@@ -257,7 +257,8 @@ export class MemberService {
     const total = result.data.total;
     const pageNumRes = result.data.pageNum ?? 1;
     const pageSizeRes = result.data.pageSize ?? 10;
-    const rows = (result.data.rows as any[]).map((row) => ({
+    type PointRow = { id: string; memberId: string; amount: number; balanceAfter: number; type: string; remark?: string; createTime: Date };
+    const rows = ((result.data.rows ?? []) as PointRow[]).map((row) => ({
       id: row.id,
       memberId: row.memberId,
       changePoints: row.amount,
@@ -301,7 +302,10 @@ export class MemberService {
    */
   async export(res: Response, query: ListMemberDto) {
     // 不分页，查全量（受 where 条件约束）
-    const exportQuery = { ...query, skip: 0, take: 10000 };
+    const exportQuery = Object.assign(new ListMemberDto(), query, {
+      pageNum: 1,
+      pageSize: 10000,
+    });
     const result = await this.list(exportQuery);
     const rows = result.data?.rows ?? [];
     return this.memberExportService.export(res, rows);

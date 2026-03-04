@@ -33,8 +33,8 @@ import type {
   Dashboard as DashboardT,
   DistributorStats as DistributorStatsT,
   OrderStats as OrderStatsT,
-  StoreCommissionPreviewDto as StoreCommissionPreviewDtoT,
-  StoreCommissionPreview as StoreCommissionPreviewT,
+  CommissionPreviewDto as CommissionPreviewDtoT,
+  CommissionPreviewVo as CommissionPreviewVoT,
   ProductConfig as ProductConfigT,
   CreateProductConfigDto as CreateProductConfigDtoT,
   UpdateProductConfigDto as UpdateProductConfigDtoT,
@@ -85,8 +85,8 @@ declare namespace Api {
     type Dashboard = DashboardT;
     type DistributorStats = DistributorStatsT;
     type OrderStats = OrderStatsT;
-    type CommissionPreviewDto = StoreCommissionPreviewDtoT;
-    type CommissionPreview = StoreCommissionPreviewT;
+    type CommissionPreviewDto = CommissionPreviewDtoT;
+    type CommissionPreview = CommissionPreviewVoT;
 
     type ProductConfig = ProductConfigT;
     type CreateProductConfigDto = CreateProductConfigDtoT;

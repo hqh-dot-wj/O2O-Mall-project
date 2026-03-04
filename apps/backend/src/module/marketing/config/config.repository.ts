@@ -41,6 +41,6 @@ export class StorePlayConfigRepository extends SoftDeleteRepository<
 
   // 快捷上下架
   async updateStatus(id: string, status: PublishStatus) {
-    return this.update(id, { status } as any);
+    return this.update(id, { status } as Prisma.StorePlayConfigUpdateInput);
   }
 }

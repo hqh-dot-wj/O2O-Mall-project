@@ -1,5 +1,5 @@
 ﻿﻿import { Controller, Get, Post, Body, Query, Request, Put, Res, HttpCode, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { DictService } from './dict.service';
 import {
   CreateDictTypeDto,
@@ -213,8 +213,8 @@ export class DictController {
   @Api({
     summary: '字典-批量导入',
     description: '批量导入字典类型及数据，支持跳过已存在的字典类型和标签',
-    body: [ImportDictDto],
   })
+  @ApiBody({ type: [ImportDictDto] })
   @RequirePermission('system:dict:add')
   @Operlog({ businessType: BusinessType.IMPORT })
   @HttpCode(200)

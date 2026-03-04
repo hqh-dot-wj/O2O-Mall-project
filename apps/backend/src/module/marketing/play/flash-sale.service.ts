@@ -28,7 +28,7 @@ export class FlashSaleService implements IMarketingStrategy {
   /**
    * 1.1 配置校验
    */
-  async validateConfig(dto: any): Promise<void> {
+  async validateConfig(dto: { rules?: unknown; stockMode?: string }): Promise<void> {
     const rules = dto.rules;
     BusinessException.throwIf(!rules, '规则配置不能为空');
 
@@ -63,15 +63,15 @@ export class FlashSaleService implements IMarketingStrategy {
   /**
    * 1. 准入校验
    */
-  async validateJoin(config: StorePlayConfig, memberId: string, params: any = {}): Promise<void> {
-    const rules = config.rules as any;
+  async validateJoin(config: StorePlayConfig, memberId: string, params: Record<string, unknown> = {}): Promise<void> {
+    const rules = config.rules as Record<string, unknown>;
     const joinDto = plainToInstance(FlashSaleJoinDto, params);
     const quantity = joinDto.quantity || 1;
 
     // A. 时间校验：必须在秒杀时间段内
     const now = Date.now();
-    const startTime = new Date(rules.startTime).getTime();
-    const endTime = new Date(rules.endTime).getTime();
+    const startTime = new Date(String(rules.startTime)).getTime();
+    const endTime = new Date(String(rules.endTime)).getTime();
 
     if (now < startTime) {
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, '秒杀尚未开始');
@@ -83,9 +83,9 @@ export class FlashSaleService implements IMarketingStrategy {
 
     // B. 限购校验：检查用户已购买数量
     const userPurchased = await this.getUserPurchasedCount(config.id, memberId);
-    const limitPerUser = rules.limitPerUser || 1;
+    const limitPerUser = Number(rules.limitPerUser) || 1;
 
-    if (userPurchased + quantity > limitPerUser) {
+    if (userPurchased + Number(quantity) > limitPerUser) {
       throw new BusinessException(
         ResponseCode.BUSINESS_ERROR,
         `每人限购${limitPerUser}件，您已购买${userPurchased}件`,
@@ -99,12 +99,12 @@ export class FlashSaleService implements IMarketingStrategy {
   /**
    * 2. 计算价格
    */
-  async calculatePrice(config: StorePlayConfig, params: any): Promise<Decimal> {
-    const rules = config.rules as any;
-    const quantity = params.quantity || 1;
-    
+  async calculatePrice(config: StorePlayConfig, params: Record<string, unknown>): Promise<Decimal> {
+    const rules = config.rules as Record<string, unknown>;
+    const quantity = Number(params.quantity) || 1;
+
     // 秒杀价格固定，不做动态计算
-    const flashPrice = new Decimal(rules.flashPrice || 0);
+    const flashPrice = new Decimal(Number(rules.flashPrice) || 0);
     return flashPrice.mul(quantity);
   }
 
@@ -128,11 +128,11 @@ export class FlashSaleService implements IMarketingStrategy {
   /**
    * 5. 前端展示增强数据
    */
-  async getDisplayData(config: StorePlayConfig): Promise<any> {
-    const rules = config.rules as any;
+  async getDisplayData(config: StorePlayConfig): Promise<Record<string, unknown>> {
+    const rules = config.rules as Record<string, unknown>;
     const now = Date.now();
-    const startTime = new Date(rules.startTime).getTime();
-    const endTime = new Date(rules.endTime).getTime();
+    const startTime = new Date(String(rules.startTime)).getTime();
+    const endTime = new Date(String(rules.endTime)).getTime();
 
     // 计算秒杀状态
     let status: 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED' = 'NOT_STARTED';
@@ -144,7 +144,7 @@ export class FlashSaleService implements IMarketingStrategy {
 
     // 获取剩余库存（从 Redis 缓存读取）
     const stockKey = `mkt:stock:${config.id}`;
-    const remainingStock = await this.prisma.$queryRaw<any>`
+    const remainingStock = await this.prisma.$queryRaw<unknown[]>`
       SELECT 1
     `.then(() => rules.totalStock); // 简化处理，实际应该从 Redis 读取
 
@@ -176,8 +176,8 @@ export class FlashSaleService implements IMarketingStrategy {
 
     // 累加购买数量
     return instances.reduce((sum, instance) => {
-      const data = instance.instanceData as any;
-      return sum + (data.quantity || 1);
+      const data = instance.instanceData as Record<string, unknown> | null;
+      return sum + Number((data?.quantity ?? 1));
     }, 0);
   }
 }

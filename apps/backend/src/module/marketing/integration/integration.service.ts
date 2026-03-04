@@ -17,6 +17,7 @@ import { getErrorMessage, getErrorStack } from 'src/common/utils/error';
 import { ORDER_SERVICE, OrderServiceContract } from 'src/module/client/order/order-service.token';
 import { MarketingEventEmitter } from '../events/marketing-event.emitter';
 import { MarketingEventType } from '../events/marketing-event.types';
+import { OrderForMarketing } from './types/order-for-marketing.type';
 
 /**
  * 订单集成服务
@@ -251,7 +252,7 @@ export class OrderIntegrationService {
             skuId: item.skuId,
             price: item.price,
             quantity: item.quantity,
-            pointsRatio: item.pointsRatio,
+            pointsRatio: item.pointsRatio ?? 100,
           })),
           baseAmount,
           order.totalAmount,
@@ -478,8 +479,8 @@ export class OrderIntegrationService {
     handler: () => Promise<void>,
   ): Promise<void> {
     const lockKey = `lock:order:marketing:${eventType}:${orderId}`;
-    const lockAcquired = await this.redisService.tryLock(lockKey, this.lockTtlMs);
-    if (!lockAcquired) {
+    const lockToken = await this.redisService.tryLock(lockKey, this.lockTtlMs);
+    if (!lockToken) {
       this.logger.warn(`订单事件处理锁未获取，已跳过: event=${eventType}, orderId=${orderId}`);
       return;
     }
@@ -503,7 +504,7 @@ export class OrderIntegrationService {
       }
     } finally {
       try {
-        await this.redisService.unlock(lockKey);
+        await this.redisService.unlock(lockKey, lockToken);
       } catch (error) {
         this.logger.warn(
           `订单事件处理释放锁失败: event=${eventType}, orderId=${orderId}, error=${getErrorMessage(error)}`,

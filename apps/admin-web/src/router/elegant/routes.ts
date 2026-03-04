@@ -421,94 +421,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
-        name: 'store_finance',
-        path: '/store/finance',
-        component: 'view.store_finance',
-        meta: {
-          title: 'store_finance',
-          i18nKey: 'route.store_finance',
-          icon: 'mdi:currency-usd'
-        },
-        children: [
-          {
-            name: 'store_finance_commission',
-            path: '/store/finance/commission',
-            component: 'view.store_finance_commission',
-            meta: {
-              title: 'store_finance_commission',
-              i18nKey: 'route.store_finance_commission'
-            }
-          },
-          {
-            name: 'store_finance_dashboard',
-            path: '/store/finance/dashboard',
-            component: 'view.store_finance_dashboard',
-            meta: {
-              title: 'store_finance_dashboard',
-              i18nKey: 'route.store_finance_dashboard'
-            }
-          },
-          {
-            name: 'store_finance_distribution-config',
-            path: '/store/finance/distribution-config',
-            component: 'view.store_finance_distribution-config',
-            meta: {
-              title: 'store_finance_distribution-config',
-              i18nKey: 'route.store_finance_distribution-config'
-            }
-          },
-          {
-            name: 'store_finance_ledger',
-            path: '/store/finance/ledger',
-            component: 'view.store_finance_ledger',
-            meta: {
-              title: 'store_finance_ledger',
-              i18nKey: 'route.store_finance_ledger'
-            }
-          },
-          {
-            name: 'store_finance_withdrawal',
-            path: '/store/finance/withdrawal',
-            component: 'view.store_finance_withdrawal',
-            meta: {
-              title: 'store_finance_withdrawal',
-              i18nKey: 'route.store_finance_withdrawal'
-            }
-          }
-        ]
-      },
-      {
-        name: 'store_order',
-        path: '/store/order',
-        component: 'view.store_order',
-        meta: {
-          title: 'store_order',
-          i18nKey: 'route.store_order',
-          icon: 'mdi:cart-outline'
-        },
-        children: [
-          {
-            name: 'store_order_detail',
-            path: '/store/order/detail',
-            component: 'view.store_order_detail',
-            meta: {
-              title: 'store_order_detail',
-              i18nKey: 'route.store_order_detail',
-              hideInMenu: true
-            }
-          },
-          {
-            name: 'store_order_list',
-            path: '/store/order/list',
-            component: 'view.store_order_list',
-            meta: {
-              title: 'store_order_list',
-              i18nKey: 'route.store_order_list'
-            }
-          }
-        ]
-      },
-      {
         name: 'store_distribution',
         path: '/store/distribution',
         component: 'view.store_distribution',
@@ -587,6 +499,103 @@ export const generatedRoutes: GeneratedRoute[] = [
             meta: {
               title: 'store_distribution_distribution-product',
               i18nKey: 'route.store_distribution_distribution-product'
+            }
+          }
+        ]
+      },
+      {
+        name: 'store_finance',
+        path: '/store/finance',
+        component: 'view.store_finance',
+        meta: {
+          title: 'store_finance',
+          i18nKey: 'route.store_finance',
+          icon: 'mdi:currency-usd'
+        },
+        children: [
+          {
+            name: 'store_finance_commission',
+            path: '/store/finance/commission',
+            component: 'view.store_finance_commission',
+            meta: {
+              title: 'store_finance_commission',
+              i18nKey: 'route.store_finance_commission'
+            }
+          },
+          {
+            name: 'store_finance_dashboard',
+            path: '/store/finance/dashboard',
+            component: 'view.store_finance_dashboard',
+            meta: {
+              title: 'store_finance_dashboard',
+              i18nKey: 'route.store_finance_dashboard'
+            }
+          },
+          {
+            name: 'store_finance_distribution-config',
+            path: '/store/finance/distribution-config',
+            component: 'view.store_finance_distribution-config',
+            meta: {
+              title: 'store_finance_distribution-config',
+              i18nKey: 'route.store_finance_distribution-config'
+            }
+          },
+          {
+            name: 'store_finance_ledger',
+            path: '/store/finance/ledger',
+            component: 'view.store_finance_ledger',
+            meta: {
+              title: 'store_finance_ledger',
+              i18nKey: 'route.store_finance_ledger'
+            }
+          },
+          {
+            name: 'store_finance_withdrawal',
+            path: '/store/finance/withdrawal',
+            component: 'view.store_finance_withdrawal',
+            meta: {
+              title: 'store_finance_withdrawal',
+              i18nKey: 'route.store_finance_withdrawal'
+            }
+          }
+        ]
+      },
+      {
+        name: 'store_order',
+        path: '/store/order',
+        component: 'view.store_order',
+        meta: {
+          title: 'store_order',
+          i18nKey: 'route.store_order',
+          icon: 'mdi:cart-outline'
+        },
+        children: [
+          {
+            name: 'store_order_detail',
+            path: '/store/order/detail',
+            component: 'view.store_order_detail',
+            meta: {
+              title: 'store_order_detail',
+              i18nKey: 'route.store_order_detail',
+              hideInMenu: true
+            }
+          },
+          {
+            name: 'store_order_dispatch',
+            path: '/store/order/dispatch',
+            component: 'view.store_order_dispatch',
+            meta: {
+              title: 'store_order_dispatch',
+              i18nKey: 'route.store_order_dispatch'
+            }
+          },
+          {
+            name: 'store_order_list',
+            path: '/store/order/list',
+            component: 'view.store_order_list',
+            meta: {
+              title: 'store_order_list',
+              i18nKey: 'route.store_order_list'
             }
           }
         ]

@@ -19,8 +19,16 @@ const { formRef, validate, restoreValidation } = useNaiveForm();
 
 const model = defineModel<Api.Pms.ProductSearchParams>('model', { required: true });
 
-// Assuming 'pms_publish_status' is a valid dict key, if not we will fix later
 const { options: publishStatusOptions } = useDict('pms_publish_status', true);
+// 兜底：字典未配置时使用与后端 PublishStatus 枚举一致的值
+const publishOptions = computed(() =>
+  publishStatusOptions.value?.length
+    ? publishStatusOptions.value
+    : [
+        { label: '上架', value: 'ON_SHELF' },
+        { label: '下架', value: 'OFF_SHELF' }
+      ]
+);
 
 async function reset() {
   await restoreValidation();
@@ -46,7 +54,7 @@ async function search() {
               <NSelect
                 v-model:value="model.publishStatus"
                 placeholder="请选择发布状态"
-                :options="publishStatusOptions"
+                :options="publishOptions"
                 clearable
               />
             </NFormItemGi>

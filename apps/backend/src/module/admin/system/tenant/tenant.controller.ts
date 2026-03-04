@@ -1,5 +1,6 @@
-﻿import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
 import { User } from 'src/common/decorators/user.decorator';
+import type { UserDto } from 'src/module/admin/system/user/user.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto, UpdateTenantDto, ListTenantDto, SyncTenantPackageDto } from './dto/index';
@@ -112,7 +113,7 @@ export class TenantController {
   })
   @RequirePermission('system:tenant:dynamic')
   @Get('/dynamic/clear')
-  clearDynamicTenant(@User() user: any) {
+  clearDynamicTenant(@User() user: UserDto) {
     return this.tenantService.clearDynamicTenant(user.user);
   }
 
@@ -122,7 +123,7 @@ export class TenantController {
   })
   @RequirePermission('system:tenant:dynamic')
   @Get('/dynamic/:tenantId')
-  dynamicTenant(@Param('tenantId') tenantId: string, @User() user: any) {
+  dynamicTenant(@Param('tenantId') tenantId: string, @User() user: UserDto) {
     return this.tenantService.dynamicTenant(tenantId, user.user);
   }
 

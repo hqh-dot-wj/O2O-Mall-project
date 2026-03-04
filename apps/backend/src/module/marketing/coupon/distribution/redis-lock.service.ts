@@ -33,13 +33,13 @@ export class RedisLockService {
     retryDelay: number = 100,
   ): Promise<T> {
     let retries = 0;
-    let lockAcquired = false;
+    let lockToken: string | null = null;
 
     // 尝试获取锁
-    while (retries < maxRetries && !lockAcquired) {
-      lockAcquired = await this.redis.tryLock(lockKey, ttl);
+    while (retries < maxRetries && !lockToken) {
+      lockToken = await this.redis.tryLock(lockKey, ttl);
 
-      if (!lockAcquired) {
+      if (!lockToken) {
         retries++;
         if (retries < maxRetries) {
           // 等待一段时间后重试
@@ -49,7 +49,7 @@ export class RedisLockService {
     }
 
     // 如果获取锁失败，抛出异常
-    if (!lockAcquired) {
+    if (!lockToken) {
       this.logger.warn(`Failed to acquire lock: ${lockKey} after ${maxRetries} retries`);
       throw new BusinessException(
         ResponseCode.BUSINESS_ERROR,
@@ -63,7 +63,7 @@ export class RedisLockService {
       return await callback();
     } finally {
       // 释放锁
-      await this.redis.unlock(lockKey);
+      await this.redis.unlock(lockKey, lockToken);
       this.logger.debug(`Lock released: ${lockKey}`);
     }
   }
@@ -73,9 +73,9 @@ export class RedisLockService {
    * 
    * @param lockKey 锁键
    * @param ttl 锁过期时间（毫秒）
-   * @returns 是否获取成功
+   * @returns 锁令牌（成功）或 null（失败）
    */
-  async tryLock(lockKey: string, ttl: number = 10000): Promise<boolean> {
+  async tryLock(lockKey: string, ttl: number = 10000): Promise<string | null> {
     return await this.redis.tryLock(lockKey, ttl);
   }
 
@@ -83,9 +83,10 @@ export class RedisLockService {
    * 释放锁
    * 
    * @param lockKey 锁键
+   * @param token 锁令牌
    */
-  async unlock(lockKey: string): Promise<void> {
-    await this.redis.unlock(lockKey);
+  async unlock(lockKey: string, token: string): Promise<void> {
+    await this.redis.unlock(lockKey, token);
   }
 
   /**

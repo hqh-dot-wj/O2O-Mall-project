@@ -3,6 +3,7 @@
 import { JobController } from './job.controller';
 import { JobService } from './job.service';
 import { Result } from 'src/common/response';
+import { StatusEnum } from 'src/common/enum';
 
 describe('JobController', () => {
   let controller: JobController;
@@ -73,7 +74,7 @@ describe('JobController', () => {
       const result = await controller.changeStatus(1, '0', 'admin');
 
       expect(result).toBe(expected);
-      expect(mockJobService.changeStatus).toHaveBeenCalledWith(1, '0', 'admin');
+      expect(mockJobService.changeStatus).toHaveBeenCalledWith(1, StatusEnum.NORMAL, 'admin');
     });
   });
 

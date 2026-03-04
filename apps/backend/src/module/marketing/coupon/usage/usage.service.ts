@@ -47,11 +47,22 @@ export class CouponUsageService {
       categoryIds: orderContext?.categoryIds,
     });
 
-    // 如果提供了订单上下文，进一步过滤
+    // 如果提供了订单上下文，进一步过滤（findAvailableCoupons 含 include: { template }）
     if (orderContext) {
-      const availableCoupons = coupons.filter((coupon) => {
-        return this.isApplicableToOrder(coupon, orderContext);
-      });
+      const couponsWithTemplate = coupons as Array<{
+        minOrderAmount: string | number | Decimal;
+        template?: { applicableProducts?: string[]; applicableCategories?: number[] };
+      }>;
+      const availableCoupons = coupons.filter((_, i) =>
+        this.isApplicableToOrder(
+          {
+            minOrderAmount: couponsWithTemplate[i].minOrderAmount,
+            applicableProducts: couponsWithTemplate[i].template?.applicableProducts,
+            applicableCategories: couponsWithTemplate[i].template?.applicableCategories,
+          },
+          orderContext,
+        ),
+      );
       return Result.ok(FormatDateFields(availableCoupons));
     }
 
@@ -66,7 +77,9 @@ export class CouponUsageService {
    * @returns 验证结果
    */
   async validateCoupon(userCouponId: string, orderContext: OrderContext) {
-    const coupon = await this.userCouponRepo.findById(userCouponId);
+    const coupon = await this.userCouponRepo.findById(userCouponId, {
+      include: { template: true },
+    });
     BusinessException.throwIfNull(coupon, CouponErrorMessages[CouponErrorCode.USER_COUPON_NOT_FOUND]);
 
     // 验证归属
@@ -96,7 +109,17 @@ export class CouponUsageService {
     );
 
     // 验证适用商品（如果有限制）
-    if (!this.isApplicableToOrder(coupon, orderContext)) {
+    const c = coupon as typeof coupon & { template?: { applicableProducts?: string[]; applicableCategories?: number[] } };
+    if (
+      !this.isApplicableToOrder(
+        {
+          minOrderAmount: coupon.minOrderAmount,
+          applicableProducts: c.template?.applicableProducts,
+          applicableCategories: c.template?.applicableCategories,
+        },
+        orderContext,
+      )
+    ) {
       BusinessException.throw(400, CouponErrorMessages[CouponErrorCode.COUPON_NOT_APPLICABLE]);
     }
 
@@ -268,7 +291,14 @@ export class CouponUsageService {
    * @param orderContext 订单上下文
    * @returns 是否适用
    */
-  private isApplicableToOrder(coupon: any, orderContext: OrderContext): boolean {
+  private isApplicableToOrder(
+    coupon: {
+      minOrderAmount: string | number | Decimal;
+      applicableProducts?: string[];
+      applicableCategories?: number[];
+    },
+    orderContext: OrderContext,
+  ): boolean {
     // 检查最低消费
     if (orderContext.orderAmount < Number(coupon.minOrderAmount)) {
       return false;

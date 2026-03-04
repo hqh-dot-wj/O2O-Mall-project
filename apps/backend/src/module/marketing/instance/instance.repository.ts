@@ -53,10 +53,10 @@ export class PlayInstanceRepository extends BaseRepository<PlayInstance, CreateP
   /**
    * 更新实例状态
    */
-  async updateStatus(id: string, status: PlayInstanceStatus, instanceData?: any) {
-    const data: any = { status };
+  async updateStatus(id: string, status: PlayInstanceStatus, instanceData?: Record<string, unknown>) {
+    const data: Prisma.PlayInstanceUpdateInput = { status };
     if (instanceData) {
-      data.instanceData = instanceData;
+      data.instanceData = instanceData as Prisma.InputJsonValue;
     }
 
     // 如果是终态，记录结束时间
@@ -81,10 +81,10 @@ export class PlayInstanceRepository extends BaseRepository<PlayInstance, CreateP
   /**
    * 批量更新实例状态
    */
-  async batchUpdateStatus(ids: string[], status: PlayInstanceStatus, instanceData?: any) {
-    const data: any = { status };
+  async batchUpdateStatus(ids: string[], status: PlayInstanceStatus, instanceData?: Record<string, unknown>) {
+    const data: Prisma.PlayInstanceUpdateManyMutationInput = { status };
     if (instanceData) {
-      data.instanceData = instanceData;
+      data.instanceData = instanceData as Prisma.InputJsonValue;
     }
 
     const finalStatuses: PlayInstanceStatus[] = [

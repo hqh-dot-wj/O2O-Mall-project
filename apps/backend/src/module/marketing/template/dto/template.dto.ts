@@ -22,7 +22,7 @@ export class PlayTemplateDto {
   @ApiProperty({ description: '规则Schema配置' })
   @IsObject()
   @IsNotEmpty()
-  ruleSchema: Record<string, any>;
+  ruleSchema: Record<string, unknown>;
 
   @ApiProperty({ description: '前端组件ID', required: false })
   @IsOptional()

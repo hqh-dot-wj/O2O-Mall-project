@@ -11,6 +11,20 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PlayStrategy } from './play-strategy.decorator';
 
+/** 满减档位结构（来自 rules） */
+interface ReductionTierLike {
+  threshold: unknown;
+  discount: unknown;
+}
+
+/** 满减下一档位返回类型 */
+interface NextTierResult {
+  threshold: number;
+  discount: number;
+  gap: number;
+  tipText: string;
+}
+
 /**
  * 满减活动玩法核心逻辑
  */
@@ -28,7 +42,7 @@ export class FullReductionService implements IMarketingStrategy {
   /**
    * 1.1 配置校验
    */
-  async validateConfig(dto: any): Promise<void> {
+  async validateConfig(dto: { rules?: unknown }): Promise<void> {
     const rules = dto.rules;
     BusinessException.throwIf(!rules, '规则配置不能为空');
 
@@ -75,13 +89,13 @@ export class FullReductionService implements IMarketingStrategy {
   /**
    * 1. 准入校验
    */
-  async validateJoin(config: StorePlayConfig, memberId: string, params: any = {}): Promise<void> {
-    const rules = config.rules as any;
+  async validateJoin(config: StorePlayConfig, memberId: string, params: Record<string, unknown> = {}): Promise<void> {
+    const rules = config.rules as Record<string, unknown>;
 
     // A. 时间校验
     const now = Date.now();
-    const startTime = new Date(rules.startTime).getTime();
-    const endTime = new Date(rules.endTime).getTime();
+    const startTime = new Date(String(rules.startTime)).getTime();
+    const endTime = new Date(String(rules.endTime)).getTime();
 
     if (now < startTime) {
       throw new BusinessException(ResponseCode.BUSINESS_ERROR, '活动尚未开始');
@@ -93,11 +107,12 @@ export class FullReductionService implements IMarketingStrategy {
 
     // B. 适用范围校验
     const calculateDto = plainToInstance(FullReductionCalculateDto, params);
-    
+    const categoryIds = Array.isArray(rules.categoryIds) ? (rules.categoryIds as unknown[]).map(String) : [];
+    const productIds = Array.isArray(rules.productIds) ? (rules.productIds as unknown[]).map(String) : [];
+
     if (rules.applicableScope === 'CATEGORY') {
-      // 检查订单商品是否在适用分类内
       const hasApplicableProduct = calculateDto.categoryIds?.some((catId) =>
-        rules.categoryIds.includes(catId),
+        categoryIds.includes(String(catId)),
       );
       if (!hasApplicableProduct) {
         throw new BusinessException(ResponseCode.BUSINESS_ERROR, '订单中没有符合活动条件的商品');
@@ -105,9 +120,8 @@ export class FullReductionService implements IMarketingStrategy {
     }
 
     if (rules.applicableScope === 'PRODUCT') {
-      // 检查订单商品是否在适用商品列表内
       const hasApplicableProduct = calculateDto.productIds?.some((prodId) =>
-        rules.productIds.includes(prodId),
+        productIds.includes(String(prodId)),
       );
       if (!hasApplicableProduct) {
         throw new BusinessException(ResponseCode.BUSINESS_ERROR, '订单中没有符合活动条件的商品');
@@ -118,18 +132,19 @@ export class FullReductionService implements IMarketingStrategy {
   /**
    * 2. 计算价格（满减优惠）
    */
-  async calculatePrice(config: StorePlayConfig, params: any): Promise<Decimal> {
-    const rules = config.rules as any;
+  async calculatePrice(config: StorePlayConfig, params: Record<string, unknown>): Promise<Decimal> {
+    const rules = config.rules as Record<string, unknown>;
+    const tiers = (Array.isArray(rules.tiers) ? rules.tiers : []) as ReductionTierLike[];
     const calculateDto = plainToInstance(FullReductionCalculateDto, params);
-    const originalAmount = new Decimal(calculateDto.originalAmount);
+    const originalAmount = new Decimal(Number(calculateDto.originalAmount));
 
     // 找到满足条件的最高档位
-    const matchedTier = rules.tiers
-      .filter((tier: any) => originalAmount.gte(tier.threshold))
-      .sort((a: any, b: any) => b.discount - a.discount)[0];
+    const matchedTier = tiers
+      .filter((tier) => originalAmount.gte(Number(tier.threshold)))
+      .sort((a, b) => Number(b.discount) - Number(a.discount))[0];
 
     if (matchedTier) {
-      const discountAmount = new Decimal(matchedTier.discount);
+      const discountAmount = new Decimal(Number(matchedTier.discount));
       const finalAmount = originalAmount.minus(discountAmount);
       
       // 确保最终金额不为负数
@@ -158,11 +173,11 @@ export class FullReductionService implements IMarketingStrategy {
   /**
    * 5. 前端展示增强数据
    */
-  async getDisplayData(config: StorePlayConfig): Promise<any> {
-    const rules = config.rules as any;
+  async getDisplayData(config: StorePlayConfig): Promise<Record<string, unknown>> {
+    const rules = config.rules as Record<string, unknown>;
     const now = Date.now();
-    const startTime = new Date(rules.startTime).getTime();
-    const endTime = new Date(rules.endTime).getTime();
+    const startTime = new Date(String(rules.startTime)).getTime();
+    const endTime = new Date(String(rules.endTime)).getTime();
 
     // 计算活动状态
     let status: 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED' = 'NOT_STARTED';
@@ -173,9 +188,10 @@ export class FullReductionService implements IMarketingStrategy {
     }
 
     // 生成优惠文案
-    const tierTexts = rules.tiers
-      .sort((a: any, b: any) => a.threshold - b.threshold)
-      .map((tier: any) => `满${tier.threshold}减${tier.discount}`);
+    const tiers = (Array.isArray(rules.tiers) ? rules.tiers : []) as ReductionTierLike[];
+    const tierTexts = tiers
+      .sort((a, b) => Number(a.threshold) - Number(b.threshold))
+      .map((tier) => `满${tier.threshold}减${tier.discount}`);
 
     // 适用范围文案
     let scopeText = '全场通用';
@@ -201,34 +217,38 @@ export class FullReductionService implements IMarketingStrategy {
    * 计算可获得的优惠金额（用于前端提示）
    */
   async calculateDiscount(config: StorePlayConfig, originalAmount: number): Promise<number> {
-    const rules = config.rules as any;
+    const rules = config.rules as Record<string, unknown>;
+    const tiers = (Array.isArray(rules.tiers) ? rules.tiers : []) as ReductionTierLike[];
     const amount = new Decimal(originalAmount);
 
-    const matchedTier = rules.tiers
-      .filter((tier: any) => amount.gte(tier.threshold))
-      .sort((a: any, b: any) => b.discount - a.discount)[0];
+    const matchedTier = tiers
+      .filter((tier) => amount.gte(Number(tier.threshold)))
+      .sort((a, b) => Number(b.discount) - Number(a.discount))[0];
 
-    return matchedTier ? matchedTier.discount : 0;
+    return matchedTier ? Number(matchedTier.discount) : 0;
   }
 
   /**
    * 获取下一档位信息（用于前端提示"再买XX元可享受更多优惠"）
    */
-  async getNextTier(config: StorePlayConfig, currentAmount: number): Promise<any> {
-    const rules = config.rules as any;
+  async getNextTier(config: StorePlayConfig, currentAmount: number): Promise<NextTierResult | null> {
+    const rules = config.rules as Record<string, unknown>;
+    const tiers = (Array.isArray(rules.tiers) ? rules.tiers : []) as ReductionTierLike[];
     const amount = new Decimal(currentAmount);
 
-    const nextTier = rules.tiers
-      .filter((tier: any) => amount.lt(tier.threshold))
-      .sort((a: any, b: any) => a.threshold - b.threshold)[0];
+    const nextTier = tiers
+      .filter((tier) => amount.lt(Number(tier.threshold)))
+      .sort((a, b) => Number(a.threshold) - Number(b.threshold))[0];
 
     if (nextTier) {
-      const gap = new Decimal(nextTier.threshold).minus(amount);
+      const threshold = Number(nextTier.threshold);
+      const discount = Number(nextTier.discount);
+      const gap = new Decimal(threshold).minus(amount);
       return {
-        threshold: nextTier.threshold,
-        discount: nextTier.discount,
+        threshold,
+        discount,
         gap: gap.toNumber(),
-        tipText: `再买${gap.toFixed(2)}元可享受满${nextTier.threshold}减${nextTier.discount}优惠`,
+        tipText: `再买${gap.toFixed(2)}元可享受满${threshold}减${discount}优惠`,
       };
     }
 

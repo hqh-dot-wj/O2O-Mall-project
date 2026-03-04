@@ -1,8 +1,22 @@
-import { IsString, IsEnum, Length, IsOptional, IsNumberString } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsString, IsEnum, Length, IsOptional, IsNumberString, IsNumber } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { PageQueryDto } from 'src/common/dto';
 import { StatusEnum, StatusEnumSchema } from 'src/common/enum';
+
+/**
+ * 用户角色授权查询 DTO
+ */
+export class UpdateAuthRoleQueryDto {
+  @ApiProperty({ required: true, description: '用户ID' })
+  @IsNumber()
+  @Type(() => Number)
+  userId!: number;
+
+  @ApiProperty({ required: true, description: '角色ID列表，逗号分隔' })
+  @IsString()
+  roleIds!: string;
+}
 
 /**
  * 用户列表查询 DTO

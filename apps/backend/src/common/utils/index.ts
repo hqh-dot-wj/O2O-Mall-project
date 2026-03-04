@@ -22,9 +22,13 @@ import { DataScopeEnum } from '../enum/index';
  * @param getLabel
  * @returns
  */
-export function ListToTree(arr: any[], getId: (m: any) => any, getLabel: (m: any) => any) {
-  const kData: Record<string, any> = {}; // 以id做key的对象 暂时储存数据
-  const lData: any[] = []; // 最终的数据 arr
+export function ListToTree<T extends { parentId?: number | string }>(
+  arr: T[],
+  getId: (m: T) => number | string,
+  getLabel: (m: T) => string,
+): Array<{ id: number | string; label: string; parentId: number; children: unknown[] }> {
+  const kData: Record<string, { id: number | string; label: string; parentId: number; children: unknown[] }> = {};
+  const lData: Array<{ id: number | string; label: string; parentId: number; children: unknown[] }> = [];
 
   // 第一次遍历，构建 kData
   arr.forEach((m) => {
@@ -105,11 +109,11 @@ export function FormatDateFields<T>(
   if (!obj) return obj;
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => FormatDateFields(item, dateFields)) as any;
+    return obj.map((item) => FormatDateFields(item, dateFields)) as T;
   }
 
   if (typeof obj === 'object') {
-    const formatted: Record<string, any> = { ...obj };
+    const formatted = { ...(obj as Record<string, unknown>) } as Record<string, unknown>;
 
     for (const key in formatted) {
       const value = formatted[key];
@@ -122,22 +126,22 @@ export function FormatDateFields<T>(
 
       // 2. 处理 Decimal
       if (value && typeof value === 'object') {
+        const val = value as Record<string, unknown>;
         // Case A: Prisma Decimal Instance
-        if (value instanceof Decimal || typeof value.toNumber === 'function') {
-          formatted[key] = value.toNumber();
+        if (value instanceof Decimal || (typeof (val as { toNumber?: unknown }).toNumber === 'function')) {
+          formatted[key] = (value as Decimal).toNumber();
           continue;
         }
 
         // Case B: Serialized Decimal POJO { s, e, d }
         // 这种结构通常是 Decimal 已经被 JSON.parse 过的产物，或者被错误地深拷贝了
-        if (value.s !== undefined && value.e !== undefined && Array.isArray(value.d)) {
+        const raw = val as { s?: unknown; e?: unknown; d?: unknown };
+        if (raw.s !== undefined && raw.e !== undefined && Array.isArray(raw.d)) {
           try {
-            // 尝试重新构建 Decimal 并转换
-            // 注意：这里假设 prisma 的 Decimal 构造器接受这种 raw object，或者我们可以转 string 再转 number
-            // 为了安全，我们检查是否真的是 Duck Type
-            formatted[key] = new Decimal(value).toNumber();
+            // Decimal 序列化后的 POJO { s, e, d }，通过 unknown 安全断言传入
+            formatted[key] = new Decimal(raw as unknown as ConstructorParameters<typeof Decimal>[0]).toNumber();
             continue;
-          } catch (e) {
+          } catch {
             // ignore
           }
         }
@@ -203,26 +207,36 @@ export function Uniq<T extends number | string>(list: Array<T>): Array<T> {
  * @param pageNum
  * @returns
  */
-export function Paginate(data: { list: Array<any>; pageSize: number; pageNum: number }, filterParam: any) {
+/** Paginate 过滤项需包含的可选字段 */
+interface PaginateFilterable {
+  ipaddr?: string;
+  userName?: string;
+}
+
+export function Paginate<T extends PaginateFilterable>(
+  data: { list: T[]; pageSize: number; pageNum: number },
+  filterParam: Record<string, unknown>,
+) {
   // 检查 pageSize 和 pageNumber 的合法性
   if (data.pageSize <= 0 || data.pageNum < 0) {
-    return [];
+    return [] as T[];
   }
 
   // 将数据转换为数组
   let arrayData = Lodash.toArray(data.list);
 
   if (Object.keys(filterParam).length > 0) {
+    const ipaddr = filterParam.ipaddr as string | undefined;
+    const userName = filterParam.userName as string | undefined;
     arrayData = Lodash.filter(arrayData, (item) => {
-      const arr = [];
-      if (filterParam.ipaddr) {
-        arr.push(Boolean(item.ipaddr.includes(filterParam.ipaddr)));
+      const arr: boolean[] = [];
+      if (ipaddr && item.ipaddr) {
+        arr.push(item.ipaddr.includes(ipaddr));
       }
-
-      if (filterParam.userName && item.userName) {
-        arr.push(Boolean(item.userName.includes(filterParam.userName)));
+      if (userName && item.userName) {
+        arr.push(item.userName.includes(userName));
       }
-      return !arr.includes(false);
+      return arr.length === 0 || !arr.includes(false);
     });
   }
 
@@ -241,7 +255,10 @@ export function Paginate(data: { list: Array<any>; pageSize: number; pageNum: nu
  * @param userAlias 用户别名
  * @param permission 权限字符
  */
-export async function DataScopeFilter<T>(entity: any, dataScope: DataScopeEnum): Promise<T> {
+export async function DataScopeFilter<T extends Record<string, unknown>>(
+  entity: T,
+  dataScope: DataScopeEnum,
+): Promise<T> {
   switch (dataScope) {
     case DataScopeEnum.DATA_SCOPE_CUSTOM:
       // entity.andWhere((qb) => {
@@ -260,7 +277,7 @@ export async function DataScopeFilter<T>(entity: any, dataScope: DataScopeEnum):
  * @param item
  * @returns {boolean}
  */
-export function isObject(item: any) {
+export function isObject(item: unknown): item is Record<string, unknown> {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
@@ -269,15 +286,19 @@ export function isObject(item: any) {
  * @param target
  * @param ...sources
  */
-export function mergeDeep(target: any, ...sources: any[]) {
+export function mergeDeep(
+  target: Record<string, unknown>,
+  ...sources: Record<string, unknown>[]
+): Record<string, unknown> {
   if (!sources.length) return target;
   const source = sources.shift();
+  if (!source) return target;
 
   if (isObject(target) && isObject(source)) {
     for (const key in source) {
       if (isObject(source[key])) {
         if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
+        mergeDeep(target[key] as Record<string, unknown>, source[key] as Record<string, unknown>);
       } else {
         Object.assign(target, { [key]: source[key] });
       }
@@ -290,6 +311,6 @@ export function mergeDeep(target: any, ...sources: any[]) {
 /**
  * 判断值是否为null undefined 空字符串 NaN
  */
-export function isEmpty(value: any) {
+export function isEmpty(value: unknown) {
   return value === null || value === undefined || value === '' || value === 'NaN';
 }
