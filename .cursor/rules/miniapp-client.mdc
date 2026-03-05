@@ -22,6 +22,7 @@ alwaysApply: false
 | `src/store/`               | Pinia 状态        |
 | `src/tabbar/`              | 自定义 tabbar     |
 | `src/utils/`               | 工具函数          |
+| `docs/`                    | 文档（先大类再功能） | 见 `docs/README.md` |
 
 ---
 

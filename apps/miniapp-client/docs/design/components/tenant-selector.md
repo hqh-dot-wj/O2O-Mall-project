@@ -1,7 +1,9 @@
 # 全局租户选择器实现说明
 
 ## 概述
+
 已将租户选择器从页面级别组件重构为可复用组件，解决了以下问题：
+
 1. ✅ **全局复用**：租户选择器通过 Pinia store 控制，可以在任何页面使用
 2. ✅ **z-index 层级问题**：弹窗 z-index 设置为 10001，确保完全覆盖 tabbar（z-index: 1000）
 3. ✅ **自动刷新**：租户变化后通过事件机制自动刷新页面数据
@@ -9,6 +11,7 @@
 ## 实现细节
 
 ### 1. 组件位置
+
 - **文件路径**：`src/components/tenant-selector/tenant-selector.vue`
 - **使用方式**：在需要的页面中引入组件（uni-app 的 App.vue 不支持 template）
 
@@ -18,22 +21,24 @@
 
 ```vue
 <script setup lang="ts">
-import TenantSelector from '@/components/tenant-selector/tenant-selector.vue'
-import { useLocationStore } from '@/store/location'
+import TenantSelector from '@/components/tenant-selector/tenant-selector.vue';
+import { useLocationStore } from '@/store/location';
 
-const locationStore = useLocationStore()
+const locationStore = useLocationStore();
 </script>
 
 <template>
   <view class="page">
     <!-- 你的页面内容 -->
-    
+
     <!-- 在页面末尾添加租户选择器组件 -->
     <TenantSelector />
   </view>
 </template>
 ```
+
 ### 3. z-index 层级设置
+
 ```vue
 <wd-popup
   v-model="showPopup"
@@ -45,6 +50,7 @@ const locationStore = useLocationStore()
 ```
 
 **说明**：
+
 - Tabbar 的 z-index 是 1000
 - 租户选择器弹窗的 z-index 是 10001
 - 弹窗从底部弹出时**应该完全覆盖 tabbar**，这是符合设计规范的（类似微信小程序的底部弹窗）
@@ -56,53 +62,56 @@ const locationStore = useLocationStore()
 
 ```typescript
 // 控制弹窗显示的状态
-const showTenantSelector = ref(false)
+const showTenantSelector = ref(false);
 
 // 打开租户选择器的方法
 async function openTenantSelector(): Promise<void> {
-  await fetchNearbyTenants()
-  showTenantSelector.value = true
+  await fetchNearbyTenants();
+  showTenantSelector.value = true;
 }
 ```
 
 ### 5. 使用方法
 
 #### 在任何页面中调用：
-```typescript
-import { useLocationStore } from '@/store/location'
 
-const locationStore = useLocationStore()
+```typescript
+import { useLocationStore } from '@/store/location';
+
+const locationStore = useLocationStore();
 
 // 打开租户选择器
 async function openTenantPopup() {
-  await locationStore.openTenantSelector()
+  await locationStore.openTenantSelector();
 }
 ```
 
 #### 监听租户变化事件（可选）：
+
 ```typescript
-import { onMounted, onUnload } from '@dcloudio/uni-app'
+import { onMounted, onUnload } from '@dcloudio/uni-app';
 
 // 监听租户变化事件
 onMounted(() => {
-  uni.$on('tenant-changed', handleTenantChanged)
-})
+  uni.$on('tenant-changed', handleTenantChanged);
+});
 
 // 页面卸载时移除监听
 onUnload(() => {
-  uni.$off('tenant-changed', handleTenantChanged)
-})
+  uni.$off('tenant-changed', handleTenantChanged);
+});
 
 // 租户变化回调
 function handleTenantChanged() {
   // 刷新页面数据
-  loadData()
+  loadData();
 }
 ```
 
 ### 6. 事件机制
 
 全局组件会在以下情况发送 `tenant-changed` 事件：
+
 1. 用户选择了不同的租户
 2. 用户点击"重新定位"并定位成功
 
@@ -120,6 +129,7 @@ function handleTenantChanged() {
 ## 其他页面如何复用
 
 ### 示例：在首页使用
+
 ```vue
 <template>
   <view class="home-page">
@@ -129,28 +139,31 @@ function handleTenantChanged() {
       <text>{{ locationStore.currentCompanyName || '定位中...' }}</text>
       <wd-icon name="arrow-down" size="24rpx" color="#999" />
     </view>
-    
+
     <!-- 其他内容 -->
   </view>
 </template>
 
 <script setup lang="ts">
-import { useLocationStore } from '@/store/location'
+import { useLocationStore } from '@/store/location';
 
-const locationStore = useLocationStore()
+const locationStore = useLocationStore();
 </script>
 ```
 
 ## 文件清单
 
 ### 新增文件
+
 - ✅ `src/components/tenant-selector/tenant-selector.vue` - 可复用的租户选择器组件
 
 ### 修改文件
+
 - ✅ `src/store/location.ts` - 添加弹窗控制状态和方法
 - ✅ `src/pages/category/category.vue` - 简化代码，引入并使用组件
 
 ### 代码简化
+
 - ❌ 移除了页面级别的弹窗模板代码（约37行）
 - ❌ 移除了页面级别的弹窗样式代码（约65行）
 - ❌ 移除了页面级别的弹窗逻辑（handleRelocate、handleSelectTenant 等）

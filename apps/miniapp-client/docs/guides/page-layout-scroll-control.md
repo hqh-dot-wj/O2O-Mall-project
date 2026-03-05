@@ -24,7 +24,7 @@
 <template>
   <!-- page-meta 必须是页面的第一个节点，用于彻底解决滚动穿透问题 -->
   <page-meta :page-style="`overflow: ${locationStore.showTenantSelector ? 'hidden' : 'visible'};`" />
-  
+
   <view class="category-page">
     <!-- 页面内容 -->
   </view>
@@ -32,6 +32,7 @@
 ```
 
 **原理**：
+
 - 当弹窗打开时 (`showTenantSelector = true`)，设置页面 `overflow: hidden`
 - 当弹窗关闭时 (`showTenantSelector = false`)，恢复页面 `overflow: visible`
 - 这是 wot-design-uni 官方推荐的方案，可以彻底解决小程序和 APP 平台的滚动穿透问题
@@ -42,21 +43,21 @@
 .category-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;      // ✅ 固定页面高度为视口高度
-  overflow: hidden;   // ✅ 防止页面整体滚动
+  height: 100vh; // ✅ 固定页面高度为视口高度
+  overflow: hidden; // ✅ 防止页面整体滚动
   background-color: #f5f5f5;
 }
 
 .main-content {
   display: flex;
-  flex: 1;           // ✅ 占据剩余空间
-  overflow: hidden;  // ✅ 防止主体内容溢出
+  flex: 1; // ✅ 占据剩余空间
+  overflow: hidden; // ✅ 防止主体内容溢出
 }
 
 // 左侧分类和右侧商品列表使用 scroll-view
 .category-nav,
 .product-list {
-  height: 100%;      // ✅ 继承父容器高度
+  height: 100%; // ✅ 继承父容器高度
   // scroll-view 自带滚动能力
 }
 ```
@@ -93,6 +94,7 @@
 3. **内部使用 scroll-view** 来实现局部滚动
 
 这样做的好处：
+
 - ✅ 页面整体不会滚动
 - ✅ 只有内容区域可以滚动
 - ✅ 弹窗打开时，配合 `lock-scroll`，可以完全阻止背景滚动
@@ -107,10 +109,16 @@
   position="bottom"
   :safe-area-inset-bottom="true"
   :z-index="10001"
-  :lock-scroll="true"           ← ✅ 锁定背景滚动
-  :close-on-click-modal="true"  ← ✅ 点击遮罩层关闭
+  :lock-scroll="true"
+  ←
+  ✅
+  锁定背景滚动
+  :close-on-click-modal="true"
+  ←
+  ✅
+  点击遮罩层关闭
   round
->
+></wd-popup>
 ```
 
 #### 属性说明：
@@ -122,6 +130,7 @@
 ### 4. 完整的滚动控制逻辑
 
 #### 正常状态（弹窗未打开）：
+
 ```
 页面整体：不滚动 (overflow: hidden)
   ↓
@@ -130,6 +139,7 @@
 ```
 
 #### 弹窗打开状态：
+
 ```
 页面整体：不滚动 (overflow: hidden)
   ↓
@@ -153,6 +163,7 @@
 ```
 
 **问题**：
+
 1. 页面容器会根据内容自动撑开高度
 2. 如果内容超过视口，整个页面会出现滚动条
 3. 弹窗打开时，即使有 `lock-scroll`，页面整体仍可能滚动
@@ -164,12 +175,13 @@
 .category-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;      // ✅ 固定高度
-  overflow: hidden;   // ✅ 禁止整体滚动
+  height: 100vh; // ✅ 固定高度
+  overflow: hidden; // ✅ 禁止整体滚动
 }
 ```
 
 **优点**：
+
 1. 页面容器固定为视口高度
 2. 页面整体不会滚动
 3. 只有 scroll-view 内部可以滚动
@@ -183,6 +195,7 @@
 4. **内部使用 scroll-view** 实现局部滚动
 
 这种布局方式是现代小程序开发的**最佳实践**，确保了：
+
 - ✅ 性能优化（局部滚动比整页滚动更流畅）
 - ✅ 用户体验（弹窗打开时背景不会滚动）
 - ✅ 布局稳定（固定高度，不会因内容变化而跳动）

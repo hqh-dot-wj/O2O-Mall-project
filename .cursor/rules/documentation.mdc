@@ -131,7 +131,7 @@ alwaysApply: false
 | **项目级文档** | `docs/`            | 整个项目的通用文档、用户指南、部署指南 |
 | **应用级文档** | `apps/{app}/docs/` | 特定应用的技术文档、需求文档、设计文档 |
 
-**选择原则**：后端模块文档放 `apps/backend/docs/`；前端功能文档放 `apps/admin-web/docs/`；项目通用指南放 `docs/`。
+**选择原则**：后端模块文档放 `apps/backend/docs/`；Admin 前端功能文档放 `apps/admin-web/docs/`；**小程序文档放 `apps/miniapp-client/docs/`**；项目通用指南放 `docs/`。
 
 ### 9.2 后端文档目录结构（apps/backend/docs/）
 
@@ -162,6 +162,25 @@ alwaysApply: false
 | 部署文档     | `docs/deployment/`    |
 | 在线部署步骤 | `docs/deploy-online/` |
 | 功能说明     | `docs/features/`      |
+
+### 9.4 小程序文档目录（apps/miniapp-client/docs/）
+
+**原则**：先按**大类**划分，再按**功能/模块**划分。文件名小写 + 连字符。
+
+| 大类       | 目录                    | 用途                         | 示例                                             |
+| ---------- | ----------------------- | ---------------------------- | ------------------------------------------------ |
+| 架构       | `architecture/`         | 整体技术架构、现状清单       | `architecture/architecture-inventory.md`        |
+| 设计       | `design/{功能}/`        | 页面/模块设计、交互设计      | `design/index/homepage-design.md`               |
+| 组件设计   | `design/components/`    | 全局组件设计说明             | `design/components/tenant-selector.md`          |
+| 需求       | `requirements/{功能}/`  | PRD、用户故事、验收标准      | `requirements/index/homepage-requirements.md`   |
+| 测试       | `testing/{功能}/`       | 测试策略、用例               | `testing/order/order-test-strategy.md`          |
+| 指南       | `guides/`               | 开发指南、实现说明、最佳实践 | `guides/page-layout-scroll-control.md`           |
+| 任务       | `tasks/`                | 任务清单                     | `tasks/index-task-list.md`                      |
+| 改进总结   | `improvements/`         | 完成总结                     | `improvements/homepage-phase1-summary.md`       |
+
+**功能目录**（与页面对应）：`index`（首页）、`me`（我的）、`product`、`category`、`cart`、`order`、`address`、`marketing`、`pay`、`upgrade`。
+
+**禁止**：小程序相关文档勿放在项目级 `docs/design/` 下；应放在 `apps/miniapp-client/docs/` 对应大类与功能下。
 
 ---
 
