@@ -8,5 +8,5 @@ import { PublishStatus } from '@prisma/client';
 export class UpdateProductStatusDto {
   @ApiProperty({ description: '发布状态', enum: PublishStatus })
   @IsEnum(PublishStatus)
-  publishStatus: PublishStatus;
+  publishStatus: string;
 }

@@ -19,7 +19,7 @@ export class CreateTenantPackageDto {
   @IsBoolean()
   menuCheckStrictly?: boolean;
 
-  @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
@@ -28,7 +28,7 @@ export class CreateTenantPackageDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '备注' })
   @IsOptional()

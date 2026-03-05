@@ -47,9 +47,10 @@ export class UpdateMemberStatusDto {
 }
 
 /**
- * 修改会员等级 Dto
+ * 修改会员等级 Dto（管理端）
+ * @description 管理端会员模块使用，与 store 分销模块的 StoreUpdateMemberLevelDto 区分避免 Swagger 重复 schema
  */
-export class UpdateMemberLevelDto {
+export class AdminUpdateMemberLevelDto {
   @ApiProperty({ description: '会员 ID' })
   @IsNotEmpty({ message: '会员 ID 不能为空' })
   @IsString()

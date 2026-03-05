@@ -71,11 +71,38 @@ export class PointsRuleService {
     // 验证配置
     this.validateRuleConfig(dto);
 
-    const rules = await this.repo.upsert(tenantId, dto as Partial<import('@prisma/client').MktPointsRule>, userId);
+    const repoData = this.dtoToRepoData(dto);
+    const rules = await this.repo.upsert(tenantId, repoData, userId);
 
     this.logger.log(`积分规则已更新: tenantId=${tenantId}`);
 
     return Result.ok(FormatDateFields(rules));
+  }
+
+  /**
+   * 将 DTO 转为仓储层可接受的格式（number → Decimal）
+   */
+  private dtoToRepoData(dto: UpdatePointsRuleDto): Partial<import('@prisma/client').MktPointsRule> {
+    const result: Partial<import('@prisma/client').MktPointsRule> = {};
+
+    if (dto.orderPointsEnabled !== undefined) result.orderPointsEnabled = dto.orderPointsEnabled;
+    if (dto.orderPointsRatio !== undefined) result.orderPointsRatio = new Decimal(dto.orderPointsRatio);
+    if (dto.orderPointsBase !== undefined) result.orderPointsBase = new Decimal(dto.orderPointsBase);
+    if (dto.signinPointsEnabled !== undefined) result.signinPointsEnabled = dto.signinPointsEnabled;
+    if (dto.signinPointsAmount !== undefined) result.signinPointsAmount = dto.signinPointsAmount;
+    if (dto.pointsValidityEnabled !== undefined) result.pointsValidityEnabled = dto.pointsValidityEnabled;
+    if (dto.pointsValidityDays !== undefined) result.pointsValidityDays = dto.pointsValidityDays;
+    if (dto.pointsRedemptionEnabled !== undefined) result.pointsRedemptionEnabled = dto.pointsRedemptionEnabled;
+    if (dto.pointsRedemptionRatio !== undefined)
+      result.pointsRedemptionRatio = new Decimal(dto.pointsRedemptionRatio);
+    if (dto.pointsRedemptionBase !== undefined)
+      result.pointsRedemptionBase = new Decimal(dto.pointsRedemptionBase);
+    if (dto.maxPointsPerOrder !== undefined) result.maxPointsPerOrder = dto.maxPointsPerOrder;
+    if (dto.maxDiscountPercentOrder !== undefined)
+      result.maxDiscountPercentOrder = dto.maxDiscountPercentOrder;
+    if (dto.systemEnabled !== undefined) result.systemEnabled = dto.systemEnabled;
+
+    return result;
   }
 
   /**

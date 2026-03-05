@@ -74,7 +74,7 @@ export class StoreCommissionRecordVo {
   rateSnapshot: number;
 
   @ApiProperty({ description: '佣金状态', enum: CommissionStatus })
-  status: CommissionStatus;
+  status: string;
 
   @ApiProperty({ description: '计划结算时间' })
   planSettleTime: string;

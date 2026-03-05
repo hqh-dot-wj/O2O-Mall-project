@@ -170,7 +170,7 @@ export class PmsProductService {
       where.categoryId = Number(categoryId);
     }
     if (publishStatus) {
-      where.publishStatus = publishStatus;
+      where.publishStatus = publishStatus as Prisma.PmsProductWhereInput['publishStatus'];
     }
 
     // 使用Repository查询
@@ -253,12 +253,12 @@ export class PmsProductService {
     if (dto.subTitle !== undefined) updateData.subTitle = dto.subTitle;
     if (dto.mainImages !== undefined) updateData.mainImages = dto.mainImages;
     if (dto.detailHtml !== undefined) updateData.detailHtml = dto.detailHtml;
-    if (dto.type !== undefined) updateData.type = dto.type;
+    if (dto.type !== undefined) updateData.type = dto.type as ProductType;
     if (dto.weight !== undefined) updateData.weight = dto.weight;
     if (dto.isFreeShip !== undefined) updateData.isFreeShip = dto.isFreeShip;
     if (dto.serviceDuration !== undefined) updateData.serviceDuration = dto.serviceDuration;
     if (dto.serviceRadius !== undefined) updateData.serviceRadius = dto.serviceRadius;
-    if (dto.publishStatus !== undefined) updateData.publishStatus = dto.publishStatus;
+    if (dto.publishStatus !== undefined) updateData.publishStatus = dto.publishStatus as PublishStatus;
     if (dto.categoryId !== undefined) updateData.category = { connect: { catId: dto.categoryId } };
     if (dto.brandId !== undefined) updateData.brand = { connect: { brandId: dto.brandId } };
 

@@ -71,7 +71,7 @@ export class LoginlogController {
   @RequirePermission('system:config:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  async export(@Res() res: Response, @Body() body: ListLoginlogDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() body: ListLoginlogDto): Promise<void> {
     return this.loginlogService.export(res, body);
   }
 }

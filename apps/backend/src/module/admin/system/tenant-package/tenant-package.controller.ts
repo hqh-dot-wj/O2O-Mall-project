@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantPackageService } from './tenant-package.service';
 import { CreateTenantPackageDto, UpdateTenantPackageDto, ListTenantPackageDto } from './dto/index';
@@ -8,6 +8,7 @@ import { Api } from 'src/common/decorators/api.decorator';
 import { TenantPackageVo, TenantPackageListVo, TenantPackageSelectVo } from './vo/tenant-package.vo';
 import { Operlog } from 'src/module/admin/common/decorators/operlog.decorator';
 import { BusinessType } from 'src/common/constant/business.constant';
+import { StatusEnum } from 'src/common/enum';
 
 @ApiTags('租户套餐管理')
 @Controller('system/tenant/package')
@@ -95,7 +96,7 @@ export class TenantPackageController {
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put('/changeStatus')
   changeStatus(@Body() updateTenantPackageDto: UpdateTenantPackageDto) {
-    return this.tenantPackageService.changeStatusEnum(updateTenantPackageDto.packageId, updateTenantPackageDto.status);
+    return this.tenantPackageService.changeStatusEnum(updateTenantPackageDto.packageId, updateTenantPackageDto.status as StatusEnum);
   }
 
   @Api({
@@ -105,7 +106,7 @@ export class TenantPackageController {
   @RequirePermission('system:tenantPackage:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  export(@Res() res: Response, @Body() body: ListTenantPackageDto) {
+  exportData(@Res() res: Response, @Body() body: ListTenantPackageDto) {
     return this.tenantPackageService.export(res, body);
   }
 }

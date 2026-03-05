@@ -47,7 +47,7 @@ export class DeptService {
       leader: createDeptDto.leader ?? '',
       phone: createDeptDto.phone ?? '',
       email: createDeptDto.email ?? '',
-      status: createDeptDto.status ?? StatusEnum.NORMAL,
+      status: createDeptDto.status as StatusEnum ?? StatusEnum.NORMAL,
       delFlag: DelFlagEnum.NORMAL,
       remark: null,
     };

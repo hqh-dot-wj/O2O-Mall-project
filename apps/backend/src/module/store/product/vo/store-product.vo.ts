@@ -13,7 +13,7 @@ export class StoreSkuVo {
   stock: number;
 
   @ApiProperty({ description: '分佣模式', enum: DistributionMode })
-  distMode: DistributionMode;
+  distMode: string;
 
   @ApiProperty({ description: '分佣比例/金额' })
   distRate: number;
@@ -50,10 +50,10 @@ export class StoreProductVo {
   albumPics: string;
 
   @ApiProperty({ description: '产品类型', enum: ProductType })
-  type: ProductType;
+  type: string;
 
   @ApiProperty({ description: '上架状态', enum: PublishStatus })
-  status: PublishStatus;
+  status: string;
 
   @ApiProperty({ description: '是否热销' })
   isHot: boolean;

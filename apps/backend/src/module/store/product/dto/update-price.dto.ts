@@ -22,7 +22,7 @@ export class UpdateProductPriceDto {
   @ApiProperty({ description: '分销模式', enum: DistributionMode, required: false })
   @IsOptional()
   @IsEnum(DistributionMode)
-  distMode?: DistributionMode;
+  distMode?: string;
 
   @ApiProperty({ description: '积分获得比例（0-100，默认100表示正常获得积分）', required: false })
   @IsOptional()

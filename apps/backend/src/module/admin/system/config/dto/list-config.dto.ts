@@ -16,7 +16,7 @@ export class ListConfigDto extends PageQueryDto {
   @Length(0, 100)
   configKey?: string;
 
-  @ApiProperty({ enum: ConfigTypeEnum, enumName: 'ConfigTypeEnum', enumSchema: ConfigTypeEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: ConfigTypeEnum, enumName: 'ConfigTypeEnum', enumSchema: ConfigTypeEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(ConfigTypeEnum)

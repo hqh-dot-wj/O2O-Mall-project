@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, DistributionMode, PublishStatus } from '@prisma/client';
+import { Prisma, DistributionMode, PublishStatus, ProductType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
@@ -47,7 +47,7 @@ export class StoreProductService {
 
     if (name) where.name = { contains: name };
     if (categoryId) where.categoryId = Number(categoryId);
-    if (type) where.type = type;
+    if (type) where.type = type as ProductType;
 
     const [list, total] = await Promise.all([
       this.prisma.pmsProduct.findMany({
@@ -334,8 +334,8 @@ export class StoreProductService {
     if (name) {
       where.OR = [{ customTitle: { contains: name } }, { product: { name: { contains: name } } }];
     }
-    if (type) where.product = { type };
-    if (status) where.status = status;
+    if (type) where.product = { type: type as ProductType };
+    if (status) where.status = status as Prisma.PmsTenantProductWhereInput['status'];
 
     const [list, total] = await Promise.all([
       this.tenantProductRepo.findWithRelations(where, query.skip, query.take),
@@ -418,7 +418,7 @@ export class StoreProductService {
     BusinessException.throwIf(tenantSku.tenantProd.tenantId !== tenantId, '无权操作此商品', ResponseCode.FORBIDDEN);
 
     // 2. 利润风控校验(使用 ProfitValidator)
-    const currentDistMode = distMode || tenantSku.distMode;
+    const currentDistMode = (distMode || tenantSku.distMode) as DistributionMode;
     const currentDistRate = distRate !== undefined ? distRate : tenantSku.distRate;
     const cost = tenantSku.globalSku.costPrice;
 
@@ -437,7 +437,7 @@ export class StoreProductService {
         price: new Decimal(price),
         stock: stock !== undefined ? stock : undefined,
         distRate: distRate !== undefined ? new Decimal(distRate) : undefined,
-        distMode: distMode !== undefined ? distMode : undefined,
+        distMode: distMode !== undefined ? distMode as DistributionMode : undefined,
         pointsRatio: pointsRatio !== undefined ? pointsRatio : undefined,
         isPromotionProduct: isPromotionProduct !== undefined ? isPromotionProduct : undefined,
         version: { increment: 1 }, // 版本号+1

@@ -19,5 +19,5 @@ export class ListMarketProductDto extends PageQueryDto {
   @ApiProperty({ description: '商品类型', enum: ProductType, required: false })
   @IsOptional()
   @IsEnum(ProductType)
-  type?: ProductType;
+  type?: string;
 }

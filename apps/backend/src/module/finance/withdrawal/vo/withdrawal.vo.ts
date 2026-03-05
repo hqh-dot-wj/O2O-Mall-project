@@ -27,7 +27,7 @@ export class WithdrawalVo {
   method: string;
 
   @ApiProperty({ description: '提现状态', enum: WithdrawalStatus })
-  status: WithdrawalStatus;
+  status: string;
 
   @ApiProperty({ description: '真实姓名' })
   realName: string;

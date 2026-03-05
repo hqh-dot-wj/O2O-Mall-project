@@ -24,7 +24,7 @@ export class UpdateProfileDto {
   @IsString()
   phonenumber: string;
 
-  @ApiProperty({ enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema, required: true })
+  @ApiProperty({ type: String, enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema, required: true })
   @IsOptional()
   @IsString()
   @IsEnum(SexEnum)

@@ -23,6 +23,7 @@ export class ListLoginlogDto extends PageQueryDto {
   userName?: string;
 
   @ApiProperty({
+    type: String,
     enum: StatusEnum,
     enumName: 'StatusEnum',
     enumSchema: StatusEnumSchema,
@@ -31,5 +32,5 @@ export class ListLoginlogDto extends PageQueryDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: StatusEnum;
+  status?: string;
 }

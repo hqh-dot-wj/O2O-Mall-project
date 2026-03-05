@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { DelFlagEnum, StatusEnum, CacheEnum } from 'src/common/enum/index';
@@ -6,7 +6,7 @@ import { Cacheable } from 'src/common/decorators/redis.decorator';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { CreateMenuDto, UpdateMenuDto, ListMenuDto, SortMenuDto } from './dto/index';
 import { ListToTree, Uniq } from 'src/common/utils/index';
-import { UserService } from '../user/user.service';
+import { UserRoleQueryService } from '../user/services/user-role-query.service';
 import { buildMenus } from './utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MenuRepository } from './menu.repository';
@@ -16,8 +16,7 @@ import { BusinessException } from 'src/common/exceptions/business.exception';
 export class MenuService {
   private logger = new Logger(MenuService.name);
   constructor(
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    private readonly userRoleQueryService: UserRoleQueryService,
     private readonly prisma: PrismaService,
     private readonly menuRepo: MenuRepository,
     private readonly redis: RedisService,
@@ -314,7 +313,7 @@ export class MenuService {
    */
   @Cacheable(CacheEnum.SYS_MENU_KEY, 'user:{userId}')
   async getMenuListByUserId(userId: number) {
-    const roleIds = await this.userService.getRoleIds([userId]);
+    const roleIds = await this.userRoleQueryService.getRoleIds([userId]);
     let menuIds: number[] = [];
 
     if (roleIds.includes(1)) {

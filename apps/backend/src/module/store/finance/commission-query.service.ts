@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Result } from 'src/common/response';
 import { FormatDateFields } from 'src/common/utils';
-import { Prisma } from '@prisma/client';
+import { Prisma, CommissionStatus } from '@prisma/client';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { CommissionRepository } from 'src/module/finance/commission/commission.repository';
 import { ListCommissionDto } from './dto/store-finance.dto';
@@ -24,7 +24,7 @@ export class StoreCommissionQueryService {
     const where: Prisma.FinCommissionWhereInput = { tenantId };
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as CommissionStatus;
     }
 
     if (query.memberId) {

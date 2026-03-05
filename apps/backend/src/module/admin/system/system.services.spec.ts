@@ -147,7 +147,7 @@ describe('System module services', () => {
 
   describe('MenuService', () => {
     let prisma: PrismaMock;
-    const userService = {
+    const userRoleQueryService = {
       getRoleIds: jest.fn(),
     };
     const createRedisMock = () => ({
@@ -164,14 +164,14 @@ describe('System module services', () => {
 
     beforeEach(() => {
       prisma = createPrismaMock();
-      service = new MenuService(userService as any, prisma, menuRepo as any);
+      service = new MenuService(userRoleQueryService as any, prisma, menuRepo as any);
       redisMock = createRedisMock();
       (service as any).redis = redisMock;
       jest.clearAllMocks();
     });
 
     it('should return full menu tree for super admin', async () => {
-      userService.getRoleIds.mockResolvedValue([1]);
+      userRoleQueryService.getRoleIds.mockResolvedValue([1]);
       (prisma.sysMenu.findMany as jest.Mock).mockResolvedValue([
         {
           menuId: 1,

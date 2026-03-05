@@ -19,6 +19,7 @@ import { SYS_USER_TYPE } from 'src/common/constant/index';
 import { SysDept, SysPost, SysRole, SysUser } from '@prisma/client';
 import { Uniq } from 'src/common/utils/index';
 import { RoleService } from '../../role/role.service';
+import { UserRoleQueryService } from './user-role-query.service';
 
 type UserWithDept = SysUser & { dept?: SysDept | null };
 type UserWithRelations = UserWithDept & { roles?: SysRole[]; posts?: SysPost[] };
@@ -36,6 +37,7 @@ export class UserAuthService {
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
     private readonly roleService: RoleService,
+    private readonly userRoleQueryService: UserRoleQueryService,
   ) {}
 
   /**
@@ -267,20 +269,10 @@ export class UserAuthService {
   }
 
   /**
-   * 获取用户角色ID列表
+   * 获取用户角色ID列表（委托给 UserRoleQueryService）
    */
   async getRoleIds(userIds: Array<number>) {
-    if (!userIds.length) {
-      return [];
-    }
-    const roleList = await this.prisma.sysUserRole.findMany({
-      where: {
-        userId: { in: userIds },
-      },
-      select: { roleId: true },
-    });
-    const roleIds = roleList.map((item) => item.roleId);
-    return Uniq(roleIds);
+    return this.userRoleQueryService.getRoleIds(userIds);
   }
 
   /**

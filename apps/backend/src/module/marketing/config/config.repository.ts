@@ -27,7 +27,7 @@ export class StorePlayConfigRepository extends SoftDeleteRepository<
     }
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as PublishStatus;
     }
 
     return this.findPage({

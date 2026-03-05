@@ -40,13 +40,13 @@ export class UserProfileVo {
   @ApiProperty({ description: '手机号码' })
   phonenumber: string;
 
-  @ApiProperty({ description: '用户性别', enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema })
+  @ApiProperty({ type: String, description: '用户性别', enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema })
   sex: string;
 
   @ApiProperty({ description: '头像地址' })
   avatar: string;
 
-  @ApiProperty({ description: '帐号状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
+  @ApiProperty({ type: String, description: '帐号状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
   status: string;
 
   @ApiProperty({ description: '最后登录IP' })

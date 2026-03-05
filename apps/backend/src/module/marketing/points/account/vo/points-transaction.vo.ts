@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PointsTransactionType, PointsTransactionStatus } from '@prisma/client';
+import { PointsTransactionStatus } from '@prisma/client';
+import { PointsTransactionTypeApi } from '../../constants/points-transaction-type-api.enum';
 
 /**
  * 积分交易记录 VO
@@ -19,8 +20,8 @@ export class PointsTransactionVo {
   @ApiProperty({ description: '用户ID' })
   memberId: string;
 
-  @ApiProperty({ description: '交易类型', enum: PointsTransactionType })
-  type: PointsTransactionType;
+  @ApiProperty({ description: '交易类型', enum: PointsTransactionTypeApi })
+  type: string;
 
   @ApiProperty({ description: '积分数量（正数为增加，负数为扣减）' })
   amount: number;
@@ -32,7 +33,7 @@ export class PointsTransactionVo {
   balanceAfter: number;
 
   @ApiProperty({ description: '交易状态', enum: PointsTransactionStatus })
-  status: PointsTransactionStatus;
+  status: string;
 
   @ApiProperty({ description: '关联ID（订单ID、任务ID等）' })
   relatedId: string | null;

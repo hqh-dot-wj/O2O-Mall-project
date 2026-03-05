@@ -86,7 +86,7 @@ export class TenantService {
           packageId: createTenantDto.packageId,
           expireTime: createTenantDto.expireTime,
           accountCount: createTenantDto.accountCount ?? -1,
-          status: createTenantDto.status ?? StatusEnum.NORMAL,
+          status: createTenantDto.status as StatusEnum ?? StatusEnum.NORMAL,
           remark: createTenantDto.remark,
           delFlag: DelFlagEnum.NORMAL,
           // [新增] O2O 字段
@@ -301,12 +301,13 @@ export class TenantService {
       }
     }
 
+    const { status, ...restUpdateData } = updateData;
+
     await this.prisma.sysTenant.update({
       where: { id },
       data: {
-        ...updateData,
-        // Explicitly map new fields if needed, or rely on updateData spreading if DTO matches Prisma types
-        // Prisma update input for regionCode/isDirect should match DTO
+        ...restUpdateData,
+        status: status as StatusEnum,
       },
     });
 

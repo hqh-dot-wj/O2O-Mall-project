@@ -28,5 +28,5 @@ export class ListProductDto extends PageQueryDto {
   @IsOptional()
   @Transform(({ value }) => toPublishStatus(value) ?? value)
   @IsEnum(PublishStatus)
-  publishStatus?: PublishStatus;
+  publishStatus?: string;
 }

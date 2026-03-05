@@ -11,7 +11,7 @@ export class ChangeUserStatusDto {
   @IsNumber()
   userId: number;
 
-  @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: true })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: true })
   @IsString()
   @IsEnum(StatusEnum)
   @Transform(({ value }) => {
@@ -19,5 +19,5 @@ export class ChangeUserStatusDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status: StatusEnum;
+  status: string;
 }

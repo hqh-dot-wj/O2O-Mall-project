@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsInt, IsString, IsEnum, Min, Max, IsDateString, ValidateNested } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { StatusEnum } from 'src/common/enum';
 
 /**
  * 排序方向枚举
@@ -120,10 +119,10 @@ export class PageQueryDto {
  * 带状态筛选的分页 DTO
  */
 export class PageQueryWithStatusDto extends PageQueryDto {
-  @ApiPropertyOptional({ description: '状态', example: '0' })
+  @ApiPropertyOptional({ description: '状态', example: '0', type: String })
   @IsOptional()
   @IsString()
-  status?: StatusEnum;
+  status?: string;
 }
 
 /**

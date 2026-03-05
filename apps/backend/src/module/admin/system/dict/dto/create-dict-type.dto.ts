@@ -29,6 +29,7 @@ export class CreateDictTypeDto {
   remark?: string;
 
   @ApiProperty({
+    type: String,
     enum: StatusEnum,
     enumName: 'StatusEnum',
     enumSchema: StatusEnumSchema,
@@ -37,5 +38,5 @@ export class CreateDictTypeDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: StatusEnum;
+  status?: string;
 }

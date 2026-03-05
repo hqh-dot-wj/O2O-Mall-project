@@ -118,7 +118,7 @@ export class PointsAccountService {
       tenantId,
       accountId: account.id,
       memberId: dto.memberId,
-      type: dto.type,
+      type: dto.type as PointsTransactionType,
       amount: dto.amount,
       balanceBefore,
       balanceAfter,
@@ -190,7 +190,7 @@ export class PointsAccountService {
           tenantId,
           accountId: account.id,
           memberId: dto.memberId,
-          type: dto.type,
+          type: dto.type as PointsTransactionType,
           amount: -dto.amount,
           balanceBefore,
           balanceAfter,
@@ -378,7 +378,10 @@ export class PointsAccountService {
    * @returns 分页结果
    */
   async getTransactions(memberId: string, query: TransactionQueryDto) {
-    const { rows, total } = await this.transactionRepo.findUserTransactions(memberId, query);
+    const { rows, total } = await this.transactionRepo.findUserTransactions(memberId, {
+      ...query,
+      type: query.type as PointsTransactionType,
+    });
 
     return Result.page(FormatDateFields(rows), total);
   }

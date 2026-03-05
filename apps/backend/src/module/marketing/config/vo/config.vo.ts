@@ -15,7 +15,7 @@ export class StorePlayConfigVo {
   serviceId: string;
 
   @ApiProperty({ description: '服务类型', enum: ProductType })
-  serviceType: ProductType;
+  serviceType: string;
 
   @ApiProperty({ description: '玩法模板编码' })
   templateCode: string;
@@ -24,10 +24,10 @@ export class StorePlayConfigVo {
   rules: Record<string, unknown>;
 
   @ApiProperty({ description: '库存策略', enum: MarketingStockMode })
-  stockMode: MarketingStockMode;
+  stockMode: string;
 
   @ApiProperty({ description: '上下架状态', enum: PublishStatus })
-  status: PublishStatus;
+  status: string;
 
   @ApiProperty({ description: '创建时间' })
   createTime: string;

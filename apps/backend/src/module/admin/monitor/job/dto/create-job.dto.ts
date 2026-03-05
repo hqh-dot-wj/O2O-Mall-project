@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Length } from 'class-validator';
 import { PageQueryDto } from 'src/common/dto/index';
-import { StatusEnum } from 'src/common/enum';
 
 export class CreateJobDto {
   @ApiProperty({ description: '任务名称' })
@@ -37,9 +36,9 @@ export class CreateJobDto {
   @IsOptional()
   concurrent?: string;
 
-  @ApiProperty({ description: '状态（0正常 1暂停）' })
+  @ApiProperty({ type: String, description: '状态（0正常 1暂停）' })
   @IsString()
-  status: StatusEnum;
+  status: string;
 
   @ApiProperty({ description: '备注信息', required: false })
   @IsString()
@@ -59,10 +58,10 @@ export class ListJobDto extends PageQueryDto {
   @Length(1, 64)
   jobGroup?: string;
 
-  @ApiProperty({ description: '状态（0正常 1暂停）', required: false })
+  @ApiProperty({ type: String, description: '状态（0正常 1暂停）', required: false })
   @IsOptional()
   @IsString()
-  status?: StatusEnum;
+  status?: string;
 }
 
 export class ListJobLogDto extends PageQueryDto {
@@ -77,8 +76,8 @@ export class ListJobLogDto extends PageQueryDto {
   @Length(1, 64)
   jobGroup?: string;
 
-  @ApiProperty({ description: '状态（0正常 1暂停）' })
+  @ApiProperty({ type: String, description: '状态（0正常 1暂停）' })
   @IsOptional()
   @IsString()
-  status?: StatusEnum;
+  status?: string;
 }

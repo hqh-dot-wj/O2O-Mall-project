@@ -30,5 +30,5 @@ export class CreateProductConfigDto {
   @ApiProperty({ description: '佣金基数类型', enum: CommissionBaseType, required: false })
   @IsOptional()
   @IsEnum(CommissionBaseType)
-  commissionBaseType?: CommissionBaseType;
+  commissionBaseType?: string;
 }

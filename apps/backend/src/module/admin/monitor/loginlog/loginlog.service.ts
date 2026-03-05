@@ -27,7 +27,7 @@ export class LoginlogService {
         browser: createLoginlogDto.browser ?? '',
         os: createLoginlogDto.os ?? '',
         msg: createLoginlogDto.msg ?? '',
-        status: createLoginlogDto.status ?? Status.NORMAL,
+        status: createLoginlogDto.status as Status ?? Status.NORMAL,
         delFlag: DelFlagEnum.NORMAL,
       },
     });

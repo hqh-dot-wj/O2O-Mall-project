@@ -10,7 +10,7 @@ export class ListNoticeDto extends PageQueryDto {
   @Length(0, 50)
   noticeTitle?: string;
 
-  @ApiProperty({ enum: NoticeTypeEnum, enumName: 'NoticeTypeEnum', enumSchema: NoticeTypeEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: NoticeTypeEnum, enumName: 'NoticeTypeEnum', enumSchema: NoticeTypeEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(NoticeTypeEnum)

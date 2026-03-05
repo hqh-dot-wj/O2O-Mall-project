@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, WithdrawalStatus, CommissionStatus, TransType } from '@prisma/client';
 import { Result } from 'src/common/response';
 import { WalletService } from 'src/module/finance/wallet/wallet.service';
 import { WithdrawalService } from 'src/module/finance/withdrawal/withdrawal.service';
@@ -78,7 +78,7 @@ export class ClientFinanceService {
     };
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as WithdrawalStatus;
     }
 
     const [list, total] = await this.prisma.$transaction([
@@ -104,7 +104,7 @@ export class ClientFinanceService {
     };
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as CommissionStatus;
     }
 
     const [list, total] = await this.prisma.$transaction([
@@ -144,7 +144,7 @@ export class ClientFinanceService {
     };
 
     if (query.type) {
-      where.type = query.type;
+      where.type = query.type as TransType;
     }
 
     const [list, total] = await this.prisma.$transaction([

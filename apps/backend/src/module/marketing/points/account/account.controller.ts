@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PointsTransactionType } from '@prisma/client';
 import { PointsAccountService } from './account.service';
 import { AddPointsDto } from './dto/add-points.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
@@ -48,7 +49,7 @@ export class PointsAccountAdminController {
   async getTransactions(@Query() query: TransactionQueryDto) {
     return this.accountService.getTransactionsForAdmin({
       memberId: query.memberId,
-      type: query.type,
+      type: query.type as PointsTransactionType,
       startTime: query.startTime,
       endTime: query.endTime,
       pageNum: query.pageNum || 1,

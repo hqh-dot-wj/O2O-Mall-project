@@ -8,6 +8,7 @@ import { UserAuthService } from './services/user-auth.service';
 import { UserProfileService } from './services/user-profile.service';
 import { UserRoleService } from './services/user-role.service';
 import { UserExportService } from './services/user-export.service';
+import { UserRoleQueryService } from './services/user-role-query.service';
 
 @Global()
 @Module({
@@ -20,7 +21,7 @@ import { UserExportService } from './services/user-export.service';
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, UserRepository, UserAuthService, UserProfileService, UserRoleService, UserExportService],
-  exports: [UserService, UserAuthService, UserProfileService, UserRoleService],
+  providers: [UserService, UserRepository, UserAuthService, UserProfileService, UserRoleService, UserExportService, UserRoleQueryService],
+  exports: [UserService, UserAuthService, UserProfileService, UserRoleService, UserRoleQueryService],
 })
 export class UserModule {}

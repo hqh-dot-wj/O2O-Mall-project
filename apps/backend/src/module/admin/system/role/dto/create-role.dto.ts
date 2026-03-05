@@ -33,6 +33,7 @@ export class CreateRoleDto {
   roleSort?: number;
 
   @ApiProperty({
+    type: String,
     required: false,
     description: '角色状态（0正常 1停用）',
     enum: StatusEnum,
@@ -47,7 +48,7 @@ export class CreateRoleDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '数据范围' })
   @IsOptional()

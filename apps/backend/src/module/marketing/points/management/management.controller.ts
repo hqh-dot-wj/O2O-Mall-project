@@ -4,6 +4,7 @@ import { PointsTransactionType } from '@prisma/client';
 import { PointsStatisticsService } from '../statistics/statistics.service';
 import { Api } from 'src/common/decorators/api.decorator';
 import { RequirePermission } from 'src/module/admin/common/decorators/require-permission.decorator';
+import { ExportTransactionsQueryDto } from './dto/export-transactions-query.dto';
 
 /**
  * 积分管理控制器
@@ -63,17 +64,12 @@ export class PointsManagementController {
   @Get('export')
   @Api({ summary: '导出积分明细' })
   @RequirePermission('marketing:points:transaction:export')
-  async exportTransactions(
-    @Query('memberId') memberId?: string,
-    @Query('type') type?: PointsTransactionType,
-    @Query('startTime') startTime?: Date,
-    @Query('endTime') endTime?: Date,
-  ) {
+  async exportTransactions(@Query() query: ExportTransactionsQueryDto) {
     return this.statisticsService.exportTransactions({
-      memberId,
-      type,
-      startTime,
-      endTime,
+      memberId: query.memberId,
+      type: query.type as PointsTransactionType | undefined,
+      startTime: query.startTime,
+      endTime: query.endTime,
     });
   }
 }

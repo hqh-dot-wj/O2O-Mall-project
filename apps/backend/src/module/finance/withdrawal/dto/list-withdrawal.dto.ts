@@ -7,7 +7,7 @@ export class ListWithdrawalDto extends PageQueryDto {
   @ApiProperty({ description: '状态', enum: WithdrawalStatus, required: false })
   @IsOptional()
   @IsEnum(WithdrawalStatus)
-  status?: WithdrawalStatus;
+  status?: string;
 
   @ApiProperty({ description: '搜索关键字(用户昵称/手机号)', required: false })
   @IsOptional()

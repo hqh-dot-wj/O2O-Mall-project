@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MenuService } from './menu.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MenuRepository } from './menu.repository';
-import { UserService } from '../user/user.service';
+import { UserRoleQueryService } from '../user/services/user-role-query.service';
 import { RedisService } from 'src/module/common/redis/redis.service';
 import { StatusEnum, DelFlagEnum } from 'src/common/enum/index';
 import { ResponseCode } from 'src/common/response';
@@ -13,7 +13,7 @@ describe('MenuService', () => {
   let service: MenuService;
   let prisma: PrismaService;
   let menuRepo: MenuRepository;
-  let userService: UserService;
+  let userRoleQueryService: UserRoleQueryService;
   let redisService: RedisService;
 
   const mockMenu = {
@@ -130,7 +130,7 @@ describe('MenuService', () => {
           },
         },
         {
-          provide: UserService,
+          provide: UserRoleQueryService,
           useValue: {
             getRoleIds: jest.fn(),
           },
@@ -155,7 +155,7 @@ describe('MenuService', () => {
     service = module.get<MenuService>(MenuService);
     prisma = module.get<PrismaService>(PrismaService);
     menuRepo = module.get<MenuRepository>(MenuRepository);
-    userService = module.get<UserService>(UserService);
+    userRoleQueryService = module.get<UserRoleQueryService>(UserRoleQueryService);
     redisService = module.get<RedisService>(RedisService);
   });
 
@@ -552,7 +552,7 @@ describe('MenuService', () => {
   describe('getMenuListByUserId', () => {
     // R-FLOW-ROUTER-01: 普通用户获取路由
     it('Given 普通用户, When getMenuListByUserId, Then 返回角色对应的菜单', async () => {
-      (userService.getRoleIds as jest.Mock).mockResolvedValue([2]);
+      (userRoleQueryService.getRoleIds as jest.Mock).mockResolvedValue([2]);
       (prisma.sysRoleMenu.findMany as jest.Mock).mockResolvedValue([{ menuId: 1 }, { menuId: 2 }]);
       (prisma.sysMenu.findMany as jest.Mock).mockResolvedValue([mockMenu, mockChildMenu]);
 
@@ -564,7 +564,7 @@ describe('MenuService', () => {
 
     // R-FLOW-ROUTER-02: 超级管理员获取所有菜单
     it('Given 超级管理员(roleId=1), When getMenuListByUserId, Then 返回所有正常菜单', async () => {
-      (userService.getRoleIds as jest.Mock).mockResolvedValue([1]);
+      (userRoleQueryService.getRoleIds as jest.Mock).mockResolvedValue([1]);
       (prisma.sysMenu.findMany as jest.Mock).mockResolvedValue([mockMenu, mockChildMenu, mockButtonMenu]);
 
       const result = await service.getMenuListByUserId(1);
@@ -582,7 +582,7 @@ describe('MenuService', () => {
 
     // R-FLOW-ROUTER-03: 用户无角色时返回空菜单
     it('Given 用户无角色菜单, When getMenuListByUserId, Then 返回空数组', async () => {
-      (userService.getRoleIds as jest.Mock).mockResolvedValue([2]);
+      (userRoleQueryService.getRoleIds as jest.Mock).mockResolvedValue([2]);
       (prisma.sysRoleMenu.findMany as jest.Mock).mockResolvedValue([]);
 
       const result = await service.getMenuListByUserId(1);
@@ -593,7 +593,7 @@ describe('MenuService', () => {
 
     // R-FLOW-ROUTER-04: 去重角色菜单ID
     it('Given 角色有重复菜单, When getMenuListByUserId, Then 菜单ID去重', async () => {
-      (userService.getRoleIds as jest.Mock).mockResolvedValue([2, 3]);
+      (userRoleQueryService.getRoleIds as jest.Mock).mockResolvedValue([2, 3]);
       (prisma.sysRoleMenu.findMany as jest.Mock).mockResolvedValue([{ menuId: 1 }, { menuId: 1 }, { menuId: 2 }]);
       (prisma.sysMenu.findMany as jest.Mock).mockResolvedValue([mockMenu, mockChildMenu]);
 

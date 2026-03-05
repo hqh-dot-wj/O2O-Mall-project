@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsOptional, Min, IsString } from 'class-validator';
-import { PointsTransactionType } from '@prisma/client';
+import { PointsTransactionTypeApi } from '../../constants/points-transaction-type-api.enum';
 
 /**
  * 积分交易查询 DTO
- * 
+ *
  * @description 用于查询积分交易记录
  */
 export class TransactionQueryDto {
@@ -13,10 +13,10 @@ export class TransactionQueryDto {
   @IsString()
   memberId?: string;
 
-  @ApiProperty({ description: '交易类型', enum: PointsTransactionType, required: false })
+  @ApiProperty({ description: '交易类型', enum: PointsTransactionTypeApi, required: false })
   @IsOptional()
-  @IsEnum(PointsTransactionType)
-  type?: PointsTransactionType;
+  @IsEnum(PointsTransactionTypeApi)
+  type?: string;
 
   @ApiProperty({ description: '开始时间', required: false })
   @IsOptional()

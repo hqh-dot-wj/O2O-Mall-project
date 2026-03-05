@@ -28,8 +28,8 @@ export class GlobalSkuVo {
   @ApiProperty({ description: '指导分销比例' })
   guideRate: number;
 
-  @ApiProperty({ description: '分销模式' })
-  distMode: DistributionMode;
+  @ApiProperty({ description: '分销模式', enum: DistributionMode })
+  distMode: string;
 
   @ApiProperty({ description: '成本价' })
   costPrice: number;

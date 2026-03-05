@@ -44,7 +44,7 @@ export class JobLogController {
   @RequirePermission('monitor:job:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  async export(@Res() res: Response, @Body() body: ListJobLogDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() body: ListJobLogDto): Promise<void> {
     return this.jobLogService.export(res, body);
   }
 }

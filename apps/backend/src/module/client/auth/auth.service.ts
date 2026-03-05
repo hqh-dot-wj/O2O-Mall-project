@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, UmsMember } from '@prisma/client';
 import { RedisService } from 'src/module/common/redis/redis.service';
-import { CheckLoginDto, RegisterDto, BindPhoneDto } from './dto/auth.dto';
+import { CheckLoginDto, ClientRegisterDto, BindPhoneDto } from './dto/auth.dto';
 import { SocialPlatform, MemberStatus } from '@prisma/client';
 import { GenerateUUID } from 'src/common/utils';
 import { CacheEnum } from 'src/common/enum';
@@ -63,7 +63,7 @@ export class AuthService {
    * @param dto 注册参数
    * @param platform 客户端平台，默认 MP_MALL（向后兼容）
    */
-  async register(dto: RegisterDto, platform: SocialPlatform = SocialPlatform.MP_MALL) {
+  async register(dto: ClientRegisterDto, platform: SocialPlatform = SocialPlatform.MP_MALL) {
     const strategy = this.strategyFactory.getStrategy(platform);
 
     // 1. 换取 OpenID
@@ -154,7 +154,7 @@ export class AuthService {
    * @param dto 注册参数
    * @param platform 客户端平台，默认 MP_MALL（向后兼容）
    */
-  async registerMobile(dto: RegisterDto & { phoneCode?: string }, platform: SocialPlatform = SocialPlatform.MP_MALL) {
+  async registerMobile(dto: ClientRegisterDto & { phoneCode?: string }, platform: SocialPlatform = SocialPlatform.MP_MALL) {
     const strategy = this.strategyFactory.getStrategy(platform);
 
     // 1. 换取 OpenID

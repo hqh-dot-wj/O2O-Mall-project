@@ -50,7 +50,7 @@ export class ListUserDto extends PageQueryDto {
   @IsString()
   phonenumber?: string;
 
-  @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
@@ -59,7 +59,7 @@ export class ListUserDto extends PageQueryDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 }
 
 /**

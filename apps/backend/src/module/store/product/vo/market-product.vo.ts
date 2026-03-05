@@ -12,7 +12,7 @@ export class MarketProductVo {
   albumPics: string;
 
   @ApiProperty({ description: '商品类型', enum: ProductType })
-  type: ProductType;
+  type: string;
 
   @ApiProperty({ description: '是否有SKU', deprecated: true })
   hasSku: boolean;

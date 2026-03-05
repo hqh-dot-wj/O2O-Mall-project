@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ProductType } from '@prisma/client';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
 import { Transactional } from 'src/common/decorators/transactional.decorator';
@@ -98,7 +98,7 @@ export class CategoryService {
       level,
       icon: dto.icon || null,
       sort: dto.sort || 0,
-      ...(dto.bindType !== undefined && { bindType: dto.bindType }),
+      ...(dto.bindType !== undefined && { bindType: dto.bindType as ProductType }),
       ...(dto.parentId && { parent: { connect: { catId: dto.parentId } } }),
       ...(dto.attrTemplateId && { attrTemplate: { connect: { templateId: dto.attrTemplateId } } }),
     });

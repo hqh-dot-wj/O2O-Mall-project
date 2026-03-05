@@ -5,7 +5,7 @@ import { MemberService } from './member.service';
 import {
   ListMemberDto,
   UpdateMemberStatusDto,
-  UpdateMemberLevelDto,
+  AdminUpdateMemberLevelDto,
   UpdateReferrerDto,
   UpdateMemberTenantDto,
   PointHistoryQueryDto,
@@ -86,7 +86,7 @@ export class MemberController {
   @RequirePermission('admin:member:level')
   @Operlog({ businessType: BusinessType.UPDATE })
   @Put('level')
-  async updateLevel(@Body() dto: UpdateMemberLevelDto) {
+  async updateLevel(@Body() dto: AdminUpdateMemberLevelDto) {
     return this.memberService.updateLevel(dto);
   }
 
@@ -118,7 +118,7 @@ export class MemberController {
   @RequirePermission('admin:member:list')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('export')
-  async export(@Res() res: Response, @Body() query: ListMemberDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() query: ListMemberDto): Promise<void> {
     return this.memberService.export(res, query);
   }
 }

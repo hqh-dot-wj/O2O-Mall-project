@@ -193,7 +193,7 @@ export class DictController {
   @RequirePermission('system:dict:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/type/export')
-  async export(@Res() res: Response, @Body() body: ListDictType): Promise<void> {
+  async exportTypeData(@Res() res: Response, @Body() body: ListDictType): Promise<void> {
     return this.dictService.export(res, body);
   }
 
@@ -206,7 +206,7 @@ export class DictController {
   @RequirePermission('system:dict:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/data/export')
-  async exportData(@Res() res: Response, @Body() body: ListDictType): Promise<void> {
+  async exportDictData(@Res() res: Response, @Body() body: ListDictType): Promise<void> {
     return this.dictService.exportData(res, body);
   }
 

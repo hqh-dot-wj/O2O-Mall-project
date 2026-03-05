@@ -40,7 +40,7 @@ export class CreateCategoryDto {
   @ApiProperty({ description: '绑定商品类型', enum: ProductType, required: false })
   @IsOptional()
   @IsEnum(ProductType)
-  bindType?: ProductType;
+  bindType?: string;
 
   /** 关联的属性模板ID */
   @ApiProperty({ description: '属性模板ID', required: false, example: 1 })

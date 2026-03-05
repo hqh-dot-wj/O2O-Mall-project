@@ -42,7 +42,7 @@ export class CreateMenuDto {
   @Length(0, 100)
   icon?: string;
 
-  @ApiProperty({ enum: MenuTypeEnum, enumName: 'MenuTypeEnum', enumSchema: MenuTypeEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: MenuTypeEnum, enumName: 'MenuTypeEnum', enumSchema: MenuTypeEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(MenuTypeEnum)

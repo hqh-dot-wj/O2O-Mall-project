@@ -17,7 +17,7 @@ import { MemberExportService } from './services/member-export.service';
 import {
   ListMemberDto,
   UpdateMemberStatusDto,
-  UpdateMemberLevelDto,
+  AdminUpdateMemberLevelDto,
   UpdateReferrerDto,
   UpdateMemberTenantDto,
   PointHistoryQueryDto,
@@ -179,7 +179,7 @@ export class MemberService {
    * 包含 C1/C2 级推荐关系重置逻辑
    */
   @Transactional()
-  async updateLevel(dto: UpdateMemberLevelDto) {
+  async updateLevel(dto: AdminUpdateMemberLevelDto) {
     const { memberId, levelId } = dto;
     const member = await this.memberRepo.findById(memberId);
     BusinessException.throwIfNull(member, '会员不存在');

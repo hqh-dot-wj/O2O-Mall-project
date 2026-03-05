@@ -8,7 +8,7 @@ export class CreateNoticeDto {
   @Length(0, 50)
   noticeTitle: string;
 
-  @ApiProperty({ enum: NoticeTypeEnum, enumName: 'NoticeTypeEnum', enumSchema: NoticeTypeEnumSchema, required: true })
+  @ApiProperty({ type: String, enum: NoticeTypeEnum, enumName: 'NoticeTypeEnum', enumSchema: NoticeTypeEnumSchema, required: true })
   @IsString()
   @IsEnum(NoticeTypeEnum)
   noticeType: string;
@@ -23,6 +23,7 @@ export class CreateNoticeDto {
   remark?: string;
 
   @ApiProperty({
+    type: String,
     enum: StatusEnum,
     enumName: 'StatusEnum',
     enumSchema: StatusEnumSchema,
@@ -31,7 +32,7 @@ export class CreateNoticeDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '公告内容' })
   @IsOptional()

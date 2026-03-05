@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { PointsTransactionType } from '@prisma/client';
+import { PointsTransactionTypeApi } from '../../constants/points-transaction-type-api.enum';
 
 /**
  * 增加积分 DTO
@@ -17,9 +17,9 @@ export class AddPointsDto {
   @Min(1)
   amount: number;
 
-  @ApiProperty({ description: '交易类型', enum: PointsTransactionType })
-  @IsEnum(PointsTransactionType)
-  type: PointsTransactionType;
+  @ApiProperty({ description: '交易类型', enum: PointsTransactionTypeApi })
+  @IsEnum(PointsTransactionTypeApi)
+  type: string;
 
   @ApiProperty({ description: '关联ID（订单ID、任务ID等）', required: false })
   @IsOptional()

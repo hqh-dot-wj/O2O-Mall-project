@@ -13,6 +13,7 @@ export class ListDeptDto {
   deptName?: string;
 
   @ApiProperty({
+    type: String,
     enum: StatusEnum,
     enumName: 'StatusEnum',
     enumSchema: StatusEnumSchema,
@@ -26,5 +27,5 @@ export class ListDeptDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 }

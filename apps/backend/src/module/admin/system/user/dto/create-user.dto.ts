@@ -49,7 +49,7 @@ export class CreateUserDto {
   @IsArray()
   roleIds?: Array<number>;
 
-  @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
@@ -58,9 +58,9 @@ export class CreateUserDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 
-  @ApiProperty({ enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(SexEnum)

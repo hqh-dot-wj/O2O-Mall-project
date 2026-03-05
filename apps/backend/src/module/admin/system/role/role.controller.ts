@@ -205,7 +205,7 @@ export class RoleController {
   @RequirePermission('system:role:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  async export(@Res() res: Response, @Body() body: ListRoleDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() body: ListRoleDto): Promise<void> {
     return this.roleService.export(res, body);
   }
 }

@@ -18,7 +18,7 @@ export class CreateConfigDto {
   @Length(0, 100)
   configKey: string;
 
-  @ApiProperty({ enum: ConfigTypeEnum, enumName: 'ConfigTypeEnum', enumSchema: ConfigTypeEnumSchema, required: true })
+  @ApiProperty({ type: String, enum: ConfigTypeEnum, enumName: 'ConfigTypeEnum', enumSchema: ConfigTypeEnumSchema, required: true })
   @IsString()
   @IsEnum(ConfigTypeEnum)
   configType: string;
@@ -33,6 +33,7 @@ export class CreateConfigDto {
   remark?: string;
 
   @ApiProperty({
+    type: String,
     enum: StatusEnum,
     enumName: 'StatusEnum',
     enumSchema: StatusEnumSchema,
@@ -41,5 +42,5 @@ export class CreateConfigDto {
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: StatusEnum;
+  status?: string;
 }

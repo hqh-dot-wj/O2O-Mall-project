@@ -9,7 +9,7 @@ export class UpdateProductBaseDto {
 
   @ApiProperty({ description: '上架状态', enum: PublishStatus })
   @IsEnum(PublishStatus)
-  status: PublishStatus;
+  status: string;
 
   @ApiProperty({ description: '门店自定义标题', required: false })
   @IsOptional()

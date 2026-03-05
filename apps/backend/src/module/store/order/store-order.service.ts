@@ -75,8 +75,8 @@ export class StoreOrderService {
     // 构建查询条件
     if (query.orderSn) where.orderSn = { contains: query.orderSn };
     if (query.receiverPhone) where.receiverPhone = { contains: query.receiverPhone };
-    if (query.status) where.status = query.status;
-    if (query.orderType) where.orderType = query.orderType;
+    if (query.status) where.status = query.status as OrderStatus;
+    if (query.orderType) where.orderType = query.orderType as OrderType;
     if (query.memberId) where.memberId = query.memberId;
 
     // 使用 PageQueryDto 的便捷方法处理时间范围
@@ -637,8 +637,8 @@ export class StoreOrderService {
     // 构建查询条件
     if (query.orderSn) where.orderSn = { contains: query.orderSn };
     if (query.receiverPhone) where.receiverPhone = { contains: query.receiverPhone };
-    if (query.status) where.status = query.status;
-    if (query.orderType) where.orderType = query.orderType;
+    if (query.status) where.status = query.status as OrderStatus;
+    if (query.orderType) where.orderType = query.orderType as OrderType;
     if (query.memberId) where.memberId = query.memberId;
 
     const dateRange = query.getDateRange('createTime');

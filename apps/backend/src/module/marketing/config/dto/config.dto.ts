@@ -16,7 +16,7 @@ export class StorePlayConfigDto {
 
   @ApiProperty({ description: '服务类型', enum: ProductType })
   @IsEnum(ProductType)
-  serviceType: ProductType;
+  serviceType: string;
 
   @ApiProperty({ description: '玩法模板编码' })
   @IsString()
@@ -30,12 +30,12 @@ export class StorePlayConfigDto {
   @ApiProperty({ description: '库存策略 (自动计算)', enum: MarketingStockMode, required: false })
   @IsEnum(MarketingStockMode)
   @IsOptional()
-  stockMode?: MarketingStockMode;
+  stockMode?: string;
 
   @ApiProperty({ description: '上下架状态', enum: PublishStatus })
   @IsEnum(PublishStatus)
   @IsOptional()
-  status?: PublishStatus;
+  status?: string;
 }
 
 export class CreateStorePlayConfigDto extends StorePlayConfigDto {}
@@ -54,7 +54,7 @@ export class UpdateStorePlayConfigDto {
   @ApiProperty({ description: '服务类型', enum: ProductType, required: false })
   @IsEnum(ProductType)
   @IsOptional()
-  serviceType?: ProductType;
+  serviceType?: string;
 
   @ApiProperty({ description: '玩法模板编码', required: false })
   @IsString()
@@ -72,12 +72,12 @@ export class UpdateStorePlayConfigDto {
   @ApiProperty({ description: '库存策略', enum: MarketingStockMode, required: false })
   @IsEnum(MarketingStockMode)
   @IsOptional()
-  stockMode?: MarketingStockMode;
+  stockMode?: string;
 
   @ApiProperty({ description: '上下架状态', enum: PublishStatus, required: false })
   @IsEnum(PublishStatus)
   @IsOptional()
-  status?: PublishStatus;
+  status?: string;
 }
 
 export class ListStorePlayConfigDto extends PageQueryDto {
@@ -94,5 +94,5 @@ export class ListStorePlayConfigDto extends PageQueryDto {
   @ApiProperty({ description: '状态', enum: PublishStatus, required: false })
   @IsOptional()
   @IsEnum(PublishStatus)
-  status?: PublishStatus;
+  status?: string;
 }

@@ -1,14 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { ModuleRef, DiscoveryService } from '@nestjs/core';
 import { IMarketingStrategy } from './strategy.interface';
-import { GroupBuyService } from './group-buy.service';
-import { CourseGroupBuyService } from './course-group-buy.service';
-import { MemberUpgradeService } from './member-upgrade.service';
-import { FlashSaleService } from './flash-sale.service';
-import { FullReductionService } from './full-reduction.service';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ResponseCode } from 'src/common/response/response.interface';
 import { PLAY_REGISTRY, PlayMetadata, getAllPlayMetadata } from './play.registry';
+import { PLAY_CODE_METADATA_KEY } from './play-strategy.decorator';
 
 /**
  * 玩法策略工厂类
@@ -24,31 +20,27 @@ import { PLAY_REGISTRY, PlayMetadata, getAllPlayMetadata } from './play.registry
  */
 @Injectable()
 export class PlayStrategyFactory implements OnModuleInit {
+  private readonly logger = new Logger(PlayStrategyFactory.name);
   private strategies = new Map<string, IMarketingStrategy>();
 
-  constructor(private readonly moduleRef: ModuleRef) {}
+  constructor(
+    private readonly moduleRef: ModuleRef,
+    private readonly discoveryService: DiscoveryService,
+  ) {}
 
   onModuleInit() {
-    // 在模块初始化时注册所有策略
-    // 注意：这里需要手动注册所有已实现的策略服务
-    // 策略类构造函数参数由 Nest DI 注入，此处使用类型断言绕过构造签名检查
-    this.register(GroupBuyService as new (...args: unknown[]) => IMarketingStrategy);
-    this.register(CourseGroupBuyService as new (...args: unknown[]) => IMarketingStrategy);
-    this.register(MemberUpgradeService as new (...args: unknown[]) => IMarketingStrategy);
-    this.register(FlashSaleService as new (...args: unknown[]) => IMarketingStrategy);
-    this.register(FullReductionService as new (...args: unknown[]) => IMarketingStrategy);
-  }
+    // 通过 DiscoveryService 自动扫描所有带 @PlayStrategy 装饰器的 provider
+    // 避免静态 import 策略 Service 导致循环依赖
+    const providers = this.discoveryService.getProviders();
+    for (const wrapper of providers) {
+      const { instance, metatype } = wrapper;
+      if (!instance || !metatype) continue;
 
-  /**
-   * 注册策略实例
-   *
-   * @param strategyClass 策略类
-   * @private
-   */
-  private register(strategyClass: new (...args: unknown[]) => IMarketingStrategy) {
-    const instance = this.moduleRef.get(strategyClass, { strict: false });
-    if (instance && instance.code) {
-      this.strategies.set(instance.code, instance);
+      const code = Reflect.getMetadata(PLAY_CODE_METADATA_KEY, metatype);
+      if (code && typeof (instance as IMarketingStrategy).code === 'string') {
+        this.strategies.set(code, instance as IMarketingStrategy);
+        this.logger.log(`[玩法注册] ${code} 注册成功`);
+      }
     }
   }
 

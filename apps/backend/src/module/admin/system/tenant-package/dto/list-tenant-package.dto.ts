@@ -10,7 +10,7 @@ export class ListTenantPackageDto extends PageQueryDto {
   @IsString()
   packageName?: string;
 
-  @ApiProperty({ required: false, description: '状态(0正常 1停用)' })
+  @ApiProperty({ type: String, required: false, description: '状态(0正常 1停用)' })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
@@ -19,5 +19,5 @@ export class ListTenantPackageDto extends PageQueryDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 }

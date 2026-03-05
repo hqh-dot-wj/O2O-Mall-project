@@ -135,7 +135,7 @@ export class TenantController {
   @RequirePermission('system:tenant:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  export(@Res() res: Response, @Body() body: ListTenantDto) {
+  exportData(@Res() res: Response, @Body() body: ListTenantDto) {
     return this.tenantService.export(res, body);
   }
 }

@@ -244,7 +244,7 @@ export interface paths {
         };
         /**
          * 获取租户列表
-         * @description 获取系统中所有可用的租户列表，用于登录时选择租户
+         * @description 获取系统中所有可用的租户列表
          */
         get: operations["AuthController_getTenantList"];
         put?: never;
@@ -289,6 +289,26 @@ export interface paths {
          * @description 用户登录接口，支持租户、验证码验证
          */
         post: operations["AuthController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 刷新令牌
+         * @description 使用 refresh_token 获取新的令牌对
+         */
+        post: operations["AuthController_refreshToken"];
         delete?: never;
         options?: never;
         head?: never;
@@ -346,7 +366,7 @@ export interface paths {
         put?: never;
         /**
          * 社交登录回调
-         * @description 第三方社交平台登录回调处理
+         * @description 第三方社交平台登录回调处理（GitHub OAuth）
          */
         post: operations["AuthController_socialCallback"];
         delete?: never;
@@ -611,6 +631,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/system/dept/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 部门管理-移动
+         * @description 将部门移动到新的父部门下，会递归更新所有子部门的祖级列表
+         */
+        put: operations["DeptController_move"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/dept/{id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 部门管理-人员统计
+         * @description 获取部门的人员统计信息，包括直接用户数和总用户数
+         */
+        get: operations["DeptController_getDeptUserStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/dept/leader/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 部门管理-负责人变更历史
+         * @description 查询部门负责人变更历史记录
+         */
+        get: operations["DeptController_getLeaderChangeHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/dict/type": {
         parameters: {
             query?: never;
@@ -847,6 +927,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/system/dict/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 字典-批量导入
+         * @description 批量导入字典类型及数据，支持跳过已存在的字典类型和标签
+         */
+        post: operations["DictController_importDict"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/dict/data/sort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 字典数据-批量排序
+         * @description 批量更新字典数据的排序值，支持拖拽排序
+         */
+        post: operations["DictController_sortDictData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/dict/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 字典-使用统计
+         * @description 获取字典类型和数据的使用统计信息，包括缓存状态
+         */
+        get: operations["DictController_getDictStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/menu/getRouters": {
         parameters: {
             query?: never;
@@ -1010,6 +1150,66 @@ export interface paths {
          * @description 级联删除菜单，多个ID用逗号分隔
          */
         delete: operations["MenuController_cascadeRemove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/menu/sort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 菜单管理-批量排序
+         * @description 批量更新菜单显示顺序，支持拖拽排序
+         */
+        put: operations["MenuController_batchSort"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/menu/generate-perms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 菜单管理-生成权限标识
+         * @description 根据菜单路径自动生成权限标识建议
+         */
+        post: operations["MenuController_generatePerms"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/menu/usage/{menuId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 菜单管理-使用情况统计
+         * @description 获取菜单被哪些角色使用的统计信息
+         */
+        get: operations["MenuController_getMenuUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1791,7 +1991,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 获取下级行政区划 (不传 parentId 则返回省份) */
+        /** 获取下级行政区划 (不传 parentCode 则返回省份) */
         get: operations["RegionController_list"];
         put?: never;
         post?: never;
@@ -1859,8 +2059,59 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 判断坐标所在位置 (C端使用) */
+        /** 判断坐标所在位置 (管理端调试) */
         get: operations["StationController_checkRegion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/lbs/metrics/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日匹配统计 */
+        get: operations["LbsMetricsController_getTodayStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/lbs/metrics/p95-latency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取当前小时P95延迟 */
+        get: operations["LbsMetricsController_getP95Latency"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/lbs/metrics/top-stations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取热门站点Top10 */
+        get: operations["LbsMetricsController_getTopStations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3568,7 +3819,7 @@ export interface paths {
             cookie?: never;
         };
         /** 查询提现列表 */
-        get: operations["StoreFinanceController_getWithdrawalList"];
+        get: operations["WithdrawalController_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3587,7 +3838,41 @@ export interface paths {
         get?: never;
         put?: never;
         /** 审核提现 */
-        post: operations["StoreFinanceController_auditWithdrawal"];
+        post: operations["WithdrawalController_audit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/settlement/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取结算统计 */
+        get: operations["SettlementController_getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/settlement/trigger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 手动触发结算 */
+        post: operations["SettlementController_trigger"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4128,6 +4413,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/member/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询会员详情 */
+        get: operations["MemberController_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/member/referrer": {
         parameters: {
             query?: never;
@@ -4224,6 +4526,23 @@ export interface paths {
         put?: never;
         /** 调整会员积分 */
         post: operations["MemberController_adjustMemberPoints"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/member/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 导出会员数据 */
+        post: operations["MemberController_export"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4360,6 +4679,312 @@ export interface paths {
         get?: never;
         /** 手动调整会员等级 */
         put: operations["AdminUpgradeController_manualLevel"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/wallet/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取钱包统计 */
+        get: operations["AdminFinanceController_getWalletStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/wallet/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询钱包列表 */
+        get: operations["AdminFinanceController_getWalletList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/wallet/abnormal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询异常钱包 */
+        get: operations["AdminFinanceController_getAbnormalWallets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/wallet/freeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 冻结钱包 */
+        post: operations["AdminFinanceController_freezeWallet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/wallet/unfreeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 解冻钱包 */
+        post: operations["AdminFinanceController_unfreezeWallet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/wallet/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量查询钱包 */
+        post: operations["AdminFinanceController_getWalletsByMemberIds"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/commission/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取佣金统计 */
+        get: operations["AdminFinanceController_getCommissionStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/commission/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询佣金列表 */
+        get: operations["AdminFinanceController_getCommissionList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/commission/detail/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取佣金详情 */
+        get: operations["AdminFinanceController_getCommissionDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/commission/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取佣金趋势 */
+        get: operations["AdminFinanceController_getCommissionTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/withdrawal/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取提现统计 */
+        get: operations["AdminFinanceController_getWithdrawalStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/withdrawal/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取提现趋势 */
+        get: operations["AdminFinanceController_getWithdrawalTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/withdrawal/detail/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取提现详情 */
+        get: operations["AdminFinanceController_getWithdrawalDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/withdrawal/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 导出提现数据 */
+        post: operations["AdminFinanceController_exportWithdrawals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/withdrawal/notify/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发送到账通知 */
+        post: operations["AdminFinanceController_sendArrivalNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/settlement/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询结算日志 */
+        get: operations["AdminFinanceController_getSettlementLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/settlement/logs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取结算日志详情 */
+        get: operations["AdminFinanceController_getSettlementLogDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/finance/settlement/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取结算概览 */
+        get: operations["AdminFinanceController_getSettlementOverview"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -5698,6 +6323,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/client/address/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取地址列表 */
+        get: operations["AddressController_getAddressList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/address/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取默认地址 */
+        get: operations["AddressController_getDefaultAddress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/address/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取地址详情 */
+        get: operations["AddressController_getAddressDetail"];
+        put?: never;
+        post?: never;
+        /** 删除地址 */
+        delete: operations["AddressController_deleteAddress"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/address": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 更新地址 */
+        put: operations["AddressController_updateAddress"];
+        /** 创建地址 */
+        post: operations["AddressController_createAddress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/address/{id}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设为默认地址 */
+        put: operations["AddressController_setDefaultAddress"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/cart/add": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 添加到购物车 */
+        post: operations["CartController_addToCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/cart/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取购物车列表 */
+        get: operations["CartController_getCartList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/cart/quantity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 更新购物车数量 */
+        put: operations["CartController_updateQuantity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/cart/{skuId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除购物车商品 */
+        delete: operations["CartController_removeItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/cart/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 清空购物车 */
+        delete: operations["CartController_clearCart"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/client/cart/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取购物车数量 */
+        get: operations["CartController_getCartCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/marketing/coupon/user-coupons": {
         parameters: {
             query?: never;
@@ -5896,195 +6710,6 @@ export interface paths {
         };
         /** 导出积分明细 */
         get: operations["PointsManagementController_exportTransactions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/address/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取地址列表 */
-        get: operations["AddressController_getAddressList"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/address/default": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取默认地址 */
-        get: operations["AddressController_getDefaultAddress"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/address/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取地址详情 */
-        get: operations["AddressController_getAddressDetail"];
-        put?: never;
-        post?: never;
-        /** 删除地址 */
-        delete: operations["AddressController_deleteAddress"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/address": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** 更新地址 */
-        put: operations["AddressController_updateAddress"];
-        /** 创建地址 */
-        post: operations["AddressController_createAddress"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/address/{id}/default": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** 设为默认地址 */
-        put: operations["AddressController_setDefaultAddress"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/cart/add": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 添加到购物车 */
-        post: operations["CartController_addToCart"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/cart/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取购物车列表 */
-        get: operations["CartController_getCartList"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/cart/quantity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** 更新购物车数量 */
-        put: operations["CartController_updateQuantity"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/cart/{skuId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** 删除购物车商品 */
-        delete: operations["CartController_removeItem"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/cart/clear": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** 清空购物车 */
-        delete: operations["CartController_clearCart"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/client/cart/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取购物车数量 */
-        get: operations["CartController_getCartCount"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6637,7 +7262,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/list": {
+    "/api/store/order/list": {
         parameters: {
             query?: never;
             header?: never;
@@ -6654,7 +7279,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/detail/{id}": {
+    "/api/store/order/detail/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -6671,7 +7296,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/dispatch/list": {
+    "/api/store/order/dispatch/list": {
         parameters: {
             query?: never;
             header?: never;
@@ -6688,7 +7313,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/reassign": {
+    "/api/store/order/reassign": {
         parameters: {
             query?: never;
             header?: never;
@@ -6705,7 +7330,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/verify": {
+    "/api/store/order/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -6722,7 +7347,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/refund": {
+    "/api/store/order/refund": {
         parameters: {
             query?: never;
             header?: never;
@@ -6739,7 +7364,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/refund/partial": {
+    "/api/store/order/refund/partial": {
         parameters: {
             query?: never;
             header?: never;
@@ -6756,7 +7381,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/export": {
+    "/api/store/order/export": {
         parameters: {
             query?: never;
             header?: never;
@@ -6773,7 +7398,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/batch/verify": {
+    "/api/store/order/batch/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -6790,7 +7415,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/order/batch/refund": {
+    "/api/store/order/batch/refund": {
         parameters: {
             query?: never;
             header?: never;
@@ -6807,7 +7432,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/finance/dashboard": {
+    "/api/store/finance/dashboard": {
         parameters: {
             query?: never;
             header?: never;
@@ -6824,7 +7449,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/finance/commission/list": {
+    "/api/store/finance/commission/list": {
         parameters: {
             query?: never;
             header?: never;
@@ -6841,7 +7466,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/finance/commission/stats": {
+    "/api/store/finance/commission/stats": {
         parameters: {
             query?: never;
             header?: never;
@@ -6858,7 +7483,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/finance/ledger": {
+    "/api/store/finance/withdrawal/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询提现列表 */
+        get: operations["StoreFinanceController_getWithdrawalList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/finance/withdrawal/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核提现 */
+        post: operations["StoreFinanceController_auditWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/finance/ledger": {
         parameters: {
             query?: never;
             header?: never;
@@ -6875,7 +7534,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/finance/ledger/stats": {
+    "/api/store/finance/ledger/stats": {
         parameters: {
             query?: never;
             header?: never;
@@ -6892,7 +7551,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/finance/ledger/export": {
+    "/api/store/finance/ledger/export": {
         parameters: {
             query?: never;
             header?: never;
@@ -7237,6 +7896,10 @@ export interface components {
             /** @description 记住我 */
             rememberMe?: boolean;
         };
+        RefreshTokenDto: {
+            /** @description 刷新令牌 */
+            refreshToken: string;
+        };
         AuthRegisterDto: {
             /**
              * @description 租户ID
@@ -7429,6 +8092,12 @@ export interface components {
             /** @description 部门ID */
             deptId?: number;
         };
+        MoveDeptDto: {
+            /** @description 要移动的部门ID */
+            deptId: number;
+            /** @description 新的父部门ID（0表示移动到顶级） */
+            newParentId: number;
+        };
         CreateDictTypeDto: {
             /** @description 字典名称 */
             dictName: string;
@@ -7577,6 +8246,70 @@ export interface components {
             dictType?: string;
             status?: components["schemas"]["StatusEnum"];
         };
+        ImportDictDataItemDto: {
+            /** @description 字典标签 */
+            dictLabel: string;
+            /** @description 字典键值 */
+            dictValue: string;
+            /** @description 字典排序 */
+            dictSort?: number;
+            /** @description 样式属性 */
+            listClass?: string;
+            /** @description CSS样式 */
+            cssClass?: string;
+            /** @description 备注 */
+            remark?: string;
+        };
+        ImportDictDto: {
+            /** @description 字典名称 */
+            dictName: string;
+            /** @description 字典类型 */
+            dictType: string;
+            /** @description 备注 */
+            remark?: string;
+            /** @description 字典数据列表 */
+            dataList: components["schemas"]["ImportDictDataItemDto"][];
+        };
+        DictDataSortItemDto: {
+            /** @description 字典数据编码 */
+            dictCode: number;
+            /** @description 排序值 */
+            dictSort: number;
+        };
+        SortDictDataDto: {
+            /** @description 字典类型 */
+            dictType: string;
+            /** @description 排序列表 */
+            sortList: components["schemas"]["DictDataSortItemDto"][];
+        };
+        DictStatsDto: {
+            /** @description 字典类型 */
+            dictType: string;
+            /** @description 字典名称 */
+            dictName: string;
+            /** @description 字典数据数量 */
+            dataCount: number;
+            /**
+             * @description 缓存状态
+             * @enum {string}
+             */
+            cacheStatus: "cached" | "not_cached";
+            /**
+             * Format: date-time
+             * @description 最后访问时间
+             */
+            lastAccessTime?: string;
+        };
+        DictStatsSummaryDto: {
+            /** @description 字典类型总数 */
+            totalTypeCount: number;
+            /** @description 字典数据总数 */
+            totalDataCount: number;
+            /** @description 已缓存的字典类型数量 */
+            cachedTypeCount: number;
+            /** @description 字典类型详细统计 */
+            details: components["schemas"]["DictStatsDto"][];
+        };
         /**
          * @description 菜单类型枚举
          *     - M: 目录
@@ -7700,6 +8433,62 @@ export interface components {
             remark?: string;
             /** @description 菜单ID */
             menuId: number;
+        };
+        MenuSortItem: {
+            /** @description 菜单ID */
+            menuId: number;
+            /** @description 显示顺序 */
+            orderNum: number;
+        };
+        SortMenuDto: {
+            /** @description 排序列表 */
+            items: components["schemas"]["MenuSortItem"][];
+        };
+        GeneratePermsVo: {
+            /** @description 推荐的权限标识 */
+            perms: string;
+            /** @description 权限标识建议列表 */
+            suggestions: string[];
+        };
+        GeneratePermsDto: {
+            /**
+             * @description 菜单路径
+             * @example /system/user
+             */
+            path: string;
+            /**
+             * @description 父菜单路径
+             * @example /system
+             */
+            parentPath?: string;
+            /**
+             * @description 菜单类型：M=目录 C=菜单 F=按钮
+             * @enum {string}
+             */
+            menuType?: "M" | "C" | "F";
+            /**
+             * @description 操作类型（按钮时使用）
+             * @enum {string}
+             */
+            action?: "list" | "query" | "add" | "edit" | "remove" | "export" | "import";
+        };
+        MenuUsageRoleVo: {
+            /** @description 角色ID */
+            roleId: number;
+            /** @description 角色名称 */
+            roleName: string;
+            /** @description 角色权限字符串 */
+            roleKey: string;
+            /** @description 角色状态（0正常 1停用） */
+            status: string;
+        };
+        MenuUsageVo: {
+            /** @description 菜单ID */
+            menuId: number;
+            /** @description 使用该菜单的角色数量 */
+            roleCount: number;
+            /** @description 使用该菜单的角色列表 */
+            roles: components["schemas"]["MenuUsageRoleVo"][];
         };
         MessageVo: {
             /** @description 消息ID */
@@ -8246,6 +9035,37 @@ export interface components {
              * @description 结束时间
              */
             endTime?: string;
+        };
+        StationPointDto: {
+            /** @description 经度 */
+            lng: number;
+            /** @description 纬度 */
+            lat: number;
+        };
+        GeoFenceDto: {
+            /**
+             * @description 围栏类型 (POLYGON/CIRCLE)
+             * @default POLYGON
+             */
+            type: string;
+            /** @description 围栏点坐标集合 */
+            points: components["schemas"]["StationPointDto"][];
+            /** @description 围栏半径(米) - 圆形围栏必填 */
+            radius: number;
+        };
+        CreateStationDto: {
+            /** @description 站点名称 */
+            name: string;
+            /** @description 站点地址 */
+            address: string;
+            /** @description 中心坐标 */
+            location: components["schemas"]["StationPointDto"];
+            /** @description 电子围栏配置 */
+            fence?: components["schemas"]["GeoFenceDto"];
+            /** @description 负责人 */
+            manager?: string;
+            /** @description 联系电话 */
+            phone?: string;
         };
         CreateTenantPackageDto: {
             /** @description 套餐名称 */
@@ -9385,6 +10205,31 @@ export interface components {
             /** @description 备注/调整原因 */
             remark?: string;
         };
+        ListMemberDto: {
+            /**
+             * @description 页码
+             * @default 1
+             */
+            pageNum: number;
+            /**
+             * @description 每页条数
+             * @default 10
+             */
+            pageSize: number;
+            /** @description 排序字段 */
+            orderByColumn?: string;
+            /**
+             * @description 排序方向
+             * @enum {string}
+             */
+            isAsc?: "asc" | "desc";
+            /** @description 时间范围 */
+            params?: components["schemas"]["DateRangeDto"];
+            /** @description 会员昵称 */
+            nickname?: string;
+            /** @description 手机号 */
+            mobile?: string;
+        };
         AddPointsDto: {
             /** @description 用户ID */
             memberId: string;
@@ -9487,6 +10332,31 @@ export interface components {
             /** @description 操作原因 */
             reason?: string;
         };
+        FreezeWalletDto: {
+            /** @description 钱包ID */
+            walletId: string;
+            /** @description 冻结原因 */
+            reason: string;
+        };
+        ExportWithdrawalDto: {
+            /**
+             * @description 提现状态
+             * @enum {string}
+             */
+            status?: "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
+            /** @description 搜索关键字 */
+            keyword?: string;
+            /**
+             * Format: date-time
+             * @description 开始时间
+             */
+            startTime?: string;
+            /**
+             * Format: date-time
+             * @description 结束时间
+             */
+            endTime?: string;
+        };
         ClientUserVo: {
             /** @description 用户ID */
             memberId: string;
@@ -9581,6 +10451,8 @@ export interface components {
             needBooking: boolean;
             /** @description SKU列表 */
             skus: string[];
+            /** @description 营销活动列表 */
+            marketingActivities?: string[];
         };
         ClientCategoryVo: {
             /** @description 分类ID */
@@ -10156,6 +11028,12 @@ export interface components {
             publishStatus: "OFF_SHELF" | "ON_SHELF";
         };
         CreateTemplateDto: Record<string, never>;
+        CategoryAttrTemplateVo: {
+            /** @description 模板ID */
+            templateId: number;
+            /** @description 模板名称 */
+            name: string;
+        };
         CategoryVo: {
             /**
              * @description 分类ID
@@ -10166,12 +11044,17 @@ export interface components {
              * @description 父级分类ID
              * @example 0
              */
-            parentId: number;
+            parentId: number | null;
             /**
              * @description 分类名称
              * @example 电子产品
              */
             name: string;
+            /**
+             * @description 层级
+             * @example 1
+             */
+            level: number;
             /**
              * @description 分类图标
              * @example icon-electronics
@@ -10183,10 +11066,17 @@ export interface components {
              */
             sort: number;
             /**
+             * @description 绑定商品类型
+             * @enum {string}
+             */
+            bindType?: "REAL" | "SERVICE";
+            /**
              * @description 属性模板ID
              * @example 1
              */
             attrTemplateId: number;
+            /** @description 属性模板 */
+            attrTemplate?: components["schemas"]["CategoryAttrTemplateVo"];
             /**
              * Format: date-time
              * @description 创建时间
@@ -10226,6 +11116,11 @@ export interface components {
              */
             sort: number;
             /**
+             * @description 绑定商品类型
+             * @enum {string}
+             */
+            bindType?: "REAL" | "SERVICE";
+            /**
              * @description 属性模板ID
              * @example 1
              */
@@ -10254,6 +11149,11 @@ export interface components {
              * @example 0
              */
             sort: number;
+            /**
+             * @description 绑定商品类型
+             * @enum {string}
+             */
+            bindType?: "REAL" | "SERVICE";
             /**
              * @description 属性模板ID
              * @example 1
@@ -10964,58 +11864,6 @@ export interface components {
             /** @description 用户ID列表 */
             memberIds: string[];
         };
-        CreatePointsTaskDto: {
-            /**
-             * @description 任务唯一标识
-             * @example COMPLETE_PROFILE
-             */
-            taskKey: string;
-            /**
-             * @description 任务名称
-             * @example 完善个人资料
-             */
-            taskName: string;
-            /** @description 任务描述 */
-            taskDescription?: string;
-            /**
-             * @description 积分奖励
-             * @example 50
-             */
-            pointsReward: number;
-            /**
-             * @description 完成条件（JSON格式）
-             * @example {}
-             */
-            completionCondition: Record<string, never>;
-            /**
-             * @description 是否可重复完成
-             * @example false
-             */
-            isRepeatable: boolean;
-            /** @description 最多完成次数 */
-            maxCompletions?: number;
-            /**
-             * @description 是否启用
-             * @example true
-             */
-            isEnabled: boolean;
-        };
-        UpdatePointsTaskDto: {
-            /** @description 任务名称 */
-            taskName?: string;
-            /** @description 任务描述 */
-            taskDescription?: string;
-            /** @description 积分奖励 */
-            pointsReward?: number;
-            /** @description 完成条件（JSON格式） */
-            completionCondition?: Record<string, never>;
-            /** @description 是否可重复完成 */
-            isRepeatable?: boolean;
-            /** @description 最多完成次数 */
-            maxCompletions?: number;
-            /** @description 是否启用 */
-            isEnabled?: boolean;
-        };
         CreateAddressDto: {
             /** @description 收货人姓名 */
             name: string;
@@ -11116,6 +11964,58 @@ export interface components {
             skuId: string;
             /** @description 新数量 */
             quantity: number;
+        };
+        CreatePointsTaskDto: {
+            /**
+             * @description 任务唯一标识
+             * @example COMPLETE_PROFILE
+             */
+            taskKey: string;
+            /**
+             * @description 任务名称
+             * @example 完善个人资料
+             */
+            taskName: string;
+            /** @description 任务描述 */
+            taskDescription?: string;
+            /**
+             * @description 积分奖励
+             * @example 50
+             */
+            pointsReward: number;
+            /**
+             * @description 完成条件（JSON格式）
+             * @example {}
+             */
+            completionCondition: Record<string, never>;
+            /**
+             * @description 是否可重复完成
+             * @example false
+             */
+            isRepeatable: boolean;
+            /** @description 最多完成次数 */
+            maxCompletions?: number;
+            /**
+             * @description 是否启用
+             * @example true
+             */
+            isEnabled: boolean;
+        };
+        UpdatePointsTaskDto: {
+            /** @description 任务名称 */
+            taskName?: string;
+            /** @description 任务描述 */
+            taskDescription?: string;
+            /** @description 积分奖励 */
+            pointsReward?: number;
+            /** @description 完成条件（JSON格式） */
+            completionCondition?: Record<string, never>;
+            /** @description 是否可重复完成 */
+            isRepeatable?: boolean;
+            /** @description 最多完成次数 */
+            maxCompletions?: number;
+            /** @description 是否启用 */
+            isEnabled?: boolean;
         };
         MatchTenantVo: {
             /** @description 租户ID */
@@ -11246,6 +12146,80 @@ export interface components {
             /** @description 库存调整项列表 */
             items: components["schemas"]["BatchUpdateStockItemDto"][];
         };
+        StoreOrderListItemVo: {
+            /** @description 订单ID */
+            id: string;
+            /** @description 订单号 */
+            orderSn: string;
+            /**
+             * @description 订单类型
+             * @enum {string}
+             */
+            orderType: "PRODUCT" | "SERVICE";
+            /** @description 订单状态 */
+            status: string;
+            /** @description 收货人 */
+            receiverName: string;
+            /** @description 收货人电话 */
+            receiverPhone: string;
+            /** @description 收货地址 */
+            receiverAddress: string;
+            /** @description 商品总金额 */
+            totalAmount: number;
+            /** @description 运费 */
+            freightAmount: number;
+            /** @description 优惠金额 */
+            discountAmount: number;
+            /** @description 实付金额 */
+            payAmount: number;
+            /** @description 创建时间 */
+            createTime: string;
+            /** @description 商品主图 */
+            productImg: string;
+            /** @description 佣金金额 */
+            commissionAmount: number;
+            /** @description 商户收款金额 */
+            remainingAmount: number;
+            /** @description 所属租户 */
+            tenantName: string;
+        };
+        StoreOrderCustomerVo: {
+            id: string;
+            nickname: string;
+            mobile: string;
+            avatar?: string;
+        };
+        StoreOrderWorkerVo: {
+            id: number;
+            name: string;
+            phone: string;
+            avatar?: string;
+            rating?: number;
+        };
+        StoreOrderCommissionVo: {
+            id: string;
+            beneficiaryId: string;
+            beneficiary?: Record<string, never>;
+            level: number;
+            amount: number;
+            rateSnapshot: number;
+            status: string;
+            planSettleTime: string;
+        };
+        StoreOrderDetailVo: {
+            /** @description 订单信息 */
+            order: components["schemas"]["StoreOrderListItemVo"];
+            /** @description 客户信息 */
+            customer?: components["schemas"]["StoreOrderCustomerVo"];
+            /** @description 技师信息 */
+            worker?: components["schemas"]["StoreOrderWorkerVo"];
+            /** @description 归因信息 */
+            attribution?: Record<string, never>;
+            /** @description 佣金明细 */
+            commissions?: components["schemas"]["StoreOrderCommissionVo"][];
+            /** @description 商户信息 */
+            business?: Record<string, never>;
+        };
         ReassignWorkerDto: {
             /** @description 订单ID */
             orderId: string;
@@ -11290,6 +12264,68 @@ export interface components {
             /** @description 退款原因 */
             remark?: string;
         };
+        StoreFinanceDashboardVo: {
+            /** @description 今日 GMV */
+            todayGMV: number;
+            /** @description 今日订单数 */
+            todayOrderCount: number;
+            /** @description 本月 GMV */
+            monthGMV: number;
+            /** @description 待结算佣金 */
+            pendingCommission: number;
+            /** @description 已结算佣金 */
+            settledCommission: number;
+            /** @description 待审核提现数 */
+            pendingWithdrawals: number;
+        };
+        StoreCommissionRecordVo: {
+            /** @description 佣金ID */
+            id: string;
+            /** @description 订单ID */
+            orderId: string;
+            /** @description 订单信息 */
+            order?: Record<string, never>;
+            /** @description 受益人ID */
+            beneficiaryId: string;
+            /** @description 受益人信息 */
+            beneficiary?: Record<string, never>;
+            /**
+             * @description 佣金层级
+             * @enum {number}
+             */
+            level: 1 | 2;
+            /** @description 佣金金额 */
+            amount: number;
+            /** @description 费率快照 */
+            rateSnapshot: number;
+            /**
+             * @description 佣金状态
+             * @enum {string}
+             */
+            status: "FROZEN" | "SETTLED" | "CANCELLED";
+            /** @description 计划结算时间 */
+            planSettleTime: string;
+            /** @description 实际结算时间 */
+            actualSettleTime?: string;
+            /** @description 创建时间 */
+            createTime: string;
+            /** @description 分佣基数类型 */
+            commissionBaseType?: string;
+            /** @description 优惠券抵扣 */
+            couponDiscount?: number;
+            /** @description 积分抵扣 */
+            pointsDiscount?: number;
+            /** @description 是否触发熔断 */
+            isCapped?: boolean;
+        };
+        StoreCommissionStatsVo: {
+            /** @description 今日佣金 */
+            todayCommission: number;
+            /** @description 本月佣金 */
+            monthCommission: number;
+            /** @description 待结算佣金 */
+            pendingCommission: number;
+        };
         AuditWithdrawalDto: {
             /** @description 提现ID */
             withdrawalId: string;
@@ -11300,6 +12336,40 @@ export interface components {
             action: "APPROVE" | "REJECT";
             /** @description 审核备注 */
             remark?: string;
+        };
+        StoreLedgerRecordVo: {
+            /** @description 流水ID */
+            id: string;
+            /** @description 流水类型 */
+            type: string;
+            /** @description 类型名称 */
+            typeName: string;
+            /** @description 金额 */
+            amount: number;
+            /** @description 变动后余额 */
+            balanceAfter?: number;
+            /** @description 关联ID */
+            relatedId?: string;
+            /** @description 备注 */
+            remark?: string;
+            /** @description 创建时间 */
+            createTime: string;
+            /** @description 状态 */
+            status?: string;
+            /** @description 用户信息 */
+            user?: Record<string, never>;
+            /** @description 分销信息（仅订单收入类型） */
+            distribution?: Record<string, never>;
+        };
+        StoreLedgerStatsVo: {
+            /** @description 总收入 */
+            totalIncome: number;
+            /** @description 总支出 */
+            totalExpense: number;
+            /** @description 净利润 */
+            netProfit: number;
+            /** @description 待结算佣金 */
+            pendingCommission: number;
         };
         ListLedgerDto: {
             /**
@@ -12410,6 +13480,77 @@ export interface operations {
             };
         };
     };
+    AuthController_refreshToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshTokenDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["LoginTokenVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
     AuthController_register: {
         parameters: {
             query?: never;
@@ -12560,7 +13701,10 @@ export interface operations {
     AuthController_socialCallback: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description 租户ID */
+                "tenant-id"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -12577,10 +13721,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                        data?: components["schemas"]["LoginTokenVo"];
                     };
                 };
             };
@@ -13811,6 +14952,236 @@ export interface operations {
             };
         };
     };
+    DeptController_move: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveDeptDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DeptController_getDeptUserStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 部门ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DeptController_getLeaderChangeHistory: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: string;
+                /** @description 每页数量 */
+                pageSize?: string;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 部门ID */
+                deptId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
     DictController_updateType: {
         parameters: {
             query?: never;
@@ -14915,6 +16286,221 @@ export interface operations {
             };
         };
     };
+    DictController_importDict: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDictDto"][];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DictController_sortDictData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SortDictDataDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    DictController_getDictStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["DictStatsSummaryDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
     MenuController_getRouters: {
         parameters: {
             query?: never;
@@ -15579,6 +17165,221 @@ export interface operations {
                             /** @default true */
                             value: boolean;
                         } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    MenuController_batchSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SortMenuDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    MenuController_generatePerms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneratePermsDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["GeneratePermsVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    MenuController_getMenuUsage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 菜单ID */
+                menuId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["MenuUsageVo"];
                     };
                 };
             };
@@ -18708,8 +20509,20 @@ export interface operations {
     RegionController_list: {
         parameters: {
             query?: {
-                /** @description 父级Code */
-                parentId?: string;
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 父级编码 */
+                parentCode?: string;
+                /** @description 行政区划名称 */
+                name?: string;
             };
             header?: never;
             path?: never;
@@ -18717,11 +20530,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -18730,17 +20596,71 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @description 行政区划编码 */
                 code: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -18751,19 +20671,77 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStationDto"];
+            };
+        };
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
     StationController_list: {
         parameters: {
             query?: {
+                /** @description 租户ID */
                 tenantId?: string;
             };
             header?: never;
@@ -18772,18 +20750,73 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
     StationController_checkRegion: {
         parameters: {
             query: {
+                /** @description 纬度 */
                 lat: number;
+                /** @description 经度 */
                 lng: number;
             };
             header?: never;
@@ -18792,11 +20825,274 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    LbsMetricsController_getTodayStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    LbsMetricsController_getP95Latency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    LbsMetricsController_getTopStations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -25953,7 +28249,7 @@ export interface operations {
             };
         };
     };
-    StoreFinanceController_getWithdrawalList: {
+    WithdrawalController_list: {
         parameters: {
             query?: {
                 /** @description 页码 */
@@ -25966,11 +28262,82 @@ export interface operations {
                 isAsc?: "asc" | "desc";
                 /** @description 时间范围 */
                 params?: components["schemas"]["DateRangeDto"];
-                /** @description 提现状态 */
+                /** @description 状态 */
                 status?: "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
+                /** @description 搜索关键字(用户昵称/手机号) */
+                keyword?: string;
                 /** @description 会员ID */
                 memberId?: string;
+                /** @description 租户ID (仅总部可用) */
+                tenantId?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["WithdrawalVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    WithdrawalController_audit: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -26038,18 +28405,84 @@ export interface operations {
             };
         };
     };
-    StoreFinanceController_auditWithdrawal: {
+    SettlementController_getStats: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuditWithdrawalDto"];
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
+    };
+    SettlementController_trigger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description 操作成功 */
             200: {
@@ -28454,6 +30887,25 @@ export interface operations {
             };
         };
     };
+    MemberController_detail: {
+        parameters: {
+            query: {
+                memberId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MemberController_updateReferrer: {
         parameters: {
             query?: never;
@@ -28696,6 +31148,80 @@ export interface operations {
             };
         };
     };
+    MemberController_export: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListMemberDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
     PointsAccountAdminController_adjustPoints: {
         parameters: {
             query?: never;
@@ -28709,11 +31235,64 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -28730,11 +31309,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -28760,11 +31392,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -28777,11 +31462,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -28798,11 +31536,64 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -28900,6 +31691,1354 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AdminFinanceController_getWalletStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getWalletList: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 钱包状态 */
+                status?: "NORMAL" | "FROZEN" | "DISABLED";
+                /** @description 搜索关键字(用户昵称/手机号) */
+                keyword?: string;
+                /** @description 最小余额 */
+                minBalance?: number;
+                /** @description 最大余额 */
+                maxBalance?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getAbnormalWallets: {
+        parameters: {
+            query: {
+                pageNum: number;
+                pageSize: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_freezeWallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreezeWalletDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_unfreezeWallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getWalletsByMemberIds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getCommissionStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getCommissionList: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 佣金状态 */
+                status?: "FROZEN" | "SETTLED" | "CANCELLED";
+                /** @description 订单ID */
+                orderId?: string;
+                /** @description 订单号 */
+                orderSn?: string;
+                /** @description 受益人ID */
+                beneficiaryId?: string;
+                /** @description 搜索关键字(用户昵称/手机号) */
+                keyword?: string;
+                /** @description 佣金层级(1=一级, 2=二级) */
+                level?: number;
+                /** @description 开始时间 */
+                startTime?: string;
+                /** @description 结束时间 */
+                endTime?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getCommissionDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getCommissionTrend: {
+        parameters: {
+            query: {
+                days: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getWithdrawalStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getWithdrawalTrend: {
+        parameters: {
+            query: {
+                days: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getWithdrawalDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_exportWithdrawals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportWithdrawalDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_sendArrivalNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getSettlementLogs: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 触发类型 */
+                triggerType?: "SCHEDULED" | "MANUAL";
+                /** @description 是否有错误 */
+                hasError?: boolean;
+                /** @description 开始时间 */
+                startTime?: string;
+                /** @description 结束时间 */
+                endTime?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getSettlementLogDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    AdminFinanceController_getSettlementOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -31374,11 +35513,64 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -32424,6 +36616,8 @@ export interface operations {
                 name?: string;
                 /** @description 分类ID */
                 categoryId?: number;
+                /** @description 发布状态 */
+                publishStatus?: "OFF_SHELF" | "ON_SHELF";
             };
             header?: never;
             path?: never;
@@ -35245,510 +39439,6 @@ export interface operations {
             };
         };
     };
-    CouponManagementController_getUserCoupons: {
-        parameters: {
-            query: {
-                memberId: string;
-                status: string;
-                pageNum: number;
-                pageSize: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    CouponManagementController_getUsageRecords: {
-        parameters: {
-            query: {
-                memberId: string;
-                templateId: string;
-                startTime: string;
-                endTime: string;
-                pageNum: number;
-                pageSize: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    CouponManagementController_getStatistics: {
-        parameters: {
-            query: {
-                templateId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    CouponManagementController_exportUsageRecords: {
-        parameters: {
-            query: {
-                memberId: string;
-                templateId: string;
-                startTime: string;
-                endTime: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 操作成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 401 */
-                        code?: number;
-                        /** @example 请先登录 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 403 */
-                        code?: number;
-                        /** @example 没有操作权限 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 500 */
-                        code?: number;
-                        /** @example 系统异常 */
-                        msg?: string;
-                        data?: Record<string, never> | null;
-                    };
-                };
-            };
-        };
-    };
-    PointsTaskAdminController_findAll: {
-        parameters: {
-            query?: {
-                /** @description 是否启用 */
-                isEnabled?: boolean;
-                /** @description 页码 */
-                pageNum?: number;
-                /** @description 每页数量 */
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsTaskAdminController_createTask: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePointsTaskDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsTaskAdminController_updateTask: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePointsTaskDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsTaskAdminController_deleteTask: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsManagementController_getEarnStatistics: {
-        parameters: {
-            query: {
-                startTime: string;
-                endTime: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsManagementController_getUseStatistics: {
-        parameters: {
-            query: {
-                startTime: string;
-                endTime: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsManagementController_getBalanceStatistics: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsManagementController_getExpireStatistics: {
-        parameters: {
-            query: {
-                startTime: string;
-                endTime: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsManagementController_getRanking: {
-        parameters: {
-            query: {
-                limit: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PointsManagementController_exportTransactions: {
-        parameters: {
-            query: {
-                memberId: string;
-                type: string;
-                startTime: string;
-                endTime: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AddressController_getAddressList: {
         parameters: {
             query?: never;
@@ -36245,6 +39935,1040 @@ export interface operations {
         parameters: {
             query: {
                 tenantId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    CouponManagementController_getUserCoupons: {
+        parameters: {
+            query: {
+                memberId: string;
+                status: string;
+                pageNum: number;
+                pageSize: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    CouponManagementController_getUsageRecords: {
+        parameters: {
+            query: {
+                memberId: string;
+                templateId: string;
+                startTime: string;
+                endTime: string;
+                pageNum: number;
+                pageSize: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    CouponManagementController_getStatistics: {
+        parameters: {
+            query: {
+                templateId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    CouponManagementController_exportUsageRecords: {
+        parameters: {
+            query: {
+                memberId: string;
+                templateId: string;
+                startTime: string;
+                endTime: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsTaskAdminController_findAll: {
+        parameters: {
+            query?: {
+                /** @description 是否启用 */
+                isEnabled?: boolean;
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页数量 */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsTaskAdminController_createTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePointsTaskDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsTaskAdminController_updateTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePointsTaskDto"];
+            };
+        };
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsTaskAdminController_deleteTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsManagementController_getEarnStatistics: {
+        parameters: {
+            query: {
+                startTime: string;
+                endTime: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsManagementController_getUseStatistics: {
+        parameters: {
+            query: {
+                startTime: string;
+                endTime: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsManagementController_getBalanceStatistics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsManagementController_getExpireStatistics: {
+        parameters: {
+            query: {
+                startTime: string;
+                endTime: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsManagementController_getRanking: {
+        parameters: {
+            query: {
+                limit: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    PointsManagementController_exportTransactions: {
+        parameters: {
+            query: {
+                memberId: string;
+                type: string;
+                startTime: string;
+                endTime: string;
             };
             header?: never;
             path?: never;
@@ -37002,11 +41726,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37032,11 +41809,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37051,11 +41881,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37068,11 +41951,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37085,11 +42021,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37102,11 +42091,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37121,11 +42163,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            201: {
+            /** @description 操作成功 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37141,11 +42236,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 操作成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            /** @default true */
+                            value: boolean;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
             };
         };
     };
@@ -37489,9 +42637,10 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Result"] & {
                         data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                            rows?: components["schemas"]["StoreOrderListItemVo"][];
+                            /** @default 0 */
+                            total: number;
+                        };
                     };
                 };
             };
@@ -37560,10 +42709,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                        data?: components["schemas"]["StoreOrderDetailVo"];
                     };
                 };
             };
@@ -37652,9 +42798,10 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Result"] & {
                         data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                            rows?: components["schemas"]["StoreOrderListItemVo"][];
+                            /** @default 0 */
+                            total: number;
+                        };
                     };
                 };
             };
@@ -38256,10 +43403,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                        data?: components["schemas"]["StoreFinanceDashboardVo"];
                     };
                 };
             };
@@ -38346,9 +43490,10 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Result"] & {
                         data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                            rows?: components["schemas"]["StoreCommissionRecordVo"][];
+                            /** @default 0 */
+                            total: number;
+                        };
                     };
                 };
             };
@@ -38407,6 +43552,163 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: components["schemas"]["StoreCommissionStatsVo"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreFinanceController_getWithdrawalList: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                pageNum?: number;
+                /** @description 每页条数 */
+                pageSize?: number;
+                /** @description 排序字段 */
+                orderByColumn?: string;
+                /** @description 排序方向 */
+                isAsc?: "asc" | "desc";
+                /** @description 时间范围 */
+                params?: components["schemas"]["DateRangeDto"];
+                /** @description 提现状态 */
+                status?: "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
+                /** @description 会员ID */
+                memberId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 操作成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"] & {
+                        data?: {
+                            rows?: components["schemas"]["WithdrawalVo"][];
+                            /** @default 0 */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 401 */
+                        code?: number;
+                        /** @example 请先登录 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 403 */
+                        code?: number;
+                        /** @example 没有操作权限 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 500 */
+                        code?: number;
+                        /** @example 系统异常 */
+                        msg?: string;
+                        data?: Record<string, never> | null;
+                    };
+                };
+            };
+        };
+    };
+    StoreFinanceController_auditWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditWithdrawalDto"];
+            };
+        };
         responses: {
             /** @description 操作成功 */
             200: {
@@ -38509,9 +43811,10 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Result"] & {
                         data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                            rows?: components["schemas"]["StoreLedgerRecordVo"][];
+                            /** @default 0 */
+                            total: number;
+                        };
                     };
                 };
             };
@@ -38601,10 +43904,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result"] & {
-                        data?: {
-                            /** @default true */
-                            value: boolean;
-                        } | null;
+                        data?: components["schemas"]["StoreLedgerStatsVo"];
                     };
                 };
             };

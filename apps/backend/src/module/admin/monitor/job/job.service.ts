@@ -77,6 +77,7 @@ export class JobService {
     const job = await this.prisma.sysJob.create({
       data: {
         ...createJobDto,
+        status: createJobDto.status as StatusEnum,
         createBy: userName,
         updateBy: userName,
       },
@@ -119,6 +120,7 @@ export class JobService {
       where: { jobId: Number(jobId) },
       data: {
         ...updateJobDto,
+        status: updateJobDto.status as StatusEnum,
         updateBy: userName,
         updateTime: new Date(),
       },

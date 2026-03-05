@@ -60,7 +60,7 @@ export class ProductConfigService {
         categoryId: dto.categoryId ?? null,
         level1Rate: dto.level1Rate !== undefined ? new Prisma.Decimal(dto.level1Rate / 100) : null,
         level2Rate: dto.level2Rate !== undefined ? new Prisma.Decimal(dto.level2Rate / 100) : null,
-        commissionBaseType: dto.commissionBaseType ?? null,
+        commissionBaseType: (dto.commissionBaseType ?? null) as CommissionBaseType | null,
         createBy: operator,
         updateBy: operator,
       },
@@ -100,7 +100,7 @@ export class ProductConfigService {
       data: {
         ...(dto.level1Rate !== undefined && { level1Rate: new Prisma.Decimal(dto.level1Rate / 100) }),
         ...(dto.level2Rate !== undefined && { level2Rate: new Prisma.Decimal(dto.level2Rate / 100) }),
-        ...(dto.commissionBaseType && { commissionBaseType: dto.commissionBaseType }),
+        ...(dto.commissionBaseType && { commissionBaseType: dto.commissionBaseType as CommissionBaseType }),
         updateBy: operator,
       },
     });

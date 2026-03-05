@@ -19,6 +19,7 @@ export class RoleVo {
   roleSort: number;
 
   @ApiProperty({
+    type: String,
     description: '数据范围',
     enum: DataScopeEnum,
     enumName: 'DataScopeEnum',
@@ -32,7 +33,7 @@ export class RoleVo {
   @ApiProperty({ description: '部门树选择项是否关联显示' })
   deptCheckStrictly: boolean;
 
-  @ApiProperty({ description: '角色状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
+  @ApiProperty({ type: String, description: '角色状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
   status: string;
 
   @ApiProperty({ description: '删除标志（0代表存在 2代表删除）' })

@@ -21,7 +21,7 @@ export class ListStoreOrderDto extends PageQueryDto {
   @ApiProperty({ description: '订单状态', enum: OrderStatus, required: false })
   @IsOptional()
   @IsEnum(OrderStatus)
-  status?: OrderStatus;
+  status?: string;
 
   @ApiProperty({ description: '会员ID', required: false })
   @IsOptional()
@@ -31,7 +31,7 @@ export class ListStoreOrderDto extends PageQueryDto {
   @ApiProperty({ description: '订单类型', enum: OrderType, required: false })
   @IsOptional()
   @IsEnum(OrderType)
-  orderType?: OrderType;
+  orderType?: string;
 }
 
 /**

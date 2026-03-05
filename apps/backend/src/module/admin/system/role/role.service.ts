@@ -28,7 +28,7 @@ export class RoleService {
       data: {
         ...rolePayload,
         roleSort: rolePayload.roleSort ?? 0,
-        status: rolePayload.status ?? StatusEnum.NORMAL,
+        status: rolePayload.status as StatusEnum ?? StatusEnum.NORMAL,
         delFlag: DelFlagEnum.NORMAL,
       },
     });
@@ -107,9 +107,11 @@ export class RoleService {
       });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { roleId, status, ...updateData } = rolePayload;
     const res = await this.prisma.sysRole.update({
       where: { roleId: updateRoleDto.roleId },
-      data: rolePayload,
+      data: { ...updateData, status: status as StatusEnum },
     });
 
     return Result.ok(res);
@@ -127,9 +129,11 @@ export class RoleService {
       });
     }
 
+     
+    const { roleId: _roleId, status: _status, ...scopeData } = rolePayload;
     const res = await this.prisma.sysRole.update({
       where: { roleId: updateRoleDto.roleId },
-      data: rolePayload,
+      data: { ...scopeData, status: _status as StatusEnum },
     });
 
     return Result.ok(res);
@@ -138,7 +142,7 @@ export class RoleService {
   async changeStatus(changeStatusDto: ChangeRoleStatusDto) {
     const res = await this.prisma.sysRole.update({
       where: { roleId: changeStatusDto.roleId },
-      data: { status: changeStatusDto.status },
+      data: { status: changeStatusDto.status as StatusEnum },
     });
     return Result.ok(res);
   }

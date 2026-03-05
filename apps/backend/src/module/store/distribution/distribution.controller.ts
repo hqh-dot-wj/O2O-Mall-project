@@ -17,7 +17,7 @@ import { GetDashboardDto } from './dto/get-dashboard.dto';
 import { CreateLevelDto } from './dto/create-level.dto';
 import { UpdateLevelDto } from './dto/update-level.dto';
 import { ListLevelDto } from './dto/list-level.dto';
-import { UpdateMemberLevelDto } from './dto/update-member-level.dto';
+import { StoreUpdateMemberLevelDto } from './dto/update-member-level.dto';
 import { ListMemberLevelLogDto } from './dto/list-member-level-log.dto';
 import { ListApplicationDto } from './dto/list-application.dto';
 import { ReviewApplicationDto } from './dto/review-application.dto';
@@ -184,7 +184,7 @@ export class DistributionController {
   @Api({ summary: '手动调整会员等级' })
   async updateMemberLevel(
     @CurrentTenant() tenantId: string,
-    @Body() dto: UpdateMemberLevelDto,
+    @Body() dto: StoreUpdateMemberLevelDto,
     @ClientInfo() clientInfo: ClientInfoDto,
   ) {
     return this.levelService.updateMemberLevel(tenantId, dto, clientInfo.userName || 'system');

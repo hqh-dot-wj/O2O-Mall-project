@@ -41,7 +41,7 @@ export class UpdateDistConfigDto {
   @ApiProperty({ description: '分佣基数类型', enum: CommissionBaseType, required: false })
   @IsOptional()
   @IsEnum(CommissionBaseType)
-  commissionBaseType?: CommissionBaseType;
+  commissionBaseType?: string;
 
   @ApiProperty({ description: '熔断保护比例 (0-100，如50表示50%)', example: 50, required: false })
   @IsOptional()

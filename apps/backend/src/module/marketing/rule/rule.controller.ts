@@ -23,7 +23,7 @@ export class ValidateRuleDto {
    * 规则配置对象
    * @example { "minCount": 2, "maxCount": 10, "price": 99 }
    */
-  rules: unknown;
+  rules: Record<string, unknown>;
 }
 
 /**

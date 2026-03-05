@@ -13,13 +13,14 @@ export class ListMenuDto {
   menuName?: string;
 
   @ApiProperty({
+    type: String,
     required: false,
     description: '菜单状态',
   })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({
     required: false,

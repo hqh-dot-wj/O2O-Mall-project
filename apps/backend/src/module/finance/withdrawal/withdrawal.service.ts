@@ -231,7 +231,7 @@ export class WithdrawalService {
     const where: Prisma.FinWithdrawalWhereInput = {};
 
     if (query.status) {
-      where.status = query.status;
+      where.status = query.status as WithdrawalStatus;
     }
 
     if (query.keyword) {

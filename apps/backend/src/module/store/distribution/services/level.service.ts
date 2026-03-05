@@ -7,7 +7,7 @@ import { Transactional } from 'src/common/decorators/transactional.decorator';
 import { CreateLevelDto, UpgradeCondition } from '../dto/create-level.dto';
 import { UpdateLevelDto } from '../dto/update-level.dto';
 import { ListLevelDto } from '../dto/list-level.dto';
-import { UpdateMemberLevelDto } from '../dto/update-member-level.dto';
+import { StoreUpdateMemberLevelDto } from '../dto/update-member-level.dto';
 import { ListMemberLevelLogDto } from '../dto/list-member-level-log.dto';
 import { LevelVo, MemberLevelLogVo } from '../vo/level.vo';
 import { LevelCheckVo, ConditionResultVo } from '../vo/level-check.vo';
@@ -188,7 +188,7 @@ export class LevelService {
    * 手动调整会员等级
    */
   @Transactional()
-  async updateMemberLevel(tenantId: string, dto: UpdateMemberLevelDto, operator: string): Promise<void> {
+  async updateMemberLevel(tenantId: string, dto: StoreUpdateMemberLevelDto, operator: string): Promise<void> {
     // 检查会员是否存在
     const member = await this.prisma.umsMember.findFirst({
       where: {

@@ -1,7 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsInt, Min, Max, Length } from 'class-validator';
 
-export class UpdateMemberLevelDto {
+/**
+ * 手动调整会员等级 Dto（分销模块）
+ * @description 与 admin/member 的 AdminUpdateMemberLevelDto 区分，避免 Swagger 重复 schema
+ */
+export class StoreUpdateMemberLevelDto {
   @ApiProperty({ description: '会员ID' })
   @IsString()
   memberId: string;

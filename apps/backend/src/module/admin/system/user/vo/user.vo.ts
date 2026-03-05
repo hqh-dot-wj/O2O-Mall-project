@@ -39,6 +39,7 @@ export class RoleVo {
   roleSort: number;
 
   @ApiProperty({
+    type: String,
     description: '数据范围',
     enum: DataScopeEnum,
     enumName: 'DataScopeEnum',
@@ -46,7 +47,7 @@ export class RoleVo {
   })
   dataScope: string;
 
-  @ApiProperty({ description: '角色状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
+  @ApiProperty({ type: String, description: '角色状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
   status: string;
 }
 
@@ -75,13 +76,13 @@ export class UserVo {
   @ApiProperty({ description: '手机号码' })
   phonenumber: string;
 
-  @ApiProperty({ description: '用户性别', enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema })
+  @ApiProperty({ type: String, description: '用户性别', enum: SexEnum, enumName: 'SexEnum', enumSchema: SexEnumSchema })
   sex: string;
 
   @ApiProperty({ description: '头像地址' })
   avatar: string;
 
-  @ApiProperty({ description: '帐号状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
+  @ApiProperty({ type: String, description: '帐号状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
   status: string;
 
   @ApiProperty({ description: '删除标志（0代表存在 2代表删除）' })

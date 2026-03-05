@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, Headers, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { CheckLoginDto, RegisterDto, BindPhoneDto } from './dto/auth.dto';
+import { CheckLoginDto, ClientRegisterDto, BindPhoneDto } from './dto/auth.dto';
 import { Api } from 'src/common/decorators/api.decorator';
 import { LoginResultVo } from './vo';
 
@@ -23,7 +23,7 @@ export class AuthController {
 
   @Api({ summary: '注册/登录（无需手机号）', type: LoginResultVo })
   @Post('register')
-  register(@Body() dto: RegisterDto) {
+  register(@Body() dto: ClientRegisterDto) {
     return this.authService.register(dto);
   }
 
@@ -38,7 +38,7 @@ export class AuthController {
 
   @Api({ summary: '手机号一键登录/注册', type: LoginResultVo })
   @Post('register-mobile')
-  registerMobile(@Body() dto: RegisterDto) {
+  registerMobile(@Body() dto: ClientRegisterDto) {
     return this.authService.registerMobile(dto);
   }
 

@@ -287,7 +287,7 @@ export class UserController {
   @RequirePermission('system:user:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  async export(@Res() res: Response, @Body() body: ListUserDto, @User() user: UserDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() body: ListUserDto, @User() user: UserDto): Promise<void> {
     return this.userService.export(res, body, user.user);
   }
 }

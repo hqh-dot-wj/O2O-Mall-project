@@ -119,7 +119,7 @@ export class ConfigController {
   @RequirePermission('system:config:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  async export(@Res() res: Response, @Body() body: ListConfigDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() body: ListConfigDto): Promise<void> {
     return this.configService.export(res, body);
   }
 }

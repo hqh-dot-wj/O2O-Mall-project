@@ -2,7 +2,7 @@ import { IsString, IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, OmitType, IntersectionType } from '@nestjs/swagger';
 import { PageQueryDto } from 'src/common/dto/index';
-import { CharEnum, StatusEnum } from 'src/common/enum/index';
+import { CharEnum } from 'src/common/enum/index';
 
 export class BaseOperLogDto {
   @ApiProperty({ required: false, description: '日志主键' })
@@ -83,10 +83,10 @@ export class BaseOperLogDto {
   @IsString()
   operTime?: string;
 
-  @ApiProperty({ enum: CharEnum, required: false, description: '登录状态' })
+  @ApiProperty({ type: String, enum: CharEnum, required: false, description: '登录状态' })
   @IsOptional()
   @IsString()
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '消耗时间' })
   @IsOptional()

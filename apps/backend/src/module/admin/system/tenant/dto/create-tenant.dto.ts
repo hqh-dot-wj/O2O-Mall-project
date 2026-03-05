@@ -67,7 +67,7 @@ export class CreateTenantDto {
   @IsNumber()
   accountCount?: number;
 
-  @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
   @IsOptional()
   @IsEnum(StatusEnum)
   @Type(() => String)
@@ -76,7 +76,7 @@ export class CreateTenantDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '备注' })
   @IsOptional()

@@ -12,6 +12,7 @@ export class NoticeVo {
   noticeTitle: string;
 
   @ApiProperty({
+    type: String,
     description: '公告类型',
     enum: NoticeTypeEnum,
     enumName: 'NoticeTypeEnum',
@@ -22,7 +23,7 @@ export class NoticeVo {
   @ApiProperty({ description: '公告内容' })
   noticeContent: string;
 
-  @ApiProperty({ description: '公告状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
+  @ApiProperty({ type: String, description: '公告状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
   status: string;
 
   @ApiProperty({ description: '创建者' })

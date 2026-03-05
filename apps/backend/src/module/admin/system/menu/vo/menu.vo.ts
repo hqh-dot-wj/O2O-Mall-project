@@ -27,6 +27,7 @@ export class MenuVo {
   query: string;
 
   @ApiProperty({
+    type: String,
     description: '是否为外链（0是 1否）',
     enum: StatusEnum,
     enumName: 'StatusEnum',
@@ -35,6 +36,7 @@ export class MenuVo {
   isFrame: string;
 
   @ApiProperty({
+    type: String,
     description: '是否缓存（0缓存 1不缓存）',
     enum: StatusEnum,
     enumName: 'StatusEnum',
@@ -43,6 +45,7 @@ export class MenuVo {
   isCache: string;
 
   @ApiProperty({
+    type: String,
     description: '菜单类型',
     enum: MenuTypeEnum,
     enumName: 'MenuTypeEnum',
@@ -51,6 +54,7 @@ export class MenuVo {
   menuType: string;
 
   @ApiProperty({
+    type: String,
     description: '显示状态（0显示 1隐藏）',
     enum: StatusEnum,
     enumName: 'StatusEnum',
@@ -58,7 +62,7 @@ export class MenuVo {
   })
   visible: string;
 
-  @ApiProperty({ description: '菜单状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
+  @ApiProperty({ type: String, description: '菜单状态', enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema })
   status: string;
 
   @ApiProperty({ description: '权限标识' })

@@ -20,7 +20,7 @@ export class ListCommissionDto extends PageQueryDto {
   @ApiProperty({ description: '佣金状态', enum: CommissionStatus, required: false })
   @IsOptional()
   @IsEnum(CommissionStatus)
-  status?: CommissionStatus;
+  status?: string;
 
   @ApiProperty({ description: '会员ID', required: false })
   @IsOptional()
@@ -35,7 +35,7 @@ export class ListWithdrawalDto extends PageQueryDto {
   @ApiProperty({ description: '提现状态', enum: WithdrawalStatus, required: false })
   @IsOptional()
   @IsEnum(WithdrawalStatus)
-  status?: WithdrawalStatus;
+  status?: string;
 
   @ApiProperty({ description: '会员ID', required: false })
   @IsOptional()

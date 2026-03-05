@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Response } from 'express';
+import { WithdrawalStatus } from '@prisma/client';
 import { WithdrawalService } from 'src/module/finance/withdrawal/withdrawal.service';
 import { ListCommissionDto, ListWithdrawalDto, AuditWithdrawalDto, ListLedgerDto } from './dto/store-finance.dto';
 import { ListWithdrawalDto as FinListWithdrawalDto } from 'src/module/finance/withdrawal/dto/list-withdrawal.dto';
@@ -57,7 +58,7 @@ export class StoreFinanceService {
     const searchParams = new FinListWithdrawalDto();
     searchParams.pageNum = query.pageNum;
     searchParams.pageSize = query.pageSize;
-    searchParams.status = query.status;
+    searchParams.status = query.status as WithdrawalStatus;
     searchParams.memberId = query.memberId;
 
     return await this.withdrawalService.getList(searchParams);

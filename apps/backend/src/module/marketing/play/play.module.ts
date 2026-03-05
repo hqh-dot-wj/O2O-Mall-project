@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { DiscoveryModule } from '@nestjs/core';
 import { GroupBuyService } from './group-buy.service';
 import { PlayInstanceModule } from '../instance/instance.module';
 import { MarketingStockModule } from '../stock/stock.module';
@@ -7,7 +8,6 @@ import { UserAssetModule } from '../asset/asset.module';
 /**
  * 具体玩法逻辑模块聚合
  */
-import { forwardRef } from '@nestjs/common';
 import { PlayStrategyFactory } from './play.factory';
 import { CourseGroupBuyService } from './course-group-buy.service';
 import { MemberUpgradeService } from './member-upgrade.service';
@@ -24,6 +24,7 @@ import { CourseGroupBuyExtensionRepository } from './course-group-buy-extension.
 
 @Module({
   imports: [
+    DiscoveryModule,
     forwardRef(() => PlayInstanceModule),
     MarketingStockModule,
     UserAssetModule,

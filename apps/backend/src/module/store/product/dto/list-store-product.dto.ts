@@ -12,12 +12,12 @@ export class ListStoreProductDto extends PageQueryDto {
   @ApiProperty({ description: '商品类型', enum: ProductType, required: false })
   @IsOptional()
   @IsEnum(ProductType)
-  type?: ProductType;
+  type?: string;
 
   @ApiProperty({ description: '上架状态', enum: PublishStatus, required: false })
   @IsOptional()
   @IsEnum(PublishStatus)
-  status?: PublishStatus;
+  status?: string;
 
   @ApiProperty({ description: '指定门店ID(仅HQ可用)', required: false })
   @IsOptional()

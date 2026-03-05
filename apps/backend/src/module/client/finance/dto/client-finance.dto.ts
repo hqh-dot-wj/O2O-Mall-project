@@ -45,19 +45,19 @@ export class ListTransactionDto extends PageQueryDto {
   @ApiProperty({ description: '交易类型', enum: TransType, required: false })
   @IsOptional()
   @IsEnum(TransType)
-  type?: TransType;
+  type?: string;
 }
 
 export class ListCommissionDto extends PageQueryDto {
   @ApiProperty({ description: '状态', enum: CommissionStatus, required: false })
   @IsOptional()
   @IsEnum(CommissionStatus)
-  status?: CommissionStatus;
+  status?: string;
 }
 
 export class ListWithdrawalDto extends PageQueryDto {
   @ApiProperty({ description: '状态', enum: WithdrawalStatus, required: false })
   @IsOptional()
   @IsEnum(WithdrawalStatus)
-  status?: WithdrawalStatus;
+  status?: string;
 }

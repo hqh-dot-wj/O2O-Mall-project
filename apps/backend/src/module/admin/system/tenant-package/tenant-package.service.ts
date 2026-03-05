@@ -39,7 +39,7 @@ export class TenantPackageService {
         packageName: createTenantPackageDto.packageName,
         menuIds,
         menuCheckStrictly: createTenantPackageDto.menuCheckStrictly ?? false,
-        status: createTenantPackageDto.status ?? StatusEnum.NORMAL,
+        status: createTenantPackageDto.status as StatusEnum ?? StatusEnum.NORMAL,
         remark: createTenantPackageDto.remark,
         delFlag: DelFlagEnum.NORMAL,
       },
@@ -160,11 +160,13 @@ export class TenantPackageService {
     }
 
     const menuIdsStr = menuIds ? menuIds.join(',') : undefined;
+    const { status, ...restUpdateData } = updateData;
 
     await this.prisma.sysTenantPackage.update({
       where: { packageId },
       data: {
-        ...updateData,
+        ...restUpdateData,
+        status: status as StatusEnum,
         menuIds: menuIdsStr,
       },
     });

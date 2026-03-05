@@ -41,7 +41,7 @@ export class CategoryVo {
 
   /** 绑定商品类型：REAL=实物，SERVICE=服务 */
   @ApiProperty({ description: '绑定商品类型', enum: ProductType, required: false })
-  bindType?: ProductType;
+  bindType?: string;
 
   /** 关联的属性模板ID */
   @ApiProperty({ description: '属性模板ID', example: 1 })

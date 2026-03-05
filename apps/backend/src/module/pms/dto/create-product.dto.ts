@@ -53,7 +53,7 @@ export class CreateSkuDto {
 
   @ApiProperty({ description: '分销模式', enum: DistributionMode })
   @IsEnum(DistributionMode)
-  distMode: DistributionMode;
+  distMode: string;
 
   @ApiProperty({ description: '指导费率' })
   @IsNumber()
@@ -112,7 +112,7 @@ export class CreateProductDto {
 
   @ApiProperty({ description: '商品类型', enum: ProductType })
   @IsEnum(ProductType)
-  type: ProductType;
+  type: string;
 
   // Real Product Fields
   @ApiProperty({ description: '重量(g)', required: false })
@@ -155,5 +155,5 @@ export class CreateProductDto {
   @ApiProperty({ description: '上架状态', enum: PublishStatus, required: false })
   @IsOptional()
   @IsEnum(PublishStatus)
-  publishStatus?: PublishStatus;
+  publishStatus?: string;
 }

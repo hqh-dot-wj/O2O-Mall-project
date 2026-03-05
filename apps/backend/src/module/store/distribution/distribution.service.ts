@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, CommissionBaseType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Result, ResponseCode } from 'src/common/response';
 import { BusinessException } from 'src/common/exceptions';
@@ -111,7 +111,7 @@ export class DistributionService {
         enableCrossTenant: dto.enableCrossTenant ?? false,
         crossTenantRate: new Prisma.Decimal(crossTenantRate),
         crossMaxDaily: new Prisma.Decimal(dto.crossMaxDaily ?? BusinessConstants.DISTRIBUTION.DEFAULT_CROSS_DAILY_LIMIT),
-        commissionBaseType: dto.commissionBaseType ?? null,
+        commissionBaseType: (dto.commissionBaseType ?? null) as CommissionBaseType | null,
         maxCommissionRate: new Prisma.Decimal(maxCommissionRate),
         operator,
       },

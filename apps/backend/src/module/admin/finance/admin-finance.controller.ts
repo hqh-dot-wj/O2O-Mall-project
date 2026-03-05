@@ -10,6 +10,7 @@ import { WalletAdminService } from 'src/module/finance/wallet/wallet-admin.servi
 import { CommissionAdminService } from 'src/module/finance/commission/commission-admin.service';
 import { WithdrawalAdminService } from 'src/module/finance/withdrawal/withdrawal-admin.service';
 import { SettlementLogService } from 'src/module/finance/settlement/settlement-log.service';
+import { CommissionStatus, WithdrawalStatus } from '@prisma/client';
 import {
   ListWalletDto,
   FreezeWalletDto,
@@ -59,7 +60,10 @@ export class AdminFinanceController {
   @Api({ summary: '查询钱包列表' })
   @RequirePermission('finance:wallet:list')
   async getWalletList(@Query() query: ListWalletDto) {
-    return await this.walletAdminService.getWalletList(query);
+    return await this.walletAdminService.getWalletList({
+      ...query,
+      status: query.status as 'NORMAL' | 'FROZEN' | 'DISABLED',
+    });
   }
 
   @Get('wallet/abnormal')
@@ -108,7 +112,10 @@ export class AdminFinanceController {
   @Api({ summary: '查询佣金列表' })
   @RequirePermission('finance:commission:list')
   async getCommissionList(@Query() query: ListCommissionDto) {
-    return await this.commissionAdminService.getCommissionList(query);
+    return await this.commissionAdminService.getCommissionList({
+      ...query,
+      status: query.status as CommissionStatus,
+    });
   }
 
   @Get('commission/detail/:id')
@@ -156,7 +163,10 @@ export class AdminFinanceController {
   @RequirePermission('finance:withdrawal:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   async exportWithdrawals(@Res() res: Response, @Body() query: ExportWithdrawalDto) {
-    return await this.withdrawalAdminService.exportWithdrawals(res, query);
+    return await this.withdrawalAdminService.exportWithdrawals(res, {
+      ...query,
+      status: query.status as WithdrawalStatus,
+    });
   }
 
   @Post('withdrawal/notify/:id')

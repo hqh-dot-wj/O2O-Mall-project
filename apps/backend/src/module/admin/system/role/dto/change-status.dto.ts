@@ -12,6 +12,7 @@ export class ChangeRoleStatusDto {
   roleId: number;
 
   @ApiProperty({
+    type: String,
     required: true,
     description: '角色状态（0正常 1停用）',
     enum: StatusEnum,
@@ -25,5 +26,5 @@ export class ChangeRoleStatusDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status: StatusEnum;
+  status: string;
 }

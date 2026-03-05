@@ -17,9 +17,10 @@ export class UserInfoObj {
 }
 
 /**
- * 简化注册 DTO - 无需手机号
+ * 简化注册 DTO（C 端/小程序）- 无需手机号，使用微信 loginCode
+ * @description 与 admin 的 RegisterDto（用户名密码）区分，避免 Swagger 重复 schema
  */
-export class RegisterDto {
+export class ClientRegisterDto {
   @ApiProperty({ description: '微信登录临时凭证 code (用于换取OpenID)' })
   @IsNotEmpty({ message: 'loginCode不能为空' })
   @IsString()

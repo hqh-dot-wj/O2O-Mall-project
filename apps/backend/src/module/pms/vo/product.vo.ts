@@ -27,7 +27,7 @@ export class ProductVo {
   detailHtml: string;
 
   @ApiProperty({ description: '商品类型', enum: ProductType })
-  type: ProductType;
+  type: string;
 
   @ApiProperty({ description: '重量(g)' })
   weight?: number;

@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Headers } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CheckLoginDto, RegisterDto } from './dto/auth.dto';
+import { CheckLoginDto, ClientRegisterDto } from './dto/auth.dto';
 import { Api } from 'src/common/decorators/api.decorator';
 import { LoginResultVo } from './vo';
 import { SocialPlatform } from '@prisma/client';
@@ -29,13 +29,13 @@ export class WorkerAuthController {
 
   @Api({ summary: '师傅端-注册/登录', type: LoginResultVo })
   @Post('register')
-  register(@Body() dto: RegisterDto) {
+  register(@Body() dto: ClientRegisterDto) {
     return this.authService.register(dto, SocialPlatform.MP_WORK);
   }
 
   @Api({ summary: '师傅端-手机号一键登录/注册', type: LoginResultVo })
   @Post('register-mobile')
-  registerMobile(@Body() dto: RegisterDto) {
+  registerMobile(@Body() dto: ClientRegisterDto) {
     return this.authService.registerMobile(dto, SocialPlatform.MP_WORK);
   }
 

@@ -16,9 +16,9 @@ export class ListDictData extends PageQueryDto {
   @Length(0, 100)
   dictType?: string;
 
-  @ApiProperty({ required: false, description: '状态（0正常 1停用）' })
+  @ApiProperty({ type: String, required: false, description: '状态（0正常 1停用）' })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
-  status?: StatusEnum;
+  status?: string;
 }

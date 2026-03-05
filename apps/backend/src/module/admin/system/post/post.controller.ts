@@ -106,7 +106,7 @@ export class PostController {
   @RequirePermission('system:post:export')
   @Operlog({ businessType: BusinessType.EXPORT })
   @Post('/export')
-  async export(@Res() res: Response, @Body() body: ListPostDto): Promise<void> {
+  async exportData(@Res() res: Response, @Body() body: ListPostDto): Promise<void> {
     return this.postService.export(res, body);
   }
 }

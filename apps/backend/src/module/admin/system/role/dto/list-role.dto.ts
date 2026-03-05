@@ -21,6 +21,7 @@ export class ListRoleDto extends PageQueryDto {
   roleKey?: string;
 
   @ApiProperty({
+    type: String,
     required: false,
     description: '角色状态（0正常 1停用）',
     enum: StatusEnum,
@@ -35,7 +36,7 @@ export class ListRoleDto extends PageQueryDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '角色ID' })
   @IsOptional()

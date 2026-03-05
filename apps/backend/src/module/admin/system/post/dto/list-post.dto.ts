@@ -17,7 +17,7 @@ export class ListPostDto extends PageQueryDto {
   @Length(0, 64)
   postCode?: string;
 
-  @ApiProperty({ enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum', enumSchema: StatusEnumSchema, required: false })
   @IsOptional()
   @IsString()
   @IsEnum(StatusEnum)
@@ -26,7 +26,7 @@ export class ListPostDto extends PageQueryDto {
     if (value === '1') return StatusEnum.STOP;
     return value;
   })
-  status?: StatusEnum;
+  status?: string;
 
   @ApiProperty({ required: false, description: '所属部门ID' })
   @IsOptional()
