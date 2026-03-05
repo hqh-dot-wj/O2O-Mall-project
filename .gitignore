@@ -6,6 +6,9 @@ node_modules/
 # Production build
 dist/
 dist-ssr/
+
+# NestJS Swagger CLI 插件自动生成（dev/watch 时生成，避免 watch 循环）
+apps/backend/src/metadata.ts
 build/
 out/
 
