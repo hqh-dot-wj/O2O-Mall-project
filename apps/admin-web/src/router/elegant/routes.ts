@@ -236,15 +236,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
-        name: 'member_points-accounts',
-        path: '/member/points-accounts',
-        component: 'view.member_points-accounts',
-        meta: {
-          title: 'member_points-accounts',
-          i18nKey: 'route.member_points-accounts'
-        }
-      },
-      {
         name: 'member_upgrade',
         path: '/member/upgrade',
         component: 'view.member_upgrade',

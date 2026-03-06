@@ -107,7 +107,7 @@ async function handleDelete(id: number) {
               <icon-ic-round-plus class="text-icon" />
             </template>
             {{ $t('common.add') }}
-          </Button>
+          </NButton>
         </NSpace>
       </template>
       <NDataTable

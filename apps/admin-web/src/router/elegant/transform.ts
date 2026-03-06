@@ -190,7 +190,6 @@ const routeMap: RouteMap = {
   "marketing_template": "/marketing/template",
   "member": "/member",
   "member_list": "/member/list",
-  "member_points-accounts": "/member/points-accounts",
   "member_upgrade": "/member/upgrade",
   "monitor": "/monitor",
   "monitor_cache": "/monitor/cache",

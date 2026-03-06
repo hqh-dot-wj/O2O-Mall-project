@@ -64,7 +64,7 @@ const getMeunTree = async () => {
         menuId: 0,
         menuName: $t('page.system.menu.rootName'),
         icon: 'material-symbols:home-outline-rounded',
-        children: handleTree(data, { idField: 'menuId', filterFn: item => item.menuType !== 'F' })
+        children: handleTree(data ?? [], { idField: 'menuId', filterFn: item => item.menuType !== 'F' })
       }
     ] as Api.System.Menu[];
   } catch {

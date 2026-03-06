@@ -20,9 +20,9 @@ export default async () => {
         ["./module/pms/attribute/dto/attribute.dto"]: await import("./module/pms/attribute/dto/attribute.dto"),
         ["./module/store/product/dto/import-product.dto"]: await import("./module/store/product/dto/import-product.dto"),
         ["./module/store/product/dto/update-price.dto"]: await import("./module/store/product/dto/update-price.dto"),
+        ["./module/marketing/points/constants/points-transaction-type-api.enum"]: await import("./module/marketing/points/constants/points-transaction-type-api.enum"),
         ["./module/store/stock/dto/batch-update-stock.dto"]: await import("./module/store/stock/dto/batch-update-stock.dto"),
         ["./module/store/order/dto/store-order.dto"]: await import("./module/store/order/dto/store-order.dto"),
-        ["./module/marketing/points/constants/points-transaction-type-api.enum"]: await import("./module/marketing/points/constants/points-transaction-type-api.enum"),
         ["./module/store/distribution/vo/level.vo"]: await import("./module/store/distribution/vo/level.vo"),
         ["./module/store/distribution/vo/level-check.vo"]: await import("./module/store/distribution/vo/level-check.vo")
     };

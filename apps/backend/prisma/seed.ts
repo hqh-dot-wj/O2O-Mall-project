@@ -5171,6 +5171,46 @@ async function main() {
     skipDuplicates: true,
   });
 
+  // sys_dist_level（分销员等级，默认租户 000000）
+  await prisma.sysDistLevel.createMany({
+    data: [
+      {
+        tenantId: '000000',
+        levelId: 0,
+        levelName: '普通用户',
+        level1Rate: 0,
+        level2Rate: 0,
+        sort: 0,
+        isActive: true,
+        createBy: 'admin',
+        updateBy: 'admin',
+      },
+      {
+        tenantId: '000000',
+        levelId: 1,
+        levelName: '初级分销员',
+        level1Rate: 0.1,
+        level2Rate: 0.05,
+        sort: 1,
+        isActive: true,
+        createBy: 'admin',
+        updateBy: 'admin',
+      },
+      {
+        tenantId: '000000',
+        levelId: 2,
+        levelName: '中级分销员',
+        level1Rate: 0.12,
+        level2Rate: 0.06,
+        sort: 2,
+        isActive: true,
+        createBy: 'admin',
+        updateBy: 'admin',
+      },
+    ],
+    skipDuplicates: true,
+  });
+
   // 重置 Postgres 序列
   console.log('正在重置数据库序列...');
   const tableNames = [
@@ -5189,7 +5229,11 @@ async function main() {
       // But looking at schema, primary keys have different names (user_id, menu_id...).
       // Let's use a generic dynamic query to find the serial column.
 
-      const constraints = await prisma.$queryRawUnsafe<any[]>(
+      interface ColumnInfo {
+        column_name: string;
+        column_default: string | null;
+      }
+      const constraints = await prisma.$queryRawUnsafe<ColumnInfo[]>(
         `SELECT column_name, column_default 
          FROM information_schema.columns 
          WHERE table_name = '${tableName}' 

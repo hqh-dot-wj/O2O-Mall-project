@@ -1426,6 +1426,22 @@ const local: App.I18n.Schema = {
     store_marketing: {
       title: 'Marketing Activity'
     },
+    finance_distribution_config: {
+      title: 'Distribution Config',
+      level1Rate: 'L1 Commission Rate (Direct)',
+      level2Rate: 'L2 Commission Rate (Indirect)',
+      enableLV0: 'Enable LV0 Distribution',
+      commissionBaseType: 'Commission Base',
+      commissionBasePlaceholder: 'Select commission base',
+      commissionBase: {
+        ORIGINAL_PRICE: 'Original Price (platform bears discount)',
+        ACTUAL_PAID: 'Actual Paid (referrer bears discount)',
+        ZERO: 'No Commission'
+      },
+      maxCommissionRate: 'Max Commission Rate',
+      maxCommissionRateTip: 'Max commission rate per order to prevent abnormal high commission',
+      commissionTip: 'Changes apply to new orders only; existing orders are not affected.'
+    },
     store_distribution: {
       title: 'Distribution Config',
       level1Rate: 'L1 Commission Rate (Direct)',

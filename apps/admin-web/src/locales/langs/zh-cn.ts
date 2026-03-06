@@ -1436,6 +1436,22 @@ const local: App.I18n.Schema = {
     store_marketing: {
       title: '营销活动'
     },
+    finance_distribution_config: {
+      title: '分销配置',
+      level1Rate: '一级分佣比例 (直推)',
+      level2Rate: '二级分佣比例 (间推)',
+      enableLV0: '允许普通用户分销',
+      commissionBaseType: '佣金计算基准',
+      commissionBasePlaceholder: '请选择佣金计算基准',
+      commissionBase: {
+        ORIGINAL_PRICE: '原价（优惠由平台承担）',
+        ACTUAL_PAID: '实付（优惠由推广者承担）',
+        ZERO: '不分佣'
+      },
+      maxCommissionRate: '最高佣金比例',
+      maxCommissionRateTip: '单笔订单最高可获得的佣金比例，用于防止异常高佣',
+      commissionTip: '分销比例调整后将影响新产生的订单，历史订单不受影响。'
+    },
     store_distribution: {
       title: '分销规则配置',
       level1Rate: '一级分佣比例 (直推)',

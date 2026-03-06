@@ -22,6 +22,11 @@ export default [
     },
   },
   {
+    // Prisma seed 需要 console 输出进度
+    files: ['**/prisma/seed.ts'],
+    rules: { 'no-console': 'off' },
+  },
+  {
     ignores: ['**/dist/**', '**/node_modules/**', '**/.turbo/**'],
   },
 ];

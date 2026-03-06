@@ -30,6 +30,14 @@ export default [
     },
   },
   {
+    // Prisma seed 脚本需要 console 输出进度，且含动态 SQL
+    files: ['prisma/seed.ts'],
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     ignores: ['dist/**', 'coverage/**', 'scripts/**/*.cjs'],
   },
 ];
