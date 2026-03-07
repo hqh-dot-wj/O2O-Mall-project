@@ -1,0 +1,38 @@
+---
+description: 核心开发原则（类型安全、异常、复杂度、提交前）
+alwaysApply: true
+---
+
+# 核心开发原则
+
+## 类型安全（强制）
+
+- 禁止 `any`、`as any`、`@ts-ignore`
+- API 类型来自 `@libs/common-types`（OpenAPI 生成）
+- Props/Emits/ref/reactive 必须显式类型
+
+## 响应与异常
+
+- Backend 统一返回 `Result<T>`；异常用 `BusinessException.throwIf(condition, msg)`；禁止 `throw new Error()`
+
+## 简洁优先
+
+- 优先已有方案；不为假设的未来需求增加抽象层
+
+## 复杂度控制
+
+- 嵌套 ≤ 3 层；early return、提取子函数；分支用 if/switch → Map → 策略模式
+- 函数职责单一；重复 3 次以上提取公共方法
+
+## 文件结构
+
+- Backend: Controller → Service → Repository；Frontend: `index.vue` + `modules/[entity]-*.vue`
+- 命名: kebab-case (文件/目录)，PascalCase (组件/类型)
+
+## 提交前检查
+
+```bash
+pnpm verify-monorepo; pnpm lint; pnpm typecheck; pnpm test
+```
+
+**对接完成必做**：新增/修改页面或接口后，必须补充对应测试并运行通过。

@@ -1,0 +1,41 @@
+---
+description: Monorepo 项目开发规范（结构、依赖、Turbo、包边界）
+alwaysApply: true
+---
+
+# Monorepo 项目开发规范
+
+**pnpm + Turborepo** monorepo，所有改动需符合根目录与工作区约定。
+
+## 1. 结构
+
+- **apps/**：可部署应用（backend、admin-web、miniapp-client）
+- **libs/**：跨应用共享库（common-types、common-utils、common-constants）
+- **apps/admin-web/packages/**：admin-web 内部共享包 `@sa/*`
+
+## 2. 依赖与版本
+
+- **内部包**：`@apps/*`、`@libs/*`、`@sa/*` 必须用 `workspace:*`
+- **共享依赖**：catalog 统一版本；子包用 `catalog:` 引用
+- **锁文件**：仅根目录 `pnpm-lock.yaml`，禁止子级锁文件
+
+## 3. Turbo 与脚本
+
+- 开发/构建从根目录：`pnpm dev`、`pnpm build`、`pnpm generate-types`、`pnpm lint`、`pnpm typecheck`、`pnpm test`
+- 单包：`pnpm --filter <包名> <script>`
+
+## 4. 跨包边界
+
+- **禁止** app 间直接引用源码；跨应用共享通过 `@libs/*` 或 API
+- **允许** 同一 app 内子包互相引用
+
+## 5. 必遵（本项目）
+
+- 路径别名：backend `@src/*`，admin-web/miniapp `@/*`
+- API 类型：先构建 backend → `pnpm generate-types` → 前端从 common-types 引用
+- Prisma 仅 backend；migrate/seed 在 backend 执行
+- Windows：命令串联用 `;` 而非 `&&`
+
+## 6. 校验
+
+改完依赖或结构后执行 `pnpm verify-monorepo`，通过后再提交。

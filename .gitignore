@@ -12,6 +12,14 @@ apps/backend/src/metadata.ts
 build/
 out/
 
+# Admin-Web 插件自动生成（dev/build 时生成，避免频繁 diff 与 lint 解析错误）
+apps/admin-web/src/typings/components.d.ts
+apps/admin-web/src/typings/elegant-router.d.ts
+apps/admin-web/src/router/elegant/
+
+# Backend OpenAPI 输出（main.ts 每次启动写入；generate-types 依赖，需先运行 backend）
+apps/backend/public/openApi.json
+
 # db
 db/
 

@@ -1,0 +1,28 @@
+---
+description: miniapp-client 核心规范（条件编译、Design Token）
+globs: apps/miniapp-client/**/*
+alwaysApply: false
+---
+
+# miniapp-client 核心规范
+
+编辑 `apps/miniapp-client` 时遵循。**应用级 rules 优先**：`apps/miniapp-client/.cursor/rules/` 与根 `miniapp/uniapp.mdc` 重复时，以应用级为准。完整规范见 `.cursor/rules/miniapp-client.mdc`。
+
+## 条件编译（必须）
+
+平台差异用条件编译，禁止运行时 `if (platform)` 判断。
+
+- JS：`// #ifdef H5` ... `// #endif`
+- 支持 `||`：`// #ifdef H5 || MP-WEIXIN`
+
+## Design Token
+
+色值、字号、间距必须用 `src/style/design-tokens.scss` 或 UnoCSS 语义类，禁止硬编码。
+
+## 目录
+
+- `src/pages/` 页面；`src/components/` 全局组件；`src/api/` 接口；`src/http/` 封装
+
+## 应用级 rules
+
+`apps/miniapp-client/.cursor/rules/` 优先，根级作补充。

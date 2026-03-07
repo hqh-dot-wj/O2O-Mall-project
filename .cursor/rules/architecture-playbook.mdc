@@ -127,7 +127,7 @@ alwaysApply: false
 
 ### 4.3 案例库
 
-位置：`docs/design/decision-cases.md`（项目级）。后端模块级决策记录放 `apps/backend/docs/design/`，见 `documentation.mdc §9`。
+位置：`docs/design/decision-cases.md`（项目级）。后端模块级决策记录放 `apps/backend/docs/design/`，见 documentation Skill §9。
 
 每个案例包含：决策简述、相态、四棱镜判断摘要、实际结果、经验教训。
 案例库的价值不是"照搬"，而是"校准直觉"——让未来的决策者快速了解团队踩过的坑。

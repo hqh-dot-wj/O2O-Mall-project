@@ -3,6 +3,10 @@ import { defineConfig } from '@soybeanjs/eslint-config';
 export default defineConfig(
   { vue: true, unocss: true },
   {
+    // 插件自动生成，避免解析/语法差异导致 lint 失败
+    ignores: ['src/typings/components.d.ts', 'src/typings/elegant-router.d.ts', 'src/router/elegant/**']
+  },
+  {
     rules: {
       'vue/multi-word-component-names': [
         'warn',

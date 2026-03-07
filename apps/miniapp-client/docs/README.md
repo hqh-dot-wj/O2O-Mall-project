@@ -61,4 +61,4 @@ docs/
 ## 文件命名
 
 - **小写 + 连字符**，如 `homepage-design.md`、`tenant-selector.md`
-- 与 `documentation.mdc` 约定一致
+- 与 documentation Skill（`.cursor/skills/documentation/`）约定一致

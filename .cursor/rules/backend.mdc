@@ -502,7 +502,7 @@ client → [finance, marketing, store, pms] → common
 
 ## 📋 18. 文档规范
 
-> 详见 `documentation.mdc`。新增/修改模块时必须同步更新 `docs/requirements/` 和 `docs/design/` 下对应文档。
+> 详见 documentation Skill（`.cursor/skills/documentation/SKILL.md`）。新增/修改模块时必须同步更新 `docs/requirements/` 和 `docs/design/` 下对应文档。
 
 ---
 

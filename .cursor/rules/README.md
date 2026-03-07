@@ -7,7 +7,7 @@
 | 规则文件                      | 说明                                                                                                            | 触发方式                                                                                                                           | 来源                                        |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | `core-principles.mdc`         | 核心开发原则（Monorepo、类型安全、响应异常、复杂度控制、提交前检查）                                            | 始终应用                                                                                                                           | `.kiro/steering/00-core-principles.md`      |
-| `documentation.mdc`           | 需求文档与设计文档规范（7 类图、11/14 章节、目录归类、缺陷分析、大模块流程）                                    | 编辑 `docs/**`、`**/docs/**`                                                                                                       | `.kiro/steering/documentation.md`           |
+| documentation Skill           | 需求文档与设计文档规范（7 类图、11/14 章节、目录归类、缺陷分析、大模块流程）                                    | 编辑 `docs/**`、`**/docs/**`；已迁至 `.cursor/skills/documentation/`                                                               | `.kiro/steering/documentation.md`           |
 | `backend.mdc`                 | NestJS 后端开发规范（响应、异常、DTO、Repository、事务、Controller、测试、性能、安全、多租户、Client 与能力域） | 编辑 `apps/backend/**/*.ts`                                                                                                        | `.kiro/steering/backend-nestjs.md`          |
 | `admin-web.mdc`               | Admin-Web 前端开发规范（Vue 生态、目录结构、命名、布局、性能、CSS、TypeScript、测试）                           | 编辑 `apps/admin-web/**/*`                                                                                                         | `.kiro/steering/admin-web-frontend.md`      |
 | `miniapp-client.mdc`          | miniapp-client 开发规范（uniapp、条件编译、样式、API、包体积、安全、性能）                                      | 编辑 `apps/miniapp-client/**/*`                                                                                                    | `.kiro/steering/miniapp-client.md`          |
@@ -26,7 +26,7 @@
 ```
 .kiro/steering/                    .cursor/rules/
 ├── 00-core-principles.md   ──→    core-principles.mdc
-├── documentation.md        ──→    documentation.mdc
+├── documentation.md        ──→    skills/documentation/（已迁出 rules）
 ├── documentation-workflow.md      （流程已并入 documentation.mdc）
 ├── backend-nestjs.md       ──→    backend.mdc
 ├── admin-web-frontend.md   ──→    admin-web.mdc

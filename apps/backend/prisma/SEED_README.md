@@ -22,25 +22,19 @@ prisma/
 
 ---
 
-## 🌱 seeds/data/ - 种子数据脚本
+## 🌱 seeds/ - 业务种子脚本（按流程分阶段）
 
-用于初始化各类基础数据的脚本。
+流程：**总部准备 → 系统配置 → 开通租户 → 选品配置 → C 端数据**
 
-| 文件                             | 说明                 |
-| -------------------------------- | -------------------- |
-| `seed-templates.ts`              | 初始化营销模板数据   |
-| `seed-coupon-templates.ts`       | 初始化优惠券模板数据 |
-| `seed-points-rules.ts`           | 初始化积分规则数据   |
-| `seed-course.ts`                 | 初始化课程数据       |
-| `seed-course-products.ts`        | 初始化课程产品数据   |
-| `file-management-config.seed.ts` | 初始化文件管理配置   |
+| 阶段 | 目录                   | 说明                                                       |
+| ---- | ---------------------- | ---------------------------------------------------------- |
+| 01   | `01-hq-foundation/`    | 商品分类(10+百货+素质教育)、品牌、属性、总部商品、营销模板 |
+| 02   | `02-system-config/`    | 分佣配置(4%/6%)                                            |
+| 03   | `03-tenants/`          | 租户、套餐、管理员                                         |
+| 04   | `04-tenant-selection/` | 门店选品、积分规则、优惠券                                 |
+| 05   | `05-c-end/`            | 会员(含上下级)、地址、钱包、积分、领券                     |
 
-**使用方式**：
-
-```bash
-npx tsx prisma/seeds/data/seed-templates.ts
-npx tsx prisma/seeds/data/seed-coupon-templates.ts
-```
+主入口 `seed.ts` 会先执行平台基础数据（部门/用户/角色/菜单等），再调用 `seeds/run-phases.ts` 执行上述业务阶段。
 
 ---
 
@@ -48,15 +42,19 @@ npx tsx prisma/seeds/data/seed-coupon-templates.ts
 
 用于重置特定模块数据的脚本。
 
-| 文件                           | 说明               |
-| ------------------------------ | ------------------ |
-| `reset-marketing-all.ts`       | 重置所有营销数据   |
-| `reset-marketing-templates.ts` | 仅重置营销模板数据 |
+| 文件                           | 说明                           |
+| ------------------------------ | ------------------------------ |
+| `reset-marketing-all.ts`       | 重置所有营销数据               |
+| `reset-marketing-templates.ts` | 仅重置营销模板数据             |
+| `clear-business-data.ts`       | 清理业务数据，保留系统基础数据 |
 
 **使用方式**：
 
 ```bash
 npx tsx prisma/seeds/reset/reset-marketing-all.ts
+
+# 清理业务数据（会员、订单、分佣、营销、商品等），保留租户/用户/角色/菜单
+pnpm --filter @apps/backend prisma:clear-business
 ```
 
 **⚠️ 警告**：重置脚本会删除现有数据，请谨慎使用！
@@ -157,14 +155,10 @@ npm run prisma:seed
 npm run prisma:reset
 ```
 
-### 3. 运行特定种子数据
+### 3. 仅运行业务种子（不重置库）
 
 ```bash
-# 运行营销模板种子数据
-npx tsx prisma/seeds/data/seed-templates.ts
-
-# 运行优惠券模板种子数据
-npx tsx prisma/seeds/data/seed-coupon-templates.ts
+pnpm --filter @apps/backend prisma:seed:only
 ```
 
 ### 4. 重置特定模块数据
@@ -194,6 +188,16 @@ npx tsx prisma/seeds/reset/reset-marketing-templates.ts
 - 用户名: `ry`
 - 密码: `admin123`
 - 权限: 普通角色
+
+### 租户管理员账号（业务种子后可用）
+
+| 租户                          | 用户名       | 密码   |
+| ----------------------------- | ------------ | ------ |
+| 长沙天心区服务中心 (100001)   | admin_100001 | 123456 |
+| 长沙岳麓生活馆 (100002)       | admin_100002 | 123456 |
+| 长沙开福区便民服务站 (100003) | admin_100003 | 123456 |
+| 北京朝阳区旗舰店 (100004)     | admin_100004 | 123456 |
+| 广州天河区体验中心 (100005)   | admin_100005 | 123456 |
 
 ---
 
@@ -229,5 +233,5 @@ npx tsx prisma/seeds/reset/reset-marketing-templates.ts
 
 ---
 
-**最后更新**：2026-02-22
+**最后更新**：2026-03-06
 **维护者**：Backend Team

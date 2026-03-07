@@ -1,0 +1,39 @@
+---
+description: Admin-Web 前端核心规范（目录、Props/Emits、API 类型）
+globs: apps/admin-web/**/*
+alwaysApply: false
+---
+
+# Admin-Web 前端核心规范
+
+编辑 `apps/admin-web` 时遵循。**完整规范见 `.cursor/rules/admin-web.mdc`**。
+
+## 目录结构
+
+```
+src/views/[module]/[entity]/
+├── index.vue
+└── modules/
+    ├── [entity]-operate-drawer.vue
+    ├── [entity]-search.vue
+    └── [entity]-[feature]-modal.vue
+```
+
+## Props / Emits 显式类型
+
+```ts
+interface Props { operateType: 'add'|'edit'; rowData?: Api.System.Role | null; }
+defineProps<Props>();
+const visible = defineModel<boolean>('visible', { default: false });
+const emit = defineEmits<{ (e: 'submitted'): void }>();
+```
+
+## API 类型
+
+- 必须来自 `@libs/common-types`，禁止手写重复类型
+- 新接口：后端修改 → `pnpm generate-types` → 前端引用
+
+## 禁止
+
+- `any`、`as any`、`@ts-ignore`
+- ref/reactive 无泛型

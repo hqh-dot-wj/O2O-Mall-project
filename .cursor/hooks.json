@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "node .cursor/hooks/after-file-edit.js",
+        "description": "Format + ESLint on edited file"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node .cursor/hooks/before-submit-prompt.js",
+        "description": "Detect secrets in prompt"
+      }
+    ]
+  }
+}

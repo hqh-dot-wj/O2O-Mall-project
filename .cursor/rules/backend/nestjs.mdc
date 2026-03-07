@@ -1,0 +1,46 @@
+---
+description: NestJS 后端核心规范（Result、异常、Repository、租户）
+globs: apps/backend/**/*.ts
+alwaysApply: false
+---
+
+# NestJS 后端核心规范
+
+编辑 `apps/backend` 时遵循。**完整规范见 `.cursor/rules/backend.mdc`**。
+
+## 响应与异常
+
+```typescript
+return Result.ok(data);
+BusinessException.throwIf(condition, '错误信息');
+// catch 中用 getErrorMessage(error)，禁止直接 error.message
+```
+
+## Repository
+
+```typescript
+export class XxxRepository extends SoftDeleteRepository<Entity, CreateInput, UpdateInput, Delegate> {
+  constructor(prisma: PrismaService, cls: ClsService) {
+    super(prisma, cls, 'sysUser', 'userId');
+  }
+}
+```
+
+## 多租户
+
+- **TenantScoped**：数据按租户隔离，Repository 自动过滤
+- **PlatformOnly**：不按租户，仅平台可调，须 `RequirePermission`
+- **TenantAgnostic**：租户由参数决定
+- 新增接口必须在 Controller 标明 `@tenantScope TenantScoped|PlatformOnly|TenantAgnostic`
+- 租户内创建数据：禁止前端传 `tenantId`，从 `TenantContext.getTenantId()` 取
+
+## 模块结构
+
+```
+xxx/
+  dto/  vo/  services/  xxx.repository.ts  xxx.service.ts  xxx.controller.ts  xxx.module.ts
+```
+
+## 安全（详见 common/security.mdc）
+
+幂等、防重复提交、敏感数据脱敏、限流、超时、错误信息隐藏。

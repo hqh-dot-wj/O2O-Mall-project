@@ -58,7 +58,7 @@ alwaysApply: false
 
 ## 3. 完整版模板（L3 / L4）
 
-在以下位置创建独立文档，或在 PR 描述中展开（按 `documentation.mdc §9` 约定）：
+在以下位置创建独立文档，或在 PR 描述中展开（按 documentation Skill §9 约定）：
 - 项目级/跨应用决策 → `docs/design/`
 - 后端模块决策 → `apps/backend/docs/design/{模块}/`
 - 前端模块决策 → `apps/admin-web/docs/design/`

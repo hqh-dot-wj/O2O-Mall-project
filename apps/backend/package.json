@@ -35,6 +35,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db push --force-reset --accept-data-loss && ts-node prisma/seed.ts && pnpm redis:flush",
     "prisma:seed:only": "ts-node prisma/seed.ts",
+    "prisma:clear-business": "ts-node prisma/seeds/reset/clear-business-data.ts",
     "prisma:reset": "prisma migrate reset --force && npm run prisma:seed:only",
     "redis:flush": "docker exec nest-admin-redis redis-cli -a 123456 -n 2 FLUSHDB",
     "generate:keys": "node scripts/generate-rsa-keys.cjs",
