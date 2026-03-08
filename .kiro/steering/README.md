@@ -7,6 +7,7 @@
 ```
 .kiro/steering/
 ├── 00-core-principles.md          # Always - 核心原则
+├── dev-cognitive-flow.md          # Always - 开发认知流程（Fast/Slow Mode）
 ├── commit-message.md              # Auto - Commit 规范（始终加载）
 │
 ├── [File Match - 自动触发]
@@ -48,6 +49,7 @@
 ### Always / Auto（始终加载）
 
 - `00-core-principles.md` - 核心原则（~75 tokens）
+- `dev-cognitive-flow.md` - 开发认知流程（Fast/Slow Mode 思维协议）
 - `commit-message.md` - Commit 规范（生成 commit 时始终需要）
 
 ### File Match（文件匹配自动触发）
@@ -95,6 +97,7 @@
 ```
 .kiro/steering/                      .cursor/rules/
 ├── 00-core-principles.md     ──→    core-principles.mdc (alwaysApply)
+├── dev-cognitive-flow.md     ──→    dev-cognitive-flow.mdc (alwaysApply)
 ├── commit-message.md         ──→    commit-message.mdc (alwaysApply)
 ├── admin-web-frontend.md     ──→    admin-web.mdc
 ├── backend-nestjs.md         ──→    backend.mdc
@@ -124,6 +127,18 @@
 └── prompt-templates.md              （无独立 cursor rule）
 ```
 
+## 🧠 Dev Cognitive Flow Skills（分析能力）
+
+`dev-cognitive-flow` Rule 的 Slow Mode 按需调用以下 Skills：
+
+| Cursor Skill            | 触发信号                                   | 分析方法                       |
+| ----------------------- | ------------------------------------------ | ------------------------------ |
+| `root-cause-analysis`   | 信号 5（复杂 Bug）、信号 6（系统异常）     | 5 Whys + 因果链 + Bug 修复流程 |
+| `impact-analysis`       | 信号 2（影响范围异常）、信号 6（系统异常） | 依赖追踪 + 影响范围 + 二阶效应 |
+| `hypothesis-validation` | 信号 1/3/4（不一致/不清/高风险）           | 假设 + 证据 + 反例             |
+
+层级关系：`Rules（行为协议）→ Skills（分析能力）→ Playbooks（架构决策三件套）`
+
 ## 🔧 Anthony Fu Skills 集成
 
 | Steering 文件         | 引用的 Skills                      |
@@ -147,4 +162,4 @@ pnpx skills add antfu/skills --skill='pnpm,turborepo,vitest,vue-testing-best-pra
 3. cursor 的 `alwaysApply: true` 对应 kiro 的 `inclusion: auto`
 4. 新增规范优先 fileMatch，避免 manual
 
-**最后同步**：2026-03-03
+**最后同步**：2026-03-08

@@ -1,18 +1,24 @@
 ---
 name: vue-best-practices
-description: Vue 3 + TypeScript 组件设计、性能优化、类型安全最佳实践。Use when editing Vue components, SFCs, or TypeScript in admin-web (apps/admin-web/src/**/*.{vue,ts,tsx}).
+description: >
+  Create or edit Vue 3 components (SFC, TS) in admin-web.
+  Trigger: user asks to create/edit Vue components in apps/admin-web;
+  implementing CRUD pages, drawers, modals, or view modules.
 ---
 
-# Vue 3 + TypeScript 最佳实践
+# Vue 3 + TypeScript 组件
 
-编辑 `apps/admin-web` 下 `.vue`、`.ts`、`.tsx` 文件时应用。项目详细规范见 `.cursor/rules/admin-web.mdc`。
+创建或编辑 `apps/admin-web` 下 `.vue`、`.ts`、`.tsx` 时应用。详细规范见 `.cursor/rules/admin-web.mdc`。
 
-## 组件设计
+## Instructions
 
-- **单一职责**：组件聚焦单一功能
-- **Props**：用 `defineProps<Props>()`，interface 显式声明
-- **Emits**：`defineEmits<Emits>()` 类型化，如 `(e: 'submitted'): void`
-- **Slots**：具名 slot 优于默认 slot 传复杂内容
+1. **目录结构**：`index.vue` + `modules/`，kebab-case 文件名；Drawer 用 `*-drawer.vue`，Modal 用 `*-modal.vue`。
+2. **Props/Emits**：`defineProps<Props>()`、`defineEmits<Emits>()` 显式类型；`defineModel<boolean>('visible', { default: false })` 双向绑定。
+3. **类型安全**：禁止 `any`、`as any`、`@ts-ignore`；`ref<T>()`、`reactive<T>()` 带泛型；API 类型来自 `@libs/common-types`。
+4. **性能**：频繁切换用 `v-show`，条件渲染用 `v-if`；`v-for` 必须 `key` 且稳定 id；大组件用 `defineAsyncComponent`。
+5. **表格列**：`DataTableColumns<Api.System.Role>`；`import type` 导入纯类型。
+
+## Example
 
 ```ts
 interface Props {
@@ -21,27 +27,12 @@ interface Props {
 }
 defineProps<Props>();
 const visible = defineModel<boolean>('visible', { default: false });
+const emit = defineEmits<{ (e: 'submitted'): void }>();
 ```
 
-## 性能优化
+## Validation
 
-| 场景 | 选择 |
-| --- | --- |
-| 频繁切换显示 | `v-show` |
-| 条件渲染 | `v-if` |
-| 列表 | `v-for` 必须 `key`，用稳定 id，不用 index |
-|  computed vs method | 需缓存用 computed，副作用/一次性用 method |
-| 大组件/弹层 | `defineAsyncComponent` 懒加载 |
-
-## TypeScript 集成
-
-- **禁止** `any`、`as any`、`@ts-ignore`；用 `unknown` + 类型收窄
-- **ref/reactive**：`ref<Api.System.Role[]>([])`，禁止无泛型 `ref([])`
-- **函数**：入参、返回值显式类型；async 返回 `Promise<T>`
-- **columns**：`DataTableColumns<Api.System.Role>`
-- **类型导入**：`import type` 导入纯类型
-
-## 代码组织
-
-- **Composables**：单一职责，按功能拆分
-- **目录**：`index.vue` + `modules/` 子组件，kebab-case 文件名
+- [ ] Props/Emits 有 interface 类型
+- [ ] 无 `any`、`as any`、`@ts-ignore`
+- [ ] ref/reactive 带泛型
+- [ ] `pnpm --filter admin-web typecheck` 通过
