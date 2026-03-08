@@ -19,6 +19,7 @@
    - 解析堆栈：定位出错文件与行号
    - 语义搜索：查找相关代码、调用链
    - 常见模式：类型不匹配、空值、权限、环境变量、依赖版本
+   - **项目特有**：多租户（TenantScoped、tenantId 过滤）、Prisma 查询/迁移错误、Nest 依赖注入循环、`Result<T>` 未正确返回、`BusinessException.throwIf` 误用
 
 3. **给出修复建议**
 
@@ -53,7 +54,13 @@
 - 构建失败、测试失败、运行时异常
 - 使用 `/debugger` 或自然语言「用 debugger 查一下…」
 
+## 项目约定
+
+- **Backend**：测试 `pnpm --filter @apps/backend test -- 模块路径`；类型 `pnpm typecheck`
+- **Admin-Web**：测试 `pnpm --filter @apps/admin-web test`；E2E 需先 `pnpm dev`
+- **Monorepo**：从根目录执行，命令串联用 `;`（PowerShell）
+
 ## 参考规范
 
-- `.cursor/rules/core-principles.mdc` § 异常与响应
+- `.cursor/rules/common/core.mdc` § 异常与响应
 - `.cursor/rules/backend/nestjs.mdc` § 错误处理

@@ -36,6 +36,8 @@ description: Process Spec + Rule ID testing. Use when writing backend tests for 
 | apply\*Rules      | 分支规则 |
 | transition\*State | 状态机   |
 
-## 详细规范
+## Process Spec 与测试位置
 
-见 `.cursor/rules/process-testing.mdc`。
+- Process Spec 存放：`apps/backend/docs/process-specs/` 或模块内 `docs/`
+- 测试文件：与 Service 同目录 `*.spec.ts`，或 `test/` 子目录
+- 涉及状态机、并发、金额、幂等的 Service 必须按本规范编写

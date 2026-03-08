@@ -19,6 +19,9 @@ description: Generate miniapp logic from PRD. Use when injecting logic from requ
 2. 识别涉及的 API、Store、页面
 3. 分步注入：先 API 调用，再 Store 状态，最后交互逻辑
 
-## 详细规范
+## 注入顺序
 
-见 `.cursor/rules/miniapp-p2c.mdc`。
+1. **API**：在 `src/service/api/` 或对应模块添加接口调用
+2. **Store**：在 Pinia store 中补充状态、actions
+3. **页面**：在页面中绑定 Store、调用 API、处理加载/错误/空态
+4. **类型**：从 `@libs/common-types` 引用 API 类型，禁止手写

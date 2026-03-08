@@ -50,6 +50,6 @@
 
 ## 参考规范
 
-- `.cursor/rules/core-principles.mdc` § 提交前检查
-- `.cursor/rules/monorepo.mdc` § 校验与 CI
+- `.cursor/rules/common/core.mdc` § 提交前检查
+- `.cursor/rules/common/monorepo.mdc` § 校验与 CI
 - `.cursor/commands/code-review.md`

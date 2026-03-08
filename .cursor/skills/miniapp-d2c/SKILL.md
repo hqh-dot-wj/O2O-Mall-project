@@ -24,6 +24,7 @@ description: Generate miniapp UI from design. Use when converting design/screens
 1. **第一步**：纯 UI 结构，Design Token，静态 mock
 2. **第二步**：API 调用、Pinia、交互逻辑、加载/错误/空态
 
-## 详细规范
+## Design Token
 
-见 `.cursor/rules/miniapp-d2c.mdc`。
+- 间距、颜色、字号见 `miniapp-ui-spec.mdc` 或项目 Design Token 配置
+- 生成时使用 CSS 变量或 Token 常量，禁止硬编码像素值

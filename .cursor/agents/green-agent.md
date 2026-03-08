@@ -17,7 +17,7 @@
 
    - 逐用例修改实现：边界校验、异常处理、安全加固
    - 只补缺口，不重写无关逻辑
-   - 遵循项目规范：`BusinessException.throwIf`、DTO 校验、权限检查等
+   - **项目规范**：`BusinessException.throwIf(condition, msg)`、`class-validator` DTO、`@RequirePermission`、Repository 租户过滤（禁止前端传 tenantId）
 
 3. **验证通过**
 
@@ -58,8 +58,13 @@
 - **Green**：修复实现使通过
 - 可多轮：Green 修复后，可再次 Red 检查是否还有遗漏
 
+## 项目约定
+
+- **验证命令**：`pnpm --filter @apps/backend test -- 模块路径` 或 `pnpm --filter @apps/admin-web test`
+- **回归检查**：修复后运行 `pnpm test` 确认无其他用例失败
+
 ## 参考规范
 
-- `.cursor/rules/core-principles.mdc` § 响应与异常、简洁优先
+- `.cursor/rules/common/core.mdc` § 响应与异常、简洁优先
 - `.cursor/rules/backend/nestjs.mdc`
 - `.cursor/agents/red-agent.md`

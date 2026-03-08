@@ -20,6 +20,17 @@ description: Generate backend code from PRD. Use when creating NestJS code from 
 - 错误场景必须显式穷举
 - 状态转换单独列出
 
-## 详细规范
+## EndpointSpec 字段说明
 
-见 `.cursor/rules/backend-p2c.mdc`（迁移前）或本 Skill 扩展内容。
+| 字段        | 说明                                                   |
+| ----------- | ------------------------------------------------------ |
+| tenantType  | TenantScoped / PlatformOnly / TenantAgnostic           |
+| caller      | admin / client / internal                              |
+| sloCategory | payment / core-trade / list-query / admin-config       |
+| errorCases  | 显式穷举：参数非法、权限不足、状态不允许、资源不存在等 |
+
+## ScenarioSpec 与 Rule ID
+
+- 每个 scenario 对应 `given`、`when`、`then`、`ruleId`
+- ruleId 格式：`R-{CATEGORY}-{DOMAIN}-{SEQ}`（如 R-IN-ORDER-001）
+- 状态转换单独列出，每条转换有 ruleId 与测试

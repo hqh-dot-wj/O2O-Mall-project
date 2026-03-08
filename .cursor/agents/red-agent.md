@@ -22,7 +22,8 @@
 
 3. **编写失败测试**
 
-   - 按项目测试框架（Vitest/Jest）编写
+   - Backend：Jest，`apps/backend/src/**/*.spec.ts`，与 Service 同目录
+   - Admin-Web：Vitest，`apps/admin-web/src/**/*.spec.ts`、`e2e/**`
    - 断言具体，避免 `toBeTruthy`
    - 预期：当前实现应**失败**（红）
 
@@ -58,8 +59,14 @@
 - **Green**：修改实现，使 Red 的测试通过
 - 对抗循环：Red → Green → 再 Red（可选），直到无新漏洞
 
+## 项目约定
+
+- **多租户**：TenantScoped 接口需覆盖跨租户访问、tenantId 篡改、空 tenantId
+- **权限**：PlatformOnly 接口需覆盖无权限、错误角色
+- **运行测试**：`pnpm --filter @apps/backend test -- 模块` 或 `pnpm --filter @apps/admin-web test`
+
 ## 参考规范
 
-- `.cursor/rules/core-principles.mdc` § 编写测试时
+- `.cursor/rules/common/core.mdc` § 编写测试时
 - `.cursor/commands/test-self-check.md`
 - `.cursor/agents/green-agent.md`

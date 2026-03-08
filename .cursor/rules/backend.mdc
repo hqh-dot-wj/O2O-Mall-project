@@ -137,7 +137,7 @@ xxx/
 | `apply*Rules` | 分支规则 | `applyZeroAmountRules(order)` |
 | `transition*State` | 状态机 | `transitionOrderState(order, target)` |
 
-主入口方法仅做协调，不含业务细节。详细规范及 Rule ID 体系见 `process-testing.mdc`。
+主入口方法仅做协调，不含业务细节。详细规范及 Rule ID 体系见 `.cursor/skills/process-testing/SKILL.md`。
 
 ## 📊 8. 最佳实践
 
