@@ -11,6 +11,10 @@ import { PointsTaskService } from './task/task.service';
 import { PointsTaskRepository } from './task/task.repository';
 import { UserTaskCompletionRepository } from './task/completion.repository';
 import { ClsService } from 'nestjs-cls';
+import { CreatePointsTaskDto } from './task/dto/create-points-task.dto';
+import { Result } from 'src/common/response/result';
+import { MemberRepository } from 'src/module/admin/member/member.repository';
+import { MarketingEventEmitter } from '../events/marketing-event.emitter';
 
 /**
  * 积分模块集成测试
@@ -62,6 +66,8 @@ describe('Points Module Integration', () => {
 
   const mockPrisma = { umsMember: { findMany: jest.fn().mockResolvedValue([]) } };
   const mockCls = { get: jest.fn().mockReturnValue('system') };
+  const mockMemberRepo = { findByMemberId: jest.fn() };
+  const mockEventEmitter = { emit: jest.fn(), emitAsync: jest.fn() };
 
   beforeEach(async () => {
     jest.spyOn(TenantContext, 'getTenantId').mockReturnValue(tenantId);
@@ -78,6 +84,8 @@ describe('Points Module Integration', () => {
         { provide: PointsRuleRepository, useValue: mockRuleRepo },
         { provide: PointsTaskRepository, useValue: mockTaskRepo },
         { provide: UserTaskCompletionRepository, useValue: mockCompletionRepo },
+        { provide: MemberRepository, useValue: mockMemberRepo },
+        { provide: MarketingEventEmitter, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -175,11 +183,12 @@ describe('Points Module Integration', () => {
       pointsReward: 5,
     });
 
-    const createTaskResult = await taskService.createTask({
+    const createTaskDto: CreatePointsTaskDto = {
       taskKey: 'DAILY_SIGNIN',
       taskName: '每日签到',
       pointsReward: 5,
-    } as any);
+    };
+    const createTaskResult = await taskService.createTask(createTaskDto);
     expect(createTaskResult.data).toBeDefined();
 
     mockCompletionRepo.countUserCompletions.mockResolvedValue(0);
@@ -198,11 +207,9 @@ describe('Points Module Integration', () => {
       availablePoints: 0,
       version: 0,
     });
-    const accountServiceAddPoints = jest.spyOn(accountService, 'addPoints').mockResolvedValue({
-      code: 200,
-      data: { id: 'tx1' },
-      message: 'ok',
-    } as any);
+    const accountServiceAddPoints = jest.spyOn(accountService, 'addPoints').mockResolvedValue(
+      Result.ok({ id: 'tx1' }),
+    );
     mockCompletionRepo.create.mockResolvedValue({
       id: 'c1',
       completionTime: new Date(),

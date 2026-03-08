@@ -3,13 +3,15 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { ClsService } from 'nestjs-cls';
 import { PointsRuleService } from './rule.service';
 import { PointsRuleRepository } from './rule.repository';
+import { PartialMock } from 'src/common/types/test-helpers.types';
+import { MktPointsRule } from '@prisma/client';
 
 describe('PointsRuleService - Anti-Arbitrage', () => {
   let service: PointsRuleService;
-  let mockRepo: jest.Mocked<PointsRuleRepository>;
-  let mockCls: jest.Mocked<ClsService>;
+  let mockRepo: PartialMock<PointsRuleRepository>;
+  let mockCls: PartialMock<ClsService>;
 
-  const mockRules = {
+  const mockRules: Partial<MktPointsRule> = {
     tenantId: 'tenant1',
     orderPointsEnabled: true,
     orderPointsRatio: new Decimal(1),
@@ -20,14 +22,14 @@ describe('PointsRuleService - Anti-Arbitrage', () => {
   beforeEach(async () => {
     mockRepo = {
       findByTenantId: jest.fn(),
-    } as any;
+    };
 
     mockCls = {
       get: jest.fn((key: string) => {
         if (key === 'tenantId') return 'tenant1';
         return null;
       }),
-    } as any;
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,7 +44,7 @@ describe('PointsRuleService - Anti-Arbitrage', () => {
 
   describe('calculateOrderPointsByItems - 防止积分套利', () => {
     beforeEach(() => {
-      mockRepo.findByTenantId.mockResolvedValue(mockRules as any);
+      mockRepo.findByTenantId!.mockResolvedValue(mockRules as MktPointsRule);
     });
 
     it('应该基于"原价 - 优惠券抵扣"计算积分，不包括积分抵扣', async () => {

@@ -5,6 +5,7 @@ import { BusinessException } from 'src/common/exceptions/business.exception';
 import { TenantContext } from 'src/common/tenant/tenant.context';
 import { PointsRuleRepository } from './rule.repository';
 import { PointsRuleService } from './rule.service';
+import { UpdatePointsRuleDto } from './dto/update-points-rule.dto';
 
 describe('PointsRuleService', () => {
   let service: PointsRuleService;
@@ -85,21 +86,21 @@ describe('PointsRuleService', () => {
       };
       mockRepo.upsert.mockResolvedValue(updated);
 
-      const result = await service.updateRules({
+      const dto: UpdatePointsRuleDto = {
         orderPointsEnabled: true,
-      } as any);
+      };
+      const result = await service.updateRules(dto);
 
       expect(mockRepo.upsert).toHaveBeenCalled();
       expect(result.data).toBeDefined();
     });
 
     it('orderPointsBase 小于等于 0 应抛异常', async () => {
-      await expect(
-        service.updateRules({
-          orderPointsEnabled: true,
-          orderPointsBase: 0,
-        } as any),
-      ).rejects.toThrow(BusinessException);
+      const dto: UpdatePointsRuleDto = {
+        orderPointsEnabled: true,
+        orderPointsBase: 0,
+      };
+      await expect(service.updateRules(dto)).rejects.toThrow(BusinessException);
     });
   });
 

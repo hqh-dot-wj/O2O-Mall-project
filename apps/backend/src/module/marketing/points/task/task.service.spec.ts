@@ -8,6 +8,9 @@ import { PointsAccountService } from '../account/account.service';
 import { PointsTaskRepository } from './task.repository';
 import { UserTaskCompletionRepository } from './completion.repository';
 import { PointsTaskService } from './task.service';
+import { CreatePointsTaskDto } from './dto/create-points-task.dto';
+import { UpdatePointsTaskDto } from './dto/update-points-task.dto';
+import { PointsTaskQueryDto } from './dto/points-task-query.dto';
 
 describe('PointsTaskService', () => {
   let service: PointsTaskService;
@@ -65,13 +68,12 @@ describe('PointsTaskService', () => {
     it('taskKey 已存在应抛异常', async () => {
       mockTaskRepo.findByTaskKey.mockResolvedValue({ id: 't1' });
 
-      await expect(
-        service.createTask({
-          taskKey: 'SIGNIN',
-          taskName: '签到',
-          pointsReward: 10,
-        } as any),
-      ).rejects.toThrow(BusinessException);
+      const dto: CreatePointsTaskDto = {
+        taskKey: 'SIGNIN',
+        taskName: '签到',
+        pointsReward: 10,
+      };
+      await expect(service.createTask(dto)).rejects.toThrow(BusinessException);
     });
 
     it('应成功创建任务', async () => {
@@ -84,11 +86,12 @@ describe('PointsTaskService', () => {
       };
       mockTaskRepo.create.mockResolvedValue(created);
 
-      const result = await service.createTask({
+      const dto: CreatePointsTaskDto = {
         taskKey: 'SIGNIN',
         taskName: '签到',
         pointsReward: 10,
-      } as any);
+      };
+      const result = await service.createTask(dto);
 
       expect(mockTaskRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -106,16 +109,16 @@ describe('PointsTaskService', () => {
     it('Given 任务不存在, When completeTask, Then 抛出业务异常', async () => {
       mockTaskRepo.findById.mockResolvedValue(null);
 
-      await expect(
-        service.updateTask('t1', { taskName: '新名称' } as any),
-      ).rejects.toThrow(BusinessException);
+      const dto: UpdatePointsTaskDto = { taskName: '新名称' };
+      await expect(service.updateTask('t1', dto)).rejects.toThrow(BusinessException);
     });
 
     it('应成功更新任务', async () => {
       mockTaskRepo.findById.mockResolvedValue({ id: 't1' });
       mockTaskRepo.update.mockResolvedValue({ id: 't1', taskName: '新名称' });
 
-      const result = await service.updateTask('t1', { taskName: '新名称' } as any);
+      const dto: UpdatePointsTaskDto = { taskName: '新名称' };
+      const result = await service.updateTask('t1', dto);
 
       expect(mockTaskRepo.update).toHaveBeenCalled();
       expect(result.data).toBeDefined();
@@ -129,7 +132,8 @@ describe('PointsTaskService', () => {
         total: 1,
       });
 
-      const result = await service.findAll({ pageNum: 1, pageSize: 10 } as any);
+      const query: PointsTaskQueryDto = { pageNum: 1, pageSize: 10 };
+      const result = await service.findAll(query);
 
       expect(result.data).toBeDefined();
       expect(result.data?.total).toBe(1);

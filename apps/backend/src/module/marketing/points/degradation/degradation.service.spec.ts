@@ -1,13 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { PointsTransactionType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PointsGracefulDegradationService } from './degradation.service';
+import { PartialMock } from 'src/common/types/test-helpers.types';
 
 describe('PointsGracefulDegradationService', () => {
   let service: PointsGracefulDegradationService;
   let prisma: PrismaService;
-  let retryQueue: any;
+  let retryQueue: PartialMock<Queue>;
 
   const mockPrisma = {
     mktPointsGrantFailure: {
