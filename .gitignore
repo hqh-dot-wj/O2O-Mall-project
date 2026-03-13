@@ -84,6 +84,7 @@ Thumbs.db
 # pnpm-lock.yaml
 
 # Deployment files
+openclaw-deploy/
 deploy.config.cjs
 .deploy-temp/
 *.tar.gz
